@@ -1,0 +1,362 @@
+<?php
+
+/// Это старый файл оставлен для совместимости, он будет удалён
+
+function gwjs_menu($may_cache) {
+  if($may_cache) {
+    $items[] = array('path' => 'gwjs/resetcache', 'title' => t('Reset browser cache'),
+      'callback' => 'gwjs_resetcache',
+      'access' => user_access('gwjs reset cache'),
+      'type' => MENU_NORMAL_ITEM
+    );
+    $items[] = array(
+      'path' => 'gwjs/file', 
+      'type' => MENU_CALLBACK, 
+      'callback' => 'gwjs_get_file', 
+      'access' => TRUE, 
+    );
+    $items[] = array(
+      'path' => 'admin/gwjs', 
+      'type' => MENU_ITEM_GROUPING, 
+      'access' => TRUE, 
+      'title' => 'GWPanel settings', 
+    );
+    $items[] = array(
+      'title' => 'Обновить файлы', 
+      'path' => 'gwjs/update', 
+      'type' => MENU_NORMAL_ITEM,
+      'callback' => 'gwjs_files_update',
+      'access' => user_access('administer gwjs'), 
+    );
+    $items[] = array(
+      'title' => 'Комментарии к новым версиям', 
+      'path' => 'gwjs/changes', 
+      'type' => MENU_NORMAL_ITEM,
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('gwjs_files_versions'), 
+      'access' => user_access('administer gwjs'), 
+    );
+    $items[] = array(
+      'path' => 'gwjs/synd', 
+      'type' => MENU_CALLBACK,
+      'callback' => 'gwjs_parse_syndicate', 
+      'access' => user_access('administer gwjs'), 
+    );
+    $items[] = array(
+      'path' => 'modules/gwjs', 
+      'type' => MENU_CALLBACK,
+      'callback' => 'gwjs_throw_file',
+      'access' => TRUE,
+    );
+  }
+  return $items;
+}
+
+function gwjs_perm() {
+  return array('gwjs reset cache');
+}
+
+function gwjs_resetcache() {
+  return 'Для браузера Opera теперь доступна только Standalone-установка, для которой не нужно обновление кэша.';
+  
+  $scripts = '<script src="http://images.ganjawars.ru/i/prototype.js"></script>
+<script src="' . url('panel/get', NULL, NULL, TRUE) . '"></script>
+<script src="' . url('', NULL, NULL, TRUE) . '?q=sets/list/get"></script>
+
+';
+  if(module_exists('outland') && module_exists('sets')) {
+    global $user;
+    $result = db_query('SELECT id, sid FROM {gwjs_sets} WHERE uid=%d AND enabled=1 ORDER BY weight ASC', $user->uid);
+    while($ar = db_fetch_array($result)) {
+      $scripts .= '<script src="' . url('outland/getset/' . $ar['id'], NULL, NULL, TRUE) . '"></script>
+';
+    }
+  }
+  global $user;
+  if(($panel_script = db_result(db_query('SELECT script FROM {gwjs_panels} WHERE uid=%d', $user->uid)))) {
+     $scripts .= '<script src="' . url('panel/get/panel.js', NULL, NULL, TRUE) . '?' . substr($panel_script, 0, 8) . '"></script>
+';
+  }
+  $r = db_query('SELECT vid, path FROM {gwjs_files} WHERE 1');
+  while($ar = db_fetch_array($r)) {
+    if(strpos($ar['path'], '.js') !== FALSE) {
+      $scripts .= '<script src="' . url('modules/gwjs/' . $ar['path'], NULL, NULL, TRUE) . '?' . $ar['vid'] . '"></script>' . "\n";
+      if(strpos($ar['path'], 'client.js') != FALSE) {
+        $scripts .= '<script src="' . url('gwjs/file/panel/' . $ar['vid'] . '/client.js', NULL, NULL, TRUE) . '"></script>' . "\n";
+      }
+    } else if(strpos($ar['path'], '.css') !== FALSE) {
+      $_ar = explode('/', $ar['path']);
+      $css .= '<link rel="stylesheet" type="text/css" href="' . url('modules/gwjs/' . $ar['path'], NULL, NULL, TRUE) . '?' . $ar['vid'] . '" />' . "\n";
+      $css .= '<link rel="stylesheet" type="text/css" href="' . url('gwjs/file/' . $_ar[0] . '/' . $ar['vid']  . '/' . $_ar[1], NULL, NULL, TRUE) . '" />' . "\n";
+    } else if(strpos($ar['path'], '.png') !== FALSE || strpos($ar['path'], '.gif') !== FALSE || strpos($ar['path'], '.jpg') !== FALSE) {
+      $_ar = explode('/', $ar['path']);
+      $images .= '<img src="/modules/gwjs/' . $ar['path'] . '" />';
+      $images .= '<img src="/gwjs/file/' . $_ar[0] . '/' . $ar['vid'] . '/' . $_ar[1] . '" />';
+    }
+  }
+  
+/*  $ar = glob('modules/gwjs/*', GLOB_ONLYDIR);
+  array_unshift($ar, 'modules/gwjs');*/
+// /*  foreach($ar  as $dir) {
+//     foreach(glob($dir . '/*.js') as $js)
+//       drupal_add_js($js);
+//     foreach(glob($dir . '/*.css') as $css)
+//       drupaL_add_css($css);
+//   }*/
+print '<html>
+<head>
+'
+. drupal_get_html_head()
+. $css
+. $scripts . 
+'
+<script>
+window.onload = function() {
+  $("loaded").innerHTML = "(готово)";
+}
+</script>
+</head>
+<body>
+<h1>Обновить кэш</h1>
+<div>Нажмите CTRL+R (либо кнопку перезагрузки страницы на панели с зажатой клавишей CTRL)</div><br />
+<h2>Пожалуйста, дождитесь полной загрузки страницы!</h2>
+<div id="loaded">(загрузка)</div><br /><br />
+<a href="' . url('') . '">Вернуться на сайт</a><br /><br />
+
+<a href="http://www.ganjawars.ru/me/">Вернуться в игру</a>
+<br /><br />
+<div style="overflow: hidden; height: 1px; width: 1px;">
+' . $images . '
+</div>
+</body>
+</html>';
+  variable_set('preprocess_css', $preprocess);
+  die();
+}
+
+function rglob($pattern='*', $flags = 0, $path='') {
+    $paths=glob($path.'*', GLOB_MARK|GLOB_ONLYDIR|GLOB_NOSORT);
+    $files=glob($path.$pattern, $flags);
+    foreach ($paths as $path) { $files=array_merge($files,rglob($pattern, $flags, $path)); }
+    return $files;
+}
+
+function gwjs_files_update() {
+  $path = drupal_get_path('module', 'gwjs');
+  $ar = glob($path . '/*', GLOB_ONLYDIR);
+  array_unshift($ar, $path);
+  $len = strlen($path);
+  foreach(rglob('*.js', 0, $path) as $js) {
+    $files[] = $js;
+  }
+  foreach(rglob('*.css', 0, $path) as $css) {
+    $files[] = $css;
+  }
+  foreach(rglob('*.png', 0, $path) as $png) {
+    $files[] = $png;
+  }
+  foreach(rglob('*.gif', 0, $path) as $gif) {
+    $files[] = $gif;
+  }
+  foreach(rglob('*.jpg', 0, $path) as $jpg) {
+    $files[] = $jpg;
+  }
+  $changed = 0;
+  foreach($files as $f) {
+    $_f = substr($f, $len + 1);
+    if(!db_num_rows($result = db_query('SELECT fid, vid, path, hash FROM {gwjs_files} WHERE path="%s"', $_f))) {
+      $fid = db_next_id('{gwjs_files}_fid');
+      db_query('INSERT INTO {gwjs_files} (fid, vid, path, hash, mtime) VALUES(%d, 1, "%s", "%s", %d)', $fid, $_f , $md5 = md5_file($f), filemtime($f));
+      $output .= '<p>Добавлен файл ' . $_f . ', md5: ' . $md5 . ', mtime: ' . date('r', filemtime($f)) . '</p>';
+      module_invoke_all('gwjs_file', 'add', $ar['path'], $fid);
+    } else {
+      $md5 = md5_file($f);
+      $ar = db_fetch_array($result);
+      if($ar['hash'] != $md5) {
+        db_query('UPDATE {gwjs_files} SET hash="%s", mtime=%d, vid=%d WHERE fid=%d', $md5, filemtime($f), $ar['vid']+1, $ar['fid']);
+        $output .= '<p>Обновлен файл ' . $_f . ', md5: ' . $md5 . ', mtime: ' . date('r', filemtime($f)) . '</p>';
+        module_invoke_all('gwjs_file', 'update', $ar['path'], $fid);
+        $changed++;
+      }
+    }
+  }
+  if($changed > 0) {
+    $output .= '<br /><br /> Обновлен один или несколько файлов. Пройдите на ' . l('соответствующую страницу', url('gwjs/changes', NULL, NULL, TRUE)) . ' чтобы прокомментировать изменения в файлах';
+  }
+  if(!$output) $output = 'Обновлений нет';
+  return $output;
+}
+
+function gwjs_files_versions($fid = FALSE) {
+  $form = array();
+  $form['#tree'] = TRUE;
+  if($fid == 'all') {
+    $for_all = TRUE;
+    $fid = FALSE;
+  }
+  $files_r = db_query('SELECT * FROM {gwjs_files}' . ($fid? ' WHERE fid=' . intval($fid): ''));
+  while($ar = db_fetch_array($files_r)) {
+    if($fid) {
+      $versions_r = db_query('SELECT fid, vid, changes FROM {gwjs_files_changes} WHERE fid=%d', $ar['fid']);
+    } else {
+      $versions_r = db_query('SELECT f.fid, f.vid, c.changes FROM {gwjs_files} f LEFT JOIN {gwjs_files_changes} c ON f.fid=c.fid AND c.vid=%d WHERE f.fid=%d AND (c.fid IS NULL OR c.changes = \'\')', $ar['vid'], $ar['fid']);
+      if(!$for_all && !db_num_rows($versions_r)) continue;
+    }
+    $form['file_' . $ar['fid']] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Файл ' . $ar['path'], 
+      '#description' => (!$fid? l('Редактировать изменения всех версий >>', url('gwjs/changes/' . $ar['fid'], NULL, NULL, TRUE)): ''), 
+    );
+    while($var = db_fetch_array($versions_r)) {
+      $form['file_' . $ar['fid']][$var['vid']] = array(
+        '#type' => 'textfield', 
+        '#title' => 'Версия ' . $var['vid'], 
+        '#default_value' => $var['changes'], 
+      );
+    }
+  }
+  if(count($form) == 1) {
+    $form['for_all'] = array(
+      '#type' => 'markup', 
+      '#value' => l('Просмотреть все файлы >>', url('gwjs/changes/all', NULL, NULL, TRUE)) . '<br />', 
+    );
+  }
+  $form['is_security'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Обновление безопасности?', 
+  );
+  $form['submit'] = array(
+    '#type' => 'submit', 
+    '#value' => 'Сохранить', 
+  );
+  return $form;
+}
+
+function gwjs_files_versions_submit($form_id, $form_values) {
+  foreach($form_values as $key => $value) {
+    if(strpos($key, 'file_') !== FALSE) {
+      list($f, $fid) = explode('_', $key);
+      if($fid) {
+        foreach($value as $vid => $changes) {
+          if(db_num_rows(db_query('SELECT fid, vid FROM {gwjs_files_changes} WHERE fid=%d AND vid=%d', $fid, $vid))) {
+            db_query('UPDATE {gwjs_files_changes} SET changes="%s", date=%d WHERE fid=%d AND vid=%d', $changes, time(), $fid, $vid);
+          } else {
+            db_query('INSERT INTO {gwjs_files_changes} (changes, fid, vid, date) VALUES ("%s", %d, %d, %d)', $changes, $fid, $vid, time());
+          }
+        }
+      }
+    }
+  }
+  panel_update_version($form_values['is_security']);
+}
+
+function gwjs_get_file($path, $hash, $file = NULL) {
+  if($file === NULL) {
+    $file = $hash;
+    $hash = $path;
+    $path = '';
+  }
+  $fname = drupal_get_path('module', 'gwjs') . '/' . $path . '/' . $file;
+  if(!file_exists($fname)) {
+    die('Not found');
+  }
+  $parts = explode('.', $file);
+  $ext = $parts[count($parts) - 1];
+  if($ext == 'png' || $ext == 'gif' || $ext == 'jpg') {
+    $is_image = TRUE;
+  } else {
+    $ar = db_fetch_array(db_query('SELECT vid, hash, mtime FROM {gwjs_files} WHERE path="%s"', $path . '/' . $file));
+    if(!$ar || !$ar['hash']) {
+      $_hash = md5_file($fname);
+      $fid = db_next_id('{gwjs_files}_fid');
+      db_query('INSERT INTO {gwjs_files} (fid, vid, path, hash, mtime) VALUES(%d, 1, "%s", "%s", %d)', $fid, $path . '/' . $file, $_hash, filemtime($fname));
+    }
+    if($ar['vid'] != $hash) {
+      header('Location: http://' . $_SERVER['SERVER_NAME'] . '/gwjs/file/' . $path . '/' . $ar['vid'] . '/' . $file);
+      die();
+    }
+  }
+  header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + 2592000));
+  header('Last-Modified: ' . gmdate('D, d M Y H:i:s \G\M\T', $ar['mtime']));
+  header('Content-Length: ' . filesize($fname));
+  header('Cache-control: public');
+  if(strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE'))
+    $msie = TRUE;
+  if($msie && !$is_image) $charset='; charset=cp1251';
+  else $charset='; charset=utf8';
+  if($is_image) {
+    header('Content-type: image/' . $ext);
+  } else if(strrpos($file, '.js') !== FALSE) {
+    header('Content-type: application/x-javascript' . $charset);
+  } else if(strrpos($file, '.css') !== FALSE) {
+    header('Content-type: text/css');
+  } else {
+    header('Content-type: text/html');
+  }
+  header('Connection: close');
+  header('Cache-control: ');
+  if($msie && !$is_image) 
+    print iconv('UTF-8', 'CP1251', file_get_contents($fname));
+  else 
+    readfile($fname);
+  die();
+}
+
+function gwjs_parse_syndicate($id, $botname = 'GWPanel Bot') {
+  if(!$id || !$botname) return FALSE;
+  require_once(drupal_get_path('module', 'gwbot') . '/gwbot.class');
+  $bot = new GwBot($botname);
+  if(!db_num_rows($result = db_query('SELECT id FROM {gwjs_syndicate} WHERE id=%d', $id))) {
+    db_query('INSERT INTO {gwjs_syndicate} (id) VALUES (%d)', $id);
+    $syndicate = array('id' => $id);
+  } else {
+    $syndicate = db_fetch_array($result);
+  }
+  if($data = iconv('CP1251', 'UTF-8', $bot->get('http://www.ganjawars.ru/syndicate.php?id=' . $id . '&page=politics'))) {
+    if(preg_match('/<td [^>]+>\\&nbsp\\;\\&nbsp\\;<b>([^<]+)<\\/b>/', $data, $matches)) {
+      $syndicate['name'] = $matches[1];
+    }
+    if(preg_match('/<b>Союзный синдикат:<\\/b> <a href=\\/syndicate.php\\?id=([0-9]+)>/', $data, $matches)) {
+      $syndicate['ally'] = $matches[1];
+    }
+    if(preg_match('/URL:<\\/b> <a[^>]+>([^<]+)<\\/a>/', $data, $matches)) {
+      $syndicate['url'] = $matches[1];
+    }
+    db_query('UPDATE {gwjs_syndicate} SET name="%s", ally=%d, url="%s" WHERE id=%d', $syndicate['name'], $syndicate['ally'], $syndicate['url'], $id);
+    return $syndicate;
+  }
+}
+
+function theme_syndicate($id) {
+  if(!($ar = db_fetch_array(db_query('SELECT * FROM {gwjs_syndicate} WHERE id=%d', $id)))) {
+    $ar = gwjs_parse_syndicate($id);
+  }
+  return '<a target="__blank" href="' . url('http://www.ganjawars.ru/syndicate.php?id=' . $id) . '"><img border="0" width="20" height="14" alt="#5866" src="http://images.ganjawars.ru/img/synds/' . $id . '.gif"/>' . ' ' . $ar['name'] . '</a>';
+}
+
+function theme_player($pl_id) {
+  $ar = db_fetch_array(db_query('SELECT * FROM {gwjs_players} WHERE pl_id=%d', $pl_id));
+  if(!$ar) return 'Игрок не существует';
+  return sprintf('<a href="http://www.ganjawars.ru/info.php?id=%d" target="_blank">%s</a>', $pl_id, $ar['pl_name']);
+}
+
+function gwjs_throw_file() {
+  $i = 2;
+  $path = 'modules/gwjs/themes/default';
+  
+  while($arg = arg($i)) {
+    $path .= '/' . $arg;
+    $i++;
+  }
+  $_ar = explode('.', arg($i - 1));
+  end($_ar);
+  $ext = ($_ar[count($_ar) - 1]);
+  if(!$ext) $ext = 'html';
+  header('Content-type: text/' . $ext);
+  if(!file_exists($path)) {
+    drupal_not_found();
+  } else {
+    readfile($path);
+  }
+}
+?>

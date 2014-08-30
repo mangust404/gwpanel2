@@ -1,0 +1,20 @@
+.npc-widget {
+  padding-top: 4px;
+}
+
+.npc-widget a {
+  font-size: 14px;
+  line-height: 21px;
+}
+
+.npc-widget .enemy a {
+  color: #990000;
+}
+
+.npc-widget .links a {
+  padding: 0 4px;
+}
+
+.npc-widget .links img {
+  width: 12px;
+}

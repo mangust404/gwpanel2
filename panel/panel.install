@@ -1,0 +1,197 @@
+<?php
+
+function panel_schema() {
+
+  $schema['gwjs_panels'] = array(
+    'description' => 'Настроенные сохранённые панели',
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Primary Key: Идентификатор скрипта.',
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'ID игрока-владельца',
+      ),
+      'title' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => 'Основная',
+        'description' => 'Название панели',
+      ),
+      'options' => array(
+        'type' => 'blob',
+        'size' => 'normal',
+        'description' => 'Опции',
+      ),
+      'version' => array(
+        'type' => 'int',
+        'description' => 'текущая версия',
+      ),
+      'security' => array(
+        'type' => 'int',
+        'description' => 'текущая версия безопасности',
+      ),
+      'date' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'д',
+      ),
+      'weight' => array(
+        'type' => 'int',
+        'sieze' => 'tiny', 
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Вес в списке',
+      ),
+    ),
+    'primary key' => array('id'),
+    'indexes' => array(
+      'uid' => array('uid'),
+    ),
+    'mysql_engine' => 'MyISAM', 
+  );
+  
+  $schema['gwjs_files'] = array(
+    'description' => 'Файлы, которыми рулит гвпанель',
+    'fields' => array(
+      'fid' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Идентификатор файла.',
+      ),
+      'vid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'Версия файла.',
+      ),
+      'path' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'Путь к файлу',
+      ),
+      'hash' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'description' => 'MD5-хэш сумма файла',
+      ),
+      'mtime' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'Время последнего изменения',
+      ),
+    ),
+    'primary key' => array('fid'),
+    'unique keys' => array(
+      'path' => array('path'),
+    ),
+    'mysql_engine' => 'MyISAM', 
+  );
+  
+  $schema['gwjs_files_changes'] = array(
+    'description' => 'Изменения в файлах',
+    'fields' => array(
+      'fid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'Версия файла.',
+      ),
+      'vid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'Версия файла.',
+      ),
+      'changes' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'Описание изменений',
+      ),
+      'date' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'дата изменения',
+      ),
+    ),
+    'primary key' => array('fid', 'vid'),
+    'indexes' => array(
+      'fid' => array('fid'), 
+    ),
+    'mysql_engine' => 'MyISAM', 
+  );
+  
+  $schema['gwjs_players'] = array(
+    'description' => 'Известные игроки',
+    'fields' => array(
+      'pl_id' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'ID игрока',
+      ),
+      'pl_name' => array(
+        'type' => 'varchar',
+        'length' => 40,
+      ),
+      'lastguest' => array(
+        'type' => 'int',
+        'description' => 'время последнего входа на сайт', 
+      ),
+    ),
+    'primary key' => array('pl_id'),
+    'indexes' => array(
+      'name' => array('pl_name'), 
+    ),
+    'mysql_engine' => 'MyISAM', 
+  );
+  
+  $schema['gwjs_syndicates'] = array(
+    'description' => 'Список синдикатов',
+    'fields' => array(
+      'synd_id' => array(
+        'type' => 'int',
+        'not null' => TRUE, 
+        'description' => 'ID синдиката',
+      ),
+      'synd_count' => array(
+        'type' => 'int',
+        'not null' => TRUE, 
+        'size' => 'medium',
+        'description' => 'количество персонажей в синдикате', 
+      ),
+      'synd_name' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'description' => 'Название синдиката',
+      ),
+      'synd_owner' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'ID владельца',
+      ),
+      'synd_lopata' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'size' => 'medium',
+        'description' => 'Лопата синдиката, очень важный параметр',
+      ),
+    ),
+    'primary key' => array('synd_id'),
+    'indexes' => array(
+      'name' => array('synd_name'),
+      'owner' => array('synd_owner'), 
+    ),
+    'mysql_engine' => 'MyISAM', 
+  );
+  
+  return $schema;
+}
+
+?>

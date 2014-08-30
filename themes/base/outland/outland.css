@@ -1,0 +1,44 @@
+
+body.walk-php td > a > img, body.walk-op-php td > a > img {
+  background: url(terrain.gif) no-repeat left top;
+}
+
+body.walk-php td > a > img.attack, body.walk-op-php td > a > img.attack {
+  background: url(t_a.gif) no-repeat left top;
+}
+
+body.walk-php td > a > img.busy, body.walk-op-php td > a > img.busy {
+  background: url(http://images.ganjawars.ru/q/t_o.gif) no-repeat left top;
+}
+
+body.walk-php div.move_topleft, body.walk-op-php div.move_topleft {
+  background: url(nav.png) no-repeat 0px 0px;
+}
+
+body.walk-php div.move_top, body.walk-op-php div.move_top {
+  background: url(nav.png) no-repeat -25px 0px;
+}
+
+body.walk-php div.move_topright, body.walk-op-php div.move_topright {
+  background: url(nav.png) no-repeat -50px 0px;
+}
+
+body.walk-php div.move_right, body.walk-op-php div.move_right {
+  background: url(nav.png) no-repeat -50px -25px;
+}
+
+body.walk-php div.move_bottomright, body.walk-op-php div.move_bottomright {
+  background: url(nav.png) no-repeat -50px -50px;
+}
+
+body.walk-php div.move_bottom, body.walk-op-php div.move_bottom {
+  background: url(nav.png) no-repeat -25px -50px;
+}
+
+body.walk-php div.move_bottomleft, body.walk-op-php div.move_bottomleft {
+  background: url(nav.png) no-repeat 0px -50px;
+}
+
+body.walk-php div.move_left, body.walk-op-php div.move_left {
+  background: url(nav.png) no-repeat 0px -25px;
+}

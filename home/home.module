@@ -1,0 +1,61 @@
+<?php
+
+function home_panel_plugins() {
+  $plugins['home'] = array(
+    'requires' => '', 
+    'excludes' => '',
+    'access' => '', 
+    'description' => 'Дополнения для домашней странички',
+    'weight' => 1, 
+    'apply' => array(
+      '/me/' => array(
+        'home_durability' => array('file' => 'home.js', 'condition' => '!options.home.nodura'),
+      ),
+      '*' => array(
+        'home_health' => 'home_health.js', 
+      ),
+    ), 
+  );
+  return $plugins;
+}
+
+function home_plugin_settings($form, &$form_state, $values) {
+  $form = array();
+  $form['home'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Домашняя страничка',
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE, 
+  );
+  $form['home']['nohht'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Не показывать таймеры на домашней страничке',
+    '#default_value' => isset($values['nohht'])? $values['nohht']: 0,
+  );
+  $form['home']['nodura'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Не показывать прочность предметов на домашней страничке',
+    '#default_value' => isset($values['nodura'])? $values['nodura']: 0,
+  );
+  
+  
+  return $form;
+}
+
+function home_panel_widgets() {
+  return array(
+    'health_widget' => array(
+      'title' => 'Индикатор выздоровления',
+      'configure' => TRUE,
+      'config_params' => array('timers', 'autohide', ),
+      'config_types' => array('checkbox', 'checkbox', ),
+      'config_titles' => array('Показывать таймеры', 'Не показывать когда здоровье 100%', ),
+      'config_values' => array(1, 1),
+      'callback' => 'home_health_widget',
+      'file' => 'home_widgets.js', 
+      'width' => 2,
+      'height' => 1, 
+    ),
+  );
+}
+?>

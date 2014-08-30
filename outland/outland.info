@@ -1,0 +1,6 @@
+name = GWPanel outland
+description = GWPanel outland module
+package = gwpanel
+version = VERSION
+core = 7.x
+dependencies[] = panel
