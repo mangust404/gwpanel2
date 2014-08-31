@@ -1,3 +1,18 @@
+function waitPanelInitialization(__window, callback) {
+  // Ждём появления в документе указанного окна CSS-ки panel.css
+  var check = function() {
+    for(var i = 0; i < __window.document.styleSheets.length; i++) {
+      if(__window.document.styleSheets[i].href && 
+         __window.document.styleSheets[i].href.indexOf('panel.css') != -1) {
+        __window.__panel.onInit(callback);
+        return;
+      }
+    }
+    setTimeout(check, 10);
+  }
+  check();
+}
+
 QUnit.assert.function_exists = function(needle, haystack, message) {
   var exists = String(typeof(haystack)).toLowerCase() == 'function';
   QUnit.push(exists, exists, needle, 'функция ' + needle + ' существует');
@@ -14,6 +29,13 @@ QUnit.test("Тест объекта __panel", function(assert) {
     assert.function_exists('__panel.' + this, __panel[this]);
   })
 
+  assert.deepEqual(__panel.failedScripts, [], 
+                  'массив незагруженных скриптов должен быть пустым');
+  assert.deepEqual(__panel.failedStyles, [], 
+                  'массив незагруженных стилей должен быть пустым');
+
+  assert.deepEqual(__panel.toQueryParams('foo=bar&bar=foo'), 
+                   {'foo': 'bar', 'bar': 'foo'}, '__panel.toQueryParams');
 });
 
 QUnit.test("Тест объекта __panel.crossWindow", function(assert) {
@@ -112,6 +134,22 @@ QUnit.asyncTest("Тест передачи русских символов", fun
   });
 });
 
+QUnit.asyncTest("Тест очистки", function(assert) {
+  var items = ['russian', 'huge_array', 'huge_string', 'test_ar', 'test_hash',
+               'test1'];
+  expect(items.length);
+  $(items).map(function(i, item) {
+    __panel.del(item, function() {
+      __panel.get(item, function(value) {
+        assert.deepEqual(null, value, 'значения ' + item + ' не должно быть');
+        if(item == items[items.length - 1]) {
+          QUnit.start();
+        }
+      });
+    });
+  });
+});
+
 QUnit.asyncTest("Тест событий из текущего окна", function(assert) {
   expect(1);
   var eventdata = {'test': 'успех'};
@@ -133,11 +171,9 @@ QUnit.asyncTest("Тест событий из чужого окна (iframe)", f
   $('<iframe id="foreign-event-iframe" src="' + document.location.href.split('?')[0]
      + '?123"></iframe>').load(function() {
     var that = this;
-    setTimeout(function() {
-      that.contentWindow.__panel.onInit(function() {
-        that.contentWindow.__panel.triggerEvent('foreign-event-test', eventdata);
-      });
-    }, 1000); /// 1 секунды должно хватить на инициализацию панели во фрейме
+    waitPanelInitialization(this.contentWindow, function() {
+      that.contentWindow.__panel.triggerEvent('foreign-event-test', eventdata);
+    });
   }).appendTo('#qunit-fixture');
 });
 
@@ -181,20 +217,443 @@ QUnit.asyncTest("Массовый тест событий", function(assert) {
   $('<iframe id="foreign-event-iframe" src="' + document.location.href.split('?')[0]
      + '?123"></iframe>').load(function() {
     var that = this;
-    setTimeout(function() {
-      that.contentWindow.__panel.onInit(function() {
-        /// Запускаем ещё 2 потока из соседнего окна
-        for(var t = 0; t < 2; t++) {
-          setTimeout(function() {
-            for(var i = 0; i < 50; i++) {
-              that.contentWindow.__panel.triggerEvent('mass-event-test', 
-                {'test': 'mass event test', 'salt': rand, 'index': i, 
-                 'thread': thread});
-            }
-            thread++;
-          }, 1);
-        }
-      });
-    }, 1000); /// 1 секунды должно хватить на инициализацию панели во фрейме
+    waitPanelInitialization(this.contentWindow, function() {
+      /// Запускаем ещё 2 потока из соседнего окна
+      for(var t = 0; t < 2; t++) {
+        setTimeout(function() {
+          for(var i = 0; i < 50; i++) {
+            that.contentWindow.__panel.triggerEvent('mass-event-test', 
+              {'test': 'mass event test', 'salt': rand, 'index': i, 
+               'thread': thread});
+          }
+          thread++;
+        }, 1);
+      }
+    });
   }).appendTo('#qunit-fixture');
 });
+
+QUnit.asyncTest("Отвязка событий", function(assert) {
+  expect(1);
+  var eventdata = {'test': 'успех'};
+  var listener_id = __panel.bind('event-unbind-test', function(data) {
+    assert.deepEqual(eventdata, data, "значение должно сопадать");
+    __panel.unbind("event-unbind-test", listener_id);
+    __panel.triggerEvent('event-unbind-test"', eventdata);
+    QUnit.start();
+  });
+  __panel.triggerEvent('event-unbind-test', eventdata);
+});
+
+QUnit.asyncTest('Подгрузка скриптов', function(assert) {
+  expect(1);
+  __panel.loadScript('lib/foobar.js', function () {
+    assert.deepEqual(__panel.__foo_bar_script, 'foo bar', 'Скрипт загружен');
+    QUnit.start();
+  }, function() {
+    console.log((new Error).stack);
+    assert.ok(false, 'Скрипт не загружен');
+    QUnit.start();
+  })
+});
+
+QUnit.asyncTest('Подгрузка ошибочных скриптов', function(assert) {
+  expect(1);
+  __panel.loadScript('lib/foobar_unexists.js', function () {
+    assert.ok(false, 'Скрипт не должен быть загружен');
+    QUnit.start();
+  }, function() {
+    assert.ok(true, 'Скрипт не загружен');
+    QUnit.start();
+  })
+});
+
+QUnit.asyncTest('Подгрузка стилей', function(assert) {
+  expect(2);
+  $('#qunit-fixture').append('<div class="foo-bar">test</div>');
+  assert.notEqual($('#qunit-fixture .foo-bar').css('font-size'), '32px', 
+                     'Стилей не должно быть');
+  __panel.loadCSS('test.css', function () {
+    assert.deepEqual($('#qunit-fixture .foo-bar').css('font-size'), '32px', 
+                     'Стили загружены');
+    QUnit.start();
+  }, function() {
+    assert.ok(false, 'Таблица стилей не загружена');
+    QUnit.start();
+  })
+});
+
+if(window.opera || jQuery.browser.msie) {
+  QUnit.asyncTest('Подгрузка ошибочных стилей', function(assert) {
+    expect(1);
+    __panel.loadCSS('test_unexisted.css', function () {
+      assert.ok(false, 'Несуществующий файл стилей не должен быть загружен');
+      QUnit.start();
+    }, function() {
+      assert.ok(true, 'Стиль не загружен');
+      QUnit.start();
+    })
+  });
+}
+
+QUnit.asyncTest('Проверка фокусировки', function(assert) {
+  expect(1);
+  jQuery(window).focus();
+  __panel.checkFocused(function() {
+    assert.ok(true, 'Текущее окно в фокусе');
+    QUnit.start();
+  });
+});
+
+QUnit.asyncTest('Проверка фокусировки другого окна', function(assert) {
+  expect(1);
+
+  $('<iframe id="foreign-event-iframe" src="' + document.location.href.split('?')[0]
+     + '?123"></iframe>').load(function() {
+    var that = this;
+    waitPanelInitialization(this.contentWindow, function() {
+      setTimeout(function() {
+        that.contentWindow.jQuery(that.contentWindow).focus();
+        that.contentWindow.__panel.checkFocused(function() {
+          assert.ok(true, 'Новое открытое окно в фокусе');
+          window.__panel.checkFocused(function() {
+            assert.ok(false, 'Текущее окно не должно быть в фокусе');
+            QUnit.start();
+          });
+
+          QUnit.start();
+        });
+      }, 100);
+    });
+  }).appendTo('#qunit-fixture');
+
+
+});
+
+QUnit.asyncTest('Установка и считывание опций', function(assert) {
+  expect(6);
+  var options = __panel.getOptions();
+  assert.equal(String(typeof(options)).toLowerCase(), 'object', 'опции получены');
+  options['test_module'] = {'test1': 'test1'};
+  __panel.setOptions(options);
+  setTimeout(function() {
+    var new_options = __panel.getOptions();
+    assert.deepEqual(new_options['test_module'], {'test1': 'test1'}, 
+                      'опции были установлены');
+    new_options['test_module']['test1'] = 'test2';
+    __panel.setOptions(new_options['test_module'], 'test_module');
+    setTimeout(function() {
+      var new_options = __panel.getOptions();
+      assert.deepEqual(new_options['test_module'], {'test1': 'test2'}, 
+                      'опции через namespace были установлены');
+      /// удаляем
+      new_options['test_module'] = undefined;
+      __panel.setOptions(new_options);
+      setTimeout(function() {
+        var new_options = __panel.getOptions();
+        assert.deepEqual('undefined', 
+                          String(typeof(new_options['test_module'])).toLowerCase(), 
+                          'опции удалены');
+        var local_options = unserialize(localStorage.options);
+        assert.deepEqual('undefined', 
+                          String(typeof(local_options['test_module'])).toLowerCase(), 
+                          'опции удалены из localStorage');
+        $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
+           + '?123"></iframe>').load(function() {
+          var that = this;
+          waitPanelInitialization(this.contentWindow, function() {
+            var new_options = that.contentWindow.__panel.getOptions();
+            assert.deepEqual('undefined', 
+                              String(typeof(new_options['test_module'])).toLowerCase(), 
+                              'опции действительно удалены');
+
+            QUnit.start();
+          });
+        }).appendTo('#qunit-fixture');
+      }, 100);
+    }, 100);
+  }, 100);
+});
+
+QUnit.asyncTest('переход по ссылке', function(assert) {
+  expect(1);
+  var gotoURL = 'http://www.ganjawars.ru/forum.php';
+  var gotoHref = false;
+  $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
+     + '?123"></iframe>').load(function() {
+    var that = this;
+    waitPanelInitialization(this.contentWindow, function() {
+      if(gotoHref) {
+        /// Если мы перешли, то проверяем местоположение
+        assert.equal(gotoURL, that.contentWindow.location.href, 
+                      'переход произведён');
+        QUnit.start();
+      } else {
+        /// Если первый запуск, то переходим
+        gotoHref = true;
+        that.contentWindow.__panel.gotoHref(gotoURL);
+      }
+    });
+  }).appendTo('#qunit-fixture');
+
+});
+
+/// Тестирование интерфейса
+QUnit.test('Тестирование бабблов', function(assert) {
+  var options = __panel.getOptions();
+  var activePanes = 0;
+  for(var i = 0; i < 4; i++) {
+    if(options.panes[i].widgets && options.panes[i].widgets.length + 
+       options.panes[i].buttons && options.panes[i].buttons.length > 0) {
+      activePanes++;
+    }
+  }
+  assert.equal(activePanes, $('.pane-bubble:visible').length, 
+    'Количество видимых бабблов');
+});
+
+QUnit.asyncTest('Тестирование открытия и закрытия бабблов', function(assert) {
+  expect(8);
+  var options = __panel.getOptions();
+  var original_panes = {};
+  jQuery.extend(original_panes, options.panes);
+  options.panes[0] = {
+    width: 6,
+    height: 4,
+    buttons: [{type: 'panel_link', top: 0, left: 0, title: 'Форум', 
+    img: 'http://images.ganjawars.ru/img/forum/f27.gif', 
+    arguments: {
+      blank: 0,
+      link: 'http://www.ganjawars.ru/forum.php'
+    }}],
+    widgets: []
+  };
+  __panel.setOptions(options);
+
+  $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
+     + '?123"></iframe>').load(function() {
+    var that = this;
+    waitPanelInitialization(this.contentWindow, function() {
+      (function($) {
+      /// кликаем по бабблу
+      $('.pane-bubble:first').click();
+      assert.ok($('.pane:visible').length > 0, 'Открылось окошко');
+      assert.ok($('.pane:visible').find('.button').length > 0,
+                'Кнопка видна');
+      $('.pane-bubble:first').click();
+      assert.ok($('.pane:visible').length == 0, 'Закрылось окошко');
+      $('.pane-bubble:first').click();
+      assert.ok($('.pane:visible').length > 0, 'Открылось окошко');
+      $(this.document.body).click();
+      assert.ok($('.pane:visible').length == 0, 'Закрылось окошко по клику по документу');
+
+      var e = $.Event('mousemove');
+      e.clientX = 500;
+      e.clientY = 500;
+
+      $(this).trigger(e);
+
+      var bubbleObject = $('.pane-bubble:first')[0];
+
+      var e = $.Event('mousemove');
+      e.clientX = bubbleObject.offsetLeft + 5;
+      e.clientY = bubbleObject.offsetTop + 50;
+      $(this).trigger(e);
+
+      $(bubbleObject).trigger('mouseover');
+      
+      assert.ok($('.pane:visible').length > 0, 'Открылось окошко при наведении');
+      $('.pane-bubble:first').click();
+      assert.ok($('.pane:visible').length == 0, 'Закрылось окошко');
+  
+      $(this).trigger(e);      
+      $(bubbleObject).trigger('mouseover');
+      assert.ok($('.pane:visible').length == 0, 
+        'При незапланированном наведении открыться не должно');
+
+      QUnit.start();
+      /// Возвращаем оригинальные настройки окон
+      __panel.setOptions(original_panes, 'panes');
+    }).apply(that.contentWindow, [that.contentWindow.jQuery])
+    });
+  }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+  
+  //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
+
+});
+
+QUnit.asyncTest('Тест drag-n-drop для перетаскивании кнопок', function(assert) {
+  var options = __panel.getOptions();
+  /// делаем бекап опций окон
+  var original_panes = {};
+  jQuery.extend(original_panes, options.panes);
+  options.panes[0] = {
+    width: 6,
+    height: 4,
+    buttons: [{type: 'panel_link', top: 0, left: 0, title: 'Форум', 
+    img: 'http://images.ganjawars.ru/img/forum/f27.gif', 
+    arguments: {
+      blank: 0,
+      link: 'http://www.ganjawars.ru/forum.php'
+    }}],
+    widgets: []
+  };
+  __panel.setOptions(options);
+
+  $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
+     + '?123"></iframe>').load(function() {
+    var that = this;
+    waitPanelInitialization(this.contentWindow, function() {
+      (function($) {
+      /// кликаем по бабблу
+      $('.pane-bubble:first').click();
+      var pane = $('.pane:visible');
+      assert.ok(pane.length > 0, 'Открылось окошко');
+      var button = pane.find('.button');
+
+      assert.ok(button.length > 0,
+                'Кнопка видна');
+
+      var e = $.Event('mousemove');
+      var padding = parseInt(pane.css('padding'));
+      if(isNaN(padding)) padding = 0;
+      e.pageX = pane[0].offsetLeft + padding + 10;
+      e.pageY = pane[0].offsetTop + padding + 10;
+      $(this).trigger(e);
+
+      var mousedown = $.Event('mousedown');
+      /// левая кнопка мыши
+      mousedown.which = 1;
+      mousedown.pageX = e.pageX;
+      mousedown.pageY = e.pageY;
+      var target = button.find('a');
+      mousedown.target = target[0];
+      button.trigger(mousedown);
+      var __window = this;
+
+      setTimeout(function() {
+        assert.ok(button.hasClass('ui-draggable'), 'Drag start');
+        assert.ok(pane.find('.pane-placeholder').length > 0, 
+          'Есть доступные места для перетаскивания');
+
+        var mousemove = $.Event('mousemove');
+        mousemove.pageX = mousedown.pageX + 75;
+        mousemove.pageY = mousedown.pageY + 150;
+        __window.jQuery(__window.document).trigger(mousemove);
+
+        var mouseup = $.Event('mouseup');
+        mouseup.pageX = mousemove.pageX;
+        mouseup.pageY = mousemove.pageY;
+        button.trigger(mouseup);
+
+        assert.ok(!button.hasClass('ui-draggable'), 'Drag end');
+        assert.ok(pane.find('.pane-placeholder').length == 0, 
+          'Нет отметок для перетаскивания');
+        assert.equal(1, __window.__panel.getOptions().panes[0].buttons[0].left,
+          'Позиция кнопки слева должна быть = 1');
+        assert.equal(2, __window.__panel.getOptions().panes[0].buttons[0].top,
+          'Позиция кнопки слева должна быть = 2');
+
+        /// Возвращаем оригинальные настройки окон
+        __panel.setOptions(original_panes, 'panes');
+
+        QUnit.start();
+      }, 1000);
+      //QUnit.start();
+    }).apply(that.contentWindow, [that.contentWindow.jQuery])
+    });
+  }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+  
+  //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
+
+});
+
+QUnit.asyncTest('Тест drag-n-drop для перетаскивании виджетов', function(assert) {
+  var options = __panel.getOptions();
+  /// Делаем бекап опций окон
+  var original_panes = {};
+  jQuery.extend(original_panes, options.panes);
+  options.panes[0] = {
+    width: 6,
+    height: 4,
+    buttons: [],
+    widgets: [{
+      'type': 'npc_npc_z',
+      top: 0,
+      left: 0,
+      arguments: {
+        friends: [5, 11],
+        enemies: [1, 4, 7, 9],
+        undress: 1
+      }
+    }]
+  };
+  __panel.setOptions(options);
+
+  $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
+     + '?123"></iframe>').load(function() {
+    var that = this;
+    waitPanelInitialization(this.contentWindow, function() {
+      (function($) {
+      /// кликаем по бабблу
+      $('.pane-bubble:first').click();
+      var pane = $('.pane:visible');
+      assert.ok(pane.length > 0, 'Открылось окошко');
+      var widget = pane.find('.widget');
+
+      assert.ok(widget.length > 0,
+                'Виджет виден');
+
+      var e = $.Event('mousemove');
+      var padding = parseInt(pane.css('padding'));
+      if(isNaN(padding)) padding = 0;
+      e.pageX = pane[0].offsetLeft + padding + 30;
+      e.pageY = pane[0].offsetTop + padding + 30;
+      $(this).trigger(e);
+
+      var mousedown = $.Event('mousedown');
+      /// левая кнопка мыши
+      mousedown.which = 1;
+      mousedown.pageX = e.pageX;
+      mousedown.pageY = e.pageY;
+      mousedown.target = widget[0].firstChild;
+      widget.trigger(mousedown);
+      var __window = this;
+
+      setTimeout(function() {
+        assert.ok(widget.hasClass('ui-draggable'), 'Drag start');
+        assert.ok(pane.find('.pane-placeholder').length > 0, 
+          'Есть доступные места для перетаскивания');
+
+        var mousemove = $.Event('mousemove');
+        mousemove.pageX = mousedown.pageX + 75;
+        mousemove.pageY = mousedown.pageY + 150;
+        __window.jQuery(__window.document).trigger(mousemove);
+
+        var mouseup = $.Event('mouseup');
+        mouseup.pageX = mousemove.pageX;
+        mouseup.pageY = mousemove.pageY;
+        widget.trigger(mouseup);
+
+        assert.ok(!widget.hasClass('ui-draggable'), 'Drag end');
+        assert.ok(pane.find('.pane-placeholder').length == 0, 
+          'Нет отметок для перетаскивания');
+        assert.equal(0, __window.__panel.getOptions().panes[0].widgets[0].left,
+          'Позиция кнопки слева должна быть = 0, т.к. виджет на всю ширину');
+        assert.equal(2, __window.__panel.getOptions().panes[0].widgets[0].top,
+          'Позиция кнопки слева должна быть = 2');
+
+        /// Возвращаем оригинальные настройки окон
+        __panel.setOptions(original_panes, 'panes');
+
+        QUnit.start();
+      }, 2000);
+      //QUnit.start();
+    }).apply(that.contentWindow, [that.contentWindow.jQuery])
+    });
+  }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+  
+  //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
+
+});
+/// TODO: тест setWidgetOptions

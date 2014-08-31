@@ -29,27 +29,32 @@ var Panel2 = new function() {
   var buttonClasses = {};
   /// список доступных виджетов, настраивается пользователем из предоставляемых модулями
   var widgetClasses = {};
-  /// список доступных пользовательских скриптов
+  /// список подгружаемых пользовательских скриптов
   var scripts = {};
+  /// список подгружаемых таблиц стилей
+  var stylesheets = {};
   /// системные параметры - ссылка на фрейм для кросс доменной передачи сообщений, текущий домен
   var contentFrame, domain;
   /// Флаг инициализации, initializeStack - стек функций, которые надо запустить после инициализации
   var initialized, initializeStack = [];
   /// адрес, откуда установлена панель
   var baseURL;
-  /// массив подгруженных CSS
-  var stylesheets = [];
   
   /******************************
   *******Приватные методы********
   *******************************/
+  function hideAllPanes() {
+    jQuery('.pane:visible').hide();
+    jQuery('.pane-bubble.active').removeClass('active');
+    $(document.body).off('click', hideAllPanes);
+  }
   /**
   * Ленивая активация одной из панелей, вызывается click или mouseover событием
   * Создаёт все кнопки и виджеты внутри панели и привязывает события только после команды активации
   */
   function activatePane(e) {
     var $this = jQuery(this);
-    if($this.hasClass('right') && (!e || e.type != 'click')) {
+    if($this.hasClass('right') && (!e || e.type != 'click') && !$('.pane:visible').length) {
       /// Правые панели не активируем при наведении, потому что там из-за скроллбара ложные срабатывания
       return false;
     }
@@ -60,13 +65,12 @@ var Panel2 = new function() {
     
     if((pane = jQuery('#pane-' + paneID)).length) {
       if(pane.css('display') == 'none') {
-        jQuery('.pane:visible').hide();
-        jQuery('.pane-bubble.active').removeClass('active');
+        hideAllPanes();
         pane.show();
         jQuery('#pane-bubble-' + paneID).addClass('active');
       } else if(e && e.type == 'click') {
-        jQuery('.pane:visible').hide();
-        jQuery('.pane-bubble.active').removeClass('active');
+        hideAllPanes();
+        return false;
       }
     } else {
       pane = jQuery('<div id="pane-' + paneID + '" class="pane' + (paneID < 2? ' left': ' right') + (paneID % 2 > 0? ' bottom': ' top') + '"></div>')
@@ -76,7 +80,7 @@ var Panel2 = new function() {
         });
       var paneContainer = jQuery('<div class="container"></div>').appendTo(pane);
       var buttons = pane_options.buttons;
-      if(buttons && buttons.length > 0) {
+      if(pane_options.buttons.length > 0) {
         jQuery(buttons).each(function(index) {
         //for(var i = 0; i < buttons.length; i++) {
           var type = buttonClasses[this.type];
@@ -123,8 +127,13 @@ var Panel2 = new function() {
           if(!hold_positions[this.top]) hold_positions[this.top] = {};
           hold_positions[this.top][this.left] = __button.attr('id');
         });
+      }
+      if(pane_options.buttons.length > 0 || pane_options.widgets.length > 0) {
+
         paneContainer.mousedown(function(e) {
           var that = jQuery(e.target).parents('.button, .widget');
+          console.log(that);
+          console.log(that.length);
           if(!that.length) return false;
           var is_widget = that.hasClass('widget');
           that.clicked = false;
@@ -159,6 +168,7 @@ var Panel2 = new function() {
               }
               that.draggable({
                 containment: 'parent', 
+                iframeFix: true,
                 delay: 100, 
                 iframeFix: true, 
                 opacity: 0.5,
@@ -330,6 +340,11 @@ var Panel2 = new function() {
       }).attr('left', data.left).attr('top', data.top);
       hold_positions = data.hold_positions;
     });
+    /// При клике на body, скрываем всплывашку
+    $(document.body).on('click', hideAllPanes);
+    /// Обязательно надо вернуть false, иначе он уйдёт в document.body 
+    /// и все всплывашки закроются
+    return false;
   }
   
   /**
@@ -364,8 +379,12 @@ var Panel2 = new function() {
             instance.onInit(function() {
               activatePane.apply(that, [e])
             });
+            return false;
           })
           .attr('paneID', i)
+          .css({'display': options.panes[i].widgets && options.panes[i].widgets.length + 
+                           options.panes[i].buttons && options.panes[i].buttons.length > 0? 
+                           '': 'none'})
           .appendTo(document.body);
       }
     }
@@ -394,7 +413,9 @@ var Panel2 = new function() {
     }
     for(var module in modules) {
       for(var i = 0; i < modules[module].length; i++) {
-        instance.loadScript(module + '/' + modules[module][i]);
+        if(typeof(modules[module][i]) != 'undefined') {
+          instance.loadScript(module + '/' + modules[module][i]);
+        }
       }
     }
   }
@@ -750,10 +771,16 @@ var Panel2 = new function() {
         }
         if(is_panelContainer || location.pathname.indexOf('btk.php') == -1) {
           // Инициализация функционала
-          jQuery(document.body).addClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
+          jQuery(document.body)
+            .addClass(
+              window.location.pathname.replace(/\./g, '-')
+                .replace(/\//g, '_')
+                .substr(1)
+            );
             
           var href = location.href;
-          if(href.charAt(location.href.length - 1) == '?' || href.charAt(location.href.length - 1) == '&')
+          if(href.charAt(location.href.length - 1) == '?' || 
+             href.charAt(location.href.length - 1) == '&')
             href = location.href.substr(0, location.href.length - 1);
            
           window.parent.postMessage(toJSON({'type': 'frame', 'title': document.title, 'href': href}), '*');
@@ -779,7 +806,14 @@ var Panel2 = new function() {
         // Инициализация фрейма и интерфейса
         jQuery('iframe:not(#crossWindowContainer)').remove();
         clearTimeouts();
-        var frame = jQuery('<iframe src="' + (location.href.indexOf('?') == -1? location.href + '?': location.href + '&') + '"></iframe>').hide().appendTo(document.body).load(function() {
+        var frame = jQuery('<iframe src="' + 
+          (location.href.indexOf('?') == -1? 
+            location.href + '?':
+            location.href + '&')
+           + '"></iframe>')
+        .hide()
+        .appendTo(document.body)
+        .load(function() {
           jQuery(this).css({
             display: 'block',
             position: 'absolute',
@@ -792,7 +826,8 @@ var Panel2 = new function() {
             border: 0,
             background: '#f5fff5'
           });
-          jQuery(document.body).css({overflow: 'hidden'}).css({height: document.body.clientHeight});
+          jQuery(document.body).css({overflow: 'hidden'})
+            .css({height: document.body.clientHeight});
         });
         jQuery(document).scrollTop(0);
         
@@ -831,7 +866,7 @@ var Panel2 = new function() {
       $('<div id="qunit-fixture"></div>').prependTo(document.body);
       $('<div id="qunit"></div>').prependTo(document.body);
       this.loadCSS('../../lib/qunit-1.15.0.css');
-      this.loadScript('lib/qunit-1.15.0.js', function() {
+      instance.loadScript('lib/qunit-1.15.0.js', function() {
         instance.loadScript('panel/panel_test.js', function() {
           if(QUnit.config.semaphore) QUnit.load;
         });
@@ -862,24 +897,40 @@ var Panel2 = new function() {
     
     /**
     * Загрузка CSS-файла
-    * @param url - относительный путь таблицы стилей
+    * @param name - название таблицы стилей (путь)
     * @param name - название таблицы стилей, пока не используется
     */
-    loadCSS: function(url, name) {
+    loadCSS: function(name, callback, failover) {
+      if(typeof(stylesheets[name]) != 'undefined') {
+        if(stylesheets[name].loaded) {
+          try {
+            callback();
+          } catch(e) {
+            instance.dispatchException(e, 'loadCSS callback error: ');
+          }
+        } else if(callback) stylesheets[name].callbacks.push(callback);
+        return;
+      }
+      stylesheets[name] = {callbacks: [], failovers: [], loaded: false};
+      if(callback) stylesheets[name].callbacks.push(callback);
+      if(failover) stylesheets[name].failovers.push(failover);
+
       if(options.standalone) {
-        window.__loadCSS(url);
+        window.__loadCSS(name);
         return;
       }
       var c = document.createElement('link');
       c.rel = 'stylesheet';
       if(options.system.theme_m) {
         var d = new Date();
-        c.href = options.system.theme_m + '/' + url + '?' + d.getTime(); 
+        c.href = options.system.theme_m + '/' + name + '?' + d.getTime(); 
       } else {
-        c.href = baseURL + 'sites/all/modules/gwpanel/themes/' + options.system.theme + '/' + url; 
+        c.href = baseURL + 'sites/all/modules/gwpanel/themes/'
+                 + options.system.theme + '/' + name; 
       };
       c.type = 'text/css';
-      stylesheets.push(c);
+
+      //stylesheets.push(c);
       try {
         if(document.getElementsByTagName('head').length) {
           document.getElementsByTagName('head')[0].appendChild(c);
@@ -900,7 +951,7 @@ var Panel2 = new function() {
     * @param name - путь к скрипту, например "home/home.js"
     * @param callback - функция, которую следует запустить после загрузки
     */
-    loadScript: function(name, callback) {
+    loadScript: function(name, callback, failover) {
       if(typeof(scripts[name]) != 'undefined') {
         if(scripts[name].loaded) {
           try {
@@ -911,9 +962,11 @@ var Panel2 = new function() {
         } else if(callback) scripts[name].callbacks.push(callback);
         return;
       }
-      scripts[name] = {callbacks: [], loaded: false};
+      scripts[name] = {callbacks: [], failovers: [], loaded: false};
+      if(callback) scripts[name].callbacks.push(callback);
+      if(failover) scripts[name].failovers.push(failover);
+
       if(options.standalone) {
-        if(callback) scripts[name].callbacks.push(callback);
         window.__loadScript(name);
       } else {
         var s = scripts[name].element = document.createElement('script');
@@ -955,6 +1008,56 @@ var Panel2 = new function() {
       }
     },
     
+    /**
+    * Обработчик ошибки загрузки скрипта
+    * @param name - путь скрипта, например "home/home.js"
+    */
+    loadScriptFail: function(name, line) {
+      scripts[name].fail = true;
+      instance.failedScripts.push(name, line);
+      if(console.log) console.log('Failed to load script "' + name + 
+                                  '" called on ' + line);
+      for(var i = 0; i < scripts[name].failovers.length; i++) {
+        try {
+          scripts[name].failovers[i]();
+        } catch(e) {
+          instance.dispatchException(e, 'failoverScript callback error: ');
+        }
+      }
+    },
+
+    /**
+    * Обработчик окончания загрузки стилей
+    * @param name - путь скрипта, например "home/home.js"
+    */
+    loadCSSComplete: function(name) {
+      stylesheets[name].loaded = true;
+      for(var i = 0; i < stylesheets[name].callbacks.length; i++) {
+        try {
+          stylesheets[name].callbacks[i]();
+        } catch(e) {
+          instance.dispatchException(e, 'loadCSS callback error: ');
+        }
+      }
+    },
+    
+    /**
+    * Обработчик ошибки загрузки скрипта
+    * @param name - путь скрипта, например "home/home.js"
+    */
+    loadCSSFail: function(name, line) {
+      stylesheets[name].fail = true;
+      instance.failedScripts.push(name, line);
+      if(console.log) console.log('Failed to load css "' + name + 
+                                  '" called on ' + line);
+      for(var i = 0; i < stylesheets[name].failovers.length; i++) {
+        try {
+          stylesheets[name].failovers[i]();
+        } catch(e) {
+          instance.dispatchException(e, 'failoverCSS callback error: ');
+        }
+      }
+    },
     /**
     * Функция проверки фокуса
     * @param callback - функция, которая будет запущена если текущее окно является активным
@@ -1017,6 +1120,18 @@ var Panel2 = new function() {
     },
     
     /**
+    * Удаление значения из хранилища
+    * @param key - название переменной
+    * @param callback - функция, которая будет вызвана после удаления значения
+    */    
+    del: function(key, callback) {
+      var __key = key;
+      var __callback = callback;
+      instance.onInit(function() {
+        instance.crossWindow.del(__key, __callback);
+      });
+    },
+    /**
     * Запуск события
     * @param type - название события
     * @param data - данные, в любом виде - объект/хеш/массив/строка
@@ -1069,13 +1184,21 @@ var Panel2 = new function() {
       } else {
         options = set_options;
       }
-      instance.set('options', options, function() {
-        var time = (new Date).getTime();
-        instance.set('options_upd', time);
-        localStorage.options = serialize(options);
-        localStorage.options_upd = time;
-        instance.triggerEvent('options_change', {options: options});
-      });
+      var new_options = {};
+      for(var key in options) {
+        var type = String(typeof(options[key])).toLowerCase();
+        if(type != 'undefined' && options[key] !== null) {
+          new_options[key] = options[key];
+        }
+      }
+      options = new_options;
+      instance.set('options', options);
+      var time = (new Date).getTime();
+      instance.set('options_upd', time);
+      /// записываем на текущий домен, чтобы при инициализации был доступ к опциям
+      localStorage.options = serialize(options);
+      localStorage.options_upd = time;
+      instance.triggerEvent('options_change', {options: options});
     },
     
     /**
@@ -1095,6 +1218,9 @@ var Panel2 = new function() {
     /**
     * Переход по ссылке
     * @param href - ссылка для перехода
+    * функция нужна была для совместимости с фреймовой версией
+    * в будущем её можно использовать для чего-нибудь ещё, например для слежения
+    * за переходами и сбора статистики
     */
     gotoHref: function(href) {
       if(contentFrame) {
@@ -1131,9 +1257,15 @@ var Panel2 = new function() {
     */
     path_to_theme: function() {
       return baseURL + '/themes/' + options.system.theme + '/';
-    }
+    },
 
-    
+    /**
+    * Публичные аттрибуты
+    */
+    /// Скрипты с ошибками
+    failedScripts: [],
+    /// Стили с ошибками
+    failedStyles: []
   });
   
   return Panel2;
