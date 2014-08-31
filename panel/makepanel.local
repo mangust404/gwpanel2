@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 скрипт user.js и добавить туда следующие три строчки:
 
 user_pref("capability.policy.policynames", "localfilelinks");
-user_pref("capability.policy.localfilelinks.sites", "http://www.ganjawars.ru http://ganjawars.ru http://quest.ganjawars.ru");
+user_pref("capability.policy.localfilelinks.sites", "http://www.ganjawars.ru http://ganjawars.ru http://quest.ganjawars.ru http://bank.ganjawars.ru");
 user_pref("capability.policy.localfilelinks.checkloaduri.enabled", "allAccess");
 
 Иначе по соображениям безопасности Firefox тупо не будет подгружать локальные файлы.

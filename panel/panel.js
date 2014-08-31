@@ -132,8 +132,6 @@ var Panel2 = new function() {
 
         paneContainer.mousedown(function(e) {
           var that = jQuery(e.target).parents('.button, .widget');
-          console.log(that);
-          console.log(that.length);
           if(!that.length) return false;
           var is_widget = that.hasClass('widget');
           that.clicked = false;
@@ -867,8 +865,9 @@ var Panel2 = new function() {
       $('<div id="qunit"></div>').prependTo(document.body);
       this.loadCSS('../../lib/qunit-1.15.0.css');
       instance.loadScript('lib/qunit-1.15.0.js', function() {
+        QUnit.config.autostart = false;
         instance.loadScript('panel/panel_test.js', function() {
-          if(QUnit.config.semaphore) QUnit.load;
+          QUnit.start();
         });
       });
     }
