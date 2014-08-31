@@ -39,6 +39,8 @@ var Panel2 = new function() {
   var initialized, initializeStack = [];
   /// адрес, откуда установлена панель
   var baseURL;
+  /// куки в виде хеша
+  var __cookies;
   
   /******************************
   *******Приватные методы********
@@ -1155,6 +1157,33 @@ var Panel2 = new function() {
       return baseURL + '/themes/' + options.system.theme + '/';
     },
 
+    /*
+    * Функция возвращает куки в виде хеша
+    */
+    getCookies: function() {
+      if(__cookies != undefined) {
+        return __cookies;
+      }
+      __cookies = {};
+
+      $(document.cookie.split('; ')).map(function(i, item) {
+        var ar = item.split('=');
+        __cookies[ar[0]] = encodeURIComponent(ar[1]);
+      });
+      return __cookies;
+    },
+    /**
+    * Функция возвращает ID текущего игрока (из кук)
+    */
+    currentPlayerID: function() {
+      return instance.getCookies()['au'];
+    },
+    /**
+    * Функция возвращает ID текущего игрока (из кук)
+    */
+    currentPlayerName: function() {
+      return instance.getCookies()['last_user_name'];
+    },
     /**
     * Публичные аттрибуты
     */
