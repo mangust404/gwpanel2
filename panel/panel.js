@@ -703,161 +703,58 @@ var Panel2 = new function() {
       }
     }, 'ganjawars.ru');
     
-    if((!options.system.noframe && window.frameElement) || options.system.noframe) {
-      // Инициализация подгружаемых скриптов
-      var pages = [];
-      if(typeof(options.apply_pages[location.pathname]) == 'object') {
-        pages = options.apply_pages[location.pathname];
-      }
-      if(typeof(options.apply_pages['*']) == 'object') {
-        for(var i = 0; i < options.apply_pages['*'].length; i++)
-          pages.push(options.apply_pages['*'][i]);
-      }
-      
-      jQuery(pages).each(function(index, func) {
-        if(typeof(func) == 'object') {
-          for(var key in func) {
-            var condition = func[key];
-            func = key;
-            break;
-          }
-          if(condition) {
-            try {
-              if(!eval(condition)) return;
-            } catch(e) {
-              instance.dispatchException(e, 'condition for loaded script error: ');
-              return;
-            }
-          }
-        }
-        instance.loadScript(options.apply_scripts[func], function() {
-          if(typeof(instance[func]) == 'undefined') {
-            throw('Function ' + func + ' in module ' + options.apply_scripts[func] + ' not found');
-          } else {
-            instance[func].apply(instance, [options[options.apply_scripts[func].split('/')[0]]]);
-          }
-        });
-      });
+    // Инициализация подгружаемых скриптов
+    var pages = [];
+    if(typeof(options.apply_pages[location.pathname]) == 'object') {
+      pages = options.apply_pages[location.pathname];
+    }
+    if(typeof(options.apply_pages['*']) == 'object') {
+      for(var i = 0; i < options.apply_pages['*'].length; i++)
+        pages.push(options.apply_pages['*'][i]);
     }
     
+    jQuery(pages).each(function(index, func) {
+      if(typeof(func) == 'object') {
+        for(var key in func) {
+          var condition = func[key];
+          func = key;
+          break;
+        }
+        if(condition) {
+          try {
+            if(!eval(condition)) return;
+          } catch(e) {
+            instance.dispatchException(e, 'condition for loaded script error: ');
+            return;
+          }
+        }
+      }
+      instance.loadScript(options.apply_scripts[func], function() {
+        if(typeof(instance[func]) == 'undefined') {
+          throw('Function ' + func + ' in module ' + options.apply_scripts[func] + ' not found');
+        } else {
+          instance[func].apply(instance, [options[options.apply_scripts[func].split('/')[0]]]);
+        }
+      });
+    });
+
     // следим за сменой опций из других окон
     instance.bind('options_change', function(data) {
       jQuery.extend(options, data.options);
     });
     
-    if(options.system.noframe || location.hostname != 'www.ganjawars.ru') {
-      jQuery(document.body).addClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
-      this.loadCSS('panel.css');
-      
-      initInterface();
-      
-      
-      if(location.hostname != 'www.ganjawars.ru') {
-        var href = location.href;
-        if(href.charAt(location.href.length - 1) == '?' || href.charAt(location.href.length - 1) == '&')
-          href = location.href.substr(0, location.href.length - 1);
-        window.parent.postMessage(toJSON({'type': 'frame', 'title': document.title, 'href': href}), '*');
-      }
-          
-    } else {
-      if(window.frameElement) {
-        var is_panelContainer;
-        try {
-          is_panelContainer = window.frameElement.panelContainer
-        } catch(e) {
-          
-        }
-        if(is_panelContainer || location.pathname.indexOf('btk.php') == -1) {
-          // Инициализация функционала
-          jQuery(document.body)
-            .addClass(
-              window.location.pathname.replace(/\./g, '-')
-                .replace(/\//g, '_')
-                .substr(1)
-            );
-            
-          var href = location.href;
-          if(href.charAt(location.href.length - 1) == '?' || 
-             href.charAt(location.href.length - 1) == '&')
-            href = location.href.substr(0, location.href.length - 1);
-           
-          window.parent.postMessage(toJSON({'type': 'frame', 'title': document.title, 'href': href}), '*');
-          
-          window.addEventListener('message', function(e) {
-            var url;
-            if(e.domain) url = e.domain;
-            else if(e.origin) url = e.origin;
-            if(!url.match(new RegExp('[^\.]*[\.]?' + domain))) return false;
-            var data = parseJSON(e.data);
-            if(data.type == 'location') {
-              location.href = data.href;
-            }
-          });
-          jQuery(document).keydown(function(e) {
-            if(e.keyCode == 116 || (e.ctrlKey && e.keyCode == 82)) { // F5 & Ctrl + R
-              location.href = location.href;
-              return false;
-            }
-          });
-        }
-      } else {
-        // Инициализация фрейма и интерфейса
-        jQuery('iframe:not(#crossWindowContainer)').remove();
-        clearTimeouts();
-        var frame = jQuery('<iframe src="' + 
-          (location.href.indexOf('?') == -1? 
-            location.href + '?':
-            location.href + '&')
-           + '"></iframe>')
-        .hide()
-        .appendTo(document.body)
-        .load(function() {
-          jQuery(this).css({
-            display: 'block',
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: '100%',
-            width: '100%',
-            border: 0,
-            background: '#f5fff5'
-          });
-          jQuery(document.body).css({overflow: 'hidden'})
-            .css({height: document.body.clientHeight});
-        });
-        jQuery(document).scrollTop(0);
-        
-        frame[0].panelContainer = true;
-        contentFrame = frame[0];
-        
-        this.loadCSS('panel.css');
-        initInterface();
-        window.addEventListener('message', function(e) {
-          var url;
-          if(e.domain) url = e.domain;
-          else if(e.origin) url = e.origin;
-          if(!url.match(new RegExp('[^\.]*[\.]?' + domain))) return false;
-          var data = parseJSON(e.data);
-          if(data.type == 'frame') {
-            try { 
-              if(history.replaceState) history.replaceState({}, data.title, data.href);
-            } catch(e) {
-              window.location = data.href;
-            }
-            instance.location = data.href;
-            document.title = data.title;
-            __panel.location = data.href;
-          }
-        });
-        jQuery(window).keydown(function(e) {
-          if(e.keyCode == 116 || (e.ctrlKey && e.keyCode == 82)) { // F5 & Ctrl + R
-            return false;
-          }
-        });
-      }
+    jQuery(document.body).addClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
+    if(location.hostname != 'www.ganjawars.ru') {
+      var href = location.href;
+      if(href.charAt(location.href.length - 1) == '?' || href.charAt(location.href.length - 1) == '&')
+        href = location.href.substr(0, location.href.length - 1);
+      window.parent.postMessage(toJSON({'type': 'frame', 'title': document.title, 'href': href}), '*');
     }
+
+    this.loadCSS('panel.css');
+    
+    initInterface();
+
     /// Инициализация тестов если в запросе указан ?gwpanel_test
     if(location.search.indexOf('?gwpanel_test') != -1) {
       //alert('test');
