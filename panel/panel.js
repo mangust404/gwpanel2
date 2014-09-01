@@ -768,7 +768,9 @@ var Panel2 = new function() {
     // Если не будет хранилища, то мы никак не сможем например с quest.ganjawars.ru получить 
     // настройки и события с других страниц, и даже тупо не сможем проверить почту чтобы вывести
     // уведомления
-    this.crossWindow = new __crossWindow('/tmp/panelcontainer.html', function() {
+    this.crossWindow = new __crossWindow(environment == 'production' || environment == 'deploy'? 
+                                  '/tmp/panel2container.html':
+                                  '/tmp/panelcontainer.html', function() {
       /// функция полной готовности окна
       instance.crossWindow.get(variantID, function(__variant) {
         if(!__variant) {
@@ -887,7 +889,7 @@ var Panel2 = new function() {
       if(callback) stylesheets[name].callbacks.push(callback);
       if(failover) stylesheets[name].failovers.push(failover);
 
-      window.__loadCSS(name);
+      window.__loadCSS('themes/' + options.system.theme + '/' + name);
     },
     
     /**
@@ -910,7 +912,7 @@ var Panel2 = new function() {
       if(callback) scripts[name].callbacks.push(callback);
       if(failover) scripts[name].failovers.push(failover);
 
-      window.__loadScript(name);
+      window.__loadScript(name, function() { instance.loadScriptComplete(name)});
     },
     
     /**
