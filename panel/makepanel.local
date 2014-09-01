@@ -725,7 +725,6 @@ function panel_standalone_local($type = '', $noexit = FALSE) {
 // @exclude       http://photos.ganjawars.ru/*
 // @exclude       http://*.ganjawars.ru/index.php
 // @exclude       http://*.ganjawars.ru/
-// @exclude       http://*.ganjawars.ru/login.php
 // @exclude       http://*.ganjawars.ru/b0/btk.php
 ';
   } else {
