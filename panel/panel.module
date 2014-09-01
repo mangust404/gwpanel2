@@ -924,6 +924,16 @@ function panel_panel_plugins() {
   $plugins['panel'] = array(
     'description' => 'Базовый модуль',
     'weight' => -100,
+    'apply' => array(
+        '/me/' => array(
+            'panel_homepage' => 'panel.js',
+
+        ),
+        '/login.php' => array(
+            'panel_login' => 'panel.js',
+
+        )
+    )
   );
   return $plugins;
 }
