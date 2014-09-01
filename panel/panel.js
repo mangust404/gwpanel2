@@ -6,8 +6,13 @@ var Panel2 = new function() {
   */
   /// Объект панели
   var instance;
+  /// Окружение
+  /// Возможные варианты: dev, production, deploy, testing
+  var environment;
   /// текущая версия
   var version;
+  /// ID настроек
+  var optionsID;
   /// хеш базовых настроек
   var options = {
     /// системные опции
@@ -17,18 +22,10 @@ var Panel2 = new function() {
     },
     /// настройки включенных окон
     panes: { 0: {}},
-    /// страницы для подгрузки, настраиваются модулями
-    apply_pages: {},
-    /// подключаемые события, настраиваются в модуле
-    apply_events: {}
   };
   /// mouseDelta и mouseSpeed - переменные, необходимые для слежения за поведением курсора мыши
   var mouseDelta = 0;
   var mouseSpeed = 0;
-  /// список доступных кнопок, настраивается пользователем из предоставляемых модулями
-  var buttonClasses = {};
-  /// список доступных виджетов, настраивается пользователем из предоставляемых модулями
-  var widgetClasses = {};
   /// список подгружаемых пользовательских скриптов
   var scripts = {};
   /// список подгружаемых таблиц стилей
@@ -85,49 +82,62 @@ var Panel2 = new function() {
       if(pane_options.buttons.length > 0) {
         jQuery(buttons).each(function(index) {
         //for(var i = 0; i < buttons.length; i++) {
-          var type = buttonClasses[this.type];
+          var type = panel_apply.buttons[this.type];
           if(!type) {
             instance.dispatchException('Unknown button type: ' + this.type, 'Pane ' + paneID + ' draw: ');
             return;
           }
-          if(!instance[type['callback']]) {
-            instance.dispatchException('Unknown callback function "' + type['callback'] + '" for button ' + this.type, 'Pane ' + paneID + ' draw: ');
-            return;
-          }
-          var callback = instance[type.callback];
-          if(type.callback_arguments) {
-            var __arguments = type.callback_arguments;
-          } else {
-            var __arguments = this.arguments;
-          }
-          var img = (this.img || type.img);
-          if(img.indexOf('http:') != 0) {
-            img = __panel.path_to_theme() + img;
-          }
-          var __button = jQuery('<div class="button" id="button_' + this.type + '_' + index + '"></div>').append(
-            jQuery('<a><div class="img"><img src="' + img + '" /></div><h3>' + (this.title? this.title: type.title) + '</h3></a>').click(function(e) {
-              if(this.parentNode.dragging) {
-                this.parentNode.dragging = false;
+          var that = this;
+          var __button_init = function() {
+            if(!instance[type['callback']]) {
+              try{
+                throw('"' + type['callback'] + '" for button ' + that.type + ', Pane ' + paneID + ' draw: ');
+              } catch(e) {
+                instance.dispatchException(e, 'Unknown callback function');
+              }
+              return;
+            }
+            var callback = instance[type.callback];
+            if(type.callback_arguments) {
+              var __arguments = type.callback_arguments;
+            } else {
+              var __arguments = that.arguments;
+            }
+            var img = (that.img || type.img);
+            if(img.indexOf('http:') != 0) {
+              img = __panel.path_to_theme() + img;
+            }
+            var __button = jQuery('<div class="button" id="button_' + that.type + '_' + index + '"></div>').append(
+              jQuery('<a><div class="img"><img src="' + img + '" /></div><h3>' + (that.title? that.title: type.title) + '</h3></a>').click(function(e) {
+                if(this.parentNode.dragging) {
+                  this.parentNode.dragging = false;
+                  return false;
+                }
+                this.parentNode.clicked = true;
+                if(type.callback_arguments) {
+                  callback(__arguments);
+                } else {
+                  callback(e, __arguments);
+                }
                 return false;
-              }
-              this.parentNode.clicked = true;
-              if(type.callback_arguments) {
-                callback(__arguments);
-              } else {
-                callback(e, __arguments);
-              }
-              return false;
+              })
+            ).css({
+              left: that.left * options.system.btnwidth,
+              top: that.top * options.system.btnheight,
+              width: options.system.btnwidth,
+              height: options.system.btnheight
             })
-          ).css({
-            left: this.left * options.system.btnwidth,
-            top: this.top * options.system.btnheight,
-            width: options.system.btnwidth,
-            height: options.system.btnheight
-          })
-          .attr('left', this.left).attr('top', this.top).attr('index', index)
-          .appendTo(paneContainer);
-          if(!hold_positions[this.top]) hold_positions[this.top] = {};
-          hold_positions[this.top][this.left] = __button.attr('id');
+            .attr('left', that.left).attr('top', that.top).attr('index', index)
+            .appendTo(paneContainer);
+            if(!hold_positions[that.top]) hold_positions[that.top] = {};
+            hold_positions[that.top][that.left] = __button.attr('id');
+          }
+          if(instance[type.callback]) {
+            instance.onInit(__button_init);
+          } else {
+            instance.loadScript(type.module + '/' + type.file, __button_init);
+          }
+
         });
       }
       if(pane_options.buttons.length > 0 || pane_options.widgets.length > 0) {
@@ -284,47 +294,59 @@ var Panel2 = new function() {
       if(widgets && widgets.length > 0) {
         jQuery(widgets).each(function(index) {
         //for(var i = 0; i < widgets.length; i++) {
-          var type = widgetClasses[this.type];
+          var type = panel_apply.widgets[this.type];
           if(!type) {
-            instance.dispatchException('Unknown widget type: ' + this.type, 'Pane ' + paneID + ' draw: ');
+            instance.dispatchException('Unknown widget type: ' + that.type, 'Pane ' + paneID + ' draw: ');
             return;
           }
-          if(!instance[type['callback']]) {
-            instance.dispatchException('Unknown callback function "' + type['callback'] + '" for widget: ' + this.type, 'Pane ' + paneID + ' draw: ');
-            return;
-          }
-          var callback = instance[type.callback];
-          var widget_width = (type.width? type.width: (this.arguments.width? this.arguments.width: 1));
-          var widget_height = (type.height? type.height: (this.arguments.height? this.arguments.height: 1));
-          var __widget = jQuery('<div class="widget '+ this.type + '" id="widget_' + this.type + '_' + index + '"></div>')
-            .css({
-              width: options.system.btnwidth * widget_width,
-              height: options.system.btnheight * widget_height, 
-              left: this.left * options.system.btnwidth, 
-              top: this.top * options.system.btnheight
-            })
-            .attr('top', this.top).attr('left', this.left).attr('index', index)
-            .appendTo(paneContainer);
-          
-          __widget[0].widget = this;
-          __widget[0].widget.index = index;
-          __widget[0].widget.paneID = paneID;
-          
-          for(var top = this.top; (this.top + widget_height) > top; top++) {
-            for(var left = this.left; (this.left + widget_width) > left; left++) {
-              if(!hold_positions[top]) hold_positions[top] = {};
-              hold_positions[top][left] = __widget.attr('id');
+          var that = this;
+          var __widget_init = function() {
+            if(!instance[type['callback']]) {
+              try {
+                throw('"' + type['callback'] + '" for widget: ' + that.type + ', Pane ' + paneID + ' draw: ');
+              } catch(e) {
+                instance.dispatchException(e, 'Unknown callback function');
+              }
+              return;
             }
-          }
+            var callback = instance[type.callback];
+            var widget_width = (type.width? type.width: (that.arguments.width? that.arguments.width: 1));
+            var widget_height = (type.height? type.height: (that.arguments.height? that.arguments.height: 1));
+            var __widget = jQuery('<div class="widget '+ that.type + '" id="widget_' + that.type + '_' + index + '"></div>')
+              .css({
+                width: options.system.btnwidth * widget_width,
+                height: options.system.btnheight * widget_height, 
+                left: that.left * options.system.btnwidth, 
+                top: that.top * options.system.btnheight
+              })
+              .attr('top', that.top).attr('left', that.left).attr('index', index)
+              .appendTo(paneContainer);
+            
+            __widget[0].widget = that;
+            __widget[0].widget.index = index;
+            __widget[0].widget.paneID = paneID;
+            
+            for(var top = that.top; (that.top + widget_height) > top; top++) {
+              for(var left = that.left; (that.left + widget_width) > left; left++) {
+                if(!hold_positions[top]) hold_positions[top] = {};
+                hold_positions[top][left] = __widget.attr('id');
+              }
+            }
 
-          var __arguments = [__widget];
-          if(type.arguments && type.arguments.length) {
-            for(var i = 0; i < type.arguments.length; i++) __arguments.push(type.arguments[i]);
+            var __arguments = [__widget];
+            if(type.arguments && type.arguments.length) {
+              for(var i = 0; i < type.arguments.length; i++) __arguments.push(type.arguments[i]);
+            }
+            if(that.arguments) {
+              __arguments.push(that.arguments);
+            }
+            instance[type['callback']].apply(that, __arguments);
+          };
+          if(instance[type.callback]) {
+            instance.onInit(__widget_init);
+          } else {
+            instance.loadScript(type.module + '/' + type.file, __widget_init);
           }
-          if(this.arguments) {
-            __arguments.push(this.arguments);
-          }
-          instance[type['callback']].apply(this, __arguments);
         });
       }
       jQuery('.pane:visible').hide();
@@ -400,7 +422,7 @@ var Panel2 = new function() {
       if(typeof(options.panes[i]) == 'object' && typeof(options.panes[i].buttons) == 'object') {
         for(var j = 0; j < options.panes[i].buttons.length; j++) {
           var type = options.panes[i].buttons[j].type;
-          var module = buttonClasses[type];
+          var module = panel_apply.buttons[type];
           if(module) {
             if(typeof(modules[module.module]) == 'undefined') {
               modules[module.module] = [];
@@ -430,7 +452,7 @@ var Panel2 = new function() {
       if(typeof(options.panes[i]) == 'object' && typeof(options.panes[i].widgets) == 'object') {
         for(var j = 0; j < options.panes[i].widgets.length; j++) {
           var type = options.panes[i].widgets[j].type;
-          var module = widgetClasses[type];
+          var module = panel_apply.widgets[type];
           if(typeof(modules[module.module]) == 'undefined') {
             modules[module.module] = [];
           }
@@ -455,7 +477,7 @@ var Panel2 = new function() {
     if(typeof(options.widgets) == 'object') {
       for(var j = 0; j < options.widgets.length; j++) {
         var type = options.widgets[j].type;
-        var module = widgetClasses[type];
+        var module = panel_apply.widgets[type];
         if(typeof(modules[module.module]) == 'undefined') {
           modules[module.module] = [];
         }
@@ -469,7 +491,7 @@ var Panel2 = new function() {
         widget.index = modules[module][i].index;
         widget.float = true;
         instance.loadScript(module + '/' + modules[module][i].file, function() {
-          var type = widgetClasses[widget.type];
+          var type = panel_apply.widgets[widget.type];
           if(typeof(instance[type.callback]) == 'undefined') {
             throw('Function ' + type.callback + ' for widget ' + widget.type + ' not found');
           } else {
@@ -608,12 +630,12 @@ var Panel2 = new function() {
   
   /**
   * Конструктор
-  * @param __options - настройки панели, хеш
-  * @param __buttonClasses - список доступных кнопок
-  * @param __widgetClasses - список доступных виджетов
+  * @param __options - дефолтные настройки панели, хеш
+  * @param __panel_apply.buttons - список доступных кнопок
+  * @param __panel_apply.widgets - список доступных виджетов
   * @param __baseURL - адрес, откуда запустилась панель
   */
-  function Panel2(__options, __buttonClasses, __widgetClasses, __baseURL) {
+  function Panel2(__env, __baseURL) {
     if(!instance )
        instance = this;
     else return instance;
@@ -621,6 +643,12 @@ var Panel2 = new function() {
       //if(window.frameElement && !window.frameElement.panelContainer) return;
     } catch(e) {}
     
+    if(location.search.indexOf('gwpanel_test') != -1) {
+      environment = 'testing';
+    } else {
+      environment = localStorage.environment || __env;
+    }
+    version = panel_apply.version;
     baseURL = __baseURL;
     
     var ar = document.domain.split('.');
@@ -633,55 +661,15 @@ var Panel2 = new function() {
       var parts = cookies[i].split('=');
       instance.cookies[parts[0]] = parts[1];
     }
-    if(typeof(__options) == 'object') jQuery.extend(options, __options);
-    if(typeof(__buttonClasses) == 'object') buttonClasses = __buttonClasses;
-    if(typeof(__widgetClasses) == 'object') widgetClasses = __widgetClasses;
-    
-    if(__options && __options.system && !localStorage.options) {
-      localStorage.options = serialize(options);
-      localStorage.options_upd = (new Date).getTime();
-    } else if(localStorage.options) {
-      try {
-        var local_options = unserialize(localStorage.options);
-      } catch(e) {}
-      jQuery.extend(options, local_options);
-    }
-    // Инициализация кросс-доменного хранилища
-    // Хранилище нужно для того, чтобы на всех поддоменах был доступ к localStorage
-    // на домене www.ganjawars.ru
-    // Если не будет хранилища, то мы никак не сможем например с quest.ganjawars.ru получить 
-    // настройки и события с других страниц, и даже тупо не сможем проверить почту чтобы вывести
-    // уведомления
-    this.crossWindow = new __crossWindow('/tmp/panelcontainer.html', function() {
-      // опции
-      instance.crossWindow.get('options', function(__options) {
-        if(typeof(__options) == 'object') {
-          instance.get('options_upd', function(options_upd) {
-            // Опции изменились, записываем их в localStorage для текущего домена
-            if(options_upd < localStorage.options_upd) {
-              localStorage.options = __options;
-              localStorage.options_upd = options_upd;
-            }
-          });
-          jQuery.extend(options, __options);
-        } else {
-          instance.set('options', options);
-        }
-      });
-      setTimeout(function() {
-        // Базовая инициализация
-        initialized = true;
-        jQuery(initializeStack).each(function() {
-          try {
-            this();
-          } catch(e) {
-            instance.dispatchException(e);
-          }
-        });
-      });
+
+    /// Функция запуска
+    /// Если в localStorage на текущем домене есть копия нужных опций, 
+    /// то эта функция будет запущена сразу
+    /// если копии нет, то сперва получаем опции из контейнера с ganjawars.ru
+    var __initFunc = function() {
       // Инициализация слушателей событий
-      for(var key in options.apply_events) {
-        jQuery(options.apply_events[key]).each(function(index, type) {
+      for(var key in panel_apply.events) {
+        jQuery(panel_apply.events[key]).each(function(index, type) {
           if(type.condition) {
             try {
               if(!eval(type.condition)) return;
@@ -693,9 +681,9 @@ var Panel2 = new function() {
           instance.bind(type.event, function() {
             var that = this;
             var _args = arguments;
-            instance.loadScript(options.apply_scripts[type.callback], function() {
+            instance.loadScript(panel_apply.scripts[type.callback], function() {
               if(typeof(instance[type.callback]) == 'undefined') {
-                throw('Function ' + type + ' in module ' + options.apply_scripts[type] + ' not found');
+                throw('Function ' + type + ' in module ' + panel_apply.scripts[type] + ' not found');
               } else {
                 instance[type.callback].apply(that, _args);
               }
@@ -703,46 +691,125 @@ var Panel2 = new function() {
           }, type.local);
         });
       }
-    }, 'ganjawars.ru');
-    
-    // Инициализация подгружаемых скриптов
-    var pages = [];
-    if(typeof(options.apply_pages[location.pathname]) == 'object') {
-      pages = options.apply_pages[location.pathname];
-    }
-    if(typeof(options.apply_pages['*']) == 'object') {
-      for(var i = 0; i < options.apply_pages['*'].length; i++)
-        pages.push(options.apply_pages['*'][i]);
-    }
-    
-    jQuery(pages).each(function(index, func) {
-      if(typeof(func) == 'object') {
-        for(var key in func) {
-          var condition = func[key];
-          func = key;
-          break;
-        }
-        if(condition) {
-          try {
-            if(!eval(condition)) return;
-          } catch(e) {
-            instance.dispatchException(e, 'condition for loaded script error: ');
-            return;
+
+      // Инициализация подгружаемых скриптов
+      var pages = [];
+      if(typeof(panel_apply.pages[location.pathname]) == 'object') {
+        pages = panel_apply.pages[location.pathname];
+      }
+      if(typeof(panel_apply.pages['*']) == 'object') {
+        for(var i = 0; i < panel_apply.pages['*'].length; i++)
+          pages.push(panel_apply.pages['*'][i]);
+      }
+      jQuery(pages).each(function(index, func) {
+        if(typeof(func) == 'object') {
+          for(var key in func) {
+            var condition = func[key];
+            func = key;
+            break;
+          }
+          if(condition) {
+            try {
+              if(!eval(condition)) return;
+            } catch(e) {
+              instance.dispatchException(e, 'condition for loaded script error: ');
+              return;
+            }
           }
         }
-      }
-      instance.loadScript(options.apply_scripts[func], function() {
-        if(typeof(instance[func]) == 'undefined') {
-          throw('Function ' + func + ' in module ' + options.apply_scripts[func] + ' not found');
-        } else {
-          instance[func].apply(instance, [options[options.apply_scripts[func].split('/')[0]]]);
-        }
+        instance.loadScript(panel_apply.scripts[func], function() {
+          if(typeof(instance[func]) == 'undefined') {
+            throw('Function ' + func + ' in module ' + panel_apply.scripts[func] + ' not found');
+          } else {
+            instance[func].apply(instance, [options[panel_apply.scripts[func].split('/')[0]] || {}]);
+          }
+        });
       });
-    });
+    }
 
+    if(environment == 'testing') {
+      var variantID = 'default';
+      optionsID = 'testing_' + instance.currentPlayerID() + '_default';
+      options = window.panelSettingsCollection.default;
+      fastInitReady = true;
+    } else {
+      var variantID = 'options_variant_' + instance.currentPlayerID();
+      var __local_variant = localStorage[variantID];
+      /// Опции сперва привязываются к окружению (environment), затем к ID игрока
+      /// затем к выбранному варианту, если вариант не найден, то выбираем default
+      var fastInitReady = false;
+      if(__local_variant != null && 
+        __local_variant.length > 0) {
+        optionsID = environment + '_' + instance.currentPlayerID() + '_' + 
+                        __local_variant;
+        var __local_options = localStorage[optionsID];
+        if(__local_options != null && 
+           __local_options.length > 0) {
+          jQuery.extend(options, unserialize(__local_options));
+          fastInitReady = true;
+        }
+      }
+    }
+    //if(typeof(__options) == 'object') jQuery.extend(options, __options);
+    //if(typeof(__panel_apply.buttons) == 'object') panel_apply.buttons = __panel_apply.buttons;
+    //if(typeof(__panel_apply.widgets) == 'object') panel_apply.widgets = __panel_apply.widgets;
+/*    if(!localStorage.options) {
+      localStorage.options = serialize(panelSettingsCollection.default);
+      localStorage.options_upd = (new Date).getTime();
+    } else if(localStorage.options) {
+      try {
+        var local_options = unserialize(localStorage.options);
+      } catch(e) {}
+      jQuery.extend(options, local_options);
+    }*/
+    // Инициализация кросс-доменного хранилища
+    // Хранилище нужно для того, чтобы на всех поддоменах был доступ к localStorage
+    // на домене www.ganjawars.ru
+    // Если не будет хранилища, то мы никак не сможем например с quest.ganjawars.ru получить 
+    // настройки и события с других страниц, и даже тупо не сможем проверить почту чтобы вывести
+    // уведомления
+    this.crossWindow = new __crossWindow('/tmp/panelcontainer.html', function() {
+      /// функция полной готовности окна
+      instance.crossWindow.get(variantID, function(__variant) {
+        if(!__variant) {
+          instance.set(variantID, 'default');
+          localStorage[variantID] = 'default';
+          __variant = 'default';
+        }
+        optionsID = environment + '_' + instance.currentPlayerID() + '_' + __variant;
+        instance.crossWindow.get(optionsID, function(__options) {
+          if(__options != null && String(typeof(__options)).toLowerCase() == 'object') {
+            options = jQuery.extend(options, __options);
+          } else {
+            /// дефолтные опции
+            options = jQuery.extend(options, window.panelSettingsCollection.default);
+            instance.set(optionsID, options);
+          }
+          localStorage[optionsID] = serialize(options);
+          if(!fastInitReady) {
+            /// медленная инициализация
+            __initFunc();
+          }
+          initialized = true;
+          jQuery(initializeStack).each(function() {
+            try {
+              this();
+            } catch(e) {
+              instance.dispatchException(e);
+            }
+          });
+        });
+      });
+    }, 'ganjawars.ru');
+
+    /// если быстрая инициализация доступна
+    if(fastInitReady) __initFunc();
+    
     // следим за сменой опций из других окон
     instance.bind('options_change', function(data) {
-      jQuery.extend(options, data.options);
+      if(data.optionsID == optionsID) {
+        jQuery.extend(options, data.options);
+      }
     });
     
     jQuery(document.body).addClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
@@ -753,20 +820,23 @@ var Panel2 = new function() {
       window.parent.postMessage(toJSON({'type': 'frame', 'title': document.title, 'href': href}), '*');
     }
 
-    this.loadCSS('panel.css');
-    
-    initInterface();
+    instance.onInit(function() {
+      instance.loadCSS('panel.css');
+      initInterface();
+    });
 
-    /// Инициализация тестов если в запросе указан ?gwpanel_test
-    if(location.search.indexOf('?gwpanel_test') != -1) {
+    /// Инициализация тестов если в запросе указан ?gwpanel_test и это не встроенный фрейм
+    if(environment == 'testing' && location.search.indexOf('continue') == -1) {
       //alert('test');
-      $('<div id="qunit-fixture"></div>').prependTo(document.body);
-      $('<div id="qunit"></div>').prependTo(document.body);
-      this.loadCSS('../../lib/qunit-1.15.0.css');
+      instance.loadCSS('../../lib/qunit-1.15.0.css');
       instance.loadScript('lib/qunit-1.15.0.js', function() {
         QUnit.config.autostart = false;
-        instance.loadScript('panel/panel_test.js', function() {
-          QUnit.start();
+        $('<div id="qunit-fixture"></div>').prependTo(document.body);
+        $('<div id="qunit"></div>').prependTo(document.body);
+        instance.onInit(function() {
+          instance.loadScript('panel/panel_test.js', function() {
+            QUnit.start();
+          });
         });
       });
     }
@@ -781,7 +851,11 @@ var Panel2 = new function() {
     * Обработка исключений. Если есть консоль, то выводим в консоль.
     */
     dispatchException: function(e, comment) {
-      if(window.console) console.log(comment, e);
+      if(window.console) {
+        console.log((comment? comment + " on ": '') + 
+                    (new Error).stack.split("\n")[1]);
+        console.log(e);
+      }
     },
     
     /**
@@ -813,35 +887,7 @@ var Panel2 = new function() {
       if(callback) stylesheets[name].callbacks.push(callback);
       if(failover) stylesheets[name].failovers.push(failover);
 
-      if(options.standalone) {
-        window.__loadCSS(name);
-        return;
-      }
-      var c = document.createElement('link');
-      c.rel = 'stylesheet';
-      if(options.system.theme_m) {
-        var d = new Date();
-        c.href = options.system.theme_m + '/' + name + '?' + d.getTime(); 
-      } else {
-        c.href = baseURL + 'sites/all/modules/gwpanel/themes/'
-                 + options.system.theme + '/' + name; 
-      };
-      c.type = 'text/css';
-
-      //stylesheets.push(c);
-      try {
-        if(document.getElementsByTagName('head').length) {
-          document.getElementsByTagName('head')[0].appendChild(c);
-        } else {
-          var h = document.createElement('head');
-          document.documentElement.appendChild(c);
-          h.appendChild(c);
-        };
-      } catch(e) {
-        document.body.appendChild(c);
-        this.dispatchException(e);
-      };
-      return c;
+      window.__loadCSS(name);
     },
     
     /**
@@ -864,31 +910,7 @@ var Panel2 = new function() {
       if(callback) scripts[name].callbacks.push(callback);
       if(failover) scripts[name].failovers.push(failover);
 
-      if(options.standalone) {
-        window.__loadScript(name);
-      } else {
-        var s = scripts[name].element = document.createElement('script');
-        s.charset = 'UTF-8';
-        if(name.indexOf('://') == -1) {
-          s.src = baseURL + 'sites/all/modules/gwpanel/' + (name == 'theme.js'? 'themes/' + options.system.theme + '/theme.js': name);
-        } else {
-          s.src = name;
-        };
-        s.addEventListener('load', function() {
-          instance.loadScriptComplete(name);
-        }, false);
-        if(document.getElementsByTagName('head').length)
-          document.getElementsByTagName('head')[0].appendChild(s);
-        else {
-          if(window.opera) {
-            document.body.appendChild(s);
-          } else {
-            var h = document.createElement('head');
-            document.documentElement.appendChild(h);
-            h.appendChild(s);
-          };
-        };
-      }
+      window.__loadScript(name);
     },
     
     /**
@@ -995,6 +1017,9 @@ var Panel2 = new function() {
     * @param callback - функция, которая будет вызвана после успешной установки значения
     */
     set: function(key, value, callback) {
+      if(['options'].indexOf(key) != -1) {
+        throw('Error: you can\'t set protected property directly');
+      }
       var __key = key;
       var __value = value;
       var __callback = callback;
@@ -1068,7 +1093,14 @@ var Panel2 = new function() {
     getOptions: function() {
       return options;
     },
-    
+    /**
+    * Получение идентификатора опций
+    * @return строка - полное название опций, зависит от окружения, пользователя
+    * и выбранных установок
+    */
+    getOptionsID: function() {
+      return optionsID;
+    },
     /**
     * Установка опций
     * @param set_options - хеш всех опций либо для конкретного модуля,
@@ -1077,6 +1109,11 @@ var Panel2 = new function() {
     *                    в котором хранятся указанные опции
     */
     setOptions: function(set_options, namespace) {
+      if(typeof(optionsID) == 'undefined') {
+        console.log('wrong optionsID: ' + optionsID);
+        console.log((new Error).stack);
+        return;
+      }
       if(namespace) {
         options[namespace] = set_options;
       } else {
@@ -1090,13 +1127,11 @@ var Panel2 = new function() {
         }
       }
       options = new_options;
-      instance.set('options', options);
-      var time = (new Date).getTime();
-      instance.set('options_upd', time);
-      /// записываем на текущий домен, чтобы при инициализации был доступ к опциям
-      localStorage.options = serialize(options);
-      localStorage.options_upd = time;
-      instance.triggerEvent('options_change', {options: options});
+      instance.set(optionsID, options);
+      //var time = (new Date).getTime();
+      /// записываем на текущий домен, чтобы при инициализации был быстрый доступ
+      localStorage[optionsID] = serialize(options);
+      instance.triggerEvent('options_change', {options: options, optionsID: optionsID});
     },
     
     /**
@@ -1143,6 +1178,7 @@ var Panel2 = new function() {
         try {
           callback();
         } catch(e) {
+          console.log((new Error).stack);
           instance.dispatchException(e);
         }
       } else {
@@ -1179,9 +1215,10 @@ var Panel2 = new function() {
       return instance.getCookies()['au'];
     },
     /**
-    * Функция возвращает ID текущего игрока (из кук)
+    * Функция возвращает имя текущего игрока
     */
     currentPlayerName: function() {
+      /// TODO: не работают русские символы, сделать получение имени другим способом
       return instance.getCookies()['last_user_name'];
     },
     /**

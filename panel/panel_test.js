@@ -26,7 +26,7 @@ QUnit.test("Тест объекта __panel", function(assert) {
      'checkFocused', 'dispatchException', 'toQueryParams', 'triggerEvent', 
      'bind', 'unbind', 'getOptions', 'setOptions', 'setWidgetOptions', 
      'gotoHref', 'onInit', 'path_to_theme', 'currentPlayerID', 
-     'currentPlayerName']).each(function() {
+     'currentPlayerName', 'getOptionsID']).each(function() {
     assert.function_exists('__panel.' + this, __panel[this]);
   })
 
@@ -40,7 +40,8 @@ QUnit.test("Тест объекта __panel", function(assert) {
   assert.ok(__panel.currentPlayerID() > 0, 'ID игрока > 0');
   assert.equal(String(typeof(__panel.currentPlayerName())).toLowerCase(), 
             'string', 'Имя игрока установлено');
-  
+  assert.ok(String(__panel.getOptionsID()).indexOf("testing") != -1, 
+    'optionsID содержат "testing"');
 });
 
 QUnit.test("Тест объекта __panel.crossWindow", function(assert) {
@@ -175,7 +176,7 @@ QUnit.asyncTest("Тест событий из чужого окна (iframe)", f
   });
 
   $('<iframe id="foreign-event-iframe" src="' + document.location.href.split('?')[0]
-     + '?123"></iframe>').load(function() {
+     + '?gwpanel_testing&continue"></iframe>').load(function() {
     var that = this;
     waitPanelInitialization(this.contentWindow, function() {
       that.contentWindow.__panel.triggerEvent('foreign-event-test', eventdata);
@@ -221,7 +222,7 @@ QUnit.asyncTest("Массовый тест событий", function(assert) {
   }
 
   $('<iframe id="foreign-event-iframe" src="' + document.location.href.split('?')[0]
-     + '?123"></iframe>').load(function() {
+     + '?gwpanel_testing&continue"></iframe>').load(function() {
     var that = this;
     waitPanelInitialization(this.contentWindow, function() {
       /// Запускаем ещё 2 потока из соседнего окна
@@ -315,7 +316,7 @@ QUnit.asyncTest('Проверка фокусировки другого окна
   expect(1);
 
   $('<iframe id="foreign-event-iframe" src="' + document.location.href.split('?')[0]
-     + '?123"></iframe>').load(function() {
+     + '?gwpanel_testing&continue"></iframe>').load(function() {
     var that = this;
     waitPanelInitialization(this.contentWindow, function() {
       setTimeout(function() {
@@ -337,7 +338,15 @@ QUnit.asyncTest('Проверка фокусировки другого окна
 });
 
 QUnit.asyncTest('Установка и считывание опций', function(assert) {
-  expect(6);
+  expect(7);
+  /// установка защищённой опции
+  try {
+    __panel.set('options', {});
+    assert.ok(false, 'Защищённая не должна быть установлена');
+  } catch(e) {
+    __panel.dispatchException(e);
+    assert.ok(true, e.toString());
+  }
   var options = __panel.getOptions();
   assert.equal(String(typeof(options)).toLowerCase(), 'object', 'опции получены');
   options['test_module'] = {'test1': 'test1'};
@@ -360,12 +369,12 @@ QUnit.asyncTest('Установка и считывание опций', functio
         assert.deepEqual('undefined', 
                           String(typeof(new_options['test_module'])).toLowerCase(), 
                           'опции удалены');
-        var local_options = unserialize(localStorage.options);
+        var local_options = unserialize(localStorage[__panel.getOptionsID()]);
         assert.deepEqual('undefined', 
                           String(typeof(local_options['test_module'])).toLowerCase(), 
                           'опции удалены из localStorage');
         $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
-           + '?123"></iframe>').load(function() {
+           + '?gwpanel_testing&continue"></iframe>').load(function() {
           var that = this;
           waitPanelInitialization(this.contentWindow, function() {
             var new_options = that.contentWindow.__panel.getOptions();
@@ -386,7 +395,7 @@ QUnit.asyncTest('переход по ссылке', function(assert) {
   var gotoURL = 'http://www.ganjawars.ru/forum.php';
   var gotoHref = false;
   $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
-     + '?123"></iframe>').load(function() {
+     + '?gwpanel_testing&continue"></iframe>').load(function() {
     var that = this;
     waitPanelInitialization(this.contentWindow, function() {
       if(gotoHref) {
@@ -420,9 +429,7 @@ QUnit.test('Тестирование бабблов', function(assert) {
 
 QUnit.asyncTest('Тестирование открытия и закрытия бабблов', function(assert) {
   expect(8);
-  var options = __panel.getOptions();
-  var original_panes = {};
-  jQuery.extend(original_panes, options.panes);
+  var options = jQuery.extend({}, panelSettingsCollection.default);
   options.panes[0] = {
     width: 6,
     height: 4,
@@ -437,49 +444,50 @@ QUnit.asyncTest('Тестирование открытия и закрытия �
   __panel.setOptions(options);
 
   $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
-     + '?123"></iframe>').load(function() {
+     + '?gwpanel_testing&continue"></iframe>').load(function() {
     var that = this;
     waitPanelInitialization(this.contentWindow, function() {
       (function($) {
       /// кликаем по бабблу
       $('.pane-bubble:first').click();
       assert.ok($('.pane:visible').length > 0, 'Открылось окошко');
-      assert.ok($('.pane:visible').find('.button').length > 0,
-                'Кнопка видна');
-      $('.pane-bubble:first').click();
-      assert.ok($('.pane:visible').length == 0, 'Закрылось окошко');
-      $('.pane-bubble:first').click();
-      assert.ok($('.pane:visible').length > 0, 'Открылось окошко');
-      $(this.document.body).click();
-      assert.ok($('.pane:visible').length == 0, 'Закрылось окошко по клику по документу');
+      var that = this;
+      setTimeout(function() {
+        assert.ok($('.pane:visible').find('.button').length > 0,
+                  'Кнопка видна');
+        $('.pane-bubble:first').click();
+        assert.ok($('.pane:visible').length == 0, 'Закрылось окошко');
+        $('.pane-bubble:first').click();
+        assert.ok($('.pane:visible').length > 0, 'Открылось окошко');
+        $(that.document.body).click();
+        assert.ok($('.pane:visible').length == 0, 'Закрылось окошко по клику по документу');
 
-      var e = $.Event('mousemove');
-      e.clientX = 500;
-      e.clientY = 500;
+        var e = $.Event('mousemove');
+        e.clientX = 500;
+        e.clientY = 500;
 
-      $(this).trigger(e);
+        $(that).trigger(e);
 
-      var bubbleObject = $('.pane-bubble:first')[0];
+        var bubbleObject = $('.pane-bubble:first')[0];
 
-      var e = $.Event('mousemove');
-      e.clientX = bubbleObject.offsetLeft + 5;
-      e.clientY = bubbleObject.offsetTop + 50;
-      $(this).trigger(e);
+        var e = $.Event('mousemove');
+        e.clientX = bubbleObject.offsetLeft + 5;
+        e.clientY = bubbleObject.offsetTop + 50;
+        $(that).trigger(e);
 
-      $(bubbleObject).trigger('mouseover');
-      
-      assert.ok($('.pane:visible').length > 0, 'Открылось окошко при наведении');
-      $('.pane-bubble:first').click();
-      assert.ok($('.pane:visible').length == 0, 'Закрылось окошко');
-  
-      $(this).trigger(e);      
-      $(bubbleObject).trigger('mouseover');
-      assert.ok($('.pane:visible').length == 0, 
-        'При незапланированном наведении открыться не должно');
+        $(bubbleObject).trigger('mouseover');
+        
+        assert.ok($('.pane:visible').length > 0, 'Открылось окошко при наведении');
+        $('.pane-bubble:first').click();
+        assert.ok($('.pane:visible').length == 0, 'Закрылось окошко');
+    
+        $(that).trigger(e);      
+        $(bubbleObject).trigger('mouseover');
+        assert.ok($('.pane:visible').length == 0, 
+          'При незапланированном наведении открыться не должно');
 
-      QUnit.start();
-      /// Возвращаем оригинальные настройки окон
-      __panel.setOptions(original_panes, 'panes');
+        QUnit.start();
+      }, 100);
     }).apply(that.contentWindow, [that.contentWindow.jQuery])
     });
   }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
@@ -489,10 +497,7 @@ QUnit.asyncTest('Тестирование открытия и закрытия �
 });
 
 QUnit.asyncTest('Тест drag-n-drop для перетаскивании кнопок', function(assert) {
-  var options = __panel.getOptions();
-  /// делаем бекап опций окон
-  var original_panes = {};
-  jQuery.extend(original_panes, options.panes);
+  var options = jQuery.extend({}, panelSettingsCollection.default);
   options.panes[0] = {
     width: 6,
     height: 4,
@@ -507,7 +512,7 @@ QUnit.asyncTest('Тест drag-n-drop для перетаскивании кно
   __panel.setOptions(options);
 
   $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
-     + '?123"></iframe>').load(function() {
+     + '?gwpanel_testing&continue"></iframe>').load(function() {
     var that = this;
     waitPanelInitialization(this.contentWindow, function() {
       (function($) {
@@ -515,56 +520,55 @@ QUnit.asyncTest('Тест drag-n-drop для перетаскивании кно
       $('.pane-bubble:first').click();
       var pane = $('.pane:visible');
       assert.ok(pane.length > 0, 'Открылось окошко');
-      var button = pane.find('.button');
-
-      assert.ok(button.length > 0,
-                'Кнопка видна');
-
-      var e = $.Event('mousemove');
-      var padding = parseInt(pane.css('padding'));
-      if(isNaN(padding)) padding = 0;
-      e.pageX = pane[0].offsetLeft + padding + 10;
-      e.pageY = pane[0].offsetTop + padding + 10;
-      $(this).trigger(e);
-
-      var mousedown = $.Event('mousedown');
-      /// левая кнопка мыши
-      mousedown.which = 1;
-      mousedown.pageX = e.pageX;
-      mousedown.pageY = e.pageY;
-      var target = button.find('a');
-      mousedown.target = target[0];
-      button.trigger(mousedown);
-      var __window = this;
-
+      var that = this;
       setTimeout(function() {
-        assert.ok(button.hasClass('ui-draggable'), 'Drag start');
-        assert.ok(pane.find('.pane-placeholder').length > 0, 
-          'Есть доступные места для перетаскивания');
+        var button = pane.find('.button');
+        assert.ok(button.length > 0,
+                  'Кнопка видна');
 
-        var mousemove = $.Event('mousemove');
-        mousemove.pageX = mousedown.pageX + 75;
-        mousemove.pageY = mousedown.pageY + 150;
-        __window.jQuery(__window.document).trigger(mousemove);
+        var e = $.Event('mousemove');
+        var padding = parseInt(pane.css('padding'));
+        if(isNaN(padding)) padding = 0;
+        e.pageX = pane[0].offsetLeft + padding + 10;
+        e.pageY = pane[0].offsetTop + padding + 10;
+        $(that).trigger(e);
 
-        var mouseup = $.Event('mouseup');
-        mouseup.pageX = mousemove.pageX;
-        mouseup.pageY = mousemove.pageY;
-        button.trigger(mouseup);
+        var mousedown = $.Event('mousedown');
+        /// левая кнопка мыши
+        mousedown.which = 1;
+        mousedown.pageX = e.pageX;
+        mousedown.pageY = e.pageY;
+        var target = button.find('a');
+        mousedown.target = target[0];
+        button.trigger(mousedown);
+        var __window = that;
 
-        assert.ok(!button.hasClass('ui-draggable'), 'Drag end');
-        assert.ok(pane.find('.pane-placeholder').length == 0, 
-          'Нет отметок для перетаскивания');
-        assert.equal(1, __window.__panel.getOptions().panes[0].buttons[0].left,
-          'Позиция кнопки слева должна быть = 1');
-        assert.equal(2, __window.__panel.getOptions().panes[0].buttons[0].top,
-          'Позиция кнопки слева должна быть = 2');
+        setTimeout(function() {
+          assert.ok(button.hasClass('ui-draggable'), 'Drag start');
+          assert.ok(pane.find('.pane-placeholder').length > 0, 
+            'Есть доступные места для перетаскивания');
 
-        /// Возвращаем оригинальные настройки окон
-        __panel.setOptions(original_panes, 'panes');
+          var mousemove = $.Event('mousemove');
+          mousemove.pageX = mousedown.pageX + 75;
+          mousemove.pageY = mousedown.pageY + 150;
+          __window.jQuery(__window.document).trigger(mousemove);
 
-        QUnit.start();
-      }, 1000);
+          var mouseup = $.Event('mouseup');
+          mouseup.pageX = mousemove.pageX;
+          mouseup.pageY = mousemove.pageY;
+          button.trigger(mouseup);
+
+          assert.ok(!button.hasClass('ui-draggable'), 'Drag end');
+          assert.ok(pane.find('.pane-placeholder').length == 0, 
+            'Нет отметок для перетаскивания');
+          assert.equal(__window.__panel.getOptions().panes[0].buttons[0].left, 1,
+            'Позиция кнопки слева должна быть = 1');
+          assert.equal(__window.__panel.getOptions().panes[0].buttons[0].top, 2, 
+            'Позиция кнопки слева должна быть = 2');
+
+          QUnit.start();
+        }, 1000);
+      }, 100);
       //QUnit.start();
     }).apply(that.contentWindow, [that.contentWindow.jQuery])
     });
@@ -575,10 +579,8 @@ QUnit.asyncTest('Тест drag-n-drop для перетаскивании кно
 });
 
 QUnit.asyncTest('Тест drag-n-drop для перетаскивании виджетов', function(assert) {
-  var options = __panel.getOptions();
+  var options = jQuery.extend({}, panelSettingsCollection.default);
   /// Делаем бекап опций окон
-  var original_panes = {};
-  jQuery.extend(original_panes, options.panes);
   options.panes[0] = {
     width: 6,
     height: 4,
@@ -597,63 +599,64 @@ QUnit.asyncTest('Тест drag-n-drop для перетаскивании вид
   __panel.setOptions(options);
 
   $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
-     + '?123"></iframe>').load(function() {
+     + '?gwpanel_testing&continue"></iframe>').load(function() {
     var that = this;
     waitPanelInitialization(this.contentWindow, function() {
       (function($) {
       /// кликаем по бабблу
       $('.pane-bubble:first').click();
       var pane = $('.pane:visible');
-      assert.ok(pane.length > 0, 'Открылось окошко');
-      var widget = pane.find('.widget');
 
-      assert.ok(widget.length > 0,
-                'Виджет виден');
-
-      var e = $.Event('mousemove');
-      var padding = parseInt(pane.css('padding'));
-      if(isNaN(padding)) padding = 0;
-      e.pageX = pane[0].offsetLeft + padding + 30;
-      e.pageY = pane[0].offsetTop + padding + 30;
-      $(this).trigger(e);
-
-      var mousedown = $.Event('mousedown');
-      /// левая кнопка мыши
-      mousedown.which = 1;
-      mousedown.pageX = e.pageX;
-      mousedown.pageY = e.pageY;
-      mousedown.target = widget[0].firstChild;
-      widget.trigger(mousedown);
-      var __window = this;
-
+      /// Ждём прорисовки виджета
       setTimeout(function() {
-        assert.ok(widget.hasClass('ui-draggable'), 'Drag start');
-        assert.ok(pane.find('.pane-placeholder').length > 0, 
-          'Есть доступные места для перетаскивания');
+      (function($) {
+        assert.ok(pane.length > 0, 'Открылось окошко');
+        var widget = pane.find('.widget');
 
-        var mousemove = $.Event('mousemove');
-        mousemove.pageX = mousedown.pageX + 75;
-        mousemove.pageY = mousedown.pageY + 150;
-        __window.jQuery(__window.document).trigger(mousemove);
+        assert.ok(widget.length > 0,
+                  'Виджет виден');
 
-        var mouseup = $.Event('mouseup');
-        mouseup.pageX = mousemove.pageX;
-        mouseup.pageY = mousemove.pageY;
-        widget.trigger(mouseup);
+        var e = $.Event('mousemove');
+        var padding = parseInt(pane.css('padding'));
+        if(isNaN(padding)) padding = 0;
+        e.pageX = pane[0].offsetLeft + padding + 30;
+        e.pageY = pane[0].offsetTop + padding + 30;
+        $(this).trigger(e);
 
-        assert.ok(!widget.hasClass('ui-draggable'), 'Drag end');
-        assert.ok(pane.find('.pane-placeholder').length == 0, 
-          'Нет отметок для перетаскивания');
-        assert.equal(0, __window.__panel.getOptions().panes[0].widgets[0].left,
-          'Позиция кнопки слева должна быть = 0, т.к. виджет на всю ширину');
-        assert.equal(2, __window.__panel.getOptions().panes[0].widgets[0].top,
-          'Позиция кнопки слева должна быть = 2');
+        var mousedown = $.Event('mousedown');
+        /// левая кнопка мыши
+        mousedown.which = 1;
+        mousedown.pageX = e.pageX;
+        mousedown.pageY = e.pageY;
+        mousedown.target = widget[0].firstChild;
+        widget.trigger(mousedown);
+        var __window = this;
 
-        /// Возвращаем оригинальные настройки окон
-        __panel.setOptions(original_panes, 'panes');
+        setTimeout(function() {
+          assert.ok(widget.hasClass('ui-draggable'), 'Drag start');
+          assert.ok(pane.find('.pane-placeholder').length > 0, 
+            'Есть доступные места для перетаскивания');
 
-        QUnit.start();
-      }, 2000);
+          var mousemove = $.Event('mousemove');
+          mousemove.pageX = mousedown.pageX + 75;
+          mousemove.pageY = mousedown.pageY + 150;
+          __window.jQuery(__window.document).trigger(mousemove);
+
+          var mouseup = $.Event('mouseup');
+          mouseup.pageX = mousemove.pageX;
+          mouseup.pageY = mousemove.pageY;
+          widget.trigger(mouseup);
+
+          assert.ok(!widget.hasClass('ui-draggable'), 'Drag end');
+          assert.ok(pane.find('.pane-placeholder').length == 0, 
+            'Нет отметок для перетаскивания');
+          assert.equal(0, __window.__panel.getOptions().panes[0].widgets[0].left,
+            'Позиция виджета слева должна быть = 0, т.к. виджет на всю ширину');
+          assert.equal(2, __window.__panel.getOptions().panes[0].widgets[0].top,
+            'Позиция виджета слева должна быть = 2');
+          QUnit.start();
+        }, 2000);
+      }).apply(that.contentWindow, [that.contentWindow.jQuery])}, 100);
       //QUnit.start();
     }).apply(that.contentWindow, [that.contentWindow.jQuery])
     });

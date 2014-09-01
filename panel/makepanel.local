@@ -635,7 +635,7 @@ function panel_standalone_local($type = '', $noexit = FALSE) {
   @ setcookie('settings', $result['settings'], time() + 31536000, '/');
   
   $options = $result['options'];
-  $apply = $apply_scripts = $apply_events = array();
+  $apply_pages = $apply_scripts = $apply_events = array();
   $plugins = module_invoke_all('panel_plugins');
   uasort($plugins, '_element_sort');
 
@@ -652,19 +652,19 @@ function panel_standalone_local($type = '', $noexit = FALSE) {
           }
         }
         if($is_array) {
-          if(!isset($apply[$page])) $apply[$page] = array();
+          if(!isset($apply_pages[$page])) $apply_pages[$page] = array();
           foreach($scripts as $key => $value) {
             if(is_array($value)) {
-              $apply[$page][] = array($key => $value['condition']);
+              $apply_pages[$page][] = array($key => $value['condition']);
             } else {
-              $apply[$page][] = $key;
+              $apply_pages[$page][] = $key;
             }
           }
         } else {
-          if(is_array($apply[$page])) {
-            $apply[$page] = array_merge($apply[$page], array_keys($scripts));
+          if(is_array($apply_pages[$page])) {
+            $apply_pages[$page] = array_merge($apply_pages[$page], array_keys($scripts));
           } else {
-            $apply[$page]  = array_keys($scripts);
+            $apply_pages[$page]  = array_keys($scripts);
           }
         }
       }
@@ -687,9 +687,17 @@ function panel_standalone_local($type = '', $noexit = FALSE) {
     'firefox' => 3.0,
     'opera' => 9.52, 
   );
-  $options['apply_pages'] = $apply;
-  $options['apply_scripts'] = $apply_scripts;
-  $options['apply_events'] = $apply_events;
+  $apply = array();
+  $apply['version'] = $version;
+  $apply['pages'] = $apply_pages;
+  $apply['scripts'] = $apply_scripts;
+  $apply['events'] = $apply_events;
+  $apply['widgets'] = $widget_classes;
+  $apply['buttons'] = $button_classes;
+
+  global $gwpanel_path;
+  file_put_contents($gwpanel_path . '/apply.js', 
+    'window.panel_apply = ' . json_encode($apply) . ';');
   
   $options['baseURL'] = $baseURL;
   if(!$options['system']['theme']) $options['system']['theme'] = 'base';
@@ -852,21 +860,19 @@ if(window.chrome) {
   $__options_str = str_replace(array('"true"', '"false"', '"'), array('true', 'false', '\\"'), json_encode($options));
   $__buttons_str = str_replace(array('"true"', '"false"', '"'), array('true', 'false', '\\"'), json_encode($button_classes));
   $__widget_str = str_replace(array('"true"', '"false"', '"'), array('true', 'false', '\\"'), json_encode($widget_classes));
-  print 'var __initJquery = "if(window.$) window.old$ = window.$; var jqs = document.createElement(\"script\"); jqs.type = \"text/javascript\"; jqs.onload = function() {__initJqueryCallback()}; jqs.src = \"' . $localURL . '/lib/jquery.js\";  jqs.charset=\"UTF-8\"; document.getElementsByTagName(\"head\")[0].appendChild(jqs);";
-var __initLibs = "var libs = [\"serialize\", \"json\"]; for(var i = 0; i < libs.length; i++) { var s = document.createElement(\"script\"); s.type = \"text/javascript\"; s.src = \"' . $localURL . '/lib/\" + libs[i] + \".js\";  s.charset=\"UTF-8\"; document.getElementsByTagName(\"head\")[0].appendChild(s);};";
-var __initCW = "var cw = document.createElement(\"script\"); cw.type = \"text/javascript\"; cw.onload=function(){window.__initCWCallback()}; cw.src = \"' . $localURL . '/lib/crosswindow.js\";  cw.charset=\"UTF-8\"; document.getElementsByTagName(\"head\")[0].appendChild(cw);";
-var __initPanel = "window.versions=' . str_replace('"', '\\"', json_encode($versions)) . '; baseURL=\"' . $localURL . '\"; localURL = \"' . $localURL . '\"; var pnls = document.createElement(\"script\"); pnls.type = \"text/javascript\"; pnls.src = \"' . $localURL . '/panel/panel.js\";  pnls.charset=\"UTF-8\"; ";
-var __runPanel = "pnls.addEventListener(\"load\", function() { if(window.old$) window.$ = window.old$; window.__panel = new Panel2(' . $__options_str . ', ' . $__buttons_str . ', ' . $__widget_str . ', baseURL); window.__panel.setVersion(' . intval($version) . ');}, false); document.getElementsByTagName(\"head\")[0].appendChild(pnls);";
+  print 'var __initLibs = "if(window.$) window.old$ = window.$; var libs = [\"jquery\", \"serialize\", \"json\"]; var libsCount = 0; for(var i = 0; i < libs.length; i++) { var s = document.createElement(\"script\"); s.type = \"text/javascript\"; s.addEventListener(\"load\", function() {if(++libsCount >= libs.length) libsLoaded();}, false); s.src = \"' . $localURL . '/lib/\" + libs[i] + \".js\";  s.charset=\"UTF-8\"; document.getElementsByTagName(\"head\")[0].appendChild(s);} var libsLoaded = function() {";
+
+var __initPanel = "var loadedLibs = 0; var _files = [\"lib/settings.js\", \"lib/crosswindow.js\", \"panel/panel.js\", \"apply.js\"]; for(var i = 0; i < _files.length; i++) { var s = document.createElement(\"script\"); s.type = \"text/javascript\"; s.addEventListener(\"load\", function() { if(++loadedLibs >= _files.length) run_panel()}); s.src = \"' . $localURL . '/\" + _files[i];  s.charset=\"UTF-8\"; document.getElementsByTagName(\"head\")[0].appendChild(s); } var run_panel = function() { if(window.old$) window.$ = window.old$; window.__panel = new Panel2(\"dev\", \"' . $localURL . '\"); }";
 ';
 
-  foreach(module_implements('panel_standalone') as $module) {
+/*  foreach(module_implements('panel_standalone') as $module) {
     if(in_array($module, $options['plugins'])) {
       $initModules .= module_invoke($module, 'panel_standalone', $options);
     }
   }
   
   print 'var __initModules = "' . packScript($initModules) . '";
-';
+';*/
 
   print 'var __initClient = "var cls = document.createElement(\"script\"); cls.type = \"text/javascript\"; cls.src = \"' . $localURL . '/lib/crossclient.js\"; cls.charset=\"UTF-8\"; document.getElementsByTagName(\"head\")[0].appendChild(cls); ";
 ';
@@ -876,9 +882,9 @@ var __runPanel = "pnls.addEventListener(\"load\", function() { if(window.old$) w
 
 var __init = "";
 if(location.pathname == "/tmp/panelcontainer.html") {
-  __init = __initLibs + __initClient; 
+  __init = __initLibs + __initClient + \'}\'; 
 } else {
-  __init = __initJquery + \'; window.__initJqueryCallback = function() {\' + __initLibs + __initCW + \'; window.__initCWCallback = function() {\' + __initModules + __initPanel + __runPanel + \'}}\';
+  __init = __initLibs + __initPanel + \'}\';
 }
 
 if(window.chrome) {
