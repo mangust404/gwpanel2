@@ -21,7 +21,7 @@ var Panel2 = new function() {
       theme: 'base'
     },
     /// настройки включенных окон
-    panes: { 0: {}},
+    panes: { 0: {}}
   };
   /// mouseDelta и mouseSpeed - переменные, необходимые для слежения за поведением курсора мыши
   var mouseDelta = 0;
@@ -1199,16 +1199,17 @@ var Panel2 = new function() {
     * Функция возвращает куки в виде хеша
     */
     getCookies: function() {
-      if(__cookies != undefined) {
+        var cookie, i, length, keyValue;
+        if(__cookies != undefined) {
+            return __cookies;
+        }
+        __cookies = {};
+        cookie = document.cookie.split('; ');
+        for(i = 0, length = cookie.length; i < length; i++){
+            keyValue = cookie[i].split("=");
+            __cookies[keyValue[0]] = encodeURIComponent(keyValue[1]);
+        }
         return __cookies;
-      }
-      __cookies = {};
-
-      $(document.cookie.split('; ')).map(function(i, item) {
-        var ar = item.split('=');
-        __cookies[ar[0]] = encodeURIComponent(ar[1]);
-      });
-      return __cookies;
     },
     /**
     * Функция возвращает ID текущего игрока (из кук)

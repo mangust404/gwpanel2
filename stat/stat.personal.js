@@ -2,18 +2,21 @@
   var skillsTable, syndnode, expTable;
 jQuery.extend(panel, {
   stat_update_personal: function() {
-    //Обновляем счётчики на главной странице 
-    for(var i = 22; i < document.images.length; i++) { if(document.images[i].src.indexOf('http://images.ganjawars.ru/i/wargroup/skill_combat_pistols.gif') == 0)
-      skillsTable = document.images[i].parentNode.parentNode.offsetParent;
-    };
-    if(!skillsTable) return;
+    //Обновляем счётчики на главной странице
+    skillsTable = jQuery('img[src*="skill_combat_pistols.gif"]').get(0);
+    if(skillsTable != null){
+        skillsTable = skillsTable.offsetParent.offsetParent;
+    }else{
+        return false;
+    }
     jQuery(skillsTable).css({position: 'relative'});
     var matches = (skillsTable.textContent || skillsTable.innerText).match(/[0-9\/]+ \([0-9\.]+\)\+[0-9\.\-]+/g);
+      //alert(matches);
     if(!matches) return false;
     var actualSkills = [];
     for(var i = 0; i < matches.length; i++) {
       actualSkills[i] = parseFloat(matches[i].split('(')[1].split(')')[0]);
-    };
+    }
     var dayStart = new Date; dayStart.setHours(0); dayStart.setMinutes(0); dayStart.setSeconds(0); dayStart.setMilliseconds(0);
     var monthStart = new Date; monthStart.setDate(1); monthStart.setHours(0); monthStart.setMinutes(0); monthStart.setSeconds(0);  monthStart.setMilliseconds(0);
     __panel.get('stat_skills', function(stat) {
@@ -53,13 +56,13 @@ jQuery.extend(panel, {
             overall = Math.round(overall * 100) / 100;
             delta = Math.round(delta * 100) / 100;
             var font = document.createElement('font');
-            var nobr = skillsTable.rows[i].cells[1].childNodes[1];
+            var nobr = skillsTable.rows[i].cells[1].childNodes[0];
             var child = nobr.childNodes[5];
             if(!child.offsetWidth) child = nobr.childNodes[4];
             var top = child.offsetTop + skillsTable.rows[i].cells[1].offsetHeight * i;
             nobr.innerHTML += ' <font title="Получено умений за последний бой: ' + delta + '" style="color: red; font-size: 8px; position: absolute; margin-left: 4px; top: ' + top + 'px;">+' + overall + '</font>';
-          };
-        };
+          }
+        }
       }
       if(changed) {
         __panel.set('stat_skills', stat, function() {
