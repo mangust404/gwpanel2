@@ -1,0 +1,527 @@
+<?php
+
+ini_set('display_errors', 'off');
+
+$modules = array();
+function module_implements($method) {
+  global $modules;
+  $result = array();
+  
+  foreach($modules as $module) {
+    if(function_exists($module . '_' . $method)) {
+      $result[] = $module;
+    }
+  }
+  return $result;
+}
+
+function url($path) {
+  return 'http://gwpanel.org/' . $path;
+}
+
+
+/// путь к корню gwpanel
+$gwpanel_path = realpath(dirname(__FILE__) . '/..');
+
+$domain = 'gwpanel.org';
+$path = '/panel2';
+
+
+/// Жёстко подключаемые библиотеки, необходимые для запуска
+$libs = array('jquery.min.js', 'serialize.js', 'json.js');
+
+function get_env() {
+  $env = 'production';
+
+  global $argc, $argv;
+  for($i = 0; $i < $argc; $i++) {
+    if($argv[$i] == '--env') {
+      $env = trim($argv[$i + 1], ' "\'');
+    }
+  }
+  if(!in_array($env, array('production', 'deploy'))) {
+    die("Возможные варианты для --env: production, deploy\n");
+  }
+  return $env;
+}
+
+function get_message() {
+  $message = '';
+
+  global $argc, $argv;
+  for($i = 0; $i < $argc; $i++) {
+    if($argv[$i] == '-m') {
+      $message = trim($argv[$i + 1], ' "\'');
+    }
+  }
+  return $message;
+}
+
+function package_path($version, $env = 'production') {
+  global $gwpanel_path;
+  $result = $gwpanel_path . '/panel/' . $env;
+  $str_v = strval($version);
+  for($i = 0; $i < strlen($str_v); $i++) {
+    $result .= '/' . $str_v{$i};
+  }
+  $result .= '/' . $str_v . '.package.js';
+  return $result;
+}
+/// Определяем последнюю версию
+if(file_exists($gwpanel_path . '/version')) {
+  $version = intval(file_get_contents($gwpanel_path . '/version'));
+  $current_package = package_path($version, get_env());
+} else {
+  $version = 0;
+}
+
+$restircted_libs = array('jquery.js', 'jquery.min.js');
+
+$plugins = array();
+/// Подготовка генерации пакета с исходниками
+/// Получаем список файлов
+$files = array();
+foreach(glob($gwpanel_path . '/*', GLOB_ONLYDIR) as $glob_path) {
+  $dirname = basename($glob_path);
+  if($dirname == 'themes' || $dirname == 'img') {
+    continue;
+  }
+  foreach(glob($gwpanel_path . '/' . $dirname . '/*.js') as $file) {
+    $filename = basename($file);
+    if($dirname == 'lib' && (in_array($filename, $libs) || 
+                             in_array($filename, $restircted_libs))) {
+      /// пропускаем жёстко подключаемые библиотеки
+      continue;
+    }
+    $files[] = $file;
+  }
+  if(file_exists($glob_path . '/' . $dirname . '.module')) {
+    include_once($glob_path . '/' . $dirname . '.module');
+    $modules[] = $dirname;
+    $func = $dirname . '_panel_plugins';
+    if(function_exists($func)) {
+      foreach($func() as $key => $val) {
+        $plugins[$key] = $val;
+      }
+    }
+  }
+}
+$files[] = $gwpanel_path . '/apply.js';
+
+/// Файлы тем
+foreach(explode("\n", shell_exec('find ' . $gwpanel_path . '/themes/ -type f -name *.css')) as $css_path) {
+  if($css_path) $css_files[] = $css_path;
+}
+
+/// делаем apply-файл
+function _element_sort($a, $b) {
+  $a_weight = (is_array($a) && isset($a['#weight'])) ? $a['#weight'] : 0;
+  $b_weight = (is_array($b) && isset($b['#weight'])) ? $b['#weight'] : 0;
+  if ($a_weight == $b_weight) {
+    return 0;
+  }
+  return ($a_weight < $b_weight) ? -1 : 1;
+}
+
+
+$apply_pages = $apply_scripts = $apply_events = array();
+uasort($plugins, '_element_sort');
+
+foreach($plugins as $plugin_name => $plugin) {
+  if(isset($plugin['apply']) && is_array($plugin['apply'])) {
+    foreach($plugin['apply'] as $page => $scripts) {
+      $is_array = FALSE;
+      foreach($scripts as $func => $file) {
+        if(is_array($file)) {
+          $apply_scripts[$func] = $plugin_name . '/' . $file['file'];
+          $is_array = TRUE;
+        } else {
+          $apply_scripts[$func] = $plugin_name . '/' . $file;
+        }
+      }
+      if($is_array) {
+        if(!isset($apply_pages[$page])) $apply_pages[$page] = array();
+        foreach($scripts as $key => $value) {
+          if(!isset($apply_pages[$page])) $apply_pages[$page] = array();
+          if(is_array($value)) {
+            $apply_pages[$page][] = array($key => $value['condition']);
+          } else {
+            $apply_pages[$page][] = $key;
+          }
+        }
+      } else {
+        if(isset($apply_pages[$page]) && is_array($apply_pages[$page])) {
+          $apply_pages[$page] = array_merge($apply_pages[$page], array_keys($scripts));
+        } else {
+          $apply_pages[$page]  = array_keys($scripts);
+        }
+      }
+    }
+    if(isset($plugin['event'])) {
+      foreach($plugin['event'] as $event => $listener) {
+        if(!isset($apply_events[$event])) $apply_events[$event] = array();
+        $listener['event'] = $event;
+        $apply_events[$event][] = $listener;
+        $apply_scripts[$listener['callback']] = $plugin_name . '/' . $listener['file'];
+      }
+    }
+    //$apply_scripts[$plugin_name] = $plugin['applyScript'];
+  }
+}
+
+$button_classes = panel_get_buttons(TRUE);
+
+$widget_classes = panel_get_widgets(TRUE);
+
+$apply = array();
+$apply['pages'] = $apply_pages;
+$apply['scripts'] = $apply_scripts;
+$apply['events'] = $apply_events;
+$apply['widgets'] = $widget_classes;
+$apply['buttons'] = $button_classes;
+
+global $gwpanel_path;
+file_put_contents($gwpanel_path . '/apply.js', 
+  'window.panel_apply = ' . json_encode($apply) . ';');
+
+if(get_env() == 'production') {
+  $package = array();
+  foreach($files as $file) {
+    $name = substr($file, strlen($gwpanel_path) + 1);
+    $package[$name] = file_get_contents($file);
+  }
+
+  foreach($css_files as $file) {
+    $contents = file_get_contents($file);
+    $filepath = dirname(substr($file, strlen($gwpanel_path) + 1));
+    if(preg_match_all('/url\(([^\)]+)\)/i', $contents, $matches)) {
+      foreach($matches[1] as $url) {
+        if(strpos($url, 'http') === FALSE) {
+          $contents = str_replace('url(' . $url . ')', 'url(' . url('panel2/' . $filepath) . '/' . $url . ')', $contents);
+        }
+      }
+    }
+    $package[$filepath . '/' . basename($file)] = $contents;
+  }
+
+  file_put_contents('/tmp/package.js', 'window.__package=' . json_encode($package));
+
+
+  if(!$version || !file_exists($current_package) || strlen(shell_exec('diff /tmp/package.js ' . $current_package)) > 1) {
+    /// Файлов нет, либо файлы различаются, делаем новую сборку
+    $message = get_message();
+    if(!strlen($message)) die("Не указано сообщение сборки. Используйте ключ -m \"СООБЩЕНИЕ\"\n");
+    $version++;
+    $new_package = package_path($version);
+
+    mkdir(dirname($new_package), 0755, TRUE);
+    shell_exec('mv /tmp/package.js ' . $new_package);
+
+    print "Записан файл пакета {$new_package}\n";
+    file_put_contents($gwpanel_path . '/version', $version);
+    print "Записан файл версии {$gwpanel_path}/version\n";
+
+    file_put_contents($gwpanel_path . '/version_' . get_env() . '.js', 'window.current_panel_version = ' . $version);
+    print "Записан файл версии для клиентов $gwpanel_path/version_" . get_env() . ".js\n";
+
+  } else {
+    unlink('/tmp/package.js');
+    print "Скрипты не отличаются от текущих, новой версии создано не будет\n";
+  }
+}
+
+/// Подготовка bootstrap.js
+$bootstrap = '
+
+(function() {
+  var panelURL = "http://' . $domain . $path . '";
+
+  var package;
+
+  var libs = ' . json_encode($libs) . ';
+  var loadedLibs = 0;
+
+  for(var i = 0; i < libs.length; i++) {
+    var s = document.createElement("script");
+    s.type = "text/javascript";
+    s.src = panelURL + "/lib/" + libs[i];
+    s.addEventListener("load", function() {
+      loadedLibs++;
+      if(loadedLibs >= libs.length) {
+        initialize();
+      }
+    })
+    document.getElementsByTagName("head")[0].appendChild(s);
+  }
+
+  var initialize = function() {
+    var environment = document.cookie.match(/gwp2_e=([a-z]+)/)? RegExp.$1: null;
+    if(!environment) {
+      var myDate = new Date();
+      myDate.setMonth(myDate.getMonth() + 120);
+      document.cookie = "gwp2_e=production;expires=" + myDate 
+                     + ";domain=.ganjawars.ru;path=/";
+    }
+    environment = (["production", "deploy"]).indexOf(environment) == -1? "production": environment;
+    var ar = document.cookie.match(/gwp2_v=([0-9]+)/);
+    var panel_version = ar? parseInt(ar[1]): null;
+    //var update_package = false;
+
+    /// Получение пакета указанной версии с сервера или из локального хранилища
+    window.__checkoutPackage = function(package_version, callback) {
+      if(environment == "deploy") {
+        callback();
+        return;
+      }
+      if(String(typeof(package)).toLowerCase() == "object") {
+        callback();
+        return;
+      }
+      if(localStorage["package_" + package_version] != undefined) {
+        /// В хранилище есть этот пакет, ничего грузить не надо
+        package = unserialize(localStorage["package_" + package_version]);
+        if(String(typeof(package)).toLowerCase() == "object") {
+          callback();
+          return;
+        }
+      }
+      /// В хранилище нет пакета или он повреждён, грузим с сервера
+      var path = panelURL + "/panel/" + environment;
+      str_version = String(package_version);
+      for(var i = 0; i < str_version.length; i++) {
+        path += "/" + str_version.charAt(i);
+      }
+      path += "/" + str_version + ".package.js";
+      var s = document.createElement("script");
+      s.type = "text/javascript";
+      s.src = path;
+      s.addEventListener("load", function() {
+        if(!window.__package) {
+          /// TODO отработать отправку ошибки и возврат на предыдущую версию
+          throw("Повреждён файл пакета " + path);
+        }
+        package = window.__package;
+        localStorage["package_" + package_version] = serialize(window.__package);
+        for(var key in package) {
+          if(localStorage[key]) {
+            localStorage.removeItem(key);
+          }
+        }
+        //update_package = true;
+        callback();
+      }, false);
+      document.getElementsByTagName("head")[0].appendChild(s);
+    }
+
+    function __checkoutVersion(callback) {
+      var s = document.createElement("script");
+      s.type = "text/javascript";
+      s.src = panelURL + "/version_" + environment + ".js";
+      s.addEventListener("load", function() {
+        panel_version = window.current_panel_version;
+        var myDate = new Date();
+        myDate.setMonth(myDate.getMonth() + 120);
+        document.cookie = "gwp2_v=" + panel_version + ";expires=" + myDate 
+                       + ";domain=.ganjawars.ru;path=/";
+        callback(panel_version);
+      }, false);
+      document.getElementsByTagName("head")[0].appendChild(s);
+    }
+
+    window.__loadCSS = function(path, callback) {
+      if(String(typeof(path)).toLowerCase() == "string") {
+        path = [path];
+      }
+      var loaded = 0;
+      for(var i = 0; i < path.length; i++) {
+        if(environment == "deploy") {
+          /// Решение взято с http://www.yearofmoo.com/2011/03/cross-browser-stylesheet-preloading.html
+          var link = document.createElement(\'link\');
+          link.type = \'text/css\';
+          link.rel = \'stylesheet\';
+          link.id = \'css-preload-\' + path[i].replace(/[^a-z0-9]+/g, \'-\') + (new Date().getTime());
+          link.href = panelURL + "/" + path[i];
+
+          var stack = (new Error).stack;
+          var onError = function() {
+            var line = stack.split("\n")[2];
+            loaded++;
+            window.setTimeout(\'window.__panel.loadCSSFail("\' + path[i] + \'", "\' + line + \'")\', 10);
+          }
+
+          document.getElementsByTagName(\'head\')[0].appendChild(link);
+
+          if(navigator.userAgent.indexOf(\'MSIE\') != -1 || window.opera) {
+            link.onload = callback;
+            link.onerror = onError;
+          } else {
+            var counter = 0;
+            var check = function() {
+              var target = document.getElementById(link.id);
+              if(target.sheet) {
+                var stylesheets = document.styleSheets;
+                for(var i = 0; i < stylesheets.length; i++) {
+                  var file = stylesheets[i];
+                  var owner = file.ownerNode ? file.ownerNode : file.owningElement;
+                  if(owner && owner.id == link.id) {
+                    loaded++;
+                    if(loaded >= path.length && callback) {
+                      callback();
+                    }
+                    return;
+                  }
+
+                  if(counter++ > 10) {
+                    onError();
+                    return;
+                  }
+                }
+              }
+
+              setTimeout(check, 10);
+            }
+            check();
+          }
+          document.getElementsByTagName(\'head\')[0].appendChild(link);
+
+          var s = document.createElement(\'link\');
+          s.rel = "stylesheet";
+          s.type = \'text/css\';
+          s.href = panelURL + "/" + path[i];
+        } else {
+          if(localStorage[path[i]]) {
+            css = localStorage[path[i]];
+            if(typeof(css) != undefined && css.length) {
+              jQuery("<style type=\'text/css\'></style>").html(css).appendTo("head");
+              loaded++;
+              if(callback && loaded == path.length) setTimeout(callback, 1);
+            } else {
+              console.log("Не удалось загрузить " + path[i]);
+            }
+          } else {
+            __checkoutPackage(panel_version, function() {
+              if(typeof(package[path[i]]) != undefined && package[path[i]].length) {
+                localStorage[path[i]] = package[path[i]];
+                jQuery("<style type=\'text/css\'></style>").html(package[path[i]]).appendTo("head");
+                loaded++;
+                if(callback && loaded == path.length) setTimeout(callback, 1);
+              } else {
+                console.log("Не удалось загрузить " + path[i]);
+              }
+            });
+          }
+        }
+      }
+    }
+
+    window.__loadScript = function(path, callback) {
+      if(String(typeof(path)).toLowerCase() == "string") {
+        path = [path];
+      }
+      var loaded = 0;
+      for(var i = 0; i < path.length; i++) {
+        if(environment == "deploy") {
+          var s = document.createElement("script");
+          s.type = "text/javascript";
+          s.charset="UTF-8";
+          s.src = panelURL + "/" + path[i];
+          s.addEventListener("load", function() {
+            loaded++;
+            if(loaded >= path.length && callback) {
+              callback();
+            }
+          }, false);
+          var stack = (new Error).stack;
+          s.addEventListener("error", function() {
+            var line = stack.split("\n")[2];
+            loaded++;
+            window.setTimeout(\'window.__panel.loadScriptFail("\' + path[i] + \'", "\' + line + \'")\', 10);
+          }, false);
+          document.getElementsByTagName("head")[0].appendChild(s);
+        } else {
+          if(localStorage[path[i]]) {
+            setTimeout(localStorage[path[i]]);
+            loaded++;
+            if(callback && loaded >= path.length) setTimeout(callback, 1);
+          } else {
+            __checkoutPackage(panel_version, function() {
+              localStorage[path[i]] = package[path[i]];
+              setTimeout(package[path[i]], 0);
+              loaded++;
+              if(callback && loaded >= path.length) setTimeout(callback, 1);
+            });
+          }
+        }
+      }
+    }
+
+    window.__clearCache = function() {
+      __checkoutPackage(panel_version, function() {
+        for(var key in package) {
+          localStorage.removeItem(key);
+        }
+        localStorage.removeItem("package_" + panel_version);
+      });
+    }
+
+    var panelInitFunc = function(version) {
+      window.__checkoutPackage(version, function() {
+        window.__loadScript(["lib/settings.js", "lib/crosswindow.js", "panel/panel.js", "apply.js"], function() {
+          window.__panel = new Panel2(environment, panelURL);
+          //if(update_package) {
+            /// Пакет был загружен, отправляем его в основное хранилище на ganjawars.ru
+            /// пока не нужно
+            //__panel.set("package_" + version, package);
+          //}
+        });
+      });
+    }
+
+    if(!isNaN(panel_version) && panel_version > 0) {
+      panelInitFunc(panel_version);
+    } else {
+      __checkoutVersion(panelInitFunc);
+    }
+  }
+})();
+';
+
+file_put_contents($gwpanel_path . '/bootstrap.js', $bootstrap);
+print 'Bootstrap written to ' . $gwpanel_path . '/bootstrap.js' . "\n";
+
+$bootstrap_container = '
+
+(function() {
+  var panelURL = "http://' . $domain . $path . '";
+
+  var package;
+
+  var libs = ' . json_encode($libs) . ';
+  var loadedLibs = 0;
+
+  for(var i = 0; i < libs.length; i++) {
+    var s = document.createElement("script");
+    s.type = "text/javascript";
+    s.src = panelURL + "/lib/" + libs[i];
+    s.addEventListener("load", function() {
+      loadedLibs++;
+      if(loadedLibs >= libs.length) {
+        initialize();
+      }
+    })
+    document.getElementsByTagName("head")[0].appendChild(s);
+  }
+
+  var initialize = function() {
+    var s = document.createElement("script");
+    s.type = "text/javascript";
+    s.src = panelURL + "/lib/crossclient.js";
+    document.getElementsByTagName("head")[0].appendChild(s);
+  }
+})();
+';
+
+file_put_contents($gwpanel_path . '/bootstrap_container.js', $bootstrap_container);
+print 'Bootstrap container written to ' . $gwpanel_path . '/bootstrap_container.js' . "\n";
+
+?>
