@@ -26,7 +26,7 @@ QUnit.test("Тест объекта __panel", function(assert) {
      'checkFocused', 'dispatchException', 'toQueryParams', 'triggerEvent', 
      'bind', 'unbind', 'getOptions', 'setOptions', 'setWidgetOptions', 
      'gotoHref', 'onInit', 'path_to_theme', 'currentPlayerID', 
-     'currentPlayerName', 'getOptionsID']).each(function() {
+     'currentPlayerName', 'getOptionsID', 'panel_homepage', 'panel_login']).each(function() {
     assert.function_exists('__panel.' + this, __panel[this]);
   })
 
@@ -38,8 +38,6 @@ QUnit.test("Тест объекта __panel", function(assert) {
   assert.deepEqual(__panel.toQueryParams('foo=bar&bar=foo'), 
                    {'foo': 'bar', 'bar': 'foo'}, '__panel.toQueryParams');
   assert.ok(__panel.currentPlayerID() > 0, 'ID игрока > 0');
-  assert.equal(String(typeof(__panel.currentPlayerName())).toLowerCase(), 
-            'string', 'Имя игрока установлено');
   assert.ok(String(__panel.getOptionsID()).indexOf("testing") != -1, 
     'optionsID содержат "testing"');
 });
@@ -661,6 +659,15 @@ QUnit.asyncTest('Тест drag-n-drop для перетаскивании вид
     }).apply(that.contentWindow, [that.contentWindow.jQuery])
     });
   }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+
+QUnit.asyncTest("Тест функции __panel.currentPlayerName()", function(assert) {
+    expect(1);
+    __panel.currentPlayerName(function(name) {
+        assert.equal('string', String(typeof(name)).toLowerCase(),
+            'Имя игрока установлено');
+        QUnit.start();
+    });
+});
   
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 

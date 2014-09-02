@@ -842,6 +842,10 @@ var Panel2 = new function() {
         });
       });
     }
+      /* нало придумать нормальный коммент
+       * а пока, тут гадил
+       * гном убийца
+       */
   }
   
   /******************************
@@ -1221,9 +1225,29 @@ var Panel2 = new function() {
     /**
     * Функция возвращает имя текущего игрока
     */
-    currentPlayerName: function() {
-      /// TODO: не работают русские символы, сделать получение имени другим способом
-      return instance.getCookies()['last_user_name'];
+
+    currentPlayerName: function(callback) {
+        instance.get('panel_currentPlayerName', callback);
+    },
+
+
+
+    panel_homepage: function(){
+        var name, id;
+        if(location.search == "?logged"){
+            name = $('a[href*="info.php?id="]').get(0).textContent;
+            id = instance.currentPlayerID();
+            instance.set("panel_currentPlayerName", name);
+            instance.triggerEvent("login", {"currentPlayerName": name, "currentPlayerID": id});
+        }
+    },
+
+    panel_login: function(){
+        var name, id;
+        name = "__notLogged";
+        id = -1;
+        instance.set("panel_currentPlayerName", name);
+        instance.triggerEvent("logout", {"currentPlayerName": name, "currentPlayerID": id});
     },
     /**
     * Публичные аттрибуты
@@ -1235,4 +1259,4 @@ var Panel2 = new function() {
   });
   
   return Panel2;
-}
+};
