@@ -889,7 +889,8 @@ var Panel2 = new function() {
       if(callback) stylesheets[name].callbacks.push(callback);
       if(failover) stylesheets[name].failovers.push(failover);
 
-      window.__loadCSS('themes/' + options.system.theme + '/' + name);
+      var path = 'themes/' + options.system.theme + '/' + name;
+      window.__loadCSS(path, function() { instance.loadCSSComplete(name)}, failover);
     },
     
     /**

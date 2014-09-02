@@ -19,7 +19,7 @@ QUnit.assert.function_exists = function(needle, haystack, message) {
 }
 
 QUnit.test("Тест объекта __panel", function(assert) {
-  assert.equal(String(typeof(window.__panel)).toLowerCase(), 'object', 
+  assert.equal('object', String(typeof(window.__panel)).toLowerCase(), 
     'объект панели был создан');
 
   $(['set', 'get', 'loadScript', 'loadScriptComplete', 'loadCSS', 
@@ -45,12 +45,12 @@ QUnit.test("Тест объекта __panel", function(assert) {
 });
 
 QUnit.test("Тест объекта __panel.crossWindow", function(assert) {
-  assert.equal(String(typeof(__panel.crossWindow)).toLowerCase(), 'object', 
+  assert.equal('object', String(typeof(__panel.crossWindow)).toLowerCase(), 
     'объект crossWindow был создан');
   $(['bind', 'get', 'set', 'triggerEvent', 'unbind']).each(function() {
     assert.function_exists('__panel.' + this, __panel[this]);
   });
-});
+}); 
 
 QUnit.asyncTest("Тест onInit()", function(assert) {
   expect(1);

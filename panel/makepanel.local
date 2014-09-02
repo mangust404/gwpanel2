@@ -754,6 +754,12 @@ try {
     };
   };
 };
+
+var myDate = new Date();
+myDate.setMonth(myDate.getMonth() + 120);
+document.cookie = "gwp2_e=dev;expires=" + myDate 
+               + ";domain=.ganjawars.ru;path=/";
+
 ';
   $__result = db_query('SELECT vid, path FROM {gwjs_files} WHERE path NOT LIKE "themes/%"');
   while($ar = db_fetch_array($__result)) {
@@ -766,7 +772,7 @@ try {
     $versions[implode('/', $_ar)] = $options['system']['theme'] . $ar['vid'];
   }
   $versions['settings'] = substr($result['script'], 0, 8);
-  print 'window.__loadCSS = function(path) {';
+  print 'window.__loadCSS = function(path, callback, failover) {';
   if($options['theme_m']) {
     print 'var s = document.createElement(\'style\');
   s.type = \'text/css\';
@@ -781,22 +787,13 @@ try {
   link.type = \'text/css\';
   link.rel = \'stylesheet\';
   link.id = \'css-preload-\' + path.replace(/[^a-z0-9]+/g, \'-\') + (new Date().getTime());
-  link.href = "' . $localURL . '/themes/' . $options['system']['theme'] . '/" + path;
-
-  var onReady = function() {
-    window.setTimeout(\'window.__panel.loadCSSComplete("\' + path + \'")\', 10);
-  }
-  var stack = (new Error).stack;
-  var onError = function() {
-    var line = stack.split("\n")[2];
-    window.setTimeout(\'window.__panel.loadCSSFail("\' + path + \'", "\' + line + \'")\', 10);
-  }
+  link.href = "' . $localURL . '/" + path;
 
   document.getElementsByTagName(\'head\')[0].appendChild(link);
 
   if(navigator.userAgent.indexOf(\'MSIE\') != -1 || window.opera) {
-    link.onload = onReady;
-    link.onerror = onError;
+    link.onload = callback;
+    link.onerror = failover;
   } else {
     var counter = 0;
     var check = function() {
@@ -807,12 +804,12 @@ try {
           var file = stylesheets[i];
           var owner = file.ownerNode ? file.ownerNode : file.owningElement;
           if(owner && owner.id == link.id) {
-            onReady();
+            callback();
             return;
           }
 
           if(counter++ > 10) {
-            onError();
+            if(failover) failover();
             return;
           }
         }
