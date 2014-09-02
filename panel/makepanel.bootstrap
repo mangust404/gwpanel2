@@ -262,6 +262,9 @@ $bootstrap = '
       document.cookie = "gwp2_e=production;expires=" + myDate 
                      + ";domain=.ganjawars.ru;path=/";
     }
+    if(environment == "dev") {
+      return;
+    }
     environment = (["production", "deploy"]).indexOf(environment) == -1? "production": environment;
     var ar = document.cookie.match(/gwp2_v=([0-9]+)/);
     var panel_version = ar? parseInt(ar[1]): null;
