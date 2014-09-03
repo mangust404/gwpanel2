@@ -11,6 +11,8 @@ var Panel2 = new function() {
   var environment;
   /// текущая версия
   var version;
+  /// уникальный идентификатор открытого окна
+  var windowID;
   /// ID настроек
   var optionsID;
   /// хеш базовых настроек
@@ -32,12 +34,18 @@ var Panel2 = new function() {
   var stylesheets = {};
   /// системные параметры - ссылка на фрейм для кросс доменной передачи сообщений, текущий домен
   var contentFrame, domain;
+  /// Флаг готовности, стек функций которые надо запустить по готовности
+  var is_ready, readyStack = [];
   /// Флаг инициализации, initializeStack - стек функций, которые надо запустить после инициализации
   var initialized, initializeStack = [];
+  /// Локальные слушатели, необходимо для создания уникальных индксов для слушателей
+  var listenersStack = {};
   /// адрес, откуда установлена панель
   var baseURL;
   /// куки в виде хеша
   var __cookies;
+
+  var timer, prev_timer;
   
   /******************************
   *******Приватные методы********
@@ -133,7 +141,7 @@ var Panel2 = new function() {
             hold_positions[that.top][that.left] = __button.attr('id');
           }
           if(instance[type.callback]) {
-            instance.onInit(__button_init);
+            instance.ready(__button_init);
           } else {
             instance.loadScript(type.module + '/' + type.file, __button_init);
           }
@@ -343,7 +351,7 @@ var Panel2 = new function() {
             instance[type['callback']].apply(that, __arguments);
           };
           if(instance[type.callback]) {
-            instance.onInit(__widget_init);
+            instance.ready(__widget_init);
           } else {
             instance.loadScript(type.module + '/' + type.file, __widget_init);
           }
@@ -376,7 +384,7 @@ var Panel2 = new function() {
   function activatePaneCheck() {
     var that = this;
     if((Math.abs(mouseDelta) > 0.05 && Math.abs(mouseSpeed) > 0.01) || Math.abs(mouseSpeed) > 0.05 ||  jQuery('.pane:visible').length > 0) {
-      instance.onInit(function() {
+      instance.ready(function() {
         activatePane.apply(that, []);
       });
     }
@@ -398,7 +406,7 @@ var Panel2 = new function() {
           .mouseover(activatePaneCheck)
           .click(function(e) {
             var that = this;
-            instance.onInit(function() {
+            instance.ready(function() {
               activatePane.apply(that, [e])
             });
             return false;
@@ -614,7 +622,7 @@ var Panel2 = new function() {
     initButtons();
     initWidgets();
     
-    instance.onInit(initFloatWidgets);
+    instance.ready(initFloatWidgets);
     
     // Прорисовка, её нужно выполнять после того как получены все опции и подгружены стили
     draw_pane_bubbles();
@@ -628,6 +636,12 @@ var Panel2 = new function() {
     };
   }
   
+  function checkTime(name) {
+    var new_timer = (new Date()).getTime();
+    //console.log(name + ': ' + '+' + (prev_timer? (new_timer - prev_timer) + ' ms, ': '') + 
+                //(new_timer - timer) + ' ms from start');
+    prev_timer = new_timer;
+  }
   /**
   * Конструктор
   * @param __options - дефолтные настройки панели, хеш
@@ -636,6 +650,7 @@ var Panel2 = new function() {
   * @param __baseURL - адрес, откуда запустилась панель
   */
   function Panel2(__env, __baseURL) {
+    timer = (new Date()).getTime();
     if(!instance )
        instance = this;
     else return instance;
@@ -661,7 +676,6 @@ var Panel2 = new function() {
       var parts = cookies[i].split('=');
       instance.cookies[parts[0]] = parts[1];
     }
-
     /// Функция запуска
     /// Если в localStorage на текущем домене есть копия нужных опций, 
     /// то эта функция будет запущена сразу
@@ -726,11 +740,19 @@ var Panel2 = new function() {
         });
       });
     }
+    checkTime('init_func');
 
     if(environment == 'testing') {
       var variantID = 'default';
       optionsID = 'testing_' + instance.currentPlayerID() + '_default';
-      options = window.panelSettingsCollection.default;
+      /// создаём заново опции если это не запуск подтеста во фрейме
+      if(location.search.indexOf('continue') == -1) {
+        options = window.panelSettingsCollection.default;
+        instance.set(optionsID, options);
+      } else {
+        options = JSON.parse(localStorage[optionsID]) || 
+                  window.panelSettingsCollection.default;
+      }
       fastInitReady = true;
     } else {
       var variantID = 'options_variant_' + instance.currentPlayerID();
@@ -745,7 +767,7 @@ var Panel2 = new function() {
         var __local_options = localStorage[optionsID];
         if(__local_options != null && 
            __local_options.length > 0) {
-          jQuery.extend(options, unserialize(__local_options));
+          jQuery.extend(options, JSON.parse(__local_options));
           fastInitReady = true;
         }
       }
@@ -754,14 +776,20 @@ var Panel2 = new function() {
     //if(typeof(__panel_apply.buttons) == 'object') panel_apply.buttons = __panel_apply.buttons;
     //if(typeof(__panel_apply.widgets) == 'object') panel_apply.widgets = __panel_apply.widgets;
 /*    if(!localStorage.options) {
-      localStorage.options = serialize(panelSettingsCollection.default);
+      localStorage.options = JSON.stringify(panelSettingsCollection.default);
       localStorage.options_upd = (new Date).getTime();
     } else if(localStorage.options) {
       try {
-        var local_options = unserialize(localStorage.options);
+        var local_options = JSON.parse(localStorage.options);
       } catch(e) {}
       jQuery.extend(options, local_options);
     }*/
+    /// если быстрая инициализация доступна
+    checkTime('fastInitReady');
+    if(fastInitReady) {
+      __initFunc();
+      checkTime('fastInit');
+    }
     // Инициализация кросс-доменного хранилища
     // Хранилище нужно для того, чтобы на всех поддоменах был доступ к localStorage
     // на домене www.ganjawars.ru
@@ -771,45 +799,64 @@ var Panel2 = new function() {
     this.crossWindow = new __crossWindow(environment == 'production' || environment == 'deploy'? 
                                   '/tmp/panel2container.html':
                                   '/tmp/panelcontainer.html', function() {
-      /// функция полной готовности окна
-      instance.crossWindow.get(variantID, function(__variant) {
-        if(!__variant) {
-          instance.set(variantID, 'default');
-          localStorage[variantID] = 'default';
-          __variant = 'default';
+      initialized = true;
+      windowID = instance.crossWindow.windowID;
+      checkTime('initialization Begin');
+      jQuery(initializeStack).each(function() {
+        try {
+          this();
+        } catch(e) {
+          instance.dispatchException(e);
         }
-        optionsID = environment + '_' + instance.currentPlayerID() + '_' + __variant;
-        instance.crossWindow.get(optionsID, function(__options) {
-          if(__options != null && String(typeof(__options)).toLowerCase() == 'object') {
-            options = jQuery.extend(options, __options);
-          } else {
-            /// дефолтные опции
-            options = jQuery.extend(options, window.panelSettingsCollection.default);
-            instance.set(optionsID, options);
-          }
-          localStorage[optionsID] = serialize(options);
-          if(!fastInitReady) {
-            /// медленная инициализация
-            __initFunc();
-          }
-          initialized = true;
-          jQuery(initializeStack).each(function() {
-            try {
-              this();
-            } catch(e) {
-              instance.dispatchException(e);
-            }
-          });
-        });
       });
+      checkTime('initialization Finish');
     }, 'ganjawars.ru');
 
-    /// если быстрая инициализация доступна
-    if(fastInitReady) __initFunc();
-    
+    checkTime('crossWindow init');
+    /// функция полной готовности окна
+    instance.get(variantID, function(__variant) {
+      checkTime('get variantID ' + variantID);
+      if(!__variant) {
+        checkTime('set default variant for ' + __variant);
+        instance.set(variantID, 'default');
+        localStorage[variantID] = 'default';
+        __variant = 'default';
+      }
+      optionsID = environment + '_' + instance.currentPlayerID() + '_' + __variant;
+      instance.get(optionsID, function(__options) {
+        checkTime('get optionsID ' + optionsID);
+        if(__options != null && String(typeof(__options)).toLowerCase() == 'object') {
+          options = jQuery.extend(options, __options);
+        } else {
+          /// дефолтные опции
+          options = jQuery.extend(options, window.panelSettingsCollection.default);
+          instance.set(optionsID, options);
+        }
+        localStorage[optionsID] = JSON.stringify(options);
+        if(!fastInitReady) {
+          /// медленная инициализация
+          __initFunc();
+        }
+        is_ready = true;
+        checkTime('panel ready stack launch');
+
+        jQuery(readyStack).each(function() {
+          try {
+            this();
+          } catch(e) {
+            instance.dispatchException(e);
+          }
+        });
+        checkTime('panel ready stack finished');
+      });
+    });
+    checkTime('crossWindow init complete');
+
+    checkTime('crossWindow create');
+
     // следим за сменой опций из других окон
     instance.bind('options_change', function(data) {
-      if(data.optionsID == optionsID) {
+      if(data.optionsID == optionsID && data.windowID != windowID) {
         jQuery.extend(options, data.options);
       }
     });
@@ -822,7 +869,7 @@ var Panel2 = new function() {
       window.parent.postMessage(toJSON({'type': 'frame', 'title': document.title, 'href': href}), '*');
     }
 
-    instance.onInit(function() {
+    instance.ready(function() {
       instance.loadCSS('panel.css');
       initInterface();
     });
@@ -835,7 +882,7 @@ var Panel2 = new function() {
         QUnit.config.autostart = false;
         $('<div id="qunit-fixture"></div>').prependTo(document.body);
         $('<div id="qunit"></div>').prependTo(document.body);
-        instance.onInit(function() {
+        instance.ready(function() {
           instance.loadScript('panel/panel_test.js', function() {
             QUnit.start();
           });
@@ -1027,12 +1074,25 @@ var Panel2 = new function() {
       if(['options'].indexOf(key) != -1) {
         throw('Error: you can\'t set protected property directly');
       }
-      var __key = key;
-      var __value = value;
-      var __callback = callback;
-      instance.onInit(function() {
-        instance.crossWindow.set(__key, __value, __callback);
-      });
+      /// Если значение есть на текущем домене, то выставляем и его
+      if(typeof(localStorage[key]) != 'undefined') {
+        localStorage[key] = JSON.stringify(value);
+      }
+
+      var __callback = function() {
+        /// выставляем на текущий домен чтобы затем сразу возвращать
+        if(document.domain != 'ganjawars.ru') {
+          localStorage[key] = JSON.stringify(value);
+        }
+        if(callback) callback();
+      }
+      if(initialized) {
+        instance.crossWindow.set(key, value, __callback);
+      } else {
+        instance.onload(function() {
+          instance.crossWindow.set(key, value, __callback);
+        });
+      }
     },
     
     /**
@@ -1042,11 +1102,29 @@ var Panel2 = new function() {
     * в эту функцию первым аргументом передаётся считанное значение
     */
     get: function(key, callback) {
-      var __key = key;
-      var __callback = callback;
-      instance.onInit(function() {
-        instance.crossWindow.get(__key, __callback);
-      });
+      checkTime('get ' + key);
+      /// Пытаемся найти значение на текущем домене
+      if(typeof(localStorage[key]) != 'undefined' && 
+         document.domain != 'ganjawars.ru') {
+        try {
+          var val = JSON.parse(localStorage[key]);
+          checkTime('get ' + key + ' from local storage');
+          callback(val);
+          return;
+        } catch(e) {
+          console.log(e);
+          localStorage.removeItem('key');
+        }
+      }
+      /// Если на текущем домене нет, то запрашиваем из основного
+      checkTime('begin to get ' + key + ' from main storage');
+      if(initialized) {
+        instance.crossWindow.get(key, callback);
+      } else {
+        instance.onload(function() {
+          instance.crossWindow.get(key, callback);
+        });
+      }
     },
     
     /**
@@ -1055,11 +1133,12 @@ var Panel2 = new function() {
     * @param callback - функция, которая будет вызвана после удаления значения
     */    
     del: function(key, callback) {
+      if(typeof(localStorage[key]) != 'undefined') {
+        localStorage.removeItem(key);
+      }
       var __key = key;
       var __callback = callback;
-      instance.onInit(function() {
-        instance.crossWindow.del(__key, __callback);
-      });
+      instance.crossWindow.del(key, callback);
     },
     /**
     * Запуск события
@@ -1080,7 +1159,24 @@ var Panel2 = new function() {
     * @return listenerID - идентификатор слушателя (для отвязки)
     */
     bind: function(type, callback) {
-      return instance.crossWindow.bind(type, callback);
+      if(instance.crossWindow) {
+        return instance.crossWindow.bind(type, callback);
+      } else {
+        /// Генерируем ID привязки самостоятельно
+        var callerFunc = (new Error).stack.split("\n")[1];
+        var listenerID = (callerFunc.substring(0, callerFunc.indexOf("@")).replace(/[<>]+/g, '') 
+                          || "anoynmous") + '_' + (new Date).getTime() + '_preinit';
+        if(!listenersStack[type]) listenersStack[type] = {};
+        var index = 0;
+        while(listenersStack[type][listenerID]) {
+          listenerID += index++;
+        }
+
+
+        instance.ready(function() {
+          return instance.crossWindow.bind(type, callback, listenerID);
+        })
+      }
     },
     
     /**
@@ -1115,13 +1211,13 @@ var Panel2 = new function() {
     * @param namespace - строка, название модуля или пространства имён,
     *                    в котором хранятся указанные опции
     */
-    setOptions: function(set_options, namespace) {
+    setOptions: function(set_options, namespace, callback) {
       if(typeof(optionsID) == 'undefined') {
         console.log('wrong optionsID: ' + optionsID);
         console.log((new Error).stack);
         return;
       }
-      if(namespace) {
+      if(namespace && typeof(namespace) != 'undefined') {
         options[namespace] = set_options;
       } else {
         options = set_options;
@@ -1134,11 +1230,14 @@ var Panel2 = new function() {
         }
       }
       options = new_options;
-      instance.set(optionsID, options);
-      //var time = (new Date).getTime();
-      /// записываем на текущий домен, чтобы при инициализации был быстрый доступ
-      localStorage[optionsID] = serialize(options);
-      instance.triggerEvent('options_change', {options: options, optionsID: optionsID});
+
+      instance.set(optionsID, options, function() {
+        instance.triggerEvent('options_change', {options: options, 
+                              optionsID: optionsID, windowID: windowID});
+        if(callback) {
+          callback();
+        }
+      });
     },
     
     /**
@@ -1173,14 +1272,35 @@ var Panel2 = new function() {
     },
     
     /**
-    * Метод для запуска функции по окончании инициализации панели
+    * Метод для запуска функции по готовности работы панели
     * @param callback - функция для запуска
     * Пример:
-    * __panel.callback(function() {
-    *   alert("Панель инициализирована и готова к работе");
+    * __panel.ready(function() {
+    *   alert("Панель готова к работе");
     * });
     */
-    onInit: function(callback) {
+    ready: function(callback) {
+      if(is_ready) {
+        try {
+          callback();
+        } catch(e) {
+          console.log((new Error).stack);
+          instance.dispatchException(e);
+        }
+      } else {
+        readyStack.push(callback);
+      }
+    },
+
+    /**
+    * Метод для запуска функции по окончании полной инициализации панели, включая фрейм
+    * @param callback - функция для запуска
+    * Пример:
+    * __panel.ready(function() {
+    *   alert("Панель готова к работе");
+    * });
+    */
+    onload: function(callback) {
       if(initialized) {
         try {
           callback();
@@ -1227,7 +1347,7 @@ var Panel2 = new function() {
     */
 
     currentPlayerName: function(callback) {
-        instance.get('panel_currentPlayerName', callback);
+      instance.get('panel_currentPlayerName', callback);
     },
 
 

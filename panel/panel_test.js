@@ -1,12 +1,9 @@
 function waitPanelInitialization(__window, callback) {
   // Ждём появления в документе указанного окна CSS-ки panel.css
   var check = function() {
-    for(var i = 0; i < __window.document.styleSheets.length; i++) {
-      if(__window.document.styleSheets[i].href && 
-         __window.document.styleSheets[i].href.indexOf('panel.css') != -1) {
-        __window.__panel.onInit(callback);
-        return;
-      }
+    if(__window.__panel && __window.__panel.crossWindow) {
+      __window.__panel.onload(callback);
+      return;
     }
     setTimeout(check, 10);
   }
@@ -25,7 +22,7 @@ QUnit.test("Тест объекта __panel", function(assert) {
   $(['set', 'get', 'loadScript', 'loadScriptComplete', 'loadCSS', 
      'checkFocused', 'dispatchException', 'toQueryParams', 'triggerEvent', 
      'bind', 'unbind', 'getOptions', 'setOptions', 'setWidgetOptions', 
-     'gotoHref', 'onInit', 'path_to_theme', 'currentPlayerID', 
+     'gotoHref', 'ready', 'onload', 'path_to_theme', 'currentPlayerID', 
      'currentPlayerName', 'getOptionsID', 'panel_homepage', 'panel_login']).each(function() {
     assert.function_exists('__panel.' + this, __panel[this]);
   })
@@ -50,10 +47,20 @@ QUnit.test("Тест объекта __panel.crossWindow", function(assert) {
   });
 }); 
 
-QUnit.asyncTest("Тест onInit()", function(assert) {
+QUnit.asyncTest("Тест ready()", function(assert) {
   expect(1);
-  __panel.onInit(function() {
+  __panel.ready(function() {
     assert.ok(true, "Функция отработала после инициализации");
+    QUnit.start();
+  });
+});
+
+QUnit.asyncTest("Тест onload()", function(assert) {
+  expect(2);
+  __panel.onload(function() {
+    assert.ok(true, "Функция отработала после инициализации");
+    assert.equal('object', String(typeof(__panel.crossWindow)), 
+                  'Объект __panel.crossWindow инициализирован');
     QUnit.start();
   });
 });
@@ -193,15 +200,11 @@ QUnit.asyncTest("Массовый тест событий", function(assert) {
       thread_counter[data.thread]++;
       if(counter == 200) {
         setTimeout(function() {
-          if(counter == 200) {
-            assert.ok(true, "400 событий из текущего окна и из чужого было запущено");
-            assert.deepEqual(thread_counter, [50, 50, 50, 50], 
+          assert.equal(200, counter, '200 событий из текущего окна и из чужого было запущено');
+          assert.deepEqual(thread_counter, [50, 50, 50, 50], 
               'Все потоки выполнены успешно');
-            QUnit.start();
-          } else {
-            assert.equal(0, counter, 'Были запущены лишние события');
-          }
-        }, 100);
+          QUnit.start();
+        }, 1000);
       }
     } else {
       assert.deepEqual(-1, data, 'неправильные данные');
@@ -301,14 +304,16 @@ if(window.opera || jQuery.browser.msie) {
   });
 }
 
-QUnit.asyncTest('Проверка фокусировки', function(assert) {
+/*QUnit.asyncTest('Проверка фокусировки', function(assert) {
   expect(1);
-  jQuery(window).focus();
-  __panel.checkFocused(function() {
-    assert.ok(true, 'Текущее окно в фокусе');
-    QUnit.start();
+  __panel.onload(function() {
+    jQuery(window).focus();
+    __panel.checkFocused(function() {
+      assert.ok(true, 'Текущее окно в фокусе');
+      QUnit.start();
+    });
   });
-});
+});*/
 
 QUnit.asyncTest('Проверка фокусировки другого окна', function(assert) {
   expect(1);
@@ -367,7 +372,7 @@ QUnit.asyncTest('Установка и считывание опций', functio
         assert.deepEqual('undefined', 
                           String(typeof(new_options['test_module'])).toLowerCase(), 
                           'опции удалены');
-        var local_options = unserialize(localStorage[__panel.getOptionsID()]);
+        var local_options = JSON.parse(localStorage[__panel.getOptionsID()]);
         assert.deepEqual('undefined', 
                           String(typeof(local_options['test_module'])).toLowerCase(), 
                           'опции удалены из localStorage');
@@ -594,82 +599,84 @@ QUnit.asyncTest('Тест drag-n-drop для перетаскивании вид
       }
     }]
   };
-  __panel.setOptions(options);
-
-  $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
-     + '?gwpanel_testing&continue"></iframe>').load(function() {
-    var that = this;
-    waitPanelInitialization(this.contentWindow, function() {
-      (function($) {
-      /// кликаем по бабблу
-      $('.pane-bubble:first').click();
-      var pane = $('.pane:visible');
-
-      /// Ждём прорисовки виджета
-      setTimeout(function() {
-      (function($) {
-        assert.ok(pane.length > 0, 'Открылось окошко');
-        var widget = pane.find('.widget');
-
-        assert.ok(widget.length > 0,
-                  'Виджет виден');
-
-        var e = $.Event('mousemove');
-        var padding = parseInt(pane.css('padding'));
-        if(isNaN(padding)) padding = 0;
-        e.pageX = pane[0].offsetLeft + padding + 30;
-        e.pageY = pane[0].offsetTop + padding + 30;
-        $(this).trigger(e);
-
-        var mousedown = $.Event('mousedown');
-        /// левая кнопка мыши
-        mousedown.which = 1;
-        mousedown.pageX = e.pageX;
-        mousedown.pageY = e.pageY;
-        mousedown.target = widget[0].firstChild;
-        widget.trigger(mousedown);
-        var __window = this;
+  __panel.setOptions(options, undefined, function() {
+    $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
+       + '?gwpanel_testing&continue"></iframe>').load(function() {
+      var that = this;
+      waitPanelInitialization(this.contentWindow, function() {
+        (function($) {
+        /// кликаем по бабблу
+        $('.pane-bubble:first').click();
 
         setTimeout(function() {
-          assert.ok(widget.hasClass('ui-draggable'), 'Drag start');
-          assert.ok(pane.find('.pane-placeholder').length > 0, 
-            'Есть доступные места для перетаскивания');
+        var pane = $('.pane:visible');
+        /// Ждём прорисовки виджета
+        setTimeout(function() {
+        (function($) {
+          assert.ok(pane.length > 0, 'Открылось окошко');
+          var widget = pane.find('.widget');
 
-          var mousemove = $.Event('mousemove');
-          mousemove.pageX = mousedown.pageX + 75;
-          mousemove.pageY = mousedown.pageY + 150;
-          __window.jQuery(__window.document).trigger(mousemove);
+          assert.ok(widget.length > 0,
+                    'Виджет виден');
 
-          var mouseup = $.Event('mouseup');
-          mouseup.pageX = mousemove.pageX;
-          mouseup.pageY = mousemove.pageY;
-          widget.trigger(mouseup);
+          var e = $.Event('mousemove');
+          var padding = parseInt(pane.css('padding'));
+          if(isNaN(padding)) padding = 0;
+          e.pageX = pane[0].offsetLeft + padding + 30;
+          e.pageY = pane[0].offsetTop + padding + 30;
+          $(this).trigger(e);
 
-          assert.ok(!widget.hasClass('ui-draggable'), 'Drag end');
-          assert.ok(pane.find('.pane-placeholder').length == 0, 
-            'Нет отметок для перетаскивания');
-          assert.equal(0, __window.__panel.getOptions().panes[0].widgets[0].left,
-            'Позиция виджета слева должна быть = 0, т.к. виджет на всю ширину');
-          assert.equal(2, __window.__panel.getOptions().panes[0].widgets[0].top,
-            'Позиция виджета слева должна быть = 2');
-          QUnit.start();
-        }, 2000);
-      }).apply(that.contentWindow, [that.contentWindow.jQuery])}, 100);
-      //QUnit.start();
-    }).apply(that.contentWindow, [that.contentWindow.jQuery])
-    });
-  }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+          var mousedown = $.Event('mousedown');
+          /// левая кнопка мыши
+          mousedown.which = 1;
+          mousedown.pageX = e.pageX;
+          mousedown.pageY = e.pageY;
+          mousedown.target = widget[0].firstChild;
+          widget.trigger(mousedown);
+          var __window = this;
 
-QUnit.asyncTest("Тест функции __panel.currentPlayerName()", function(assert) {
-    expect(1);
-    __panel.currentPlayerName(function(name) {
-        assert.equal('string', String(typeof(name)).toLowerCase(),
-            'Имя игрока установлено');
-        QUnit.start();
-    });
-});
-  
+          setTimeout(function() {
+            assert.ok(widget.hasClass('ui-draggable'), 'Drag start');
+            assert.ok(pane.find('.pane-placeholder').length > 0, 
+              'Есть доступные места для перетаскивания');
+
+            var mousemove = $.Event('mousemove');
+            mousemove.pageX = mousedown.pageX + 75;
+            mousemove.pageY = mousedown.pageY + 150;
+            __window.jQuery(__window.document).trigger(mousemove);
+
+            var mouseup = $.Event('mouseup');
+            mouseup.pageX = mousemove.pageX;
+            mouseup.pageY = mousemove.pageY;
+            widget.trigger(mouseup);
+
+            assert.ok(!widget.hasClass('ui-draggable'), 'Drag end');
+            assert.ok(pane.find('.pane-placeholder').length == 0, 
+              'Нет отметок для перетаскивания');
+            assert.equal(0, __window.__panel.getOptions().panes[0].widgets[0].left,
+              'Позиция виджета слева должна быть = 0, т.к. виджет на всю ширину');
+            assert.equal(2, __window.__panel.getOptions().panes[0].widgets[0].top,
+              'Позиция виджета слева должна быть = 2');
+            QUnit.start();
+          }, 2000);
+        }).apply(that.contentWindow, [that.contentWindow.jQuery])}, 100);
+
+        }, 100);
+        //QUnit.start();
+      }).apply(that.contentWindow, [that.contentWindow.jQuery])
+      });
+    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+  });
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 
 });
 /// TODO: тест setWidgetOptions
+
+QUnit.asyncTest("Тест функции __panel.currentPlayerName()", function(assert) {
+  expect(1);
+  __panel.currentPlayerName(function(name) {
+    assert.equal('string', String(typeof(name)).toLowerCase(),
+        'Имя игрока установлено');
+    QUnit.start();
+  });
+});

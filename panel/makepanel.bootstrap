@@ -28,7 +28,7 @@ $path = '/panel2';
 
 
 /// Жёстко подключаемые библиотеки, необходимые для запуска
-$libs = array('jquery.min.js', 'serialize.js', 'json.js');
+$libs = array('jquery.min.js');
 
 function get_env() {
   $env = 'production';
@@ -282,7 +282,7 @@ $bootstrap = '
       }
       if(localStorage["package_" + package_version] != undefined) {
         /// В хранилище есть этот пакет, ничего грузить не надо
-        package = unserialize(localStorage["package_" + package_version]);
+        package = JSON.parse(localStorage["package_" + package_version]);
         if(String(typeof(package)).toLowerCase() == "object") {
           callback();
           return;
@@ -304,7 +304,7 @@ $bootstrap = '
           throw("Повреждён файл пакета " + path);
         }
         package = window.__package;
-        localStorage["package_" + package_version] = serialize(window.__package);
+        localStorage["package_" + package_version] = JSON.stringify(window.__package);
         for(var key in package) {
           if(localStorage[key]) {
             localStorage.removeItem(key);

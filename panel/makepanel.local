@@ -803,7 +803,7 @@ document.cookie = "gwp2_e=dev;expires=" + myDate
           var file = stylesheets[i];
           var owner = file.ownerNode ? file.ownerNode : file.owningElement;
           if(owner && owner.id == link.id) {
-            callback();
+            setTimeout(callback, 10);
             return;
           }
 
@@ -856,7 +856,7 @@ if(window.chrome) {
   $__options_str = str_replace(array('"true"', '"false"', '"'), array('true', 'false', '\\"'), json_encode($options));
   $__buttons_str = str_replace(array('"true"', '"false"', '"'), array('true', 'false', '\\"'), json_encode($button_classes));
   $__widget_str = str_replace(array('"true"', '"false"', '"'), array('true', 'false', '\\"'), json_encode($widget_classes));
-  print 'var __initLibs = "if(window.$) window.old$ = window.$; var libs = [\"jquery\", \"serialize\", \"json\"]; var libsCount = 0; for(var i = 0; i < libs.length; i++) { var s = document.createElement(\"script\"); s.type = \"text/javascript\"; s.addEventListener(\"load\", function() {if(++libsCount >= libs.length) libsLoaded();}, false); s.src = \"' . $localURL . '/lib/\" + libs[i] + \".js\";  s.charset=\"UTF-8\"; document.getElementsByTagName(\"head\")[0].appendChild(s);} var libsLoaded = function() {";
+  print 'var __initLibs = "if(window.$) window.old$ = window.$; var libs = [\"jquery\"]; var libsCount = 0; for(var i = 0; i < libs.length; i++) { var s = document.createElement(\"script\"); s.type = \"text/javascript\"; s.addEventListener(\"load\", function() {if(++libsCount >= libs.length) libsLoaded();}, false); s.src = \"' . $localURL . '/lib/\" + libs[i] + \".js\";  s.charset=\"UTF-8\"; document.getElementsByTagName(\"head\")[0].appendChild(s);} var libsLoaded = function() {";
 
 var __initPanel = "var loadedLibs = 0; var _files = [\"lib/settings.js\", \"lib/crosswindow.js\", \"panel/panel.js\", \"apply.js\"]; for(var i = 0; i < _files.length; i++) { var s = document.createElement(\"script\"); s.type = \"text/javascript\"; s.addEventListener(\"load\", function() { if(++loadedLibs >= _files.length) run_panel()}); s.src = \"' . $localURL . '/\" + _files[i];  s.charset=\"UTF-8\"; document.getElementsByTagName(\"head\")[0].appendChild(s); } var run_panel = function() { if(window.old$) window.$ = window.old$; window.__panel = new Panel2(\"dev\", \"' . $localURL . '\"); }";
 ';
