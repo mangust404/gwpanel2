@@ -638,8 +638,8 @@ var Panel2 = new function() {
   
   function checkTime(name) {
     var new_timer = (new Date()).getTime();
-    //console.log(name + ': ' + '+' + (prev_timer? (new_timer - prev_timer) + ' ms, ': '') + 
-                //(new_timer - timer) + ' ms from start');
+    console.log(name + ': ' + '+' + (prev_timer? (new_timer - prev_timer) + ' ms, ': '') + 
+                (new_timer - timer) + ' ms from start');
     prev_timer = new_timer;
   }
   /**
@@ -790,13 +790,14 @@ var Panel2 = new function() {
       __initFunc();
       checkTime('fastInit');
     }
+
     // Инициализация кросс-доменного хранилища
     // Хранилище нужно для того, чтобы на всех поддоменах был доступ к localStorage
     // на домене www.ganjawars.ru
     // Если не будет хранилища, то мы никак не сможем например с quest.ganjawars.ru получить 
     // настройки и события с других страниц, и даже тупо не сможем проверить почту чтобы вывести
     // уведомления
-    this.crossWindow = new __crossWindow(environment == 'production' || environment == 'deploy'? 
+    instance.crossWindow = new __crossWindow(environment == 'production' || environment == 'deploy'? 
                                   '/tmp/panel2container.html':
                                   '/tmp/panelcontainer.html', function() {
       initialized = true;
@@ -1116,13 +1117,17 @@ var Panel2 = new function() {
           localStorage.removeItem('key');
         }
       }
+      var __callback = function(value) {
+        localStorage[key] = JSON.stringify(value)
+        if(callback) callback(value);
+      }
       /// Если на текущем домене нет, то запрашиваем из основного
       checkTime('begin to get ' + key + ' from main storage');
       if(initialized) {
-        instance.crossWindow.get(key, callback);
+        instance.crossWindow.get(key, __callback);
       } else {
         instance.onload(function() {
-          instance.crossWindow.get(key, callback);
+          instance.crossWindow.get(key, __callback);
         });
       }
     },
