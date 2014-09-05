@@ -9,6 +9,7 @@ var Panel2 = new function() {
   /// Окружение
   /// Возможные варианты: dev, production, deploy, testing
   var environment;
+  var original_environment;
   /// текущая версия
   var version;
   /// уникальный идентификатор открытого окна
@@ -658,10 +659,11 @@ var Panel2 = new function() {
       //if(window.frameElement && !window.frameElement.panelContainer) return;
     } catch(e) {}
     
+    original_environment = localStorage.environment || __env;
     if(location.search.indexOf('gwpanel_test') != -1) {
       environment = 'testing';
     } else {
-      environment = localStorage.environment || __env;
+      environment = original_environment;
     }
     version = panel_apply.version;
     baseURL = __baseURL;
@@ -797,7 +799,9 @@ var Panel2 = new function() {
     // Если не будет хранилища, то мы никак не сможем например с quest.ganjawars.ru получить 
     // настройки и события с других страниц, и даже тупо не сможем проверить почту чтобы вывести
     // уведомления
-    instance.crossWindow = new __crossWindow(environment == 'production' || environment == 'deploy'? 
+    instance.crossWindow = new __crossWindow(
+                                  original_environment == 'production' || 
+                                  original_environment == 'deploy'? 
                                   '/tmp/panel2container.html':
                                   '/tmp/panelcontainer.html', function() {
       initialized = true;
@@ -1373,6 +1377,28 @@ var Panel2 = new function() {
         id = -1;
         instance.set("panel_currentPlayerName", name);
         instance.triggerEvent("logout", {"currentPlayerName": name, "currentPlayerID": id});
+    },
+
+    /**
+    * Функция выставления окружения
+    */
+    setEnv: function(env) {
+      var possible_values = [dev, production, deploy, testing];
+      if(!possible_values.indexOf(env) == -1) {
+        return console.log('Possible environments: ' + possible_values.join(', '));
+      }
+      environment = env;
+      var myDate = new Date();
+      myDate.setMonth(myDate.getMonth() + 120);
+      document.cookie = "gwp2_e=" + env + ";expires=" + myDate 
+                     + ";domain=.ganjawars.ru;path=/";
+      console.log('Reload page to commit environment change');
+    },
+    /**
+    *
+    */
+    getEnv: function() {
+      return environment;
     },
     /**
     * Публичные аттрибуты
