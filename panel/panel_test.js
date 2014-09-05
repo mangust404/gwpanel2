@@ -28,10 +28,10 @@ QUnit.test("Тест объекта __panel", function(assert) {
     assert.function_exists('__panel.' + this, __panel[this]);
   })
 
-  assert.deepEqual(__panel.failedScripts, [], 
-                  'массив незагруженных скриптов должен быть пустым');
-  assert.deepEqual(__panel.failedStyles, [], 
-                  'массив незагруженных стилей должен быть пустым');
+  assert.deepEqual('array', jQuery.type(__panel.failedScripts), 
+                    'массив незагруженных скриптов');
+  assert.deepEqual('array', jQuery.type(__panel.failedStyles), 
+                  'массив незагруженных стилей');
 
   assert.deepEqual(__panel.toQueryParams('foo=bar&bar=foo'), 
                    {'foo': 'bar', 'bar': 'foo'}, '__panel.toQueryParams');

@@ -402,7 +402,7 @@ var Panel2 = new function() {
   */
   function draw_pane_bubbles() {
     for(var i = 0; i < 4; i++) {
-      if(typeof(options.panes[i]) == 'object') {
+      if(jQuery.type(options.panes[i]) == 'object') {
         jQuery('<div id="pane-bubble-' + i + '" class="pane-bubble' + (i < 2? ' left': ' right') + (i % 2 > 0? ' bottom': ' top') + '"></div>')
           .mouseover(activatePaneCheck)
           .click(function(e) {
@@ -428,12 +428,12 @@ var Panel2 = new function() {
     var modules = {};
     
     for(var i = 0; i < 4; i++) {
-      if(typeof(options.panes[i]) == 'object' && typeof(options.panes[i].buttons) == 'object') {
+      if(jQuery.type(options.panes[i]) == 'object' && jQuery.type(options.panes[i].buttons) == 'array') {
         for(var j = 0; j < options.panes[i].buttons.length; j++) {
           var type = options.panes[i].buttons[j].type;
           var module = panel_apply.buttons[type];
           if(module) {
-            if(typeof(modules[module.module]) == 'undefined') {
+            if(jQuery.type(modules[module.module]) == 'undefined') {
               modules[module.module] = [];
             }
             if(modules[module.module].indexOf(module.file) == -1)
@@ -444,7 +444,7 @@ var Panel2 = new function() {
     }
     for(var module in modules) {
       for(var i = 0; i < modules[module].length; i++) {
-        if(typeof(modules[module][i]) != 'undefined') {
+        if(jQuery.type(modules[module][i]) != 'undefined') {
           instance.loadScript(module + '/' + modules[module][i]);
         }
       }
@@ -458,11 +458,11 @@ var Panel2 = new function() {
     var modules = {};
     
     for(var i = 0; i < 4; i++) {
-      if(typeof(options.panes[i]) == 'object' && typeof(options.panes[i].widgets) == 'object') {
+      if(jQuery.type(options.panes[i]) == 'object' && jQuery.type(options.panes[i].widgets) == 'array') {
         for(var j = 0; j < options.panes[i].widgets.length; j++) {
           var type = options.panes[i].widgets[j].type;
           var module = panel_apply.widgets[type];
-          if(typeof(modules[module.module]) == 'undefined') {
+          if(jQuery.type(modules[module.module]) == 'undefined') {
             modules[module.module] = [];
           }
           if(modules[module.module].indexOf(module.file) == -1)
@@ -483,11 +483,11 @@ var Panel2 = new function() {
   function initFloatWidgets() {
     var modules = {};
     
-    if(typeof(options.widgets) == 'object') {
+    if(jQuery.type(options.widgets) == 'array') {
       for(var j = 0; j < options.widgets.length; j++) {
         var type = options.widgets[j].type;
         var module = panel_apply.widgets[type];
-        if(typeof(modules[module.module]) == 'undefined') {
+        if(jQuery.type(modules[module.module]) == 'undefined') {
           modules[module.module] = [];
         }
         if(modules[module.module].indexOf(module.file) == -1)
@@ -501,7 +501,7 @@ var Panel2 = new function() {
         widget.float = true;
         instance.loadScript(module + '/' + modules[module][i].file, function() {
           var type = panel_apply.widgets[widget.type];
-          if(typeof(instance[type.callback]) == 'undefined') {
+          if(jQuery.type(instance[type.callback]) == 'undefined') {
             throw('Function ' + type.callback + ' for widget ' + widget.type + ' not found');
           } else {
             var width = type.width * options.system.btnwidth;
@@ -639,8 +639,8 @@ var Panel2 = new function() {
   
   function checkTime(name) {
     var new_timer = (new Date()).getTime();
-    console.log(name + ': ' + '+' + (prev_timer? (new_timer - prev_timer) + ' ms, ': '') + 
-                (new_timer - timer) + ' ms from start');
+    // console.log(name + ': ' + '+' + (prev_timer? (new_timer - prev_timer) + ' ms, ': '') + 
+    //             (new_timer - timer) + ' ms from start');
     prev_timer = new_timer;
   }
   /**
@@ -711,7 +711,7 @@ var Panel2 = new function() {
               var that = this;
               var _args = arguments;
               instance.loadScript(panel_apply.scripts[type.callback], function() {
-                if(typeof(instance[type.callback]) == 'undefined') {
+                if(jQuery.type(instance[type.callback]) == 'undefined') {
                   throw('Function ' + type + ' in module ' + panel_apply.scripts[type] + ' not found');
                 } else {
                   instance[type.callback].apply(that, _args);
@@ -723,15 +723,15 @@ var Panel2 = new function() {
 
         // Инициализация подгружаемых скриптов
         var pages = [];
-        if(typeof(panel_apply.pages[location.pathname]) == 'object') {
+        if(jQuery.type(panel_apply.pages[location.pathname]) == 'array') {
           pages = panel_apply.pages[location.pathname];
         }
-        if(typeof(panel_apply.pages['*']) == 'object') {
+        if(jQuery.type(panel_apply.pages['*']) == 'array') {
           for(var i = 0; i < panel_apply.pages['*'].length; i++)
             pages.push(panel_apply.pages['*'][i]);
         }
         jQuery(pages).each(function(index, func) {
-          if(typeof(func) == 'object') {
+          if(jQuery.type(func) == 'object') {
             for(var key in func) {
               var condition = func[key];
               func = key;
@@ -747,7 +747,8 @@ var Panel2 = new function() {
             }
           }
           instance.loadScript(panel_apply.scripts[func], function() {
-            if(typeof(instance[func]) == 'undefined') {
+            //console.log(func)
+            if(jQuery.type(instance[func]) == 'undefined') {
               throw('Function ' + func + ' in module ' + panel_apply.scripts[func] + ' not found');
             } else {
               instance[func].apply(instance, [options[panel_apply.scripts[func].split('/')[0]] || {}]);
@@ -787,9 +788,9 @@ var Panel2 = new function() {
           }
         }
       }
-      //if(typeof(__options) == 'object') jQuery.extend(options, __options);
-      //if(typeof(__panel_apply.buttons) == 'object') panel_apply.buttons = __panel_apply.buttons;
-      //if(typeof(__panel_apply.widgets) == 'object') panel_apply.widgets = __panel_apply.widgets;
+      //if(jQuery.type(__options) == 'object') jQuery.extend(options, __options);
+      //if(jQuery.type__panel_apply.buttons) == 'object') panel_apply.buttons = __panel_apply.buttons;
+      //if(jQuery.type__panel_apply.widgets) == 'object') panel_apply.widgets = __panel_apply.widgets;
   /*    if(!localStorage.options) {
         localStorage.options = JSON.stringify(panelSettingsCollection.default);
         localStorage.options_upd = (new Date).getTime();
@@ -843,7 +844,7 @@ var Panel2 = new function() {
         optionsID = environment + '_' + instance.currentPlayerID() + '_' + __variant;
         instance.get(optionsID, function(__options) {
           checkTime('get optionsID ' + optionsID);
-          if(__options != null && String(typeof(__options)).toLowerCase() == 'object') {
+          if(__options != null && jQuery.type(__options) == 'object') {
             options = jQuery.extend(options, __options);
           } else {
             /// дефолтные опции
@@ -899,12 +900,13 @@ var Panel2 = new function() {
         $('<div id="qunit"></div>').prependTo(document.body);
         instance.loadCSS('../../lib/qunit-1.15.0.css');
         instance.onload(function() {
-          instance.loadScript('lib/qunit-1.15.0.js', function() {
-            console.log('QUnit', QUnit);
-            QUnit.config.autostart = false;
-            instance.loadScript('panel/panel_test.js', function() {
-              QUnit.start();
-            });
+          var tests = window.panel_tests || [];
+          tests.unshift('lib/qunit-1.15.0.js');
+
+          instance.loadScript(tests, function() {
+            if(jQuery.type(QUnit.config.semaphore) == 'undefined') {
+              QUnit.load();
+            }
           });
         });
       }      
@@ -935,7 +937,7 @@ var Panel2 = new function() {
     * @param name - название таблицы стилей, пока не используется
     */
     loadCSS: function(name, callback, failover) {
-      if(typeof(stylesheets[name]) != 'undefined') {
+      if(jQuery.type(stylesheets[name]) != 'undefined') {
         if(stylesheets[name].loaded) {
           try {
             callback();
@@ -961,27 +963,81 @@ var Panel2 = new function() {
     },
     
     /**
-    * Подгрузка юзер-скрипта
-    * @param name - путь к скрипту, например "home/home.js"
+    * Подгрузка юзер-скрипта или нескольких скриптов
+    * @param name - путь к скрипту, например "home/home.js", либо массив,
+    *               например ["map/map.js", "npc/nps_widget.js"]
     * @param callback - функция, которую следует запустить после загрузки
+                        скрипта, либо всех скриптов если указан массив
     */
     loadScript: function(name, callback, failover) {
-      if(typeof(scripts[name]) != 'undefined') {
-        if(scripts[name].loaded) {
-          try {
-            callback();
-          } catch(e) {
-            instance.dispatchException(e, 'loadScript callback error: ');
-          }
-        } else if(callback) scripts[name].callbacks.push(callback);
-        return;
+      if(jQuery.type(name) != 'array') {
+        name = [name];
       }
-      scripts[name] = {callbacks: [], failovers: [], loaded: false};
-      if(callback) scripts[name].callbacks.push(callback);
-      if(failover) scripts[name].failovers.push(failover);
 
-      window.__loadScript(name, function() { instance.loadScriptComplete(name) },
-                                function(e) { instance.loadScriptFail(name, e) });
+      var to_load = [];
+      var loaded = 0;
+
+      for(var i = 0; i < name.length; i++) {
+        if(jQuery.type(scripts[name[i]]) != 'undefined') {
+          /// запись скрипта не инициализирована
+          if(scripts[name[i]].loaded) {
+            /// скрипт уже был загружен, загружать не нужно
+            loaded++;
+          } else if(name.length == 1 && callback) {
+            /// скрипт был добавлен в очередь загрузки и параллельно загружается где-то ещё,
+            /// загружать его не нужно, но выполнить действие нужно если производится
+            /// одиночная загрузка этого скрипта
+            scripts[name[i]].callbacks.push(callback);
+          }
+          continue;
+        }
+        scripts[name[i]] = {callbacks: [], failovers: [], loaded: false};
+        if(name.length == 1) {
+          /// Если подгружается только этот скрипт, то добавляем функцию обратного
+          /// вызова в список вызовов этой функции, чтобы в случае параллельного
+          /// массового вызова, этот callback тоже отработал
+          if(callback) scripts[name[i]].callbacks.push(callback);
+          if(failover) scripts[name[i]].failovers.push(failover);
+        }
+        to_load.push(name[i]);
+      }
+
+      window.__loadScript(to_load, 
+        function() { 
+          if(name.length > 1) {
+            /// отработал массовый вызов
+            /// проходим по всем скриптам и выполяем обратные вызовы для скриптов,
+            /// которые ещё не были отмечены как загруженные
+            for(var i = 0; i < name.length; i++) {
+              instance.loadScriptComplete(name[i]);
+            }
+            try {
+              /// выполняем основной callback
+              callback();
+            } catch(e) {
+              if(failover) {
+                failover();
+              }
+            }
+          } else {
+            /// отработал одиночный вызов
+            instance.loadScriptComplete(name[0]) 
+          }
+        },
+        function(e) {
+          if(name.length > 1) {
+            /// отработал массовый вызов
+            /// проходим по всем скриптам и выполяем обратные вызовы
+            for(var i = 0; i < name.length; i++) {
+              instance.loadScriptFail(name[i]);
+            }
+            if(failover) failover();
+          } else {
+            /// отработал одиночный вызов
+            instance.loadScriptFail(name[0]) 
+          }
+        }
+      );
     },
     
     /**
@@ -989,6 +1045,7 @@ var Panel2 = new function() {
     * @param name - путь скрипта, например "home/home.js"
     */
     loadScriptComplete: function(name) {
+      if(scripts[name].loaded) return;
       scripts[name].loaded = true;
       for(var i = 0; i < scripts[name].callbacks.length; i++) {
         try {
@@ -1092,7 +1149,7 @@ var Panel2 = new function() {
         throw('Error: you can\'t set protected property directly');
       }
       /// Если значение есть на текущем домене, то выставляем и его
-      if(typeof(localStorage[key]) != 'undefined') {
+      if(jQuery.type(localStorage[key]) != 'undefined') {
         localStorage[key] = JSON.stringify(value);
       }
 
@@ -1121,7 +1178,7 @@ var Panel2 = new function() {
     get: function(key, callback) {
       checkTime('get ' + key);
       /// Пытаемся найти значение на текущем домене
-      if(typeof(localStorage[key]) != 'undefined' && 
+      if(jQuery.type(localStorage[key]) != 'undefined' && 
          document.domain != 'ganjawars.ru') {
         try {
           var val = JSON.parse(localStorage[key]);
@@ -1154,7 +1211,7 @@ var Panel2 = new function() {
     * @param callback - функция, которая будет вызвана после удаления значения
     */    
     del: function(key, callback) {
-      if(typeof(localStorage[key]) != 'undefined') {
+      if(jQuery.type(localStorage[key]) != 'undefined') {
         localStorage.removeItem(key);
       }
       var __key = key;
@@ -1233,19 +1290,19 @@ var Panel2 = new function() {
     *                    в котором хранятся указанные опции
     */
     setOptions: function(set_options, namespace, callback) {
-      if(typeof(optionsID) == 'undefined') {
+      if(jQuery.type(optionsID) == 'undefined') {
         console.log('wrong optionsID: ' + optionsID);
         console.log((new Error).stack);
         return;
       }
-      if(namespace && typeof(namespace) != 'undefined') {
+      if(namespace && jQuery.type(namespace) != 'undefined') {
         options[namespace] = set_options;
       } else {
         options = set_options;
       }
       var new_options = {};
       for(var key in options) {
-        var type = String(typeof(options[key])).toLowerCase();
+        var type = jQuery.type(options[key]);
         if(type != 'undefined' && options[key] !== null) {
           new_options[key] = options[key];
         }

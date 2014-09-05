@@ -639,6 +639,8 @@ function panel_standalone_local($type = '', $noexit = FALSE) {
   $plugins = module_invoke_all('panel_plugins');
   uasort($plugins, '_element_sort');
 
+  $tests = array();
+
   foreach($plugins as $plugin_name => $plugin) {
     if(is_array($plugin['apply'])) {
       foreach($plugin['apply'] as $page => $scripts) {
@@ -676,6 +678,9 @@ function panel_standalone_local($type = '', $noexit = FALSE) {
       }
       //$apply_scripts[$plugin_name] = $plugin['applyScript'];
     }
+    foreach(glob(realpath(dirname(__FILE__) . '/../' . $plugin_name) . '/*_test.js') as $_file) {
+      $tests[] = $plugin_name . '/' . basename($_file);
+    }
   }
   
   $button_classes = panel_get_buttons(TRUE);
@@ -697,7 +702,8 @@ function panel_standalone_local($type = '', $noexit = FALSE) {
 
   global $gwpanel_path;
   file_put_contents($gwpanel_path . '/apply.js', 
-    'window.panel_apply = ' . json_encode($apply) . ';');
+    'window.panel_apply = ' . json_encode($apply) . ';
+window.panel_tests = ' . json_encode($tests) . ';');
   
   $options['baseURL'] = $baseURL;
   if(!$options['system']['theme']) $options['system']['theme'] = 'base';
@@ -829,20 +835,28 @@ document.cookie = "gwp2_e=dev;expires=" + myDate
   print '};
 ';
 
-  print 'window.__loadScript = function(path) {
-  var s = document.createElement("script");
-  s.type = "text/javascript";
-  s.charset="UTF-8";
-  s.src = "' . $localURL . '/" + path;
-  s.addEventListener("load", function() {
-    window.setTimeout(\'window.__panel.loadScriptComplete("\' + path + \'")\', 10);
-  }, false);
-  var stack = (new Error).stack;
-  s.addEventListener("error", function() {
-    var line = stack.split("\n")[2];
-    window.setTimeout(\'window.__panel.loadScriptFail("\' + path + \'", "\' + line + \'")\', 10);
-  }, false);
-  document.getElementsByTagName("head")[0].appendChild(s);
+  print 'window.__loadScript = function(path, callback, failover) {
+  if(!path || !path.length) return;
+  if(String(typeof(path)).toLowerCase() != "object" || !path.length) {
+    path = [path];
+  }
+  var loaded = 0;
+  for(var i = 0; i < path.length; i++) {
+    var s = document.createElement("script");
+    s.type = "text/javascript";
+    s.charset="UTF-8";
+    s.src = "' . $localURL . '/" + path[i];
+    s.addEventListener("load", function() {
+      loaded++;
+      if(loaded >= path.length && callback) {
+        setTimeout(callback, 1);
+      }
+    }, false);
+    if(failover) {
+      s.addEventListener("error", failover, false);
+    }
+    document.getElementsByTagName("head")[0].appendChild(s);
+  }
 };
 if(window.chrome) {
   var script  = document.createElement("script");
@@ -858,7 +872,7 @@ if(window.chrome) {
   $__widget_str = str_replace(array('"true"', '"false"', '"'), array('true', 'false', '\\"'), json_encode($widget_classes));
   print 'var __initLibs = "if(window.$) window.old$ = window.$; var libs = [\"jquery\"]; var libsCount = 0; for(var i = 0; i < libs.length; i++) { var s = document.createElement(\"script\"); s.type = \"text/javascript\"; s.addEventListener(\"load\", function() {if(++libsCount >= libs.length) libsLoaded();}, false); s.src = \"' . $localURL . '/lib/\" + libs[i] + \".js\";  s.charset=\"UTF-8\"; document.getElementsByTagName(\"head\")[0].appendChild(s);} var libsLoaded = function() {";
 
-var __initPanel = "var loadedLibs = 0; var _files = [\"lib/settings.js\", \"lib/crosswindow.js\", \"panel/panel.js\", \"apply.js\"]; for(var i = 0; i < _files.length; i++) { var s = document.createElement(\"script\"); s.type = \"text/javascript\"; s.addEventListener(\"load\", function() { if(++loadedLibs >= _files.length) run_panel()}); s.src = \"' . $localURL . '/\" + _files[i];  s.charset=\"UTF-8\"; document.getElementsByTagName(\"head\")[0].appendChild(s); } var run_panel = function() { if(window.old$) window.$ = window.old$; window.__panel = new Panel2(\"dev\", \"' . $localURL . '\"); }";
+var __initPanel = "var loadedLibs = 0; var _files = [\"lib/settings.js\", \"lib/crosswindow.js\", \"panel/panel.js\", \"apply.js\"]; for(var i = 0; i < _files.length; i++) { var s = document.createElement(\"script\"); s.type = \"text/javascript\"; s.addEventListener(\"load\", function() { if(++loadedLibs >= _files.length) run_panel()}); s.src = \"' . $localURL . '/\" + _files[i];  s.charset=\"UTF-8\"; document.getElementsByTagName(\"head\")[0].appendChild(s); } var run_panel = function() { if(window.old$) window.$ = window.old$; window.__panel = new Panel2(\"dev\", \"' . $localURL . '\"); window.__panel.init(); }";
 ';
 
 /*  foreach(module_implements('panel_standalone') as $module) {
