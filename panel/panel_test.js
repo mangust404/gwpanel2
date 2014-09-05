@@ -23,7 +23,8 @@ QUnit.test("Тест объекта __panel", function(assert) {
      'checkFocused', 'dispatchException', 'toQueryParams', 'triggerEvent', 
      'bind', 'unbind', 'getOptions', 'setOptions', 'setWidgetOptions', 
      'gotoHref', 'ready', 'onload', 'path_to_theme', 'currentPlayerID', 
-     'currentPlayerName', 'getOptionsID', 'panel_homepage', 'panel_login']).each(function() {
+     'currentPlayerName', 'getOptionsID', 'panel_homepage', 'panel_login',
+     'setEnv', 'getEnv']).each(function() {
     assert.function_exists('__panel.' + this, __panel[this]);
   })
 
