@@ -273,7 +273,6 @@ $bootstrap = '
     environment = (["production", "deploy"]).indexOf(environment) == -1? "production": environment;
     var ar = document.cookie.match(/gwp2_v=([0-9]+)/);
     var panel_version = ar? parseInt(ar[1]): null;
-    //var update_package = false;
 
     /// Получение пакета указанной версии с сервера или из локального хранилища
     window.__checkoutPackage = function(package_version, callback) {
@@ -315,7 +314,6 @@ $bootstrap = '
             localStorage.removeItem(key);
           }
         }
-        //update_package = true;
         callback(package);
       }, false);
       document.getElementsByTagName("head")[0].appendChild(s);
@@ -422,7 +420,7 @@ $bootstrap = '
       }
     }
 
-    window.__loadScript = function(path, callback) {
+    window.__loadScript = function(path, callback, failover) {
       if(String(typeof(path)).toLowerCase() == "string") {
         path = [path];
       }
@@ -440,23 +438,33 @@ $bootstrap = '
             }
           }, false);
           var stack = (new Error).stack;
-          s.addEventListener("error", function() {
-            var line = stack.split("\n")[2];
-            loaded++;
-            window.setTimeout(\'window.__panel.loadScriptFail("\' + path[i] + \'", "\' + line + \'")\', 10);
-          }, false);
+          s.addEventListener("error", failover, false);
           document.getElementsByTagName("head")[0].appendChild(s);
         } else {
           if(localStorage[path[i]]) {
-            setTimeout(localStorage[path[i]]);
-            loaded++;
-            if(callback && loaded >= path.length) setTimeout(callback, 1);
+            try {
+              eval.apply(window, [localStorage[path[i]]]);
+              loaded++;
+              if(callback && loaded >= path.length) callback();
+            } catch(e) {
+              loaded++;
+              if(failover) failover(e);
+            }
           } else {
             __checkoutPackage(panel_version, function(package) {
+              if(typeof(package[path[i]]) == "undefined") {
+                if(failover) failover();
+                return;
+              }
               localStorage[path[i]] = package[path[i]];
-              setTimeout(package[path[i]], 0);
-              loaded++;
-              if(callback && loaded >= path.length) setTimeout(callback, 1);
+              try {
+                eval.apply(window, [package[path[i]]]);
+                loaded++;
+                if(callback && loaded >= path.length) callback();
+              } catch(e) {
+                loaded++;
+                if(failover) failover(e);
+              }
             });
           }
         }
@@ -474,13 +482,12 @@ $bootstrap = '
 
     var panelInitFunc = function(version) {
       window.__checkoutPackage(version, function(package) {
-        window.__loadScript(["lib/settings.js", "lib/crosswindow.js", "panel/panel.js", "apply.js"], function() {
+        window.__loadScript(["lib/settings.js", 
+                              "panel/panel.js", 
+                              "lib/crosswindow.js", 
+                              "apply.js"], function() {
           window.__panel = new Panel2(environment, panelURL);
-          //if(update_package) {
-            /// Пакет был загружен, отправляем его в основное хранилище на ganjawars.ru
-            /// пока не нужно
-            //__panel.set("package_" + version, package);
-          //}
+          window.__panel.init();
         });
       });
     }

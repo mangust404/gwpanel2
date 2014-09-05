@@ -678,226 +678,6 @@ var Panel2 = new function() {
       var parts = cookies[i].split('=');
       instance.cookies[parts[0]] = parts[1];
     }
-    /// Функция запуска
-    /// Если в localStorage на текущем домене есть копия нужных опций, 
-    /// то эта функция будет запущена сразу
-    /// если копии нет, то сперва получаем опции из контейнера с ganjawars.ru
-    var __initFunc = function() {
-      // Инициализация слушателей событий
-      for(var key in panel_apply.events) {
-        jQuery(panel_apply.events[key]).each(function(index, type) {
-          if(type.condition) {
-            try {
-              if(!eval(type.condition)) return;
-            } catch(e) {
-              instance.dispatchException(e, 'condition for loaded script error: ');
-              return;
-            }
-          }
-          instance.bind(type.event, function() {
-            var that = this;
-            var _args = arguments;
-            instance.loadScript(panel_apply.scripts[type.callback], function() {
-              if(typeof(instance[type.callback]) == 'undefined') {
-                throw('Function ' + type + ' in module ' + panel_apply.scripts[type] + ' not found');
-              } else {
-                instance[type.callback].apply(that, _args);
-              }
-            });
-          }, type.local);
-        });
-      }
-
-      // Инициализация подгружаемых скриптов
-      var pages = [];
-      if(typeof(panel_apply.pages[location.pathname]) == 'object') {
-        pages = panel_apply.pages[location.pathname];
-      }
-      if(typeof(panel_apply.pages['*']) == 'object') {
-        for(var i = 0; i < panel_apply.pages['*'].length; i++)
-          pages.push(panel_apply.pages['*'][i]);
-      }
-      jQuery(pages).each(function(index, func) {
-        if(typeof(func) == 'object') {
-          for(var key in func) {
-            var condition = func[key];
-            func = key;
-            break;
-          }
-          if(condition) {
-            try {
-              if(!eval(condition)) return;
-            } catch(e) {
-              instance.dispatchException(e, 'condition for loaded script error: ');
-              return;
-            }
-          }
-        }
-        instance.loadScript(panel_apply.scripts[func], function() {
-          if(typeof(instance[func]) == 'undefined') {
-            throw('Function ' + func + ' in module ' + panel_apply.scripts[func] + ' not found');
-          } else {
-            instance[func].apply(instance, [options[panel_apply.scripts[func].split('/')[0]] || {}]);
-          }
-        });
-      });
-    }
-    checkTime('init_func');
-
-    if(environment == 'testing') {
-      var variantID = 'default';
-      optionsID = 'testing_' + instance.currentPlayerID() + '_default';
-      /// создаём заново опции если это не запуск подтеста во фрейме
-      if(location.search.indexOf('continue') == -1) {
-        options = window.panelSettingsCollection.default;
-        instance.set(optionsID, options);
-      } else {
-        options = JSON.parse(localStorage[optionsID]) || 
-                  window.panelSettingsCollection.default;
-      }
-      fastInitReady = true;
-    } else {
-      var variantID = 'options_variant_' + instance.currentPlayerID();
-      var __local_variant = localStorage[variantID];
-      /// Опции сперва привязываются к окружению (environment), затем к ID игрока
-      /// затем к выбранному варианту, если вариант не найден, то выбираем default
-      var fastInitReady = false;
-      if(__local_variant != null && 
-        __local_variant.length > 0) {
-        optionsID = environment + '_' + instance.currentPlayerID() + '_' + 
-                        __local_variant;
-        var __local_options = localStorage[optionsID];
-        if(__local_options != null && 
-           __local_options.length > 0) {
-          jQuery.extend(options, JSON.parse(__local_options));
-          fastInitReady = true;
-        }
-      }
-    }
-    //if(typeof(__options) == 'object') jQuery.extend(options, __options);
-    //if(typeof(__panel_apply.buttons) == 'object') panel_apply.buttons = __panel_apply.buttons;
-    //if(typeof(__panel_apply.widgets) == 'object') panel_apply.widgets = __panel_apply.widgets;
-/*    if(!localStorage.options) {
-      localStorage.options = JSON.stringify(panelSettingsCollection.default);
-      localStorage.options_upd = (new Date).getTime();
-    } else if(localStorage.options) {
-      try {
-        var local_options = JSON.parse(localStorage.options);
-      } catch(e) {}
-      jQuery.extend(options, local_options);
-    }*/
-    /// если быстрая инициализация доступна
-    checkTime('fastInitReady');
-    if(fastInitReady) {
-      __initFunc();
-      checkTime('fastInit');
-    }
-
-    // Инициализация кросс-доменного хранилища
-    // Хранилище нужно для того, чтобы на всех поддоменах был доступ к localStorage
-    // на домене www.ganjawars.ru
-    // Если не будет хранилища, то мы никак не сможем например с quest.ganjawars.ru получить 
-    // настройки и события с других страниц, и даже тупо не сможем проверить почту чтобы вывести
-    // уведомления
-    instance.crossWindow = new __crossWindow(
-                                  original_environment == 'production' || 
-                                  original_environment == 'deploy'? 
-                                  '/tmp/panel2container.html':
-                                  '/tmp/panelcontainer.html', function() {
-      initialized = true;
-      windowID = instance.crossWindow.windowID;
-      checkTime('initialization Begin');
-      jQuery(initializeStack).each(function() {
-        try {
-          this();
-        } catch(e) {
-          instance.dispatchException(e);
-        }
-      });
-      checkTime('initialization Finish');
-    }, 'ganjawars.ru');
-
-    checkTime('crossWindow init');
-    /// функция полной готовности окна
-    instance.get(variantID, function(__variant) {
-      checkTime('get variantID ' + variantID);
-      if(!__variant) {
-        checkTime('set default variant for ' + __variant);
-        instance.set(variantID, 'default');
-        localStorage[variantID] = 'default';
-        __variant = 'default';
-      }
-      optionsID = environment + '_' + instance.currentPlayerID() + '_' + __variant;
-      instance.get(optionsID, function(__options) {
-        checkTime('get optionsID ' + optionsID);
-        if(__options != null && String(typeof(__options)).toLowerCase() == 'object') {
-          options = jQuery.extend(options, __options);
-        } else {
-          /// дефолтные опции
-          options = jQuery.extend(options, window.panelSettingsCollection.default);
-          instance.set(optionsID, options);
-        }
-        localStorage[optionsID] = JSON.stringify(options);
-        if(!fastInitReady) {
-          /// медленная инициализация
-          __initFunc();
-        }
-        is_ready = true;
-        checkTime('panel ready stack launch');
-
-        jQuery(readyStack).each(function() {
-          try {
-            this();
-          } catch(e) {
-            instance.dispatchException(e);
-          }
-        });
-        checkTime('panel ready stack finished');
-      });
-    });
-    checkTime('crossWindow init complete');
-
-    checkTime('crossWindow create');
-
-    // следим за сменой опций из других окон
-    instance.bind('options_change', function(data) {
-      if(data.optionsID == optionsID && data.windowID != windowID) {
-        jQuery.extend(options, data.options);
-      }
-    });
-    
-    jQuery(document.body).addClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
-    if(location.hostname != 'www.ganjawars.ru') {
-      var href = location.href;
-      if(href.charAt(location.href.length - 1) == '?' || href.charAt(location.href.length - 1) == '&')
-        href = location.href.substr(0, location.href.length - 1);
-      window.parent.postMessage(toJSON({'type': 'frame', 'title': document.title, 'href': href}), '*');
-    }
-
-    instance.ready(function() {
-      instance.loadCSS('panel.css');
-      initInterface();
-    });
-
-    /// Инициализация тестов если в запросе указан ?gwpanel_test и это не встроенный фрейм
-    if(environment == 'testing' && location.search.indexOf('continue') == -1) {
-      //alert('test');
-      instance.loadCSS('../../lib/qunit-1.15.0.css');
-      instance.onload(function() {
-        instance.loadScript('lib/qunit-1.15.0.js', function() {
-          QUnit.config.autostart = false;
-          $('<div id="qunit-fixture"></div>').prependTo(document.body);
-          $('<div id="qunit"></div>').prependTo(document.body);
-          instance.loadScript('panel/panel_test.js', function() {
-            QUnit.start();
-          });
-        });
-      });
-    }
-      /* нало придумать нормальный коммент
-       * а пока, тут гадил
-       * гном убийца
-       */
   }
   
   /******************************
@@ -905,6 +685,230 @@ var Panel2 = new function() {
   *******************************/
 
   jQuery.extend(Panel2.prototype, {
+    /**
+    * Функция инициализации
+    * Была вынесена из конструктора потому что если для загрузки 
+    * скриптов используется eval(), то при инициализации нам уже нужен
+    * объект window.__panel чтобы успешно подгрузить внешние модули
+    */
+    init: function() {
+      /// Если в localStorage на текущем домене есть копия нужных опций, 
+      /// то эта функция будет запущена сразу
+      /// если копии нет, то сперва получаем опции из контейнера с ganjawars.ru
+      var __initFunc = function() {
+        // Инициализация слушателей событий
+        for(var key in panel_apply.events) {
+          jQuery(panel_apply.events[key]).each(function(index, type) {
+            if(type.condition) {
+              try {
+                if(!eval(type.condition)) return;
+              } catch(e) {
+                instance.dispatchException(e, 'condition for loaded script error: ');
+                return;
+              }
+            }
+            instance.bind(type.event, function() {
+              var that = this;
+              var _args = arguments;
+              instance.loadScript(panel_apply.scripts[type.callback], function() {
+                if(typeof(instance[type.callback]) == 'undefined') {
+                  throw('Function ' + type + ' in module ' + panel_apply.scripts[type] + ' not found');
+                } else {
+                  instance[type.callback].apply(that, _args);
+                }
+              });
+            }, type.local);
+          });
+        }
+
+        // Инициализация подгружаемых скриптов
+        var pages = [];
+        if(typeof(panel_apply.pages[location.pathname]) == 'object') {
+          pages = panel_apply.pages[location.pathname];
+        }
+        if(typeof(panel_apply.pages['*']) == 'object') {
+          for(var i = 0; i < panel_apply.pages['*'].length; i++)
+            pages.push(panel_apply.pages['*'][i]);
+        }
+        jQuery(pages).each(function(index, func) {
+          if(typeof(func) == 'object') {
+            for(var key in func) {
+              var condition = func[key];
+              func = key;
+              break;
+            }
+            if(condition) {
+              try {
+                if(!eval(condition)) return;
+              } catch(e) {
+                instance.dispatchException(e, 'condition for loaded script error: ');
+                return;
+              }
+            }
+          }
+          instance.loadScript(panel_apply.scripts[func], function() {
+            if(typeof(instance[func]) == 'undefined') {
+              throw('Function ' + func + ' in module ' + panel_apply.scripts[func] + ' not found');
+            } else {
+              instance[func].apply(instance, [options[panel_apply.scripts[func].split('/')[0]] || {}]);
+            }
+          });
+        });
+      }
+      checkTime('init_func');
+
+      if(environment == 'testing') {
+        var variantID = 'default';
+        optionsID = 'testing_' + instance.currentPlayerID() + '_default';
+        /// создаём заново опции если это не запуск подтеста во фрейме
+        if(location.search.indexOf('continue') == -1) {
+          options = window.panelSettingsCollection.default;
+          instance.set(optionsID, options);
+        } else {
+          options = JSON.parse(localStorage[optionsID]) || 
+                    window.panelSettingsCollection.default;
+        }
+        fastInitReady = true;
+      } else {
+        var variantID = 'options_variant_' + instance.currentPlayerID();
+        var __local_variant = localStorage[variantID];
+        /// Опции сперва привязываются к окружению (environment), затем к ID игрока
+        /// затем к выбранному варианту, если вариант не найден, то выбираем default
+        var fastInitReady = false;
+        if(__local_variant != null && 
+          __local_variant.length > 0) {
+          optionsID = environment + '_' + instance.currentPlayerID() + '_' + 
+                          __local_variant;
+          var __local_options = localStorage[optionsID];
+          if(__local_options != null && 
+             __local_options.length > 0) {
+            jQuery.extend(options, JSON.parse(__local_options));
+            fastInitReady = true;
+          }
+        }
+      }
+      //if(typeof(__options) == 'object') jQuery.extend(options, __options);
+      //if(typeof(__panel_apply.buttons) == 'object') panel_apply.buttons = __panel_apply.buttons;
+      //if(typeof(__panel_apply.widgets) == 'object') panel_apply.widgets = __panel_apply.widgets;
+  /*    if(!localStorage.options) {
+        localStorage.options = JSON.stringify(panelSettingsCollection.default);
+        localStorage.options_upd = (new Date).getTime();
+      } else if(localStorage.options) {
+        try {
+          var local_options = JSON.parse(localStorage.options);
+        } catch(e) {}
+        jQuery.extend(options, local_options);
+      }*/
+      /// если быстрая инициализация доступна
+      checkTime('fastInitReady');
+      if(fastInitReady) {
+        __initFunc();
+        checkTime('fastInit');
+      }
+
+      // Инициализация кросс-доменного хранилища
+      // Хранилище нужно для того, чтобы на всех поддоменах был доступ к localStorage
+      // на домене www.ganjawars.ru
+      // Если не будет хранилища, то мы никак не сможем например с quest.ganjawars.ru получить 
+      // настройки и события с других страниц, и даже тупо не сможем проверить почту чтобы вывести
+      // уведомления
+      instance.crossWindow = new __crossWindow(
+                                    original_environment == 'production' || 
+                                    original_environment == 'deploy'? 
+                                    '/tmp/panel2container.html':
+                                    '/tmp/panelcontainer.html', function() {
+        initialized = true;
+        windowID = instance.crossWindow.windowID;
+        checkTime('initialization Begin');
+        jQuery(initializeStack).each(function() {
+          try {
+            this();
+          } catch(e) {
+            instance.dispatchException(e);
+          }
+        });
+        checkTime('initialization Finish');
+      }, 'ganjawars.ru');
+
+      checkTime('crossWindow init');
+      /// функция полной готовности окна
+      instance.get(variantID, function(__variant) {
+        checkTime('get variantID ' + variantID);
+        if(!__variant) {
+          checkTime('set default variant for ' + __variant);
+          instance.set(variantID, 'default');
+          localStorage[variantID] = 'default';
+          __variant = 'default';
+        }
+        optionsID = environment + '_' + instance.currentPlayerID() + '_' + __variant;
+        instance.get(optionsID, function(__options) {
+          checkTime('get optionsID ' + optionsID);
+          if(__options != null && String(typeof(__options)).toLowerCase() == 'object') {
+            options = jQuery.extend(options, __options);
+          } else {
+            /// дефолтные опции
+            options = jQuery.extend(options, window.panelSettingsCollection.default);
+            instance.set(optionsID, options);
+          }
+          localStorage[optionsID] = JSON.stringify(options);
+          if(!fastInitReady) {
+            /// медленная инициализация
+            __initFunc();
+          }
+          is_ready = true;
+          checkTime('panel ready stack launch');
+
+          jQuery(readyStack).each(function() {
+            try {
+              this();
+            } catch(e) {
+              instance.dispatchException(e);
+            }
+          });
+          checkTime('panel ready stack finished');
+        });
+      });
+      checkTime('crossWindow init complete');
+
+      checkTime('crossWindow create');
+
+      // следим за сменой опций из других окон
+      instance.bind('options_change', function(data) {
+        if(data.optionsID == optionsID && data.windowID != windowID) {
+          jQuery.extend(options, data.options);
+        }
+      });
+      
+      jQuery(document.body).addClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
+      if(location.hostname != 'www.ganjawars.ru') {
+        var href = location.href;
+        if(href.charAt(location.href.length - 1) == '?' || href.charAt(location.href.length - 1) == '&')
+          href = location.href.substr(0, location.href.length - 1);
+        window.parent.postMessage(toJSON({'type': 'frame', 'title': document.title, 'href': href}), '*');
+      }
+
+      instance.ready(function() {
+        instance.loadCSS('panel.css');
+        initInterface();
+      });
+
+      /// Инициализация тестов если в запросе указан ?gwpanel_test и это не встроенный фрейм
+      if(environment == 'testing' && location.search.indexOf('continue') == -1) {
+        //alert('test');
+        $('<div id="qunit-fixture"></div>').prependTo(document.body);
+        $('<div id="qunit"></div>').prependTo(document.body);
+        instance.loadCSS('../../lib/qunit-1.15.0.css');
+        instance.onload(function() {
+          instance.loadScript('lib/qunit-1.15.0.js', function() {
+            console.log('QUnit', QUnit);
+            QUnit.config.autostart = false;
+            instance.loadScript('panel/panel_test.js', function() {
+              QUnit.start();
+            });
+          });
+        });
+      }      
+    },
     /**
     * Обработка исключений. Если есть консоль, то выводим в консоль.
     */
@@ -976,7 +980,8 @@ var Panel2 = new function() {
       if(callback) scripts[name].callbacks.push(callback);
       if(failover) scripts[name].failovers.push(failover);
 
-      window.__loadScript(name, function() { instance.loadScriptComplete(name)});
+      window.__loadScript(name, function() { instance.loadScriptComplete(name) },
+                                function(e) { instance.loadScriptFail(name, e) });
     },
     
     /**
@@ -989,7 +994,7 @@ var Panel2 = new function() {
         try {
           scripts[name].callbacks[i]();
         } catch(e) {
-          instance.dispatchException(e, 'loadScript callback error: ');
+          instance.dispatchException(e, 'loadScript ' + name + ' callback error: ');
         }
       }
     },
@@ -998,11 +1003,11 @@ var Panel2 = new function() {
     * Обработчик ошибки загрузки скрипта
     * @param name - путь скрипта, например "home/home.js"
     */
-    loadScriptFail: function(name, line) {
+    loadScriptFail: function(name, e) {
       scripts[name].fail = true;
-      instance.failedScripts.push(name, line);
+      instance.failedScripts.push(name);
       if(console.log) console.log('Failed to load script "' + name + 
-                                  '" called on ' + line);
+                                  '"', e);
       for(var i = 0; i < scripts[name].failovers.length; i++) {
         try {
           scripts[name].failovers[i]();
@@ -1390,7 +1395,7 @@ var Panel2 = new function() {
     * Функция выставления окружения
     */
     setEnv: function(env) {
-      var possible_values = [dev, production, deploy, testing];
+      var possible_values = ['dev', 'production', 'deploy', 'testing'];
       if(!possible_values.indexOf(env) == -1) {
         return console.log('Possible environments: ' + possible_values.join(', '));
       }
