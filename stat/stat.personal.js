@@ -2,11 +2,12 @@
   var skillsTable, syndnode, expTable;
 jQuery.extend(panel, {
   stat_update_personal: function() {
+    jQuery(function() {
     //Обновляем счётчики на главной странице
     skillsTable = jQuery('img[src*="skill_combat_pistols.gif"]').get(0);
     if(skillsTable != null){
         skillsTable = skillsTable.offsetParent.offsetParent;
-    }else{
+    } else{
         return false;
     }
     jQuery(skillsTable).css({position: 'relative'});
@@ -188,6 +189,8 @@ jQuery.extend(panel, {
           });
         };   
       }
+    });
+
     });
   },
   

@@ -30,7 +30,9 @@ var Panel2 = new function() {
   var mouseDelta = 0;
   var mouseSpeed = 0;
   /// список подгружаемых пользовательских скриптов
-  var scripts = {};
+  var scripts = {
+    'panel/panel.js': {loaded: true, callbacks: [], failovers: []}
+  };
   /// список подгружаемых таблиц стилей
   var stylesheets = {};
   /// системные параметры - ссылка на фрейм для кросс доменной передачи сообщений, текущий домен
@@ -904,9 +906,11 @@ var Panel2 = new function() {
           tests.unshift('lib/qunit-1.15.0.js');
 
           instance.loadScript(tests, function() {
-            if(jQuery.type(QUnit.config.semaphore) == 'undefined') {
-              QUnit.load();
-            }
+            setTimeout(function() {
+              if(jQuery.type(QUnit.config.semaphore) == 'undefined') {
+                QUnit.load();
+              }
+            }, 100);
           });
         });
       }      
@@ -1002,6 +1006,15 @@ var Panel2 = new function() {
         to_load.push(name[i]);
       }
 
+      if(!to_load.length) {
+        /// Загружать нечего, просто запускаем callback
+        try {
+          if(callback) callback();
+        } catch(e) {
+          if(failover) failover();
+        }
+        return;
+      }
       window.__loadScript(to_load, 
         function() { 
           if(name.length > 1) {
@@ -1013,7 +1026,7 @@ var Panel2 = new function() {
             }
             try {
               /// выполняем основной callback
-              callback();
+              if(callback) callback();
             } catch(e) {
               if(failover) {
                 failover();

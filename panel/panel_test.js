@@ -256,7 +256,7 @@ QUnit.asyncTest("Отвязка событий", function(assert) {
 
 QUnit.asyncTest('Подгрузка скриптов', function(assert) {
   expect(1);
-  __panel.loadScript('lib/foobar.js', function () {
+  __panel.loadScript('lib/tests/foobar.js', function () {
     assert.deepEqual(__panel.__foo_bar_script, 'foo bar', 'Скрипт загружен');
     QUnit.start();
   }, function() {
@@ -268,13 +268,54 @@ QUnit.asyncTest('Подгрузка скриптов', function(assert) {
 
 QUnit.asyncTest('Подгрузка ошибочных скриптов', function(assert) {
   expect(1);
-  __panel.loadScript('lib/foobar_unexists.js', function () {
+  __panel.loadScript('lib/tests/foobar_unexists.js', function () {
     assert.ok(false, 'Скрипт не должен быть загружен');
     QUnit.start();
   }, function() {
     assert.ok(true, 'Скрипт не загружен');
     QUnit.start();
   })
+});
+
+QUnit.asyncTest('Подгрузка нескольких скриптов, синхронизация', function(assert) {
+  expect(3);
+  var passed_count = 0;
+
+  $('<iframe id="foreign-event-iframe" src="' + document.location.href.split('?')[0]
+   + '?gwpanel_testing&continue"></iframe>').load(function() {
+    var that = this;
+    waitPanelInitialization(this.contentWindow, function() {
+      var panel = that.contentWindow.__panel;
+      setTimeout(function() {
+        panel.loadScript(['lib/tests/foobar.js', 'lib/tests/foobar2.js'], function () {
+          assert.deepEqual(panel.__foo_bar_script, 'foo bar', 'Скрипт загружен');
+          assert.deepEqual(panel.__foo_bar_script2, 'foo bar', 'Второй скрипт загружен');
+          passed_count++;
+          if(passed_count > 1) {
+            QUnit.start();
+          }
+        }, function() {
+          console.log((new Error).stack);
+          assert.ok(false, 'Скрипт не загружен');
+          QUnit.start();
+        })
+      }, 1);
+      setTimeout(function() {
+        panel.loadScript('lib/tests/foobar.js', function () {
+          assert.deepEqual(panel.__foo_bar_script, 'foo bar', 
+                          'Скрипт загружен параллельно');
+          passed_count++;
+          if(passed_count > 1) {
+            QUnit.start();
+          }
+        }, function() {
+          console.log((new Error).stack);
+          assert.ok(false, 'Скрипт не загружен');
+          QUnit.start();
+        })
+      }, 1);      
+    });
+  }).appendTo('#qunit-fixture');
 });
 
 QUnit.asyncTest('Подгрузка стилей', function(assert) {

@@ -95,6 +95,11 @@ foreach(glob($gwpanel_path . '/*', GLOB_ONLYDIR) as $glob_path) {
     }
     $files[] = $file;
   }
+  if($dirname == 'lib') {
+    foreach(glob($gwpanel_path . '/' . $dirname . '/tests/*.js') as $file) {
+      $files[] = $file;
+    }
+  }
   if(file_exists($glob_path . '/' . $dirname . '.module')) {
     include_once($glob_path . '/' . $dirname . '.module');
     $modules[] = $dirname;
@@ -132,6 +137,7 @@ function _element_sort($a, $b) {
 $apply_pages = $apply_scripts = $apply_events = array();
 uasort($plugins, '_element_sort');
 
+$tests = array();
 foreach($plugins as $plugin_name => $plugin) {
   if(isset($plugin['apply']) && is_array($plugin['apply'])) {
     foreach($plugin['apply'] as $page => $scripts) {
@@ -172,6 +178,9 @@ foreach($plugins as $plugin_name => $plugin) {
     }
     //$apply_scripts[$plugin_name] = $plugin['applyScript'];
   }
+  foreach(glob(realpath(dirname(__FILE__) . '/../' . $plugin_name) . '/*_test.js') as $_file) {
+    $tests[] = $plugin_name . '/' . basename($_file);
+  }  
 }
 
 $button_classes = panel_get_buttons(TRUE);
@@ -187,7 +196,8 @@ $apply['buttons'] = $button_classes;
 
 global $gwpanel_path;
 file_put_contents($gwpanel_path . '/apply.js', 
-  'window.panel_apply = ' . json_encode($apply) . ';');
+  'window.panel_apply = ' . json_encode($apply) . ';
+window.panel_tests = ' . json_encode($tests) . ';');
 
 if(get_env() == 'production') {
   $package = array();
