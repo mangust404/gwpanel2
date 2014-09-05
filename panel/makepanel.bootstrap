@@ -113,6 +113,11 @@ foreach(explode("\n", shell_exec('find ' . $gwpanel_path . '/themes/ -type f -na
   if($css_path) $css_files[] = $css_path;
 }
 
+/// CSS файлы в lib/
+foreach(explode("\n", shell_exec('find ' . $gwpanel_path . '/lib/ -type f -name *.css')) as $css_path) {
+  if($css_path) $css_files[] = $css_path;
+}
+
 /// делаем apply-файл
 function _element_sort($a, $b) {
   $a_weight = (is_array($a) && isset($a['#weight'])) ? $a['#weight'] : 0;
@@ -273,18 +278,18 @@ $bootstrap = '
     /// Получение пакета указанной версии с сервера или из локального хранилища
     window.__checkoutPackage = function(package_version, callback) {
       if(environment == "deploy") {
-        callback();
+        callback(package);
         return;
       }
       if(String(typeof(package)).toLowerCase() == "object") {
-        callback();
+        callback(package);
         return;
       }
       if(localStorage["package_" + package_version] != undefined) {
         /// В хранилище есть этот пакет, ничего грузить не надо
         package = JSON.parse(localStorage["package_" + package_version]);
         if(String(typeof(package)).toLowerCase() == "object") {
-          callback();
+          callback(package);
           return;
         }
       }
@@ -311,7 +316,7 @@ $bootstrap = '
           }
         }
         //update_package = true;
-        callback();
+        callback(package);
       }, false);
       document.getElementsByTagName("head")[0].appendChild(s);
     }
@@ -402,7 +407,7 @@ $bootstrap = '
               console.log("Не удалось загрузить " + path[i]);
             }
           } else {
-            __checkoutPackage(panel_version, function() {
+            __checkoutPackage(panel_version, function(package) {
               if(typeof(package[path[i]]) != undefined && package[path[i]].length) {
                 localStorage[path[i]] = package[path[i]];
                 jQuery("<style type=\'text/css\'></style>").html(package[path[i]]).appendTo("head");
@@ -447,7 +452,7 @@ $bootstrap = '
             loaded++;
             if(callback && loaded >= path.length) setTimeout(callback, 1);
           } else {
-            __checkoutPackage(panel_version, function() {
+            __checkoutPackage(panel_version, function(package) {
               localStorage[path[i]] = package[path[i]];
               setTimeout(package[path[i]], 0);
               loaded++;
@@ -459,7 +464,7 @@ $bootstrap = '
     }
 
     window.__clearCache = function() {
-      __checkoutPackage(panel_version, function() {
+      __checkoutPackage(panel_version, function(package) {
         for(var key in package) {
           localStorage.removeItem(key);
         }
@@ -468,7 +473,7 @@ $bootstrap = '
     }
 
     var panelInitFunc = function(version) {
-      window.__checkoutPackage(version, function() {
+      window.__checkoutPackage(version, function(package) {
         window.__loadScript(["lib/settings.js", "lib/crosswindow.js", "panel/panel.js", "apply.js"], function() {
           window.__panel = new Panel2(environment, panelURL);
           //if(update_package) {

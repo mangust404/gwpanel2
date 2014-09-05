@@ -879,11 +879,11 @@ var Panel2 = new function() {
     if(environment == 'testing' && location.search.indexOf('continue') == -1) {
       //alert('test');
       instance.loadCSS('../../lib/qunit-1.15.0.css');
-      instance.loadScript('lib/qunit-1.15.0.js', function() {
-        QUnit.config.autostart = false;
-        $('<div id="qunit-fixture"></div>').prependTo(document.body);
-        $('<div id="qunit"></div>').prependTo(document.body);
-        instance.ready(function() {
+      instance.onload(function() {
+        instance.loadScript('lib/qunit-1.15.0.js', function() {
+          QUnit.config.autostart = false;
+          $('<div id="qunit-fixture"></div>').prependTo(document.body);
+          $('<div id="qunit"></div>').prependTo(document.body);
           instance.loadScript('panel/panel_test.js', function() {
             QUnit.start();
           });
@@ -941,7 +941,14 @@ var Panel2 = new function() {
       if(callback) stylesheets[name].callbacks.push(callback);
       if(failover) stylesheets[name].failovers.push(failover);
 
-      var path = 'themes/' + options.system.theme + '/' + name;
+      var ar = name.split('/');
+      if(environment != 'deploy' && environment != 'dev' && 
+          ar[0] == '..' && ar[1] == '..' && ar[2] == 'lib') {
+        ar = ar.splice(2);
+        var path = ar.join('/');
+      } else {
+        var path = 'themes/' + options.system.theme + '/' + name;
+      }
       window.__loadCSS(path, function() { instance.loadCSSComplete(name)}, failover);
     },
     
