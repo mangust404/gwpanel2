@@ -59,6 +59,22 @@ var Panel2 = new function() {
     $(document.body).off('click', hideAllPanes);
   }
   /**
+  * Обработчик перетаскивания кнопок и виджетов в другие окна
+  */
+  function dragOverPanes(e) {
+    /// Наведение мышки на баблы
+    $('.pane-bubble.external').each(function() {
+      var paneID = this.id.split('-')[2];
+      var that = this;
+      if(e.pageX > this.offsetLeft - 15 && e.pageX < this.offsetLeft + this.clientWidth + 15 && 
+         e.pageY > this.offsetTop - 3 && e.pageY < this.offsetTop + this.clientHeight + 3) {
+        $(this).addClass('drag-over');
+      } else {
+        if($(this).hasClass('drag-over')) $(this).removeClass('drag-over');
+      }
+    });
+  }
+  /**
   * Ленивая активация одной из панелей, вызывается click или mouseover событием
   * Создаёт все кнопки и виджеты внутри панели и привязывает события только после команды активации
   */
@@ -90,7 +106,7 @@ var Panel2 = new function() {
         });
       var paneContainer = jQuery('<div class="container"></div>').appendTo(pane);
       var buttons = pane_options.buttons;
-      if(pane_options.buttons.length > 0) {
+      if(pane_options.buttons && pane_options.buttons.length > 0) {
         jQuery(buttons).each(function(index) {
         //for(var i = 0; i < buttons.length; i++) {
           var type = panel_apply.buttons[this.type];
@@ -118,7 +134,13 @@ var Panel2 = new function() {
             if(img.indexOf('http:') != 0) {
               img = __panel.path_to_theme() + img;
             }
-            var __button = jQuery('<div class="button" id="button_' + that.type + '_' + index + '"></div>').append(
+            if(that.id) {
+              id = that.id;
+            } else {
+              id = 'button_' + that.type + '_' + index;
+              options.panes[paneID].buttons[index].id = id;
+            }
+            var __button = jQuery('<div class="button" id="' + id + '"></div>').append(
               jQuery('<a><div class="img"><img src="' + img + '" /></div><h3>' + (that.title? that.title: type.title) + '</h3></a>').click(function(e) {
                 if(this.parentNode.dragging) {
                   this.parentNode.dragging = false;
@@ -151,7 +173,8 @@ var Panel2 = new function() {
 
         });
       }
-      if(pane_options.buttons.length > 0 || pane_options.widgets.length > 0) {
+      if((pane_options.buttons && pane_options.buttons.length > 0) || 
+         (pane_options.widgets && pane_options.widgets.length > 0)) {
 
         paneContainer.mousedown(function(e) {
           var that = jQuery(e.target).parents('.button, .widget');
@@ -188,7 +211,7 @@ var Panel2 = new function() {
                 }
               }
               that.draggable({
-                containment: 'parent', 
+                containment: 'document', 
                 iframeFix: true,
                 delay: 100, 
                 iframeFix: true, 
@@ -199,7 +222,11 @@ var Panel2 = new function() {
                 revert: true, 
                 cursor: 'move', 
                 start: function() {
-                  //start
+                  /// перетаскивание кнопок и виджетов в другие окна
+                  $('.pane-bubble:hidden').show();
+                  $('.pane-bubble:not(#pane-bubble-' + paneID + ')')
+                    .addClass('external');
+                  $(document.body).on('mousemove', dragOverPanes);
                 },
                 drag: function(event, ui) {
                   var left = Math.round(ui.position.left / options.system.btnwidth);
@@ -221,7 +248,12 @@ var Panel2 = new function() {
                   } else {
                     not_empty = hold_positions[top] && hold_positions[top][left];
                   }
-                  if(not_empty) {
+
+                  if( left >= options.panes[paneID].width || 
+                      top >= options.panes[paneID].height) {
+                    /// Элемент за  пределами окна, возвращаем на родину
+                    that.draggable('option', 'revert', true);
+                  } else if(not_empty) {
                     that.draggable('option', 'revert', true);
                   } else {
                     //Если есть, запоминаем позицию
@@ -231,6 +263,7 @@ var Panel2 = new function() {
                   }
                 },
                 stop: function() {
+                  $(document.body).off('mousemove', dragOverPanes);
                   if(that[0].dragClassTO > 0) {
                     clearTimeout(that[0].dragClassTO);
                     that[0].dragClassTO = 0;
@@ -238,12 +271,128 @@ var Panel2 = new function() {
                   setTimeout(function() {
                     that[0].dragging = false;
                   }, 20);
+                  if($('.pane-bubble.drag-over').length) {
+                    /// Попытка перетаскивания в другое окно
+                    var newPaneID = $('.pane-bubble.drag-over').attr('id').split('-')[2];
+                    new_pane_options = options.panes[newPaneID] || {width: 6, height: 6, buttons: [], widgets: []};
+                    if(!new_pane_options.buttons) new_pane_options.buttons = [];
+                    if(!new_pane_options.widgets) new_pane_options.widgets = [];
+                    console.log(newPaneID, new_pane_options);
+                    var element_height = widget_height || 1;
+                    var element_width = widget_width || 1;
+                    console.log(new_pane_options);
+                    /// Проверяем, хватает ли свободного места в новом окне
+                    var new_top = 0;
+                    var new_left = 0;
+                    var place_found = false;
+                    var new_pane_hold_positions = {};
+                    for(var i = 0; i < new_pane_options.buttons.length; i++) {
+                      if(!new_pane_hold_positions[new_pane_options.buttons[i].top]) 
+                        new_pane_hold_positions[new_pane_options.buttons[i].top] = {};
+                      new_pane_hold_positions[new_pane_options.buttons[i].top][new_pane_options.buttons[i].left] = new_pane_options.buttons[i].id || 1;
+                    }
+                    for(var i = 0; i < new_pane_options.widgets.length; i++) {
+                      for(var __top = new_pane_options.widgets[i].top; __top < new_pane_options.widgets[i].height; __top++) {
+                        if(!new_pane_hold_positions[__top]) 
+                          new_pane_hold_positions[__top] = {};
+                        for(var __left = new_pane_options.widgets[i].left; __left < new_pane_options.widgets[i].width; __left++) {
+                          new_pane_hold_positions[__top][__left] = new_pane_options.widgets[i].id || 1;
+                        }
+                      }
+                    }
+
+                    console.log(new_pane_hold_positions, id);
+                    console.log('new_pane_options.height - element_height', new_pane_options.height - element_height);
+                    console.log('new_pane_options.width - element_width', new_pane_options.width - element_width);
+                    start:
+                    for(new_top = 0; new_top < new_pane_options.height - element_height + 1; new_top++) {
+                      for(new_left = 0; new_left < new_pane_options.width - element_width + 1; new_left++) {
+                        var new_pane_not_empty = false;
+                        console.log('check new_top, new_left', new_top, new_left)
+                        checkout_new_pos:
+                        for(var __top = new_top; (new_top + element_height) > __top; __top++) {
+                          for(var __left = new_left; (new_left + element_width) > __left; __left++) {
+                            if(!new_pane_hold_positions[__top]) continue;
+                            if(new_pane_hold_positions[__top] && new_pane_hold_positions[__top][__left] && new_pane_hold_positions[__top][__left] != id) {
+                              new_pane_not_empty = true;
+                              break checkout_new_pos;
+                            }
+                          }
+                        }
+                        console.log('new_pane_not_empty', new_pane_not_empty);
+                        if(!new_pane_not_empty) {
+                          /// место свободно, всё хорошо
+                          place_found = true;
+                          break start;
+                        }
+                      }
+                    }
+                    console.log(place_found);
+                    if(!place_found) {
+                      /// место не найдено, возвращаем виджет на прежнее место
+                      that.draggable('option', 'revert', true);
+                      return;
+                    }
+                    if(is_widget) {
+                      var widget_options = {};
+                      var id = that.attr('id');
+                      /// ищем виджет в старом окне и удаляем
+                      for(var i = 0; i < options.panes[paneID].widgets.length; i++) {
+                        if(id == options.panes[paneID].widgets[i].id) {
+                          widget_options = options.panes[paneID].widgets[i];
+                          options.panes[paneID].widgets.splice(i, 1);
+                          break;
+                        }
+                      }
+                      /// Добавляем виджет в новое окно
+                      widget_options.paneID = newPaneID;
+                      widget_options.top = new_top;
+                      widget_options.left = new_left;
+                      if(!options.panes[newPaneID].widgets) 
+                        options.panes[newPaneID].widgets = [];
+                      options.panes[newPaneID].widgets.push(widget_options);
+                    } else {
+                      var button_options = {};
+                      var id = that.attr('id');
+                      /// ищем виджет в старом окне и удаляем
+                      for(var i = 0; i < options.panes[paneID].buttons.length; i++) {
+                        if(id == options.panes[paneID].buttons[i].id) {
+                          button_options = options.panes[paneID].buttons[i];
+                          options.panes[paneID].buttons.splice(i, 1);
+                          break;
+                        }
+                      }
+                      /// Добавляем кнопку в новое окно
+                      button_options.paneID = newPaneID;
+                      button_options.top = new_top;
+                      button_options.left = new_left;
+                      if(!options.panes[newPaneID].buttons) 
+                        options.panes[newPaneID].buttons = [];
+                      options.panes[newPaneID].buttons.push(button_options);
+                    }
+                    if($('#pane-' + newPaneID).length) {
+                      /// если окошко каким-то образом уже отрисовалось, то удаляем его
+                      /// чтобы оно прорисовалось с новыми элементами
+                      $('#pane-' + newPaneID).remove();
+                    }
+                    /// И, наконец-то удаляем элемент из предыдущего окна
+                    $('#pane-' + paneID).find('#' + id).remove();
+
+                    instance.showFlash('Если вы закончили настройку, то нажмите <strong>F5</strong>,<br />чтобы изменения вступили в силу', 'message', 5000);
+                    $('.pane-bubble.drag-over').removeClass('drag-over');
+                    that.draggable('destroy');
+                    jQuery('.pane-placeholder').remove();
+
+                    /// И последний шаг - сохраняем новые опции
+                    instance.setOptions(options);
+                    return;
+                  }                  
                   if(!that.draggable('option', 'revert')) {
                     var top = parseInt(that.attr('top'));
                     var left = parseInt(that.attr('left'));
                     var new_top = parseInt(that.attr('ntop'));
                     var new_left = parseInt(that.attr('nleft'));
-                    
+
                     if(is_widget) {
                       for(var __top = top; (top + widget_height) > __top; __top++) {
                         for(var __left = left; (left + widget_width) > __left; __left++) {
@@ -323,7 +472,13 @@ var Panel2 = new function() {
             var callback = instance[type.callback];
             var widget_width = (type.width? type.width: (that.arguments.width? that.arguments.width: 1));
             var widget_height = (type.height? type.height: (that.arguments.height? that.arguments.height: 1));
-            var __widget = jQuery('<div class="widget '+ that.type + '" id="widget_' + that.type + '_' + index + '"></div>')
+            if(that.id) {
+              var id = that.id;
+            } else {
+              var id = 'widget_' + that.type + '_' + index;
+              options.panes[paneID].widgets[index].id = id;
+            }
+            var __widget = jQuery('<div class="widget '+ that.type + '" id="' + id + '"></div>')
               .css({
                 width: options.system.btnwidth * widget_width,
                 height: options.system.btnheight * widget_height, 
@@ -415,8 +570,8 @@ var Panel2 = new function() {
             return false;
           })
           .attr('paneID', i)
-          .css({'display': options.panes[i].widgets && options.panes[i].widgets.length + 
-                           options.panes[i].buttons && options.panes[i].buttons.length > 0? 
+          .css({'display': ((options.panes[i].widgets && options.panes[i].widgets.length) + 
+                           (options.panes[i].buttons && options.panes[i].buttons.length)) > 0? 
                            '': 'none'})
           .appendTo(document.body);
       }
@@ -1497,6 +1652,35 @@ var Panel2 = new function() {
           }
         }
       }
+    },
+
+    /**
+    * Функция для отображения сообщения пользователю
+    */
+    showFlash: function(text, type, timeout) {
+      var types = ['message', 'warning', 'error'];
+      if(types.indexOf(type) == -1) type = 'message';
+
+      var alreadyShown;
+      $('.panel-flash:visible').each(function() {
+        $(this).animate({bottom: parseInt($(this).css('bottom')) + 50});
+      });
+
+      var flash = $('<div class="panel-flash"></div>').css({bottom: -40}).addClass(type).html(text)
+        .appendTo(document.body).animate({bottom: 20}).click(function() {
+          $(this).fadeOut(function() {
+            $(this).remove();
+          });
+        });
+      /// таймаут скрытия по-умолчанию
+      if(!timeout) timeout = 20000;
+      setTimeout(function() {
+        flash.animate({bottom: parseInt(flash.css('bottom')) + 300},
+          { duration: 200, queue: false });
+        flash.fadeOut(100, function() {
+          $(this).remove();
+        });
+      }, timeout);
     },
     /**
     * Публичные аттрибуты

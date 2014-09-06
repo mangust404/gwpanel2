@@ -126,3 +126,34 @@
   border-radius: 10px;
   z-index: 2;
 }
+
+.pane-bubble.drag-over {
+  border: 2px dashed red;
+  opacity: 1;
+  width: 30px;
+  border-radius: 0;
+}
+
+.pane-bubble.drag-over:before {
+  content: "\2193";
+  color: red;
+  font-size: 22px;
+  position: relative;
+  left: 10px;
+  top: 50%;
+  line-height: 0;
+}
+
+.panel-flash {
+  position: absolute;
+  bottom: 10px;
+  background: none repeat scroll 0 0 #d0eed0;
+  border-radius: 10px;
+  padding: 15px 20px;
+  text-align: center;
+  left: 50%;
+  margin-left: -250px;
+  width: 500px;
+  z-index: 20;
+  box-shadow: 1px 1px 3px #003300;
+}
