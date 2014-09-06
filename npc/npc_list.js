@@ -30,3 +30,21 @@ for(var island = 1; island < 4; island++) {
     __panel.npc_list.push(this);
   });
 }
+
+__panel.npc_list_g = {};
+
+jQuery(__panel.npc_list_island[1]).each(function() {
+  __panel.npc_list_g[this.id] = this.name;
+});
+
+__panel.npc_list_z = {};
+
+jQuery(__panel.npc_list_island[2]).each(function() {
+  __panel.npc_list_z[this.id] = this.name;
+});
+
+__panel.npc_list_p = {};
+
+jQuery(__panel.npc_list_island[3]).each(function() {
+  __panel.npc_list_p[this.id] = this.name;
+});

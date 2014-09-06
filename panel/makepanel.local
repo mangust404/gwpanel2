@@ -38,7 +38,8 @@ C:\Documents and settings\%username%\Application Data\Mozilla\Firefox\Profiles\�
 
 */
 
-ini_set('display_errors', 'off');
+ini_set('display_errors', 'on');
+error_reporting(E_ALL);
 
 /// путь к корню gwpanel
 $gwpanel_path = realpath(dirname(__FILE__) . '/..');
@@ -48,549 +49,13 @@ if(strpos($gwpanel_path, 'file:///') === FALSE) {
   $gwpanel_path = str_replace('file://', 'file:///', $gwpanel_path);
 }
 
-/// Настройки панели
-$__panel_options = array(
-  'system' => array(
-    //'embed_to' => 0, ///Таймаут встраивания панели (для версии с фреймом), больше не поддерживается
-    'noframe' => 1,  ///Версия без фрейма?
-    //'pos' => 'top', /// Положение: top - наверху страницы, bottom - внизу страницы, больше не поддерживается
-    'debug' => 1, ///Режим отладки
-    'version_cmp_to' => '300000', ///Таймаут проверки версии, в милилсекундах
-    'theme' => 'base', ///Тема оформления
-    'theme_m' => '', /// Если тема не указана, подставляется этот путь, например file:///home/user/panel/themes/mytheme (для *nix) или file:///C:/panel/themes/mytheme (для Win)
-    'btnwidth' => 70, 
-    'btnheight' => 85, 
-    'plugins' => array ( ///Подгружаемые автономные модули
-      'battle',
-      'battleimg',
-      'outland', 
-/*      0 => 'sets',*/
-/*      2 => 'bhelper',  
-      3 => 'battlefix',*/
-/*      5 => 'home',
-      6 => 'notify',   
-      7 => 'player',   
-      8 => 'navigation',
-      9 => 'gwlinks',  
-      10 => 'items',   
-      11 => 'npc',
-      12 => 'searchplayer',  
-      14 => 'hotkeys', 
-      15 => 'gwforum', 
-      16 => 'mymenu',  
-      17 => 'map',
-      18 => 'gwzone',  
-      19 => 'irc',*/
-    ),
-  ),
-  'panes' => array(
-    0 => array(
-      'width' => 6,
-      'height' => 4,
-      'buttons' => array(
-        array(
-          'type' => 'map_gohome',
-          'title' => 'Домой',
-          'img' => 'icons/home.png',
-          'arguments' => array(
-            'sector' => '151x149', 
-          ),
-          'left' => 0,
-          'top' => 0, 
-        ),
-        array(
-          'type' => 'panel_link',
-          'title' => 'Форум',
-          'img' => 'http://images.ganjawars.ru/img/forum/f27.gif',
-          'arguments' => array(
-            'link' => 'http://www.ganjawars.ru/forum.php',
-            'blank' => 0,
-          ),
-          'left' => 1,
-          'top' => 0, 
-        ),
-        array(
-          'type' => 'panel_settings',
-          'left' => 2,
-          'top' => 0, 
-        ),
-        array(
-          'type' => 'map_goport',
-          'arguments' => array(
-            'port' => '151x150', 
-          ),
-          'left' => 3,
-          'top' => 0, 
-        ),
-        array(
-          'type' => 'map_gooverlord',
-          'title' => 'Overlord', 
-          'arguments' => array(
-            'port' => '10', 
-          ),
-          'left' => 4,
-          'img' => 'icons/pokemon.png', 
-          'top' => 0, 
-        ),
-        array(
-          'type' => 'panel_exit',
-          'left' => 5,
-          'top' => 3, 
-        ),
-      ),
-      'widgets' => array(
-        array(
-          'type' => 'npc_npc_z',
-          'arguments' => array(
-            'friends' => array(5, 11),
-            'enemies' => array(1, 4, 7, 9),
-            'undress' => 1, 
-          ),
-          'left' => 0,
-          'top' => 1, 
-        ),
-      ),
-    ),
-    1 => array(
-      'width' => 4,
-      'height' => 4,
-    ),
-    2 => array(
-      'width' => 6,
-      'height' => 4,
-    ),
-    3 => array(
-      'width' => 4,
-      'height' => 4,
-    ),
-    
-  ),
-  
-  /// "Плавающие" виджеты
-  'widgets' => array(
-    array(
-      'type' => 'home_health_widget',
-      'left' => 510,
-      'top' => 0,
-      'arguments' => array(
-        'type' => 0,
-        'autohide' => 1, 
-        'size' => 2, 
-      ),
-    ),
-  ),
-  
-  
-  'notify' => array(
-    'nohht' => 0, ///Не показывать таймеры на домашней страничке
-    'updateInterval' => 0.25, /// Интервал опроса почты и т.д., в минутах
-    '80' => '1', ///Уведомлять о выздоровлении до 80%
-    '80_sound' => '11',///Звук уведомления о выздоровлении до 80%
-    '80_nomsg' => '1', /// Не выводить сообщение о выздоровлении до 80%, только звук
-    '100' => 0, /// Уведомление о восстановлении 100% здоровья
-    '100_sound' => 0, /// Звук уведомления о восстановлении 100% здоровья
-    '100_nomsg' => 0, /// Не выводить сообщение о выздоровлении до 100%, только звук
-    'singlewar' => '1', /// Уведомление в одиночных боях
-    'arrival' => '1', ///Уведомление о прибытии
-    'arrival_sound' => '8', /// Звук для уведомления о прибытии
-    'a_nosingleisland' => '1', ///Не уведомлять о перемещениях внутри одного острова
-    'workend' => '1', ///Сообщение об окончании работы
-    'workend_sound' => 'generic', 
-    'singlewar_sound' => '14', /// Звук для  уведомления о вызова в одиночных
-    'singlewar_nomsg' => '1', /// Не выводить сообщение о вызове в одиночках, только звук
-    'battle_begin' => '1', /// Сообщение о начале боя
-    'battle_begin_sound' => '14', /// Звук для уведомления о начале боя 
-    'battle_begin_nomsg' => 0, /// Не выводить сообщение о начале боя, только звук
-    'mail_watch' => '1', /// Следить за почтой
-    'mail_watch_sound' => 'voicemail', ///Звук для уведомления о новой почте
-    'mail_watch_nomsg' => '1', ///Не выводить сообщение, только звук
-    'parcel_watch' => '1', /// Следить за посылками
-    'parcel_watch_sound' => 'send', ///Звук для уведомления о новой посылке
-    'parcel_watch_nomsg' => '1', ///Не выводить сообщение, только звук
-    'arrival_nomsg' => '1',  /// Не выводить сообщение о прибытии, только звук
-    'workend_msg' => '1', /// Уведомлять об окончании рабочей смены
-    'workend_nomsg' => '1', /// Не выводить сообщение об окончании работы, только звук
-    'synd_war' => '1', /// Следить за лампой синдикатных боев
-    'synd_war_sound' => 'uquestion', /// Звк для уведомления о синдикатном бое
-    'synd_war_nomsg' => '1',  /// Не выводить сообщение о начале синдбоя, только звук
-    'npcattck_sound' => 0, /// Звук уведомления о возможности нападения на NPC
-    'npcattck_nomsg' => 0, /// Не выводить сообщение для уведомления о возможности нападения на NPC
-    'gwar' => '1', /// Сообщать о начале граф. боя
-    'gwar_sound' => '25', /// Звук сообщения о начале граф. боя
-    'gwar_nomsg' => 0,  /// Не выводить сообщение, только звук о начале граф. боя
-    'quest_to_sound' => '4', /// Звук уведомления о выполнении следующего квеста
-    'quest_to_nomsg' => 0,   /// не выводить сообщение о выполнении следующего квеста
-    'quest_ansto_sound' => 'ring', /// Звук уведомления об окончании времени на ответ NPC
-    'quest_ansto_nomsg' => 0, /// не выводить сообщение об окончании времени на ответ NPC
-    'quest_doto_sound' => 'generic', /// Звук уведомления об окончании времени на выполнение квеста
-    'quest_doto_nomsg' => 0, /// не выводить сообщение об окончании времени на выполнение квеста
-    'quest_doto_5_sound' => 0, /// Уведомление за 5 минут до конца квеста
-    'quest_doto_5_nomsg' => 0, /// Не показывать сообщение для уведомления за 5 минут до конца квеста
-  ),
-  
-  'home' => array(
-    'nohht' => 0,
-    'nodura' => 0, 
-  ),
-  
-  //'playerSearchNW' => '1', ///Если равно 1, то будет установлена галочка "в новом окне" для формы поиска персонажей
-  
-  
-  //'nohpperc' => 0, /// Не показывать проценты выздоровления на панели , больше не поддерживается
-  //'nohptimer' => '1', /// Не показывать таймер выздоровления до 100% на панели , больше не поддерживается
-  //'nohptimer80' => 0, /// Не показывать таймер выздоровления до 80% на панели , больше не поддерживается
-  //'noconfirm' => 0, /// Не требовать подтверждения о закрытии вкладки/окна, больше не поддерживается
-  
-  'battle' => array(
-    'wartime_s' => '10', /// Таймаут обновления данных в бою (переназначает игровой таймаут, который у некоторых не работает)
-    'battle_moves' => '1', ///Отмечать игроков, сделавших ход
-    'indexes' => '1', ///Добавлять порядковые номера противникам
-    'nobchat_m' => 0, /// Не изменять боевой чат
-    'genuniq' => '1', /// Генерировать случайный ходы для обеих рук
-    'autogen' => 1, /// Генерировать ход
-    'nobgen' => 0, /// Не выводить генератор
-    'autoredo' => 0, /// Запоминать ход
-    'noplinfo' => 0, /// Не выводить информацию об игроке
-    'noblines' => 0, /// Не выводить линейку (граф. расположение )
-    'nobopacity' => 0, /// Не использовать прозрачность
-    'nobdc' => 0, /// Не отображать Динамический Центр
-    'nobfresize' => 0, /// Не задавать полю боя фиксированную высоту
-    'advSelect' => '1', /// Показывать расширенную информацию в списке выбора противника
-    'nobattlepm' => 0, 
-    'bwords' => 'ку|привет|привет бандиты)|хлабысь|бабах|пыщщщььь|Hello World!', /// Слова для быстрых фраз
-  ),
-  
-  'outland' => array(
-    'sectorin' => '10',  ///Сектор для отбытия [Energy One]
-    'autos' => '1', ///Автоматически отплывать, ага
-    'check_set' => '', ///Проверять комплекты
-    'fightas' => 0, ///Автоматически закрывать заявку
-    'takeas' => '1', ///Автоматически подбирать вещи
-    'highlight' => '1', ///Подкрашивать клетки, на которые можно перейти
-  ),
-  
-  'forum' => array(
-    'expand_quotes' => 0, /// Раскрывать цитаты по-умолчанию
-    'from_time' => 0, /// Показывать смещение во времени от предыдущего поста
-  ),
-
-  'other' => array(
-    'npcshow' => '2', /// Показывать NPC на островах
-    'date_len' => '3', /// Кол-во дней на доске объявлений
-    'island' => '1', /// Остров по-умолчанию
-    'hideKarma' => 0,  /// Скрывать карму
-    'homesector' => '151x149', /// Домашний сектор [Mind's eye]
-    'homeport' => '151x150', /// Домашний порт [Energy One]
-    'nouse' => 0, /// Скрывать кнопку "Использовать" в инвентаре
-    'masssell' => '1', /// Массовая сдача в гос, отключена по-умолчанию
-    'blevel' => '40', /// Боевой уровень (до этого по идее отправлялся автоматом)
-    'gwzoneruSelected' => 'uran', /// показывать объекты для интеграции с GW-Zone.ru
-    'eun_price' => '65000', /// Стоимость 1 EUN на рынке
-  ),
-  
-
-  //'menuName' => 'Моё меню 2', /// Заголовок "моего меню", больше не поддерживается
-//   'gotoout' => '1', /// Выводить иконку быстрого отплытия на аут
-//   'irc_div_height' => '250', /// Высота окна IRC-чата 
-//   'irc_div_width' => '450', /// Ширина окна IRC-чата 
-//   'irc_pos' => '1', /// Положение IRC-чата
-//   'cgiirc' => array ( /// Настройки для CGI-интерфейса irc (звуки, показ ников и пр.)
-//     'actsound' => '1',
-//     'joinsound' => '1',
-//     'smilies' => '1',
-//     'shownick' => '1',
-//     'timestamp' => '1',
-//   ),
-//   'ircchans' => array ( /// Каналы на которые входить по-умолчанию
-//     0 => 'chat',
-//     1 => 'test',
-//   ),
-//   'irc_chan' => 'chat', /// Чат по-умолчанию
-  //'panel_show' => 'dropdown', /// показ панели для версии с попапом (dropdown - при наведении, click - при клике)
-  //'tabonly' => '1', /// Открывать контейнер в новой вкладке (а не окне)
-  //'gotooverlord' => '1', /// Показывать кнопку отплытия на новый аут
-//   'h_i' => 'i', /// горячяя клавиша: инвентарь
-//   'h_h' => 'h', /// горячяя клавиша: домашнаяя страничка
-//   'h_m' => 'i', /// горячяя клавиша: Карта острова
-//   'h_w' => 'w', /// горячяя клавиша: Бой
-//   'h_f' => 'f', /// горячяя клавиша: Форум
-//   'h_p' => 'p', /// горячяя клавиша: Персонаж
-//   'h_n' => 'n', /// горячяя клавиша: Переключение по ссылкам навигации
-//   'h_l' => 'l', /// горячяя клавиша: Ссылка на объект "Последний раз вы работали на..."
-);
-  
-///Данные панели "из базы" 
-$__panel = array(
-  'id' => 5,
-  'uid' => 1,
-  'script' => '',
-  'options' => $__panel_options,
-  'version' => time(), /// Версия
-  'security' => 9999999, /// Версия обновления безопасности
-  'date' => time(), /// Время установки
-  'type' => 5, ///Тип, Standalone-обычная
-  'settings' => '3f0459a2', /// хэш-ключ настроек
-);
-
-/// Данные для комплектов "из базы"
-
-$sets_list = array(
-  /// Данные для комплекта
-  array(
-    'id' => 273, /// идентификатор в базе
-    'pid' => 0, /// родительский комплект
-    'name' => 'Глобокольт', /// название
-    'uid' => 1, /// ID пользователя-владельца
-    'sid' => 'd7fd1b64e7d81800ec3b2696215d6d76', /// ID скрипта
-    'weight' => 0, ///Вес (порядковый номер в списке)
-    'enabled' => 1, /// Включён или нет
-    'items' => serialize(array ( /// Список предметов
-      0 => 'Nokia N95',
-      1 => 'Nokia 9500',
-      2 => 'Colt m636 [ShS]',
-      3 => 'GL-06 40mm',
-      4 => 'Шлем Mk-6',
-      5 => 'Лесной маскхалат',
-      6 => 'Титановые щитки',
-      7 => 'Вертолёт МИ-8',
-      8 => 'Карманные часы',
-      9 => 'Тепловизор IRT-7',
-      10 => 'Чип брони 2 класса',
-    )), 
-    'slots' => serialize(array (  /// Список слотов
-      0 => '1',
-      1 => '1',
-      2 => '2',
-      3 => '1',
-      4 => '1',
-      5 => '1',
-      6 => '1',
-      7 => '1',
-      8 => '1',
-      9 => '1',
-      10 => '1',
-    )), 
-    'keep_order' => 0, /// Соблюдать порядок надевания?
-    'date' => 1259057878 /// дата создания (изменения)
-  ), 
-  
-  /// И еще один комплект
-  array(
-    'id' => 124, 
-    'pid' => 0, 
-    'name' => 'Хавки [АРТ]', 
-    'uid' => 1, 
-    'sid' => '85d258aaa9d172faff7e0da34d3257fd', 
-    'weight' => 0, 
-    'enabled' => 1, 
-    'items' => serialize(array (
-      0 => 'Nokia N95',
-      1 => 'HAWK 97',
-      2 => 'HAWK 97',
-      3 => 'Шлем Mk-6',
-      4 => 'Бронежилет "Патруль" [PA]',
-      5 => 'Лесной маскхалат',
-      6 => 'Десантные сапоги [BS]',
-      7 => 'Вертолёт МИ-8',
-      8 => 'Складная лопата',
-      9 => 'NightHawk IR',
-      10 => 'Чип самолечения',
-    )), 
-    'slots' => serialize(array (
-      0 => '1',
-      1 => '2',
-      2 => '1',
-      3 => '1',
-      4 => '1',
-      5 => '1',
-      6 => '1',
-      7 => '1',
-      8 => '1',
-      9 => '1',
-      10 => '1',
-    )), 
-    'keep_order' => 0, 
-    'date' => 1253467639
-  ),
-);
-
-/// Псевдообъект пользователя
-global $user;
-$user = new stdClass();
-$user->uid = 1;
-
-/// Пара пунктов для "Моего меню"
-$user->menu_items = array(
-  'Торговые форумы',
-  'РГД2М (где купить)',
-);
-$user->menu_links = array(
-  'http://www.ganjawars.ru/forum.php?gid=2',
-  'http://www.ganjawars.ru/statlist.php?r=rgd2m&type=i',
-);
-$user->menu_styles = array( /// CSS-стили кнопок
-  'color: green; text-decoration: underline; ',
-  '',
-);
-$user->menu_nw = array( /// Признак открытия в новом окне
-  1,
-  0
-);
-$user->menu_hotkeys = array();
-
-
-if(file_exists('local_settings.php')) include_once('local_settings.php');
-
-include_once('panel.module');
-
-include_once($gwpanel_path . '/gwjs.module');
-
-/**
- * Функции-заместители, симулирующие API Drupal-а: запрос к базе, права доступа и т.д.
- */
-
-function db_query($query, $arg1 = NULL, $arg2 = NULL, $arg3 = NULL, $arg4 = NULL) {
-  global $__panel_options;
-  global $gwpanel_path;
-
-  $result = array();
-
-  switch($query) {
-    case 'SELECT * FROM {gwjs_panels} WHERE uid=%d';
-      global $__panel;
-      return array($__panel);
-    break;
-    case 'SELECT vid, path FROM {gwjs_files} WHERE path NOT LIKE "themes/%"':
-      global $modules;
-      foreach($modules as $module) {
-        foreach(glob($gwpanel_path  . '/' . $module . '/*.js') as $path) {
-          $result[] = array('vid' => 1, 'path' => $module . '/' . basename($path));
-        }
-      }
-    break;
-    case 'SELECT vid, path FROM {gwjs_files} WHERE path LIKE "themes/%s/%"':
-      global $modules;
-      foreach(rglob('*.css', 0, $gwpanel_path  . '/themes/' . $arg1 . '/') as $file) {
-        $result[] = array('vid' => 1, 'path' => str_replace($gwpanel_path . '/', '', $file));
-      }
-    break;
-    case 'SELECT path FROM {gwjs_files} WHERE path LIKE "themes/' . $__panel_options['system']['theme'] . '/%.css"':
-      foreach(rglob('*.css', 0, $gwpanel_path  . '/themes/' . $__panel_options['system']['theme'] . '/') as $file) {
-        $result[] = array('path' => str_replace($gwpanel_path . '/', '', $file));
-      }
-    break;
-    case 'SELECT path FROM {gwjs_files} WHERE path LIKE "%s/%.js"':
-      foreach(glob($gwpanel_path  . '/' . $arg1 . '/*.js') as $path) {
-        $result[] = array('path' => $arg1 . '/' . basename($path));
-      }
-    break;
-    case 'SELECT id, name, sid, items, slots, keep_order FROM {gwjs_sets} WHERE uid=%d AND pid=0 AND enabled=1 ORDER BY weight ASC':
-      global $sets_list;
-      return $sets_list;
-    break;
-  }
-  return $result;
-}
-
-function db_fetch_array(&$result) {
-  $output = current($result);
-  if(!count($output) || !is_array($output)) return FALSE;
-  next($result);
-  return $output;
-}
-
-function user_access() {
-  return TRUE;
-}
-
-function url($path) {
-  return 'http://test.gwpanel.org/' . $path;
-}
-
 function _element_sort($a, $b) {
-  $a_weight = (is_array($a) && isset($a['#weight'])) ? $a['#weight'] : 0;
-  $b_weight = (is_array($b) && isset($b['#weight'])) ? $b['#weight'] : 0;
+  $a_weight = (is_array($a) && isset($a['weight'])) ? $a['weight'] : 0;
+  $b_weight = (is_array($b) && isset($b['weight'])) ? $b['weight'] : 0;
   if ($a_weight == $b_weight) {
     return 0;
   }
   return ($a_weight < $b_weight) ? -1 : 1;
-}
-
-function module_invoke_all($hook) {
-  $args = func_get_args();
-  $hook = array_shift($args);
-  $return = array();
-  foreach (module_implements($hook) as $module) {
-    $function = $module .'_'. $hook;
-    $result = call_user_func_array($function, $args);
-    if (isset($result) && is_array($result)) {
-      $return = array_merge($return, $result);
-    }
-    else if (isset($result)) {
-      $return[] = $result;
-    }
-  }
-
-  return $return;
-}
-
-function drupal_add_js() {
-
-}
-
-function variable_set() {
-
-}
-
-function variable_get($name) {
-  switch($name) {
-    case '':
-    
-    break;
-  }
-}
-
-function drupal_validate_utf8($text) {
-  if (strlen($text) == 0) {
-    return TRUE;
-  }
-  return (preg_match('/^./us', $text) == 1);
-}
-
-function check_plain($text) {
-  return drupal_validate_utf8($text) ? htmlspecialchars($text, ENT_QUOTES) : '';
-}
-
-function drupal_get_path($type, $arg) {
-  if($type == 'module') {
-    global $gwpanel_path;
-    if($arg == 'gwjs') {
-      return $gwpanel_path;
-    }
-    return $gwpanel_path . '/' . $arg;
-  }
-}
-
-function module_implements($method) {
-  global $modules;
-  $result = array();
-  
-  foreach($modules as $module) {
-    if(function_exists($module . '_' . $method)) {
-      $result[] = $module;
-    }
-  }
-  return $result;
-}
-
-function module_invoke() {
-  $args = func_get_args();
-  $module = array_shift($args);
-  $hook = array_shift($args);
-  $function = $module .'_'. $hook;
-  if(function_exists($function)) {
-    return call_user_func_array($function, $args);
-  }
 }
 
 /// Получаем список модулей
@@ -602,48 +67,41 @@ foreach(glob($gwpanel_path . '/*', GLOB_ONLYDIR) as $path) {
   }
   
   $modules[] = $name;
-  
-  include_once($gwpanel_path . '/' . $name . '/' . $name . '.module');
 }
 
-ob_start();
-ob_clean();
+function panel_standalone_local() {
+  global $gwpanel_path;
 
-/**
- * Функция выдачи STANDALONE-юзерскрипта для локальной разработки.
- * @param $type - тип. Возможные значения: 
- *   - 'manual' = ручной тип установки
- *   - всё остальное = обычный тип установки
- */
-function panel_standalone_local($type = '', $noexit = FALSE) {
-  if(!user_access('get panel')) return 'Вы должны быть зарегистрированы и авторизованы';
-  global $user;
-  global $__panel;
-  $result = $__panel;
-  
-  $baseURL = url('', NULL, NULL, TRUE);
-  
-  $localURL = 'file://' . realpath(dirname(__FILE__) . '/../');
+  $localURL = 'file://' . $gwpanel_path;
   if(strpos($localURL, 'file:///') === FALSE) {
     $localURL = str_replace('\\', '/', $localURL);
     $localURL = str_replace('file://', 'file:///', $localURL);
   }
   
-  
-  $gwjs_path = drupal_get_path('module', 'gwjs');
-  
-  @ setcookie('settings', $result['settings'], time() + 31536000, '/');
-  
-  $options = $result['options'];
   $apply_pages = $apply_scripts = $apply_events = array();
-  $plugins = module_invoke_all('panel_plugins');
+  /// Получаем данные модулей
+  $plugins = array();
+  global $modules;
+  foreach($modules as $i => $module) {
+    if(file_exists($gwpanel_path . '/' . $module . '/' . $module . '.module.json')) {
+      $data = json_decode(file_get_contents($gwpanel_path . '/' . $module . '/' . $module . '.module.json'), TRUE);
+      if($data) {
+        $plugins[$module] = $data;
+      } else {
+        print "ERROR!!! Bad json syntax in $module/$module.module.json\n";
+        exit;
+      }
+    }
+  }
   uasort($plugins, '_element_sort');
 
   $tests = array();
+  $widget_classes = $button_classes = array();
 
   foreach($plugins as $plugin_name => $plugin) {
     if(is_array($plugin['apply'])) {
       foreach($plugin['apply'] as $page => $scripts) {
+        if(!is_array($scripts)) continue;
         $is_array = FALSE;
         foreach($scripts as $func => $file) {
           if(is_array($file)) {
@@ -663,29 +121,42 @@ function panel_standalone_local($type = '', $noexit = FALSE) {
             }
           }
         } else {
-          if(is_array($apply_pages[$page])) {
+          if(isset($apply_pages[$page]) && is_array($apply_pages[$page])) {
             $apply_pages[$page] = array_merge($apply_pages[$page], array_keys($scripts));
           } else {
-            $apply_pages[$page]  = array_keys($scripts);
+            $apply_pages[$page]  = is_array($scripts)? array_keys($scripts): '';
           }
         }
       }
+      //$apply_scripts[$plugin_name] = $plugin['applyScript'];
+    }
+    if(isset($plugin['event']) && is_array($plugin['event'])) {
       foreach($plugin['event'] as $event => $listener) {
         if(!isset($apply_events[$event])) $apply_events[$event] = array();
         $listener['event'] = $event;
         $apply_events[$event][] = $listener;
         $apply_scripts[$listener['callback']] = $plugin_name . '/' . $listener['file'];
       }
-      //$apply_scripts[$plugin_name] = $plugin['applyScript'];
     }
+
+    if(isset($plugin['buttons']) && is_array($plugin['buttons'])) {
+      foreach($plugin['buttons'] as $type => $button) {
+        $button['module'] = $plugin_name;
+        $button_classes[$plugin_name . '_' . $type] = $button;
+      }
+    }
+
+    if(isset($plugin['widgets']) && is_array($plugin['widgets'])) {
+      foreach($plugin['widgets'] as $type => $widget) {
+        $widget['module'] = $plugin_name;
+        $widget_classes[$plugin_name . '_' . $type] = $widget;
+      }
+    }
+
     foreach(glob(realpath(dirname(__FILE__) . '/../' . $plugin_name) . '/*_test.js') as $_file) {
       $tests[] = $plugin_name . '/' . basename($_file);
     }
   }
-  
-  $button_classes = panel_get_buttons(TRUE);
-  
-  $widget_classes = panel_get_widgets(TRUE);
   
   //print_r($apply);
   $options['browsers'] = array(
@@ -693,7 +164,6 @@ function panel_standalone_local($type = '', $noexit = FALSE) {
     'opera' => 9.52, 
   );
   $apply = array();
-  $apply['version'] = $version;
   $apply['pages'] = $apply_pages;
   $apply['scripts'] = $apply_scripts;
   $apply['events'] = $apply_events;
@@ -705,27 +175,13 @@ function panel_standalone_local($type = '', $noexit = FALSE) {
     'window.panel_apply = ' . json_encode($apply) . ';
 window.panel_tests = ' . json_encode($tests) . ';');
   
-  $options['baseURL'] = $baseURL;
-  if(!$options['system']['theme']) $options['system']['theme'] = 'base';
-  $version = $result['version'];
-  @ setcookie('version', $version, time() + 31536000, '/');
-  
-  $options['standalone'] = 1;
-  
-
-  variable_set('gwjs_firefox_userjs_get', variable_get('gwjs_firefox_userjs_get', 0) + 1);
-
-  @ header('Content-type: text/javascript;  charset=utf8');
-  @ header('Content-Disposition: attachment; filename="gwpanel.user.js"');
-
-  print '// ==UserScript==
+  $output = '// ==UserScript==
 // @name          GWPanel 2
 // @namespace     http://gwpanel.org
-// @description      Client-panel for Ganjawars online game STANDALONE ' . check_plain($type) . ' version (server ' . $_SERVER['HTTP_HOST'] . ', timestamp: ' . date('r') . ')
-';
-  if($options['system']['noframe'] || TRUE) {
-    print '// @include       http://ganjawars.ru/*
-// @version       ' . $version . '.' . time() . '
+// @description      Developement-версия GWPanel 2
+// @version       0.0.1
+
+// @include       http://ganjawars.ru/*
 // @include       http://*.ganjawars.ru/*
 // @exclude       http://chat.ganjawars.ru/*
 // @exclude       http://photos.ganjawars.ru/*
@@ -733,17 +189,8 @@ window.panel_tests = ' . json_encode($tests) . ';');
 // @exclude       http://*.ganjawars.ru/
 // @exclude       http://*.ganjawars.ru/b0/btk.php
 ';
-  } else {
-    print '// @include       http://ganjawars.ru/*
-// @version       ' . $version . '.' . time() . '
-// @include       http://*.ganjawars.ru/*
-// @exclude       http://chat.ganjawars.ru/*
-// @exclude       http://photos.ganjawars.ru/*
-// @exclude       http://www.ganjawars.ru/*shop*
-// @exclude       http://www.ganjawars.ru/work.php*
-';
-  }
-  print '// ==/UserScript==
+
+  $output .= '// ==/UserScript==
 try {
   if(unsafeWindow)
     var window = unsafeWindow;
@@ -765,28 +212,16 @@ myDate.setMonth(myDate.getMonth() + 120);
 document.cookie = "gwp2_e=dev;expires=" + myDate 
                + ";domain=.ganjawars.ru;path=/";
 
-';
-  $__result = db_query('SELECT vid, path FROM {gwjs_files} WHERE path NOT LIKE "themes/%"');
-  while($ar = db_fetch_array($__result)) {
-    $versions[$ar['path']] = $ar['vid'];
-  }
-  $__result = db_query('SELECT vid, path FROM {gwjs_files} WHERE path LIKE "themes/%s/%"', $options['system']['theme']);
-  while($ar = db_fetch_array($__result)) {
-    $_ar = explode('/', $ar['path']);
-    $_ar = array_splice($_ar, 2);
-    $versions[implode('/', $_ar)] = $options['system']['theme'] . $ar['vid'];
-  }
-  $versions['settings'] = substr($result['script'], 0, 8);
-  print 'window.__loadCSS = function(path, callback, failover) {';
-  if($options['theme_m']) {
-    print 'var s = document.createElement(\'style\');
+window.__loadCSS = function(path, callback, failover) {';
+  /*if($options['theme_m']) {
+    $output .= 'var s = document.createElement(\'style\');
   s.type = \'text/css\';
   var d = new Date();
   s.innerHTML = "<!-- @import url(' . $options['theme_m'] . '/" + path + "?" + d.getTime() + "); -->";
   document.getElementsByTagName("head")[0].appendChild(s);
 ';
-  } else {
-    print '
+  } else {*/
+    $output .= '
   /// Решение взято с http://www.yearofmoo.com/2011/03/cross-browser-stylesheet-preloading.html
   var link = document.createElement(\'link\');
   link.type = \'text/css\';
@@ -829,13 +264,11 @@ document.cookie = "gwp2_e=dev;expires=" + myDate
   var s = document.createElement(\'link\');
   s.rel = "stylesheet";
   s.type = \'text/css\';
-  s.href = "' . $localURL . '/themes/' . $options['system']['theme'] . '/" + path;
+  s.href = "' . $localURL . '/themes/base/" + path;
 ';
-  }
-  print '};
-';
-
-  print 'window.__loadScript = function(path, callback, failover) {
+  //}
+  $output .= '};
+window.__loadScript = function(path, callback, failover) {
   if(!path || !path.length) return;
   if(String(typeof(path)).toLowerCase() != "object" || !path.length) {
     path = [path];
@@ -870,7 +303,7 @@ if(window.chrome) {
   $__options_str = str_replace(array('"true"', '"false"', '"'), array('true', 'false', '\\"'), json_encode($options));
   $__buttons_str = str_replace(array('"true"', '"false"', '"'), array('true', 'false', '\\"'), json_encode($button_classes));
   $__widget_str = str_replace(array('"true"', '"false"', '"'), array('true', 'false', '\\"'), json_encode($widget_classes));
-  print 'var __initLibs = "if(window.$) window.old$ = window.$; var libs = [\"jquery\"]; var libsCount = 0; for(var i = 0; i < libs.length; i++) { var s = document.createElement(\"script\"); s.type = \"text/javascript\"; s.addEventListener(\"load\", function() {if(++libsCount >= libs.length) libsLoaded();}, false); s.src = \"' . $localURL . '/lib/\" + libs[i] + \".js\";  s.charset=\"UTF-8\"; document.getElementsByTagName(\"head\")[0].appendChild(s);} var libsLoaded = function() {";
+  $output .= 'var __initLibs = "if(window.$) window.old$ = window.$; var libs = [\"jquery\"]; var libsCount = 0; for(var i = 0; i < libs.length; i++) { var s = document.createElement(\"script\"); s.type = \"text/javascript\"; s.addEventListener(\"load\", function() {if(++libsCount >= libs.length) libsLoaded();}, false); s.src = \"' . $localURL . '/lib/\" + libs[i] + \".js\";  s.charset=\"UTF-8\"; document.getElementsByTagName(\"head\")[0].appendChild(s);} var libsLoaded = function() {";
 
 var __initPanel = "var loadedLibs = 0; var _files = [\"lib/settings.js\", \"lib/crosswindow.js\", \"panel/panel.js\", \"apply.js\"]; for(var i = 0; i < _files.length; i++) { var s = document.createElement(\"script\"); s.type = \"text/javascript\"; s.addEventListener(\"load\", function() { if(++loadedLibs >= _files.length) run_panel()}); s.src = \"' . $localURL . '/\" + _files[i];  s.charset=\"UTF-8\"; document.getElementsByTagName(\"head\")[0].appendChild(s); } var run_panel = function() { if(window.old$) window.$ = window.old$; window.__panel = new Panel2(\"dev\", \"' . $localURL . '\"); window.__panel.init(); }";
 ';
@@ -881,14 +314,13 @@ var __initPanel = "var loadedLibs = 0; var _files = [\"lib/settings.js\", \"lib/
     }
   }
   
-  print 'var __initModules = "' . packScript($initModules) . '";
+  $output .= 'var __initModules = "' . packScript($initModules) . '";
 ';*/
 
-  print 'var __initClient = "var cls = document.createElement(\"script\"); cls.type = \"text/javascript\"; cls.src = \"' . $localURL . '/lib/crossclient.js\"; cls.charset=\"UTF-8\"; document.getElementsByTagName(\"head\")[0].appendChild(cls); ";
+  $output .= 'var __initClient = "var cls = document.createElement(\"script\"); cls.type = \"text/javascript\"; cls.src = \"' . $localURL . '/lib/crossclient.js\"; cls.charset=\"UTF-8\"; document.getElementsByTagName(\"head\")[0].appendChild(cls); ";
 ';
 
-  if($options['system']['noframe'] || TRUE) {
-  print '
+  $output .= '
 
 var __init = "";
 if(location.pathname == "/tmp/panelcontainer.html") {
@@ -908,15 +340,12 @@ if(window.chrome) {
 
   
 ';
-  }
-  if(!$noexit) exit();
+  return $output;
 }
 
 /// Выводим скрипт
-panel_standalone_local('', TRUE);
+$content = panel_standalone_local('', TRUE);
 
-$content = ob_get_contents();
-ob_clean();
 //print $content;
 if(file_put_contents($gwpanel_path . '/gwpanel2.user.js', $content)) {
   print 'File written successfully: ' . $gwpanel_path . '/gwpanel2.user.js' . "\n";
