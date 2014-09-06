@@ -249,8 +249,8 @@ var Panel2 = new function() {
                     not_empty = hold_positions[top] && hold_positions[top][left];
                   }
 
-                  if( left >= options.panes[paneID].width || 
-                      top >= options.panes[paneID].height) {
+                  if( left + (is_widget? widget_width: 1) > options.panes[paneID].width || 
+                      top + (is_widget? widget_height: 1) > options.panes[paneID].height) {
                     /// Элемент за  пределами окна, возвращаем на родину
                     that.draggable('option', 'revert', true);
                   } else if(not_empty) {
@@ -558,6 +558,23 @@ var Panel2 = new function() {
   * Вывод плашек активации
   */
   function draw_pane_bubbles() {
+    var buttons = 0;
+    for(var i = 0; i < 4; i++) {
+      if(jQuery.type(options.panes[i].buttons) == 'array') {
+        buttons += options.panes[i].buttons.length;
+      }
+    }
+    if(buttons == 0) {
+      /// все кнопки были удалены, добавляем дефолтную 
+      /// кнопку настроек в первое пустое окошко
+      for(var i = 0; i < 4; i++) {
+        if((!options.panes[i].buttons || !options.panes[i].buttons.length) &&
+            (!options.panes[i].widgets || !options.panes[i].widgets.length)) {
+          options.panes[i].buttons = [{ 'type': 'panel_settings', 'left': 0,'top': 0 }];
+          break;
+        }
+      }
+    }
     for(var i = 0; i < 4; i++) {
       if(jQuery.type(options.panes[i]) == 'object') {
         jQuery('<div id="pane-bubble-' + i + '" class="pane-bubble' + (i < 2? ' left': ' right') + (i % 2 > 0? ' bottom': ' top') + '"></div>')
