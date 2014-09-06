@@ -1491,7 +1491,11 @@ var Panel2 = new function() {
     wipeAll: function() {
       if(confirm("Вы действительно хотите удалить все данные GWPanel 2?\n\
                 Будут удалены ВСЕ ваши настройки, статистика, журналы.")) {
-
+        for(var key in localStorage) {
+          if(key.indexOf('gwp2_') == 0) {
+            localStorage.removeItem(key);
+          }
+        }
       }
     },
     /**
