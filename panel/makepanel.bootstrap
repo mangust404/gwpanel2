@@ -81,6 +81,8 @@ $plugins = array();
 /// Подготовка генерации пакета с исходниками
 /// Получаем список файлов
 $files = array();
+$modules = array();
+
 foreach(glob($gwpanel_path . '/*', GLOB_ONLYDIR) as $glob_path) {
   $dirname = basename($glob_path);
   if($dirname == 'themes' || $dirname == 'img') {
@@ -100,14 +102,15 @@ foreach(glob($gwpanel_path . '/*', GLOB_ONLYDIR) as $glob_path) {
       $files[] = $file;
     }
   }
-  if(file_exists($glob_path . '/' . $dirname . '.module')) {
-    include_once($glob_path . '/' . $dirname . '.module');
+  if(file_exists($glob_path . '/' . $dirname . '.module.json')) {
     $modules[] = $dirname;
-    $func = $dirname . '_panel_plugins';
-    if(function_exists($func)) {
-      foreach($func() as $key => $val) {
-        $plugins[$key] = $val;
-      }
+
+    $data = json_decode(file_get_contents($glob_path . '/' . $dirname . '.module.json'), TRUE);
+    if($data) {
+      $plugins[$dirname] = $data;
+    } else {
+      print "ERROR!!! Bad json syntax in $module/$module.module.json\n";
+      exit;
     }
   }
 }
@@ -138,9 +141,12 @@ $apply_pages = $apply_scripts = $apply_events = array();
 uasort($plugins, '_element_sort');
 
 $tests = array();
+$widget_classes = $button_classes = array();
+
 foreach($plugins as $plugin_name => $plugin) {
   if(isset($plugin['apply']) && is_array($plugin['apply'])) {
     foreach($plugin['apply'] as $page => $scripts) {
+      if(!is_array($scripts)) continue;
       $is_array = FALSE;
       foreach($scripts as $func => $file) {
         if(is_array($file)) {
@@ -168,24 +174,36 @@ foreach($plugins as $plugin_name => $plugin) {
         }
       }
     }
-    if(isset($plugin['event'])) {
-      foreach($plugin['event'] as $event => $listener) {
-        if(!isset($apply_events[$event])) $apply_events[$event] = array();
-        $listener['event'] = $event;
-        $apply_events[$event][] = $listener;
-        $apply_scripts[$listener['callback']] = $plugin_name . '/' . $listener['file'];
-      }
-    }
     //$apply_scripts[$plugin_name] = $plugin['applyScript'];
   }
+  if(isset($plugin['event'])) {
+    foreach($plugin['event'] as $event => $listener) {
+      if(!isset($apply_events[$event])) $apply_events[$event] = array();
+      $listener['event'] = $event;
+      $apply_events[$event][] = $listener;
+      $apply_scripts[$listener['callback']] = $plugin_name . '/' . $listener['file'];
+    }
+  }
+
+  if(isset($plugin['buttons']) && is_array($plugin['buttons'])) {
+    foreach($plugin['buttons'] as $type => $button) {
+      $button['module'] = $plugin_name;
+      $button_classes[$plugin_name . '_' . $type] = $button;
+    }
+  }
+
+  if(isset($plugin['widgets']) && is_array($plugin['widgets'])) {
+    foreach($plugin['widgets'] as $type => $widget) {
+      $widget['module'] = $plugin_name;
+      $widget_classes[$plugin_name . '_' . $type] = $widget;
+    }
+  }
+
   foreach(glob(realpath(dirname(__FILE__) . '/../' . $plugin_name) . '/*_test.js') as $_file) {
     $tests[] = $plugin_name . '/' . basename($_file);
-  }  
+  }
+
 }
-
-$button_classes = panel_get_buttons(TRUE);
-
-$widget_classes = panel_get_widgets(TRUE);
 
 $apply = array();
 $apply['pages'] = $apply_pages;

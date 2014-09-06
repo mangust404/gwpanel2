@@ -40,7 +40,7 @@
       "title": "Настройки",
       "configure": false,
       "callback": "__panel.panel_settings_editor",
-      "file": "panel/panel_settings.js",
+      "file": "panel_settings.js",
       "img": "icons/settings.png"
     },
     "exit": {
