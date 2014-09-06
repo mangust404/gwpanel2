@@ -62,7 +62,7 @@ function _element_sort($a, $b) {
 $modules = array();
 foreach(glob($gwpanel_path . '/*', GLOB_ONLYDIR) as $path) {
   $name = basename($path);
-  if($name == 'lib' || $name == 'themes' || $name == 'img' || !file_exists($gwpanel_path . '/' . $name . '/' . $name . '.module')) {
+  if($name == 'lib' || $name == 'themes' || $name == 'img' || !file_exists($gwpanel_path . '/' . $name . '/' . $name . '.module.json')) {
     continue;
   }
   
