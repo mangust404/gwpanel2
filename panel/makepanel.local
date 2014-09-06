@@ -849,7 +849,7 @@ document.cookie = "gwp2_e=dev;expires=" + myDate
     s.addEventListener("load", function() {
       loaded++;
       if(loaded >= path.length && callback) {
-        setTimeout(callback, 1);
+        callback();
       }
     }, false);
     if(failover) {

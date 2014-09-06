@@ -1007,11 +1007,13 @@ var Panel2 = new function() {
       }
 
       if(!to_load.length) {
-        /// Загружать нечего, просто запускаем callback
-        try {
-          if(callback) callback();
-        } catch(e) {
-          if(failover) failover();
+        if(name.length == 1 && scripts[name[0]].loaded) {
+          /// Загружать нечего, просто запускаем callback
+          try {
+            if(callback) callback();
+          } catch(e) {
+            if(failover) failover();
+          }
         }
         return;
       }

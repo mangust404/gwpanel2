@@ -318,6 +318,64 @@ QUnit.asyncTest('Подгрузка нескольких скриптов, си�
   }).appendTo('#qunit-fixture');
 });
 
+QUnit.asyncTest('Параллельная подгрузка нескольких скриптов', function(assert) {
+  expect(5);
+  var passed_count = 0;
+
+  $('<iframe id="foreign-event-iframe" src="' + document.location.href.split('?')[0]
+   + '?gwpanel_testing&continue"></iframe>').load(function() {
+    var that = this;
+    waitPanelInitialization(this.contentWindow, function() {
+      var panel = that.contentWindow.__panel;
+      setTimeout(function() {
+        panel.loadScript(['lib/tests/foobar.js', 'lib/tests/foobar2.js'], function () {
+          assert.deepEqual(panel.__foo_bar_script, 'foo bar', 'Скрипт загружен');
+          assert.deepEqual(panel.__foo_bar_script2, 'foo bar', 'Второй скрипт загружен');
+          passed_count++;
+          if(passed_count > 2) {
+            QUnit.start();
+          }
+        }, function() {
+          console.log((new Error).stack);
+          assert.ok(false, 'Скрипт не загружен');
+          QUnit.start();
+        })
+      }, 1);
+      setTimeout(function() {
+        panel.loadScript(['lib/tests/foobar2.js', 
+                          'lib/tests/foobar3.js'], function () {
+          assert.deepEqual(panel.__foo_bar_script2, 'foo bar', 
+                          'Второй скрипт загружен параллельно');
+          assert.deepEqual(panel.__foo_bar_script3, 'foo bar', 
+                          'Третий скрипт загружен параллельно');
+          passed_count++;
+          if(passed_count > 2) {
+            QUnit.start();
+          }
+        }, function() {
+          console.log((new Error).stack);
+          assert.ok(false, 'Скрипт не загружен');
+          QUnit.start();
+        })
+      }, 1);   
+      setTimeout(function() {
+        panel.loadScript('lib/tests/foobar2.js', function () {
+          assert.deepEqual(panel.__foo_bar_script2, 'foo bar', 
+                          'Второй скрипт загружен параллельно');
+          passed_count++;
+          if(passed_count > 2) {
+            QUnit.start();
+          }
+        }, function() {
+          console.log((new Error).stack);
+          assert.ok(false, 'Скрипт не загружен');
+          QUnit.start();
+        })
+      }, 1);      
+    });
+  }).appendTo('#qunit-fixture');
+});
+
 QUnit.asyncTest('Подгрузка стилей', function(assert) {
   expect(2);
   $('#qunit-fixture').append('<div class="foo-bar">test</div>');
