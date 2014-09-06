@@ -226,7 +226,7 @@ var Panel2 = new function() {
                   $('.pane-bubble:hidden').show();
                   $('.pane-bubble:not(#pane-bubble-' + paneID + ')')
                     .addClass('external');
-                  $(document.body).on('mousemove', dragOverPanes);
+                  $(document).on('mousemove', dragOverPanes);
                 },
                 drag: function(event, ui) {
                   var left = Math.round(ui.position.left / options.system.btnwidth);
@@ -263,7 +263,7 @@ var Panel2 = new function() {
                   }
                 },
                 stop: function() {
-                  $(document.body).off('mousemove', dragOverPanes);
+                  $(document).off('mousemove', dragOverPanes);
                   if(that[0].dragClassTO > 0) {
                     clearTimeout(that[0].dragClassTO);
                     that[0].dragClassTO = 0;
