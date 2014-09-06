@@ -921,7 +921,7 @@ var Panel2 = new function() {
     dispatchException: function(e, comment) {
       if(window.console) {
         console.log((comment? comment + " on ": '') + 
-                    (new Error).stack.split("\n")[1]);
+                    ((new Error).stack || arguments.callee.toString()).split("\n")[1]);
         console.log(e);
       }
     },
@@ -1256,7 +1256,7 @@ var Panel2 = new function() {
         return instance.crossWindow.bind(type, callback);
       } else {
         /// Генерируем ID привязки самостоятельно
-        var callerFunc = (new Error).stack.split("\n")[1];
+        var callerFunc = ((new Error).stack || arguments.callee.toString()).split("\n")[1];
         var listenerID = (callerFunc.substring(0, callerFunc.indexOf("@")).replace(/[<>]+/g, '') 
                           || "anoynmous") + '_' + (new Date).getTime() + '_preinit';
         if(!listenersStack[type]) listenersStack[type] = {};
