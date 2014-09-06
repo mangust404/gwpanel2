@@ -1,6 +1,0 @@
-name = GWPanel stats
-description = GWPanel statistics module
-package = gwpanel
-version = VERSION
-core = 7.x
-dependencies[] = panel

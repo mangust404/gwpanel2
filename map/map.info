@@ -1,6 +1,0 @@
-name = GWPanel map
-description = GWPanel map module
-package = gwpanel
-version = VERSION
-core = 7.x
-dependencies[] = panel
