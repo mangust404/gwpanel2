@@ -472,7 +472,7 @@ QUnit.asyncTest('Установка и считывание опций', functio
         assert.deepEqual('undefined', 
                           String(typeof(new_options['test_module'])).toLowerCase(), 
                           'опции удалены');
-        var local_options = JSON.parse(localStorage[__panel.getOptionsID()]);
+        var local_options = JSON.parse(localStorage['gwp2_' + __panel.getOptionsID()]);
         assert.deepEqual('undefined', 
                           String(typeof(local_options['test_module'])).toLowerCase(), 
                           'опции удалены из localStorage');

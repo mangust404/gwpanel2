@@ -294,9 +294,9 @@ $bootstrap = '
         callback(package);
         return;
       }
-      if(localStorage["package_" + package_version] != undefined) {
+      if(localStorage["gwp2_package_" + package_version] != undefined) {
         /// В хранилище есть этот пакет, ничего грузить не надо
-        package = JSON.parse(localStorage["package_" + package_version]);
+        package = JSON.parse(localStorage["gwp2_package_" + package_version]);
         if(String(typeof(package)).toLowerCase() == "object") {
           callback(package);
           return;
@@ -318,10 +318,10 @@ $bootstrap = '
           throw("Повреждён файл пакета " + path);
         }
         package = window.__package;
-        localStorage["package_" + package_version] = JSON.stringify(window.__package);
+        localStorage["gwp2_package_" + package_version] = JSON.stringify(window.__package);
         for(var key in package) {
-          if(localStorage[key]) {
-            localStorage.removeItem(key);
+          if(localStorage["gwp2_f_" + key]) {
+            localStorage.removeItem("gwp2_f_" + key);
           }
         }
         callback(package);
@@ -405,8 +405,8 @@ $bootstrap = '
           s.type = \'text/css\';
           s.href = panelURL + "/" + path[i];
         } else {
-          if(localStorage[path[i]]) {
-            css = localStorage[path[i]];
+          if(localStorage["gwp2_f_" + path[i]]) {
+            css = localStorage["gwp2_f_" + path[i]];
             if(typeof(css) != undefined && css.length) {
               jQuery("<style type=\'text/css\'></style>").html(css).appendTo("head");
               loaded++;
@@ -417,7 +417,7 @@ $bootstrap = '
           } else {
             __checkoutPackage(panel_version, function(package) {
               if(typeof(package[path[i]]) != undefined && package[path[i]].length) {
-                localStorage[path[i]] = package[path[i]];
+                localStorage["gwp2_f_" + path[i]] = package[path[i]];
                 jQuery("<style type=\'text/css\'></style>").html(package[path[i]]).appendTo("head");
                 loaded++;
                 if(callback && loaded == path.length) setTimeout(callback, 1);
@@ -451,9 +451,9 @@ $bootstrap = '
           s.addEventListener("error", failover, false);
           document.getElementsByTagName("head")[0].appendChild(s);
         } else {
-          if(localStorage[path[i]]) {
+          if(localStorage["gwp2_f_" + path[i]]) {
             try {
-              eval.apply(window, [localStorage[path[i]]]);
+              eval.apply(window, [localStorage["gwp2_f_" + path[i]]]);
               loaded++;
               if(callback && loaded >= path.length) callback();
             } catch(e) {
@@ -466,7 +466,7 @@ $bootstrap = '
                 if(failover) failover();
                 return;
               }
-              localStorage[path[i]] = package[path[i]];
+              localStorage["gwp2_f_" + path[i]] = package[path[i]];
               try {
                 eval.apply(window, [package[path[i]]]);
                 loaded++;
@@ -484,9 +484,9 @@ $bootstrap = '
     window.__clearCache = function() {
       __checkoutPackage(panel_version, function(package) {
         for(var key in package) {
-          localStorage.removeItem(key);
+          localStorage.removeItem("gwp2_f_" + key);
         }
-        localStorage.removeItem("package_" + panel_version);
+        localStorage.removeItem("gwp2_package_" + panel_version);
       });
     }
 

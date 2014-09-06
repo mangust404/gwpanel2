@@ -661,7 +661,7 @@ var Panel2 = new function() {
       //if(window.frameElement && !window.frameElement.panelContainer) return;
     } catch(e) {}
     
-    original_environment = localStorage.environment || __env;
+    original_environment = localStorage['gwp2_' + environment] || __env;
     if(location.search.indexOf('gwpanel_test') != -1) {
       environment = 'testing';
     } else {
@@ -768,13 +768,13 @@ var Panel2 = new function() {
           options = window.panelSettingsCollection.default;
           instance.set(optionsID, options);
         } else {
-          options = JSON.parse(localStorage[optionsID]) || 
+          options = JSON.parse(localStorage['gwp2_' + optionsID]) || 
                     window.panelSettingsCollection.default;
         }
         fastInitReady = true;
       } else {
         var variantID = 'options_variant_' + instance.currentPlayerID();
-        var __local_variant = localStorage[variantID];
+        var __local_variant = localStorage['gwp2_' + variantID];
         /// Опции сперва привязываются к окружению (environment), затем к ID игрока
         /// затем к выбранному варианту, если вариант не найден, то выбираем default
         var fastInitReady = false;
@@ -782,7 +782,7 @@ var Panel2 = new function() {
           __local_variant.length > 0) {
           optionsID = environment + '_' + instance.currentPlayerID() + '_' + 
                           __local_variant;
-          var __local_options = localStorage[optionsID];
+          var __local_options = localStorage['gwp2_' + optionsID];
           if(__local_options != null && 
              __local_options.length > 0) {
             jQuery.extend(options, JSON.parse(__local_options));
@@ -840,7 +840,7 @@ var Panel2 = new function() {
         if(!__variant) {
           checkTime('set default variant for ' + __variant);
           instance.set(variantID, 'default');
-          localStorage[variantID] = 'default';
+          localStorage['gwp2_' + variantID] = 'default';
           __variant = 'default';
         }
         optionsID = environment + '_' + instance.currentPlayerID() + '_' + __variant;
@@ -853,7 +853,7 @@ var Panel2 = new function() {
             options = jQuery.extend(options, window.panelSettingsCollection.default);
             instance.set(optionsID, options);
           }
-          localStorage[optionsID] = JSON.stringify(options);
+          localStorage['gwp2_' + optionsID] = JSON.stringify(options);
           if(!fastInitReady) {
             /// медленная инициализация
             __initFunc();
@@ -1164,14 +1164,14 @@ var Panel2 = new function() {
         throw('Error: you can\'t set protected property directly');
       }
       /// Если значение есть на текущем домене, то выставляем и его
-      if(jQuery.type(localStorage[key]) != 'undefined') {
-        localStorage[key] = JSON.stringify(value);
+      if(jQuery.type(localStorage['gwp2_' + key]) != 'undefined') {
+        localStorage['gwp2_' + key] = JSON.stringify(value);
       }
 
       var __callback = function() {
         /// выставляем на текущий домен чтобы затем сразу возвращать
         if(document.domain != 'ganjawars.ru') {
-          localStorage[key] = JSON.stringify(value);
+          localStorage['gwp2_' + key] = JSON.stringify(value);
         }
         if(callback) callback();
       }
@@ -1193,20 +1193,20 @@ var Panel2 = new function() {
     get: function(key, callback) {
       checkTime('get ' + key);
       /// Пытаемся найти значение на текущем домене
-      if(jQuery.type(localStorage[key]) != 'undefined' && 
+      if(jQuery.type(localStorage['gwp2_' + key]) != 'undefined' && 
          document.domain != 'ganjawars.ru') {
         try {
-          var val = JSON.parse(localStorage[key]);
+          var val = JSON.parse(localStorage['gwp2_' + key]);
           checkTime('get ' + key + ' from local storage');
           callback(val);
           return;
         } catch(e) {
           console.log(e);
-          localStorage.removeItem('key');
+          localStorage.removeItem('gwp2_' + key);
         }
       }
       var __callback = function(value) {
-        localStorage[key] = JSON.stringify(value)
+        localStorage['gwp2_' + key] = JSON.stringify(value)
         if(callback) callback(value);
       }
       /// Если на текущем домене нет, то запрашиваем из основного
@@ -1226,8 +1226,8 @@ var Panel2 = new function() {
     * @param callback - функция, которая будет вызвана после удаления значения
     */    
     del: function(key, callback) {
-      if(jQuery.type(localStorage[key]) != 'undefined') {
-        localStorage.removeItem(key);
+      if(jQuery.type(localStorage['gwp2_' + key]) != 'undefined') {
+        localStorage.removeItem('gwp2_' + key);
       }
       var __key = key;
       var __callback = callback;
@@ -1479,10 +1479,20 @@ var Panel2 = new function() {
       console.log('Reload page to commit environment change');
     },
     /**
-    *
+    * Функция получения текущего окружения
     */
     getEnv: function() {
       return environment;
+    },
+
+    /*
+    * Функция удаления всех данных панели
+    */
+    wipeAll: function() {
+      if(confirm("Вы действительно хотите удалить все данные GWPanel 2?\n\
+                Будут удалены ВСЕ ваши настройки, статистика, журналы.")) {
+
+      }
     },
     /**
     * Публичные аттрибуты
