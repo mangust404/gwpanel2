@@ -1,0 +1,53 @@
+{
+  "title": "Ядро",
+  "weight": -100,
+  "apply": {
+    "/me/": {
+      "panel_homepage": "panel.js"
+    },
+    "/login.php": {
+      "panel_login": "panel.js"
+    }
+  },
+
+  "settings": {
+    "theme": {
+      "title": "Тема оформления", 
+      "type": "radios", 
+      "options": "__panel.getThemes()", 
+      "default_value": "base"
+    },
+    "theme_m": {
+      "type": "textfield", 
+      "title": "Указать путь к своей теме (на локальном диске или удаленном сервере)", 
+      "default_value": "", 
+      "description": "Если вы укажете что-нибудь в этом поле, то панель будет пытаться загрузить тему из этого каталога. Эта опция нужна для тех кто хочет разработать собственную темку. Пример:<br /><li>file:///home/myaccount/mytheme</li><li>http://localhost/mytheme</li>"
+    }
+  },
+
+  "buttons": {
+    "link": {
+      "title": "Ссылка",
+      "configure": true, 
+      "config_params": ["link", "blank"],
+      "config_types": ["text", "checkbox"], 
+      "config_titles": ["Ссылка для перехода", "В новом окне?"], 
+      "config_values": ["http://www.ganjawars.ru/путь_полностью", 0], 
+      "callback": "panel_link", 
+      "file": "panel_buttons.js"
+    },
+    "settings": {
+      "title": "Настройки",
+      "configure": false,
+      "callback": "__panel.panel_settings_editor",
+      "file": "panel/panel_settings.js",
+      "img": "icons/settings.png"
+    },
+    "exit": {
+      "title": "Выход",
+      "configure": false,
+      "callback": "panel_exit",
+      "img": "icons/exit.png"
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "requires": "", 
+  "excludes": "",
+  "description": "Модуль для NPC",
+  "weight":4, 
+  "apply": {
+    "/npc.php": {
+      "npc_updStatus": "npc.js"
+    },
+    "/warlog.php": {
+      "ncp_warlogCheck": "npc.js"
+    }
+  }, 
+  "event": {
+    "npc_battleend": {
+      "file": "npc.js", 
+      "callback": "npc_battleEnd", 
+      "local": true
+    }
+  },
+  "widgets": {
+    "npc_z": {
+      "title": "NPC [Z]",
+      "configure": true,
+      "config_params": ["friends", "enemies", "undress"],
+      "config_types": ["checkboxes", "checkboxes", "checkbox"],
+      "config_titles": ["Друзья", "Враги", "Раздеваться перед началом разговора :)"],
+      "config_values": ["__panel.npc_list_z", "__panel.npc_list_z", 0],
+      "config_files": ["npc/npc_list.js"],
+      "callback": "npc_widget",
+      "arguments": [2],
+      "file": "npc_widgets.js", 
+      "width": 6,
+      "height": 2
+    },
+    "npc_g": {
+      "title": "NPC [G]",
+      "configure": true,
+      "config_params": ["friends", "enemies", "undress"],
+      "config_types": ["checkboxes", "checkboxes", "checkbox"],
+      "config_titles": ["Друзья", "Враги", "Раздеваться перед началом разговора :)"],
+      "config_values": ["__panel.npc_list_g", "__panel.npc_list_g", 0],
+      "config_files": ["npc/npc_list.js"],
+      "callback": "npc_widget",
+      "arguments": [1],
+      "file": "npc_widgets.js", 
+      "width": 6,
+      "height": 2
+    },
+    "npc_p": {
+      "title": "NPC [P]",
+      "configure": true,
+      "config_params": ["friends", "enemies", "undress"],
+      "config_types": ["checkboxes", "checkboxes", "checkbox"],
+      "config_titles": ["Друзья", "Враги", "Раздеваться перед началом разговора :)"],
+      "config_values": ["__panel.npc_list_p", "__panel.npc_list_p", 0],
+      "config_files": ["npc/npc_list.js"],
+      "callback": "npc_widget",
+      "arguments": [3],
+      "file": "npc_widgets.js", 
+      "width": 6,
+      "height": 2
+    }
+  }
+}

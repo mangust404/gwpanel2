@@ -1,0 +1,29 @@
+{
+  "requires": "", 
+  "excludes": "",
+  "access": "", 
+  "title": "Статистика по опыту и умениям",
+  "weight": 6, 
+  "apply": {
+    "/me/": {
+      "stat_update_personal": "stat.personal.js", 
+      "stat_draw_main_counters": "stat.personal.js", 
+      "stat_check_update_achievements": "stat.js"
+    },
+    "/info.php": {
+      "stat_update_info_personal": "stat.personal.js", 
+      "stat_draw_info_counters": "stat.personal.js"
+    },
+    "/info.ach.php": {
+      "stat_update_achievements": "stat.ach.js", 
+      "stat_draw_achievements": "stat.ach.js"
+    }
+  }, 
+  "event": {
+    "stat_ach": {
+      "callback": "stat_get_achievements",
+      "file": "stat.ach.js", 
+      "local": true
+    }
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "requires": "", 
+  "excludes": "",
+  "title": "Модуль для карты и передвижений",
+  "weight": 3, 
+  "apply": {
+    "/me/": {
+      "map_sector": "map.js"
+    },
+    "/map.move.php": {
+      "map_mmupdate": "map.js"
+    },
+    "/map.moving.php": {
+      "map_mmupdate": "map.js"
+    },
+    "/npc.php": {
+      "map_links": "map.js"
+    },
+    "/info.php": {
+      "map_links": "map.js"
+    },
+    "/object.php": {
+      "map_links": "map.js"
+    },
+    "/statlist.php": {
+      "map_links": "map.js"
+    },
+    "/objects-bar.php": {
+      "map_links": "map.js"
+    }
+  }, 
+
+  "buttons": {
+    "gohome": {
+      "title": "Домой",
+      "configure": true,
+      "img": "icons/home.png", 
+      "config_params": ["sector"],
+      "config_types": ["select"],
+      "config_titles": ["Домашний сектор"],
+      "config_values": ["__panel.map_names"],
+      "config_files": ["map/map_sectors.js"],
+      "callback": "map_gohome", 
+      "file": "map_buttons.js"
+    },
+    "goport": {
+      "title": "В порт",
+      "configure": true,
+      "img": "icons/anchor.png", 
+      "config_params": ["sector"],
+      "config_types": ["select"],
+      "config_titles": ["Домашний порт"],
+      "config_values": ["__panel.map_get_ports_names()"],
+      "callback": "map_goport", 
+      "file": "map_buttons.js"
+    },
+    "goout": {
+      "title": "Outland",
+      "configure": true,
+      "img": "icons/outland.png", 
+      "config_params": ["port"],
+      "config_types": ["select"],
+      "config_titles": ["Порт отбытия"],
+      "config_values": ["__panel.map_get_ports_ids()"],
+      "callback": "map_goout", 
+      "file": "map_buttons.js"
+    },
+    "gooverlord": {
+      "title": "Overlord",
+      "configure": true,
+      "img": "icons/overlord.png", 
+      "config_params": ["port"],
+      "config_types": ["select"],
+      "config_titles": ["Порт отбытия"],
+      "config_values": ["__panel.map_get_ports_ids()"],
+      "callback": "map_gooverlord", 
+      "file": "map_buttons.js"
+    }
+  }
+}

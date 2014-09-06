@@ -1,0 +1,42 @@
+{
+  "requires": "", 
+  "excludes": "",
+  "access": "", 
+  "description": "Дополнения для домашней странички",
+  "weight": 1, 
+  "apply": {
+    "/me/": {
+      "home_durability": {"file": "home.js", "condition": "!options.home.nodura"}
+    },
+    "*": {
+      "home_health": "home_health.js"
+    }
+  }, 
+  "settings": {
+    "nohht": {
+      "type": "checkbox",
+      "title": "Не показывать таймеры на домашней страничке",
+      "default_value": 0
+    },
+    "nodura": {
+      "type": "checkbox",
+      "title": "Не показывать прочность предметов на домашней страничке",
+      "default_value": 0
+    }
+  },
+  
+  "widgets": {
+    "health_widget": {
+      "title": "Индикатор выздоровления",
+      "configure": true,
+      "config_params": ["timers", "autohide"],
+      "config_types": ["checkbox", "checkbox"],
+      "config_titles": ["Показывать таймеры", "Скрывать когда здоровье 100%"],
+      "config_values": [1, 1],
+      "callback": "home_health_widget",
+      "file": "home_widgets.js", 
+      "width": 2,
+      "height": 1
+    }
+  }
+}
