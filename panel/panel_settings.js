@@ -2,8 +2,190 @@
   /// приватные переменные
   var editor;
   /// приватные функции
-  function panel_settings_form(element, settings) {
+  /**
+  * Функция вывода формы настроек виджета или кнопки
+  */
+  function panel_settings_form (widget) {
+    $('#settings-form-popup').html('')
+      .append('<h2>Добавить виджет "' + widget.title + '</h2>');
 
+    if(widget.configure) {
+      var setting_content = jQuery('<div class="ui-corner-all custom-corners">\
+  <div class="ui-bar ui-bar-a">\
+    <h3>Настройки</h3>\
+  </div>\
+  <div class="ui-body ui-body-a">\
+    <fieldset data-role="controlgroup">\
+    </fieldset>\
+  </div>\
+</div>').appendTo('#settings-form-popup').trigger('create').find('fieldset');
+      var widget_data = {};
+
+      jQuery.each(widget.config_params, function(i) {
+        var param = this;
+        var type = widget.config_types[i];
+        var title = widget.config_titles[i];
+        var options = widget.config_values[i];
+        var default_value = widget.config_defaults[i];
+        widget_data[param] = default_value;
+
+        var current_value = default_value || '';
+
+        /// Если в значении было выражение, то преобразуем его
+        if(jQuery.type(options) == 'string' && options.indexOf('__panel.') == 0) {
+          options = eval(options);
+        }
+
+        switch(type) {
+          case 'checkboxes':
+            current_value = jQuery.type(current_value) == 'array'? current_value: [current_value];
+            widget_data[param] = current_value;
+            var ul = jQuery('<div data-role="collapsible">' + 
+                    '<h4>' + title + '</h4>' + 
+                    '<ul data-role="listview"></ul></div>').appendTo(setting_content).find('ul');
+            var is_array = jQuery.type(options) == 'array';
+            jQuery.each(options, function(key) {
+              if(is_array) {
+                var value = this;
+              } else {
+                var value = key;
+              }
+              var li = jQuery('<li></li>').appendTo(ul);
+              jQuery('<label for="param-' + value + '-' + param + '">' + 
+                this + '</label>').appendTo(li);
+              jQuery('<input name="' + param + '" id="param-' + value + '-' + param + '"' +
+                  (current_value.indexOf(this) == -1? '': ' checked="checked"') +
+                  ' type="checkbox" data-mini="true">')
+                  .appendTo(li)
+                  .change(function() {
+                    var ind = widget_data[param].indexOf(value);
+                    if(this.checked) {
+                      if(ind == -1) {
+                        widget_data[param].push(value);
+                      }
+                      console.log('add ' + value + ' to ' + param);
+                    } else if(ind > -1) {
+                      widget_data[param].splice(ind, 1);
+                      console.log('remove ' + value + ' to ' + param);
+                    }
+                  });
+            });
+          break;
+          case 'select':
+            var s = jQuery('<select name="' + param + '" multiple="multiple"></select>');
+            var is_array = jQuery.type(options) == 'array';
+            jQuery.each(options, function(key) {
+              if(is_array) {
+                s.append('<option value="' + this + '"' + 
+                  (this == default_value? ' selected="selected"': '') + 
+                  '>' + this + '</option>');
+              } else {
+                s.append('<option value="' + key + '"' + 
+                  (key == default_value? ' selected="selected"': '') + 
+                  '>' + this + '</option>');
+              }
+            });
+            s.appendTo(setting_content).change(function() {
+              widget_data[param] = jQuery(this).val();
+              console.log('change select ' + param);
+            });
+          break;
+          case 'checkbox':
+            jQuery('<label for="param-' + param + '">' + title + '</label>').appendTo(setting_content);
+            jQuery('<input name="' + param + '" id="param-' + param + '"' +
+              (current_value? ' checked="checked"': '') +
+              ' type="checkbox">')
+              .appendTo(setting_content)
+              .change(function() {
+                widget_data[param] = this.checked;
+                console.log('change ' + param);
+              });
+          break;
+          default: 
+            //default_data[widget.config_params[i]] = '';
+          break;
+        }
+      });
+      setting_content.trigger('create');
+    }
+
+    var displace_div = jQuery('<div class="ui-corner-all custom-corners">\
+  <div class="ui-bar ui-bar-a">\
+    <h3>Куда размещать</h3>\
+  </div>\
+  <div class="ui-body ui-body-a">\
+    <fieldset data-role="controlgroup" data-type="horizontal">\
+    </fieldset>\
+  </div>\
+</div>').appendTo('#settings-form-popup').find('fieldset');
+
+    var options = panel.getOptions();
+
+    function draw_pane(num) {
+      if(!widget.width || options.panes[num].width >= widget.width) {
+        var places = panel.checkPanePlaces(num, widget);
+        console.log(num, places, widget);
+        if(places) {
+          displace_div.append('<label for="select-pane-' + num + '">Окно ' + (num +  1) + '</label>' + 
+            '<input name="displace" type="radio" id="select-pane-' + num + '" value="' + num + '">');
+        } else {
+          displace_div.parent().append('<div class="description">в окне ' + (num + 1) + ' нет свободного места</div>');
+        }
+      } else {
+        displace_div.parent().append('<div class="description">окно ' + (num + 1) + ' слишком узкое для этого элемента</div>');
+      }
+    }
+    draw_pane(0); draw_pane(1);
+    displace_div.append('<label for="select-pane-float">Плавающий</label>' + 
+          '<input name="displace" type="radio" id="select-pane-float" value="float">');
+
+    draw_pane(2); draw_pane(3);
+
+    jQuery('#settings-form-popup')
+      .append(
+      jQuery('<div class="ui-grid-a"></div>').append(
+        jQuery('<div class="ui-block-a"></div>').append(
+          jQuery('<a href="#" class="ui-shadow ui-btn ui-corner-all">Отменить</a>').click(function() {
+            jQuery('#settings-form-popup').popup('close');
+            jQuery('.pane-bubble.drag-over').removeClass('drag-over');
+            return false;
+          })
+        )
+      ).append(
+        jQuery('<div class="ui-block-b"></div>').append(
+          jQuery('<a href="#" class="ui-shadow ui-btn ui-corner-all">Добавить</a>').click(function() {
+            var displace;
+            jQuery('input[name=displace]').each(function() {
+              if(this.checked) {
+                displace = this.value;
+              }
+            });
+            if(!displace) {
+              panel.showFlash('Пожалуйста, укажите место размещения', 'warning', 5000);
+              return false;
+            }
+
+            if(displace != 'float') {
+              displace = parseInt(displace);
+            }
+            console.log(displace, widget_data);
+
+            jQuery('.pane-bubble.drag-over').removeClass('drag-over');
+            return false;
+          })
+        )
+      )
+    ).trigger('create');
+
+    jQuery('input[name=displace]').change(function() {
+      jQuery('.pane-bubble.drag-over').removeClass('drag-over');
+      if(this.checked) {
+        var id = parseInt(this.id.split('-')[2]);
+        if(!isNaN(id)) {
+          jQuery('#pane-bubble-' + id).show().addClass('drag-over').css({'zIndex': 99});
+        }
+      }
+    });
   }
 
   jQuery.extend(panel, {
@@ -11,13 +193,17 @@
     panel.loadCSS(['../../lib/gw.css',
                    '../../lib/jquery.mobile.icons.min.css', 
                    '../../lib/jquery.mobile.custom.structure.min.css',
+                   //'../../lib/jquery.mobile.structure-1.4.3.min.css',
                    'panel_settings.css']);
     jQuery(document).bind("mobileinit", function () {
       jQuery.mobile.ajaxEnabled = false;
     });
 
     /// подгружаем АБСОЛЮТНО все скрипты
-    var scripts = ['lib/jquery.mobile.custom.min.js'];
+    var scripts = [
+                    //'lib/jquery.mobile-1.4.3.min.js'
+                    'lib/jquery.mobile.custom.min.js'
+                  ];
     for(var key in panel_apply.scripts) {
       if(scripts.indexOf(panel_apply.scripts[key]) == -1) {
         scripts.push(panel_apply.scripts[key]);
@@ -71,22 +257,28 @@
       editor = jQuery('<div id="panel-settings-editor" class="ui-page-theme-a ui-popup ui-overlay-shadow ui-corner-all" data-role="tabs">\
   <div data-grid="c" data-role="navbar" class="first-view">\
     <ul class="ui-grid-c">\
-      <li><a href="#edit-buttons-wrapper" data-ajax="false" data-icon="grid">Кнопки</a></li>\
-      <li><a href="#edit-widgets-wrapper" data-ajax="false" data-icon="bars">Виджеты</a></li>\
-      <li><a href="#edit-modules-wrapper" data-ajax="false" data-icon="gear">Модули</a></li>\
-      <li><a href="#edit-other-wrapper" data-ajax="false" data-icon="edit">Другое</a></li>\
+      <li><a href="#edit-buttons-wrapper" data-ajax="false" data-icon="grid"><span>Кнопки</span></a></li>\
+      <li><a href="#edit-widgets-wrapper" data-ajax="false" data-icon="bars"><span>Виджеты</span></a></li>\
+      <li><a href="#edit-modules-wrapper" data-ajax="false" data-icon="gear"><span>Модули</span></a></li>\
+      <li><a href="#edit-other-wrapper" data-ajax="false" data-icon="edit"><span>Другое</span></a></li>\
     </ul>\
   </div>\
   <div id="edit-buttons-wrapper" style="display: none;" class="edit-wrapper">\
+    <h3 class="footer">Кликните на кнопку из коллекции чтобы посмотреть опции и добавить в одно из окон</h3>\
   </div>\
   <div id="edit-widgets-wrapper" style="display: none;" class="edit-wrapper">\
+    <h3 class="footer">Для добавления виджета, кликните на кнопку "Добавить" под виджетом</h3>\
   </div>\
   <div id="edit-modules-wrapper" style="display: none;" class="edit-wrapper">\
+    <h3 class="footer">Вы можете отключить ненужные для вас функции, убрав галочку с соответствующей опции</h3>\
   </div> \
   <div id="edit-other-wrapper" style="display: none;" class="edit-wrapper">\
   <h2>Опции:</h2>\
   </div> \
+  <hr class="footer-delim" />\
   <a class="close-settings ui-btn ui-btn-icon-right ui-icon-delete ui-btn-inline" onclick="jQuery(\'#panel-settings-editor\').fadeOut(); return false;">Закрыть</a>\
+  <div id="settings-form-popup" data-role="popup" data-position-to="window">\
+  test</div>\
 </div>')
         .appendTo(document.body);
 
@@ -112,19 +304,32 @@
         ).appendTo('#edit-buttons-wrapper').trigger('create');
       }
 
-      for(var key in panel_apply.widgets) {
-        var widget = panel_apply.widgets[key];
-        var id = 'widget_' + key;
+      jQuery.each(panel_apply.widgets, function(widget_name) {
+        var widget = this;
+        var id = 'widget_' + widget_name;
+        var __widget;
 
         var widget_wrapper = jQuery('<div class="widget-wrapper"><h2>' + 
-                              widget.title + '</h2></div>')
-                              .appendTo('#edit-widgets-wrapper');
-        var __widget = jQuery('<div class="widget '+ key + '" id="' + id + '"></div>')
-          .css({
-            width: options.system.btnwidth * widget.width,
-            height: options.system.btnheight * widget.height
-          }).appendTo(widget_wrapper);
-        
+          widget.title + '</h2></div>')
+           .append(
+           __widget = jQuery('<div class="widget '+ widget_name + '" id="' + id + '"></div>')
+             .css({
+              width: options.system.btnwidth * widget.width,
+              height: options.system.btnheight * widget.height
+            })
+          )
+          .append(
+            jQuery('<p></p>').append(
+              jQuery('<a data-rel="popup" data-transition="slideup" href="#settings-form-popup" id="add-widget-' + widget_name + '" \
+                class="ui-btn ui-btn-inline ui-btn-icon-right ui-icon-plus">Добавить</a>')
+              .click(function() {
+                panel_settings_form(widget);
+                return true;
+              })
+            )
+          )
+          .appendTo('#edit-widgets-wrapper').trigger('create');
+
         var __arguments = [__widget];
         if(jQuery.type(widget.arguments) == 'array') {
           for(var i = 0; i < widget.arguments.length; i++) {
@@ -135,44 +340,12 @@
         if(jQuery.type(widget.config_params) == 'array') {
           console.log(widget);
           for(var i = 0; i < widget.config_params.length; i++) {
-            switch(widget.config_types[i]) {
-              case 'checkboxes':
-              case 'select':
-                default_data[widget.config_params[i]] = widget.config_defaults[i];
-/*                if(jQuery.type(widget.config_values[i]) == 'string' &&
-                 widget.config_values[i].indexOf('__panel.') == 0) {
-                  var select_options = eval(widget.config_values[i]);
-                  if(jQuery.type(select_options) == "object") {
-                    for(var key in select_options) break;
-                    default_data[widget.config_params[i]] = key;
-                  } else if(jQuery.type(select_options) == "array") {
-                    default_data[widget.config_params[i]] = select_options[0];
-                  }
-                } else if(jQuery.type(widget.config_values[i]) == 'object') {
-                  for(var key in widget.config_values[i]) break;
-                  default_data[widget.config_params[i]] = key;
-                } else if(jQuery.type(widget.config_values[i]) == 'array') {
-                  default_data[widget.config_params[i]] = widget.config_values[i][0];
-                } else {
-                  default_data[widget.config_params[i]] = '';
-                }
-                if(widget.config_types[i] == 'checkboxes') {
-                  default_data[widget.config_params[i]] = [default_data[widget.config_params[i]]];
-                }*/
-              break;
-              case 'checkbox':
-                default_data[widget.config_params[i]] = widget.config_defaults[i];
-              break;
-              default: 
-                default_data[widget.config_params[i]] = '';
-              break;
-            }
+            default_data[widget.config_params[i]] = widget.config_defaults[i];
           }
         }
-        console.log(key, default_data);
         __arguments.push(default_data);
         panel[widget['callback']].apply(panel, __arguments);
-      }
+      });
 
       /// Модули
       var modules_ul = jQuery('<ul data-role="collapsibleset" data-filter="true" data-filter-placeholder="Поиск настроек"></ul>');
@@ -212,9 +385,11 @@
       editor.trigger('create')
         .find('.ui-navbar a.ui-btn').click(function() {
           jQuery('.ui-navbar.first-view').removeClass('first-view');
+          jQuery('.ui-btn-active').removeClass('ui-btn-active');
+          jQuery(this).addClass('ui-btn-active');
           jQuery('.edit-wrapper').hide();
           jQuery('#' + this.href.split('#')[1]).show();
-          return true;
+          return false;
         });
     });
     }

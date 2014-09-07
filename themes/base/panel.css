@@ -145,7 +145,7 @@
 }
 
 .panel-flash {
-  position: absolute;
+  position: fixed;
   bottom: 10px;
   background: none repeat scroll 0 0 #d0eed0;
   border-radius: 10px;
@@ -154,7 +154,7 @@
   left: 50%;
   margin-left: -250px;
   width: 500px;
-  z-index: 20;
+  z-index: 99;
   box-shadow: 1px 1px 3px #003300;
 }
 

@@ -279,52 +279,26 @@ var Panel2 = new function() {
                     new_pane_options = options.panes[newPaneID] || {width: 6, height: 6, buttons: [], widgets: []};
                     if(!new_pane_options.buttons) new_pane_options.buttons = [];
                     if(!new_pane_options.widgets) new_pane_options.widgets = [];
-                    var element_height = widget_height || 1;
-                    var element_width = widget_width || 1;
-                    /// Проверяем, хватает ли свободного места в новом окне
-                    var new_top = 0;
-                    var new_left = 0;
-                    var place_found = false;
-                    var new_pane_hold_positions = {};
-                    for(var i = 0; i < new_pane_options.buttons.length; i++) {
-                      if(!new_pane_hold_positions[new_pane_options.buttons[i].top]) 
-                        new_pane_hold_positions[new_pane_options.buttons[i].top] = {};
-                      new_pane_hold_positions[new_pane_options.buttons[i].top][new_pane_options.buttons[i].left] = new_pane_options.buttons[i].id || 1;
-                    }
-                    for(var i = 0; i < new_pane_options.widgets.length; i++) {
-                      for(var __top = new_pane_options.widgets[i].top; __top < new_pane_options.widgets[i].height; __top++) {
-                        if(!new_pane_hold_positions[__top]) 
-                          new_pane_hold_positions[__top] = {};
-                        for(var __left = new_pane_options.widgets[i].left; __left < new_pane_options.widgets[i].width; __left++) {
-                          new_pane_hold_positions[__top][__left] = new_pane_options.widgets[i].id || 1;
-                        }
-                      }
-                    }
 
-                    start:
-                    for(new_top = 0; new_top < new_pane_options.height - element_height + 1; new_top++) {
-                      for(new_left = 0; new_left < new_pane_options.width - element_width + 1; new_left++) {
-                        var new_pane_not_empty = false;
-                        checkout_new_pos:
-                        for(var __top = new_top; (new_top + element_height) > __top; __top++) {
-                          for(var __left = new_left; (new_left + element_width) > __left; __left++) {
-                            if(!new_pane_hold_positions[__top]) continue;
-                            if(new_pane_hold_positions[__top] && new_pane_hold_positions[__top][__left] && new_pane_hold_positions[__top][__left] != id) {
-                              new_pane_not_empty = true;
-                              break checkout_new_pos;
-                            }
-                          }
-                        }
-                        if(!new_pane_not_empty) {
-                          /// место свободно, всё хорошо
-                          place_found = true;
-                          break start;
-                        }
-                      }
-                    }
-                    if(!place_found) {
+                    var new_top, new_left;
+
+                    var free_place = instance.checkPanePlaces(newPaneID, 
+                      {height: widget_height || 1, width: widget_width || 1});
+                    if(free_place) {
+                      new_top = free_place[0];
+                      new_left = free_place[1];
+                    } else {
                       /// место не найдено, возвращаем виджет на прежнее место
                       that.draggable('option', 'revert', true);
+                      instance.showFlash('В этом окне нет места!', 'warning', 5000);
+                      that.draggable('destroy');
+                      jQuery('.pane-placeholder').remove();
+                      console.log(that.attr('top'), that.attr('left'));
+                      that.draggable('element').animate({
+                        top: parseInt(that.attr('top')) * options.system.btnheight,
+                        left: parseInt(that.attr('left')) * options.system.btnwidth
+                      });
+                      $('.pane-bubble.drag-over').removeClass('drag-over');
                       return;
                     }
                     if(is_widget) {
@@ -1758,6 +1732,64 @@ var Panel2 = new function() {
       };
     },
 
+    checkPanePlaces: function(paneID, widget) {
+      var element_height = widget.height || 1;
+      var element_width = widget.width || 1;
+
+      var p_options = instance.getOptions().panes[paneID];
+      if(!p_options.buttons) p_options.buttons = [];
+      if(!p_options.widgets) p_options.widgets = [];
+
+      var new_top = 0;
+      var new_left = 0;
+      var place_found = false;
+      var hold = {};
+      for(var i = 0; i < p_options.buttons.length; i++) {
+        if(!hold[p_options.buttons[i].top]) 
+          hold[p_options.buttons[i].top] = {};
+        hold[p_options.buttons[i].top][p_options.buttons[i].left] = p_options.buttons[i].id || 1;
+      }
+      for(var i = 0; i < p_options.widgets.length; i++) {
+        var _w_height = p_options.widgets[i].height || 
+                        panel_apply.widgets[p_options.widgets[i].type].height;
+        var _w_width = p_options.widgets[i].width || 
+                       panel_apply.widgets[p_options.widgets[i].type].width;
+
+        for(var __top = p_options.widgets[i].top; __top < p_options.widgets[i].top + _w_height; __top++) {
+          if(!hold[__top]) 
+            hold[__top] = {};
+          for(var __left = p_options.widgets[i].left; __left < p_options.widgets[i].left + _w_width; __left++) {
+            hold[__top][__left] = p_options.widgets[i].id || 1;
+          }
+        }
+      }
+
+      start:
+      for(new_top = 0; new_top < p_options.height - element_height + 1; new_top++) {
+        for(new_left = 0; new_left < p_options.width - element_width + 1; new_left++) {
+          var new_pane_not_empty = false;
+          checkout_new_pos:
+          for(var __top = new_top; (new_top + element_height) > __top; __top++) {
+            for(var __left = new_left; (new_left + element_width) > __left; __left++) {
+              if(!hold[__top]) continue;
+              if(hold[__top] && hold[__top][__left] && hold[__top][__left] != id) {
+                new_pane_not_empty = true;
+                break checkout_new_pos;
+              }
+            }
+          }
+          if(!new_pane_not_empty) {
+            /// место свободно, всё хорошо
+            place_found = true;
+            break start;
+          }
+        }
+      }
+      if(place_found) {
+        return [new_top, new_left];
+      }
+      return false;
+    },
     /**
     * Публичные аттрибуты
     */
