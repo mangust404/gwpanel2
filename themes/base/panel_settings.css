@@ -1,0 +1,97 @@
+#panel-settings-editor {
+  background: #f0fff0;
+  opacity: 1;
+  position: fixed;
+  padding: 20px;
+  z-index: 3;
+  left: 20px;
+  top: 10px;
+  bottom: 10px;
+  right: 20px;
+  z-index: 1;
+}
+
+#panel-settings-editor h1 {
+  margin: 0 0 10px;
+  font-size: 24px;
+  text-align: center;
+}
+
+#panel-settings-editor h2 {
+  margin: 0 0 10px;
+  text-align: center;
+}
+
+#panel-settings-editor .edit-wrapper {
+  bottom: 60px;
+  left: 1px;
+  overflow-y: auto;
+  padding: 20px;
+  position: absolute;
+  right: 15px;
+  top: 85px;
+}
+
+#panel-settings-editor .button-wrapper {
+  min-width: 100px;
+  width: 25%;
+  display: inline-block;
+  height: 150px;
+  text-align: center;
+}
+
+#panel-settings-editor .close-settings {
+  position: absolute;
+  right: 20px;
+  bottom: 0px;
+  padding-right: 40px;
+}
+
+#panel-settings-editor .first-view {
+  top: 50%;
+  margin: -143px auto 0;
+  width: 50%;
+  position: relative;
+}
+
+#panel-settings-editor .first-view .ui-btn-icon-top:after {
+  top: 50px;
+}
+
+#panel-settings-editor .first-view li {
+  width: 50%;
+}
+
+#panel-settings-editor .first-view li a {
+  padding: 80px 20px 40px;
+  font-size: 16px;
+}
+
+#panel-settings-editor .description {
+  color: #666;
+  font-size: 11px;
+}
+
+#edit-widgets-wrapper .widget {
+  display: block !important;
+  vertical-align: top;
+}
+
+#edit-widgets-wrapper .widget-wrapper {
+  width: 50%;
+  min-width: 200px;
+  display: inline-block;
+  padding-bottom: 30px;
+}
+
+#edit-widgets-wrapper .widget-wrapper h2 {
+  text-align: center;
+}
+
+#edit-modules-wrapper ul {
+  padding: 0;
+}
+
+#edit-modules-wrapper li {
+  list-style: none;
+}

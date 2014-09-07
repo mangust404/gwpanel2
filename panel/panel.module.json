@@ -29,25 +29,29 @@
     "link": {
       "title": "Ссылка",
       "configure": true, 
-      "config_params": ["link", "blank"],
-      "config_types": ["text", "checkbox"], 
-      "config_titles": ["Ссылка для перехода", "В новом окне?"], 
-      "config_values": ["http://www.ganjawars.ru/путь_полностью", 0], 
+      "config_params": ["link", "blank", "icon"],
+      "config_types": ["text", "checkbox", "icon"], 
+      "config_titles": ["Ссылка для перехода", "В новом окне?", "Иконка"], 
+      "config_values": ["", 0, ""], 
+      "config_defaults": ["http://www.ganjawars.ru/me/", 0, "icon-action"],
       "callback": "panel_link", 
-      "file": "panel_buttons.js"
+      "file": "panel_buttons.js",
+      "description": "Любая ссылка на любую страницу"
     },
     "settings": {
       "title": "Настройки",
       "configure": false,
-      "callback": "__panel.panel_settings_editor",
+      "callback": "panel_settings_editor",
       "file": "panel_settings.js",
-      "img": "icons/settings.png"
+      "img": "icons/settings.png",
+      "description": "Кнопка настроек"
     },
     "exit": {
       "title": "Выход",
       "configure": false,
       "callback": "panel_exit",
-      "img": "icons/exit.png"
+      "img": "icons/exit.png",
+      "description": "Кнопка выхода из игры"
     }
   }
 }

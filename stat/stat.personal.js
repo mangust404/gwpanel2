@@ -208,4 +208,8 @@ jQuery.extend(panel, {
     //Выводим счётчики на странице персонажа
     
   }
-})})(window.__panel);
+})
+
+panel.stat_update_personal.description = 'Вывод счетчиков на главной странице';
+
+})(window.__panel);

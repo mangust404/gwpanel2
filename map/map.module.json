@@ -39,9 +39,11 @@
       "config_types": ["select"],
       "config_titles": ["Домашний сектор"],
       "config_values": ["__panel.map_names"],
+      "config_defaults": ["__panel.map_current_sector_coords()"],
       "config_files": ["map/map_sectors.js"],
       "callback": "map_gohome", 
-      "file": "map_buttons.js"
+      "file": "map_buttons.js",
+      "description": "Переход в домашний сектор"
     },
     "goport": {
       "title": "В порт",
@@ -51,8 +53,10 @@
       "config_types": ["select"],
       "config_titles": ["Домашний порт"],
       "config_values": ["__panel.map_get_ports_names()"],
+      "config_defaults": [""],
       "callback": "map_goport", 
-      "file": "map_buttons.js"
+      "file": "map_buttons.js",
+      "description": "Переход в домашний порт"
     },
     "goout": {
       "title": "Outland",
@@ -62,8 +66,10 @@
       "config_types": ["select"],
       "config_titles": ["Порт отбытия"],
       "config_values": ["__panel.map_get_ports_ids()"],
+      "config_defaults": [""],
       "callback": "map_goout", 
-      "file": "map_buttons.js"
+      "file": "map_buttons.js",
+      "description": "Кнопка отплытия на Outland"
     },
     "gooverlord": {
       "title": "Overlord",
@@ -73,8 +79,10 @@
       "config_types": ["select"],
       "config_titles": ["Порт отбытия"],
       "config_values": ["__panel.map_get_ports_ids()"],
+      "config_defaults": [""],
       "callback": "map_gooverlord", 
-      "file": "map_buttons.js"
+      "file": "map_buttons.js",
+      "description": "Кнопка отплытия в Overlord"
     }
   }
 }

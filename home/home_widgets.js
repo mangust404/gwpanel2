@@ -95,6 +95,7 @@ jQuery.extend(panel, {
   home_health_widget: function(_widget, _options) {
     widget = _widget;
     options = _options;
+    options.size = options.size || 2;
     progressImg = jQuery('<img src="' + __panel.path_to_theme() + '/icons/heart.png" width=' + (options.size * 11 + 5) + '"/>');
     widget.hide().css({
       height: 'auto'

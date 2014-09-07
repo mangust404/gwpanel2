@@ -2,11 +2,11 @@
   "requires": "", 
   "excludes": "",
   "access": "", 
-  "description": "Дополнения для домашней странички",
+  "title": "Дополнения для домашней странички",
   "weight": 1, 
   "apply": {
     "/me/": {
-      "home_durability": {"file": "home.js", "condition": "!options.home.nodura"}
+      "home_durability": "home.js"
     },
     "*": {
       "home_health": "home_health.js"
@@ -29,10 +29,11 @@
     "health_widget": {
       "title": "Индикатор выздоровления",
       "configure": true,
-      "config_params": ["timers", "autohide"],
-      "config_types": ["checkbox", "checkbox"],
-      "config_titles": ["Показывать таймеры", "Скрывать когда здоровье 100%"],
-      "config_values": [1, 1],
+      "config_params": ["timers", "autohide", "size"],
+      "config_types": ["checkbox", "checkbox", "select"],
+      "config_titles": ["Показывать таймеры", "Скрывать когда здоровье 100%", "Высота"],
+      "config_values": [1, 1, {"2": "средний", "1": "маленький", "3": "большой"}],
+      "config_defaults": [1, 1, "2"],
       "callback": "home_health_widget",
       "file": "home_widgets.js", 
       "width": 2,

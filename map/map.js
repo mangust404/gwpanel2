@@ -93,7 +93,17 @@ jQuery.extend(panel, {
 //           link.parentNode.insertBefore(a, link.nextSibling);
       };
     };
+  },
+
+  map_current_sector_coords: function() {
+
+  },
+
+  map_current_sector_name: function() {
+    
   }
   
 });
+
+__panel.map_links.description = 'Добавление ссылок быстрого перехода в сектор';
 })(window.__panel);

@@ -1,6 +1,7 @@
 (function(panel) {
 jQuery.extend(panel, {
   home_health: function() {
+    panel.clearTimeouts();
     if(!window.hp_start) return;
     __panel.get('health', function(data) {
       var new_data = {hp_start: window.hp_start, hp_max: window.hp_max, hp_speed: window.hp_speed};

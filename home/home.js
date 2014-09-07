@@ -32,4 +32,6 @@ jQuery.extend(panel, {
     });
   }
 });
+
+panel.home_durability.description = 'Отображение прочности предметов на домашней страничке';
 })(window.__panel);

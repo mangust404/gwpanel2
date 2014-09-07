@@ -115,62 +115,64 @@ var Panel2 = new function() {
             return;
           }
           var that = this;
-          var __button_init = function() {
-            if(!instance[type['callback']]) {
-              try{
-                throw('"' + type['callback'] + '" for button ' + that.type + ', Pane ' + paneID + ' draw: ');
-              } catch(e) {
-                instance.dispatchException(e, 'Unknown callback function');
-              }
-              return;
-            }
-            var callback = instance[type.callback];
-            if(type.callback_arguments) {
-              var __arguments = type.callback_arguments;
-            } else {
-              var __arguments = that.arguments;
-            }
-            var img = (that.img || type.img);
-            if(img.indexOf('http:') != 0) {
-              img = __panel.path_to_theme() + img;
-            }
-            if(that.id) {
-              id = that.id;
-            } else {
-              id = 'button_' + that.type + '_' + index;
-              options.panes[paneID].buttons[index].id = id;
-            }
-            var __button = jQuery('<div class="button" id="' + id + '"></div>').append(
-              jQuery('<a><div class="img"><img src="' + img + '" /></div><h3>' + (that.title? that.title: type.title) + '</h3></a>').click(function(e) {
-                if(this.parentNode.dragging) {
-                  this.parentNode.dragging = false;
-                  return false;
-                }
-                this.parentNode.clicked = true;
-                if(type.callback_arguments) {
-                  callback(__arguments);
-                } else {
-                  callback(e, __arguments);
-                }
-                return false;
-              })
-            ).css({
-              left: that.left * options.system.btnwidth,
-              top: that.top * options.system.btnheight,
-              width: options.system.btnwidth,
-              height: options.system.btnheight
-            })
-            .attr('left', that.left).attr('top', that.top).attr('index', index)
-            .appendTo(paneContainer);
-            if(!hold_positions[that.top]) hold_positions[that.top] = {};
-            hold_positions[that.top][that.left] = __button.attr('id');
+          var img = (that.img || type.img);
+          if(img.indexOf('http:') != 0) {
+            img = __panel.path_to_theme() + img;
           }
-          if(instance[type.callback]) {
-            instance.ready(__button_init);
+          if(that.id) {
+            id = that.id;
           } else {
-            instance.loadScript(type.module + '/' + type.file, __button_init);
+            id = 'button_' + that.type + '_' + index;
+            options.panes[paneID].buttons[index].id = id;
           }
+          var __button = jQuery('<div class="button ' + that.type + '" id="' + id + '"></div>').append(
+            jQuery('<a><div class="img"><img src="' + img + '" /></div><h3>' + 
+              (that.title? that.title: type.title) + 
+              '</h3></a>').click(function(e) {
+              if(this.parentNode.dragging) {
+                this.parentNode.dragging = false;
+                return false;
+              }
+              var __that = this;
 
+              instance.loadScript(type.module + '/' + type.file, function() {
+                if(!instance[type['callback']]) {
+                  try{
+                    throw('"' + type['callback'] + '" for button ' + that.type + ', Pane ' + paneID + ' draw: ');
+                  } catch(e) {
+                    instance.dispatchException(e, 'Unknown callback function');
+                  }
+                  return;
+                }
+                var callback = instance[type.callback];
+                if(type.callback_arguments) {
+                  var __arguments = type.callback_arguments;
+                } else {
+                  var __arguments = that.arguments;
+                }
+                __that.parentNode.clicked = true;
+                try {
+                  if(type.callback_arguments) {
+                    callback(__arguments);
+                  } else {
+                    callback(e, __arguments);
+                  }
+                } catch(e) {
+                  instance.dispatchException(e);
+                }
+              });
+              return false;
+            })
+          ).css({
+            left: that.left * options.system.btnwidth,
+            top: that.top * options.system.btnheight,
+            width: options.system.btnwidth,
+            height: options.system.btnheight
+          })
+          .attr('left', that.left).attr('top', that.top).attr('index', index)
+          .appendTo(paneContainer);
+          if(!hold_positions[that.top]) hold_positions[that.top] = {};
+          hold_positions[that.top][that.left] = __button.attr('id');
         });
       }
       if((pane_options.buttons && pane_options.buttons.length > 0) || 
@@ -277,10 +279,8 @@ var Panel2 = new function() {
                     new_pane_options = options.panes[newPaneID] || {width: 6, height: 6, buttons: [], widgets: []};
                     if(!new_pane_options.buttons) new_pane_options.buttons = [];
                     if(!new_pane_options.widgets) new_pane_options.widgets = [];
-                    console.log(newPaneID, new_pane_options);
                     var element_height = widget_height || 1;
                     var element_width = widget_width || 1;
-                    console.log(new_pane_options);
                     /// Проверяем, хватает ли свободного места в новом окне
                     var new_top = 0;
                     var new_left = 0;
@@ -301,14 +301,10 @@ var Panel2 = new function() {
                       }
                     }
 
-                    console.log(new_pane_hold_positions, id);
-                    console.log('new_pane_options.height - element_height', new_pane_options.height - element_height);
-                    console.log('new_pane_options.width - element_width', new_pane_options.width - element_width);
                     start:
                     for(new_top = 0; new_top < new_pane_options.height - element_height + 1; new_top++) {
                       for(new_left = 0; new_left < new_pane_options.width - element_width + 1; new_left++) {
                         var new_pane_not_empty = false;
-                        console.log('check new_top, new_left', new_top, new_left)
                         checkout_new_pos:
                         for(var __top = new_top; (new_top + element_height) > __top; __top++) {
                           for(var __left = new_left; (new_left + element_width) > __left; __left++) {
@@ -319,7 +315,6 @@ var Panel2 = new function() {
                             }
                           }
                         }
-                        console.log('new_pane_not_empty', new_pane_not_empty);
                         if(!new_pane_not_empty) {
                           /// место свободно, всё хорошо
                           place_found = true;
@@ -327,7 +322,6 @@ var Panel2 = new function() {
                         }
                       }
                     }
-                    console.log(place_found);
                     if(!place_found) {
                       /// место не найдено, возвращаем виджет на прежнее место
                       that.draggable('option', 'revert', true);
@@ -486,6 +480,10 @@ var Panel2 = new function() {
                 top: that.top * options.system.btnheight
               })
               .attr('top', that.top).attr('left', that.left).attr('index', index)
+              .on('show', function() {
+                /// при показе подгружаем все скрипты и вызываем функцию прорисовки
+
+              })
               .appendTo(paneContainer);
             
             __widget[0].widget = that;
@@ -507,7 +505,8 @@ var Panel2 = new function() {
               __arguments.push(that.arguments);
             }
             instance[type['callback']].apply(that, __arguments);
-          };
+          }
+
           if(instance[type.callback]) {
             instance.ready(__widget_init);
           } else {
@@ -559,9 +558,18 @@ var Panel2 = new function() {
   */
   function draw_pane_bubbles() {
     var buttons = 0;
+    var have_settings_button;
     for(var i = 0; i < 4; i++) {
       if(jQuery.type(options.panes[i].buttons) == 'array') {
         buttons += options.panes[i].buttons.length;
+        if(!have_settings_button) {
+          for(var j = 0; j < options.panes[i].buttons.length; j++) {
+            if(options.panes[i].buttons[j].type == 'panel_settings') {
+              have_settings_button = true;
+              break;
+            }
+          }
+        }
       }
     }
     if(buttons == 0) {
@@ -571,6 +579,20 @@ var Panel2 = new function() {
         if((!options.panes[i].buttons || !options.panes[i].buttons.length) &&
             (!options.panes[i].widgets || !options.panes[i].widgets.length)) {
           options.panes[i].buttons = [{ 'type': 'panel_settings', 'left': 0,'top': 0 }];
+          have_settings_button = true;
+          break;
+        }
+      }
+    }
+    if(!have_settings_button) {
+      /// Если пользователь каким-то образом удалил кнопку настроек, то добавляем её
+      for(var i = 3; i >= 0; i--) {
+        if((options.panes[i].buttons && options.panes[i].buttons.length) ||
+            (options.panes[i].widgets && options.panes[i].widgets.length)) {
+
+          options.panes[i].buttons.push({ 'type': 'panel_settings', 
+                                          'left': options.panes[i].width - 1,
+                                          'top': options.panes[i].height - 1 });
           break;
         }
       }
@@ -591,62 +613,6 @@ var Panel2 = new function() {
                            (options.panes[i].buttons && options.panes[i].buttons.length)) > 0? 
                            '': 'none'})
           .appendTo(document.body);
-      }
-    }
-  }
-  
-  /**
-  * Инициализация кнопок. Подгружаются нужные скрипты.
-  */
-  function initButtons() {
-    var modules = {};
-    
-    for(var i = 0; i < 4; i++) {
-      if(jQuery.type(options.panes[i]) == 'object' && jQuery.type(options.panes[i].buttons) == 'array') {
-        for(var j = 0; j < options.panes[i].buttons.length; j++) {
-          var type = options.panes[i].buttons[j].type;
-          var module = panel_apply.buttons[type];
-          if(module) {
-            if(jQuery.type(modules[module.module]) == 'undefined') {
-              modules[module.module] = [];
-            }
-            if(modules[module.module].indexOf(module.file) == -1)
-              modules[module.module].push(module.file);
-          }
-        }
-      }
-    }
-    for(var module in modules) {
-      for(var i = 0; i < modules[module].length; i++) {
-        if(jQuery.type(modules[module][i]) != 'undefined') {
-          instance.loadScript(module + '/' + modules[module][i]);
-        }
-      }
-    }
-  }
-  
-  /**
-  * Инициализация виджетов. Подгружаются нужные скрипты.
-  */
-  function initWidgets() {
-    var modules = {};
-    
-    for(var i = 0; i < 4; i++) {
-      if(jQuery.type(options.panes[i]) == 'object' && jQuery.type(options.panes[i].widgets) == 'array') {
-        for(var j = 0; j < options.panes[i].widgets.length; j++) {
-          var type = options.panes[i].widgets[j].type;
-          var module = panel_apply.widgets[type];
-          if(jQuery.type(modules[module.module]) == 'undefined') {
-            modules[module.module] = [];
-          }
-          if(modules[module.module].indexOf(module.file) == -1)
-            modules[module.module].push(module.file);
-        }
-      }
-    }
-    for(var module in modules) {
-      for(var i = 0; i < modules[module].length; i++) {
-        instance.loadScript(module + '/' + modules[module][i]);
       }
     }
   }
@@ -794,21 +760,10 @@ var Panel2 = new function() {
       instance.__mouseprevx = e.clientX;
     });
     
-    initButtons();
-    initWidgets();
-    
     instance.ready(initFloatWidgets);
     
     // Прорисовка, её нужно выполнять после того как получены все опции и подгружены стили
     draw_pane_bubbles();
-  }
-  
-  function clearTimeouts(w) {
-    if(!w) w = window;
-    var s = w.setTimeout('void 0;', 1000);
-    for(var i = s; i > s - 100; i--) {
-      w.clearTimeout(i);
-    };
   }
   
   function checkTime(name) {
@@ -921,7 +876,6 @@ var Panel2 = new function() {
             }
           }
           instance.loadScript(panel_apply.scripts[func], function() {
-            //console.log(func)
             if(jQuery.type(instance[func]) == 'undefined') {
               throw('Function ' + func + ' in module ' + panel_apply.scripts[func] + ' not found');
             } else {
@@ -1113,6 +1067,100 @@ var Panel2 = new function() {
     * @param name - название таблицы стилей, пока не используется
     */
     loadCSS: function(name, callback, failover) {
+      if(jQuery.type(name) != 'array') {
+        name = [name];
+      }
+
+      var to_load = [];
+      var loaded = 0;
+
+      for(var i = 0; i < name.length; i++) {
+        if(jQuery.type(stylesheets[name[i]]) != 'undefined') {
+          /// запись скрипта не инициализирована
+          if(stylesheets[name[i]].loaded) {
+            /// скрипт уже был загружен, загружать не нужно
+            loaded++;
+          } else if(name.length == 1 && callback) {
+            /// скрипт был добавлен в очередь загрузки и параллельно загружается где-то ещё,
+            /// загружать его не нужно, но выполнить действие нужно если производится
+            /// одиночная загрузка этого скрипта
+            stylesheets[name[i]].callbacks.push(callback);
+          }
+          continue;
+        }
+        stylesheets[name[i]] = {callbacks: [], failovers: [], loaded: false};
+        if(name.length == 1) {
+          /// Если подгружается только этот скрипт, то добавляем функцию обратного
+          /// вызова в список вызовов этой функции, чтобы в случае параллельного
+          /// массового вызова, этот callback тоже отработал
+          if(callback) stylesheets[name[i]].callbacks.push(callback);
+          if(failover) stylesheets[name[i]].failovers.push(failover);
+        }
+
+        var ar = name[i].split('/');
+        if(environment != 'deploy' && environment != 'dev' && 
+            ar[0] == '..' && ar[1] == '..' && ar[2] == 'lib') {
+          ar = ar.splice(2);
+          var path = ar.join('/');
+        } else {
+          var path = 'themes/' + options.system.theme + '/' + name[i];
+        }
+
+        to_load.push(path);
+      }
+
+      if(!to_load.length) {
+        if(name.length == 1 && stylesheets[name[0]].loaded) {
+          /// Загружать нечего, просто запускаем callback
+          try {
+            if(callback) callback();
+          } catch(e) {
+            if(failover) failover();
+          }
+        }
+        return;
+      }
+      window.__loadCSS(to_load, 
+        function() { 
+          if(name.length > 1) {
+            /// отработал массовый вызов
+            /// проходим по всем скриптам и выполяем обратные вызовы для скриптов,
+            /// которые ещё не были отмечены как загруженные
+            for(var i = 0; i < name.length; i++) {
+              instance.loadCSSComplete(name[i]);
+            }
+            try {
+              /// выполняем основной callback
+              if(callback) callback();
+            } catch(e) {
+              if(failover) {
+                failover();
+              }
+            }
+          } else {
+            /// отработал одиночный вызов
+            instance.loadCSSComplete(name[0]) 
+          }
+        },
+        function(e) {
+          if(name.length > 1) {
+            /// отработал массовый вызов
+            /// проходим по всем скриптам и выполяем обратные вызовы
+            for(var i = 0; i < name.length; i++) {
+              instance.loadScriptFail(name[i]);
+            }
+            if(failover) failover();
+          } else {
+            /// отработал одиночный вызов
+            instance.loadScriptFail(name[0]) 
+          }
+        }
+      );
+      return;
+
+      if(jQuery.type(name) != 'array') {
+        name = [name];
+      }
       if(jQuery.type(stylesheets[name]) != 'undefined') {
         if(stylesheets[name].loaded) {
           try {
@@ -1179,12 +1227,13 @@ var Panel2 = new function() {
       }
 
       if(!to_load.length) {
-        if(name.length == 1 && scripts[name[0]].loaded) {
+        if(loaded == name.length) {
           /// Загружать нечего, просто запускаем callback
           try {
             if(callback) callback();
           } catch(e) {
             if(failover) failover();
+            instance.dispatchException(e);
           }
         }
         return;
@@ -1205,6 +1254,7 @@ var Panel2 = new function() {
               if(failover) {
                 failover();
               }
+              instance.dispatchException(e);
             }
           } else {
             /// отработал одиночный вызов
@@ -1699,6 +1749,15 @@ var Panel2 = new function() {
         });
       }, timeout);
     },
+
+    clearTimeouts: function (w) {
+      if(!w) w = window;
+      var s = w.setTimeout('void 0;', 1000);
+      for(var i = s; i > s - 100; i--) {
+        w.clearTimeout(i);
+      };
+    },
+
     /**
     * Публичные аттрибуты
     */

@@ -1,7 +1,7 @@
 {
   "requires": "", 
   "excludes": "",
-  "description": "Модуль для NPC",
+  "title": "Модуль для NPC",
   "weight":4, 
   "apply": {
     "/npc.php": {
@@ -26,12 +26,14 @@
       "config_types": ["checkboxes", "checkboxes", "checkbox"],
       "config_titles": ["Друзья", "Враги", "Раздеваться перед началом разговора :)"],
       "config_values": ["__panel.npc_list_z", "__panel.npc_list_z", 0],
+      "config_defaults": [[], [], 0],
       "config_files": ["npc/npc_list.js"],
       "callback": "npc_widget",
       "arguments": [2],
       "file": "npc_widgets.js", 
       "width": 6,
-      "height": 2
+      "height": 2,
+      "description": "Список NPC на острове Z-lands"
     },
     "npc_g": {
       "title": "NPC [G]",
@@ -41,11 +43,13 @@
       "config_titles": ["Друзья", "Враги", "Раздеваться перед началом разговора :)"],
       "config_values": ["__panel.npc_list_g", "__panel.npc_list_g", 0],
       "config_files": ["npc/npc_list.js"],
+      "config_defaults": [[], [], 0],
       "callback": "npc_widget",
       "arguments": [1],
       "file": "npc_widgets.js", 
       "width": 6,
-      "height": 2
+      "height": 2,
+      "description": "Список NPC на острове Ganja Island"
     },
     "npc_p": {
       "title": "NPC [P]",
@@ -55,11 +59,13 @@
       "config_titles": ["Друзья", "Враги", "Раздеваться перед началом разговора :)"],
       "config_values": ["__panel.npc_list_p", "__panel.npc_list_p", 0],
       "config_files": ["npc/npc_list.js"],
+      "config_defaults": [[], [], 0],
       "callback": "npc_widget",
       "arguments": [3],
       "file": "npc_widgets.js", 
       "width": 6,
-      "height": 2
+      "height": 2,
+      "description": "Список NPC на острове Palm Island"
     }
   }
 }

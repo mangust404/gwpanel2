@@ -96,7 +96,7 @@ function panel_standalone_local() {
   uasort($plugins, '_element_sort');
 
   $tests = array();
-  $widget_classes = $button_classes = array();
+  $widget_classes = $button_classes = $module_info = array();
 
   foreach($plugins as $plugin_name => $plugin) {
     if(is_array($plugin['apply'])) {
@@ -156,6 +156,11 @@ function panel_standalone_local() {
     foreach(glob(realpath(dirname(__FILE__) . '/../' . $plugin_name) . '/*_test.js') as $_file) {
       $tests[] = $plugin_name . '/' . basename($_file);
     }
+
+    $module_info[$plugin_name] = array(
+      'title' => isset($plugin['title'])? $plugin['title']: $plugin_name,
+      'description' => isset($plugin['description'])? $plugin['description']: '',
+    );
   }
   
   //print_r($apply);
@@ -169,6 +174,7 @@ function panel_standalone_local() {
   $apply['events'] = $apply_events;
   $apply['widgets'] = $widget_classes;
   $apply['buttons'] = $button_classes;
+  $apply['modules'] = $module_info;
 
   global $gwpanel_path;
   file_put_contents($gwpanel_path . '/apply.js', 
@@ -212,62 +218,56 @@ myDate.setMonth(myDate.getMonth() + 120);
 document.cookie = "gwp2_e=dev;expires=" + myDate 
                + ";domain=.ganjawars.ru;path=/";
 
-window.__loadCSS = function(path, callback, failover) {';
-  /*if($options['theme_m']) {
-    $output .= 'var s = document.createElement(\'style\');
-  s.type = \'text/css\';
-  var d = new Date();
-  s.innerHTML = "<!-- @import url(' . $options['theme_m'] . '/" + path + "?" + d.getTime() + "); -->";
-  document.getElementsByTagName("head")[0].appendChild(s);
-';
-  } else {*/
-    $output .= '
-  /// Решение взято с http://www.yearofmoo.com/2011/03/cross-browser-stylesheet-preloading.html
-  var link = document.createElement(\'link\');
-  link.type = \'text/css\';
-  link.rel = \'stylesheet\';
-  link.id = \'css-preload-\' + path.replace(/[^a-z0-9]+/g, \'-\') + (new Date().getTime());
-  link.href = "' . $localURL . '/" + path;
+window.__loadCSS = function(path, callback, failover) {
+  if(String(typeof(path)).toLowerCase() == "string") {
+    path = [path];
+  }
+  var loaded = 0;
+  for(var i = 0; i < path.length; i++) {
+    /// Решение взято с http://www.yearofmoo.com/2011/03/cross-browser-stylesheet-preloading.html
+    var link = document.createElement(\'link\');
+    link.type = \'text/css\';
+    link.rel = \'stylesheet\';
+    link.id = \'css-preload-\' + path[i].replace(/[^a-z0-9]+/g, \'-\') + (new Date().getTime());
+    link.href = "' . $localURL . '/" + path[i];
 
-  document.getElementsByTagName(\'head\')[0].appendChild(link);
+    document.getElementsByTagName(\'head\')[0].appendChild(link);
 
-  if(navigator.userAgent.indexOf(\'MSIE\') != -1 || window.opera) {
-    link.onload = callback;
-    link.onerror = failover;
-  } else {
-    var counter = 0;
-    var check = function() {
-      var target = document.getElementById(link.id);
-      if(target.sheet) {
-        var stylesheets = document.styleSheets;
-        for(var i = 0; i < stylesheets.length; i++) {
-          var file = stylesheets[i];
-          var owner = file.ownerNode ? file.ownerNode : file.owningElement;
-          if(owner && owner.id == link.id) {
-            setTimeout(callback, 10);
-            return;
-          }
+    if(navigator.userAgent.indexOf(\'MSIE\') != -1 || window.opera) {
+      link.onload = callback;
+      link.onerror = failover;
+    } else {
+      var counter = 0;
+      var check = function() {
+        var target = document.getElementById(link.id);
+        if(target.sheet) {
+          var stylesheets = document.styleSheets;
+          for(var i = 0; i < stylesheets.length; i++) {
+            var file = stylesheets[i];
+            var owner = file.ownerNode ? file.ownerNode : file.owningElement;
+            if(owner && owner.id == link.id) {
+              loaded++;
+              if(loaded >= path.length && callback) {
+                setTimeout(callback, 10);
+              }
+              return;
+            }
 
-          if(counter++ > 10) {
-            if(failover) failover();
-            return;
+            if(counter++ > 10) {
+              if(failover) failover();
+              return;
+            }
           }
         }
+
+        setTimeout(check, 10);
       }
-
-      setTimeout(check, 10);
+      check();
     }
-    check();
+    document.getElementsByTagName(\'head\')[0].appendChild(link);
   }
-  document.getElementsByTagName(\'head\')[0].appendChild(link);
+}
 
-  var s = document.createElement(\'link\');
-  s.rel = "stylesheet";
-  s.type = \'text/css\';
-  s.href = "' . $localURL . '/themes/base/" + path;
-';
-  //}
-  $output .= '};
 window.__loadScript = function(path, callback, failover) {
   if(!path || !path.length) return;
   if(String(typeof(path)).toLowerCase() != "object" || !path.length) {

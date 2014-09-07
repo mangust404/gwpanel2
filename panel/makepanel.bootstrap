@@ -141,7 +141,7 @@ $apply_pages = $apply_scripts = $apply_events = array();
 uasort($plugins, '_element_sort');
 
 $tests = array();
-$widget_classes = $button_classes = array();
+$widget_classes = $button_classes = $module_info = array();
 
 foreach($plugins as $plugin_name => $plugin) {
   if(isset($plugin['apply']) && is_array($plugin['apply'])) {
@@ -203,6 +203,10 @@ foreach($plugins as $plugin_name => $plugin) {
     $tests[] = $plugin_name . '/' . basename($_file);
   }
 
+  $module_info[$plugin_name] = array(
+    'title' => isset($plugin['title'])? $plugin['title']: $plugin_name,
+    'description' => isset($plugin['description'])? $plugin['description']: '',
+  );
 }
 
 $apply = array();
@@ -211,6 +215,7 @@ $apply['scripts'] = $apply_scripts;
 $apply['events'] = $apply_events;
 $apply['widgets'] = $widget_classes;
 $apply['buttons'] = $button_classes;
+$apply['modules'] = $module_info;
 
 global $gwpanel_path;
 file_put_contents($gwpanel_path . '/apply.js', 
@@ -362,7 +367,7 @@ $bootstrap = '
       document.getElementsByTagName("head")[0].appendChild(s);
     }
 
-    window.__loadCSS = function(path, callback) {
+    window.__loadCSS = function(path, callback, failover) {
       if(String(typeof(path)).toLowerCase() == "string") {
         path = [path];
       }
@@ -376,18 +381,11 @@ $bootstrap = '
           link.id = \'css-preload-\' + path[i].replace(/[^a-z0-9]+/g, \'-\') + (new Date().getTime());
           link.href = panelURL + "/" + path[i];
 
-          var stack = (new Error).stack;
-          var onError = function() {
-            var line = stack.split("\n")[2];
-            loaded++;
-            window.setTimeout(\'window.__panel.loadCSSFail("\' + path[i] + \'", "\' + line + \'")\', 10);
-          }
-
           document.getElementsByTagName(\'head\')[0].appendChild(link);
 
           if(navigator.userAgent.indexOf(\'MSIE\') != -1 || window.opera) {
             link.onload = callback;
-            link.onerror = onError;
+            link.onerror = failover;
           } else {
             var counter = 0;
             var check = function() {
@@ -406,7 +404,7 @@ $bootstrap = '
                   }
 
                   if(counter++ > 10) {
-                    onError();
+                    if(failover) failover();
                     return;
                   }
                 }
@@ -417,11 +415,6 @@ $bootstrap = '
             check();
           }
           document.getElementsByTagName(\'head\')[0].appendChild(link);
-
-          var s = document.createElement(\'link\');
-          s.rel = "stylesheet";
-          s.type = \'text/css\';
-          s.href = panelURL + "/" + path[i];
         } else {
           if(localStorage["gwp2_f_" + path[i]]) {
             css = localStorage["gwp2_f_" + path[i]];
