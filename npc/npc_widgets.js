@@ -50,10 +50,10 @@
   
 jQuery.extend(panel, {
   // отрисовка NPC
-  npc_widget: function(widget, type, data) {
+  npc_widget: function(type, data) {
     __panel.loadCSS('npc/npc_widget.css');
-    widget.addClass('npc-widget');
-    var table = jQuery('<table></table>').appendTo(widget);
+    this.addClass('npc-widget');
+    var table = jQuery('<table></table>').appendTo(this);
     __panel.loadScript('npc/npc_list.js', function() {
       jQuery(__panel.npc_list_island[type]).map(function() {
         var id = this.id;
@@ -116,7 +116,7 @@ jQuery.extend(panel, {
     __panel.bind('npc_update', function(data) {
       drawTimer(data);
     });
-    widget.append(jQuery('<div class="npcupdatetime"></div>').css({'text-align': 'right'}));
+    this.append(jQuery('<div class="npcupdatetime"></div>').css({'text-align': 'right'}));
     __panel.npc_requestLocations();
     setInterval(__panel.npc_requestLocations, 1000 * 300);
   },

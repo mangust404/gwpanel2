@@ -293,7 +293,6 @@ var Panel2 = new function() {
                       instance.showFlash('В этом окне нет места!', 'warning', 5000);
                       that.draggable('destroy');
                       jQuery('.pane-placeholder').remove();
-                      console.log(that.attr('top'), that.attr('left'));
                       that.draggable('element').animate({
                         top: parseInt(that.attr('top')) * options.system.btnheight,
                         left: parseInt(that.attr('left')) * options.system.btnwidth
@@ -471,14 +470,14 @@ var Panel2 = new function() {
               }
             }
 
-            var __arguments = [__widget];
+            var __arguments = [];
             if(type.arguments && type.arguments.length) {
               for(var i = 0; i < type.arguments.length; i++) __arguments.push(type.arguments[i]);
             }
             if(that.arguments) {
               __arguments.push(that.arguments);
             }
-            instance[type['callback']].apply(that, __arguments);
+            instance[type['callback']].apply(__widget, __arguments);
           }
 
           if(instance[type.callback]) {
@@ -633,7 +632,7 @@ var Panel2 = new function() {
             if(widget.left + width> jQuery(window).width()) __widget.css({left: jQuery(window).width() - width - 12});
             if(widget.height + height> jQuery(window).height()) __widget.css({height: jQuery(window).height() - height - 12});
             __widget[0].widget = widget;
-            var args = [__widget];
+            var args = [];
             if(panel_apply.widgets[widget.type].arguments &&
                jQuery.type(panel_apply.widgets[widget.type].arguments) == 'array') {
               for(var i = 0; i < panel_apply.widgets[widget.type].arguments.length; i++) {

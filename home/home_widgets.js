@@ -4,6 +4,7 @@
     var h = Math.floor(s / 3600);
     var m = Math.floor((s - h * 3600) / 60);
     var s = s - h * 3600 - m * 60;
+    if(isNaN(h) || isNaN(m)) return '';
     return (h > 0? (h < 9? '0' + h: h) + ':': '') + (m < 10? '0' + m: m) + ':' + (s < 10? '0' + s: s);
   }
 
@@ -56,7 +57,7 @@
       this.progressText.html('100%');
       this.progressBarText.html('100%');
       health.hp_current = health.hp_start = health.hp_max;
-      if(this.options.autohide) widget.css({display: 'none'});
+      if(this.options.autohide) this.css({display: 'none'});
       clearInterval(this.healthUpdInterval);
       this.healthUpdInterval = false;
       this.hp_current = false;
@@ -67,7 +68,7 @@
     }
   }
   
-  function home_health_progress(widget, init, health) {
+  function home_health_progress(init, health) {
     if(((!this.hp_current && health.hp_start != health.hp_max) || this.hp_current < health.hp_start || init)) {
       if(this.healthUpdInterval) {
         clearInterval(this.healthUpdInterval);
@@ -76,7 +77,7 @@
           this.progressImg.css({opacity: 0.9});
         }
       }
-      widget.show();
+      this.show();
       var width = Math.round(100 * 100 * this.hp_current / health.hp_max) / 100;
       this.progressBar.css({width: width + '%'});
       
@@ -88,20 +89,20 @@
     }
     if(health.hp_start == health.hp_max) {
       this.progressBar.css({width: '100%'});
-      if(this.options.autohide) widget.css({display: 'none'});
+      if(this.options.autohide) this.css({display: 'none'});
     }
   }
   
 jQuery.extend(panel, {
-  home_health_widget: function(widget, options) {
+  home_health_widget: function(options) {
     var that = this;
     this.options = options;
     options.size = options.size || 2;
     this.progressImg = jQuery('<img src="' + __panel.path_to_theme() + '/icons/heart.png" width=' + (options.size * 11 + 5) + '"/>');
-    widget.hide().css({
+    this.hide().css({
       height: 'auto'
     }).append(this.progressImg);
-    if(!options.autohide) widget.show();
+    if(!options.autohide) this.show();
     __panel.loadCSS('home/home_widget.css');
     this.progressBarText = jQuery('<div class="progress-bar-text"></div>');
     this.progressBar = jQuery('<div class="progress-bar"></div>').css({
@@ -115,7 +116,7 @@ jQuery.extend(panel, {
     this.progressContainer = jQuery('<div class="progress-container"></div>')
       .append(this.progressBar)
       .append(this.progressText)
-      .appendTo(widget)
+      .appendTo(this)
       .css({
         height: options.size * 10
       })
@@ -123,12 +124,12 @@ jQuery.extend(panel, {
       .click(function() {
         options.type++;
         if(options.type > 2 || isNaN(options.type)) options.type = 0;
-        this.timerType = options.type;
-        __panel.setWidgetOptions(options, widget);
+        that.timerType = options.type;
+        __panel.setWidgetOptions(options, that);
         __panel.get('health', function(health) {
           home_health_timer.apply(that, [health]);
         });
-        switch(this.timerType) {
+        switch(that.timerType) {
           case 0:
             jQuery(this).attr('title', 'Процент выздоровления, от 0% до 100%');
           break;
@@ -139,13 +140,14 @@ jQuery.extend(panel, {
             jQuery(this).attr('title', 'Таймер выздоровления до 100%');
           break;
         }
+        return false;
       });
     this.timer100 = jQuery('<div class="this.timer100"></div>');
     this.timer80 = jQuery('<div class="this.timer80"></div>');
     jQuery('<div class="timers"></div>')
       .append(this.timer100)
       .append(this.timer80)
-      .appendTo(widget);
+      .appendTo(this);
     switch(options.size) {
       case 1:
         this.progressBarText.css({'font-size': '10px'});
@@ -157,11 +159,11 @@ jQuery.extend(panel, {
       break;
     }
     __panel.get('health', function(health) {
-      home_health_progress.apply(that, [widget, false, health]);
+      home_health_progress.apply(that, [false, health]);
     });
     __panel.bind('hp_update', function(health) {
       __panel.set('health', health);
-      home_health_progress.apply(that, [widget, true, health]);
+      home_health_progress.apply(that, [true, health]);
     });
   }
 });

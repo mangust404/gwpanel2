@@ -377,7 +377,7 @@
           )
           .appendTo('#edit-widgets-wrapper').trigger('create');
 
-        var __arguments = [__widget];
+        var __arguments = [];
         if(jQuery.type(widget.arguments) == 'array') {
           for(var i = 0; i < widget.arguments.length; i++) {
             __arguments.push(widget.arguments[i]);
@@ -390,7 +390,7 @@
           }
         }
         __arguments.push(default_data);
-        panel[widget['callback']].apply(panel, __arguments);
+        panel[widget['callback']].apply(__widget, __arguments);
       });
 
       /// Модули
