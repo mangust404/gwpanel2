@@ -641,7 +641,7 @@ var Panel2 = new function() {
               }
             }
             args.push(widget.arguments);
-            instance[type.callback].apply(instance, args);
+            instance[type.callback].apply(__widget, args);
             __widget.mousedown(function(e) {
               if(jQuery(e.target).hasClass('float-widget')) var that = jQuery(e.target);
               else var that = jQuery(e.target).parents('.float-widget');
