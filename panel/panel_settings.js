@@ -367,7 +367,7 @@
           )
           .append(
             jQuery('<p></p>').append(
-              jQuery('<a data-rel="popup" data-transition="slideup" href="#settings-form-popup" id="add-widget-' + widget_name + '" \
+              jQuery('<a data-rel="popup" data-transition="pop" href="#settings-form-popup" id="add-widget-' + widget_name + '" \
                 class="ui-btn ui-btn-inline ui-btn-icon-right ui-icon-plus">Добавить</a>')
               .click(function() {
                 panel_settings_form(widget, 'widget', widget_name);
