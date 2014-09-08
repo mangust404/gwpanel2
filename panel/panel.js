@@ -608,12 +608,13 @@ var Panel2 = new function() {
           modules[module.module].push({file: module.file, widget: options.widgets[j], index: j});
       }
     }
-    for(var module in modules) {
-      for(var i = 0; i < modules[module].length; i++) {
-        var widget = modules[module][i].widget;
-        widget.index = modules[module][i].index;
+    jQuery.each(modules, function(module) {
+      jQuery.each(this, function(i) {
+        var __module = this;
+        var widget = this.widget;
+        widget.index = this.index;
         widget.float = true;
-        instance.loadScript(module + '/' + modules[module][i].file, function() {
+        instance.loadScript(module + '/' + this.file, function() {
           var type = panel_apply.widgets[widget.type];
           if(jQuery.type(instance[type.callback]) == 'undefined') {
             throw('Function ' + type.callback + ' for widget ' + widget.type + ' not found');
@@ -632,7 +633,15 @@ var Panel2 = new function() {
             if(widget.left + width> jQuery(window).width()) __widget.css({left: jQuery(window).width() - width - 12});
             if(widget.height + height> jQuery(window).height()) __widget.css({height: jQuery(window).height() - height - 12});
             __widget[0].widget = widget;
-            instance[type.callback].apply(instance, [__widget, widget.arguments]);
+            var args = [__widget];
+            if(panel_apply.widgets[widget.type].arguments &&
+               jQuery.type(panel_apply.widgets[widget.type].arguments) == 'array') {
+              for(var i = 0; i < panel_apply.widgets[widget.type].arguments.length; i++) {
+                args.push(panel_apply.widgets[widget.type].arguments[i]);
+              }
+            }
+            args.push(widget.arguments);
+            instance[type.callback].apply(instance, args);
             __widget.mousedown(function(e) {
               if(jQuery(e.target).hasClass('float-widget')) var that = jQuery(e.target);
               else var that = jQuery(e.target).parents('.float-widget');
@@ -687,8 +696,8 @@ var Panel2 = new function() {
         
           }
         });
-      }
-    }
+      });
+    });
     instance.bind('float_widget_move', function(data) {
       jQuery('#' + data.id).css({
         left: data.left,

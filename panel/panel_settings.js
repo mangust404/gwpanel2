@@ -5,7 +5,7 @@
   /**
   * Функция вывода формы настроек виджета или кнопки
   */
-  function panel_settings_form (widget) {
+  function panel_settings_form (widget, kind, type) {
     $('#settings-form-popup').html('')
       .append('<h2>Добавить виджет "' + widget.title + '</h2>');
 
@@ -23,28 +23,28 @@
 
       jQuery.each(widget.config_params, function(i) {
         var param = this;
-        var type = widget.config_types[i];
+        var param_type = widget.config_types[i];
         var title = widget.config_titles[i];
-        var options = widget.config_values[i];
+        var __options = widget.config_values[i];
         var default_value = widget.config_defaults[i];
         widget_data[param] = default_value;
 
         var current_value = default_value || '';
 
         /// Если в значении было выражение, то преобразуем его
-        if(jQuery.type(options) == 'string' && options.indexOf('__panel.') == 0) {
-          options = eval(options);
+        if(jQuery.type(__options) == 'string' && __options.indexOf('__panel.') == 0) {
+          __options = eval(__options);
         }
 
-        switch(type) {
+        switch(param_type) {
           case 'checkboxes':
             current_value = jQuery.type(current_value) == 'array'? current_value: [current_value];
             widget_data[param] = current_value;
             var ul = jQuery('<div data-role="collapsible">' + 
                     '<h4>' + title + '</h4>' + 
                     '<ul data-role="listview"></ul></div>').appendTo(setting_content).find('ul');
-            var is_array = jQuery.type(options) == 'array';
-            jQuery.each(options, function(key) {
+            var is_array = jQuery.type(__options) == 'array';
+            jQuery.each(__options, function(key) {
               if(is_array) {
                 var value = this;
               } else {
@@ -63,18 +63,16 @@
                       if(ind == -1) {
                         widget_data[param].push(value);
                       }
-                      console.log('add ' + value + ' to ' + param);
                     } else if(ind > -1) {
                       widget_data[param].splice(ind, 1);
-                      console.log('remove ' + value + ' to ' + param);
                     }
                   });
             });
           break;
           case 'select':
             var s = jQuery('<select name="' + param + '" multiple="multiple"></select>');
-            var is_array = jQuery.type(options) == 'array';
-            jQuery.each(options, function(key) {
+            var is_array = jQuery.type(__options) == 'array';
+            jQuery.each(__options, function(key) {
               if(is_array) {
                 s.append('<option value="' + this + '"' + 
                   (this == default_value? ' selected="selected"': '') + 
@@ -87,7 +85,6 @@
             });
             s.appendTo(setting_content).change(function() {
               widget_data[param] = jQuery(this).val();
-              console.log('change select ' + param);
             });
           break;
           case 'checkbox':
@@ -98,7 +95,6 @@
               .appendTo(setting_content)
               .change(function() {
                 widget_data[param] = this.checked;
-                console.log('change ' + param);
               });
           break;
           default: 
@@ -122,22 +118,28 @@
     var options = panel.getOptions();
 
     function draw_pane(num) {
+      var is_valid = true;
+      var reason = '';
+
       if(!widget.width || options.panes[num].width >= widget.width) {
         var places = panel.checkPanePlaces(num, widget);
-        console.log(num, places, widget);
-        if(places) {
-          displace_div.append('<label for="select-pane-' + num + '">Окно ' + (num +  1) + '</label>' + 
-            '<input name="displace" type="radio" id="select-pane-' + num + '" value="' + num + '">');
-        } else {
-          displace_div.parent().append('<div class="description">в окне ' + (num + 1) + ' нет свободного места</div>');
+        if(!places) {
+          is_valid = false;
+          reason = 'в окне ' + (num + 1) + ' нет свободного места';
         }
       } else {
-        displace_div.parent().append('<div class="description">окно ' + (num + 1) + ' слишком узкое для этого элемента</div>');
+        is_valid = false;
+        reason = 'окно ' + (num + 1) + ' слишком узкое для этого элемента';
       }
+      displace_div.append('<div class="radio-wrapper"' + (reason? ' title="' + reason + '"': '') + 
+        '><label for="select-pane-' + num + '" ' + '>Окно ' + (num +  1) + '</label>' + 
+        '<input name="displace" type="radio" id="select-pane-' + num + '" value="' + 
+        num + '" ' + (is_valid? '': ' disabled="disabled"') + '></div>');
+
     }
     draw_pane(0); draw_pane(1);
-    displace_div.append('<label for="select-pane-float">Плавающий</label>' + 
-          '<input name="displace" type="radio" id="select-pane-float" value="float">');
+    displace_div.append('<div class="radio-wrapper"><label for="select-pane-float">Плавающий</label>' + 
+          '<input name="displace" type="radio" id="select-pane-float" value="float"></div>');
 
     draw_pane(2); draw_pane(3);
 
@@ -165,11 +167,56 @@
               return false;
             }
 
-            if(displace != 'float') {
-              displace = parseInt(displace);
-            }
-            console.log(displace, widget_data);
+            var __data = {};
+            __data.arguments = widget_data;
+            __data.type = type;
 
+
+            if(kind == 'widget') {
+              if(displace == 'float') {
+                __data.left = 200;
+                __data.top = 100;
+
+                var index = 0;
+                for(var i = 0; i < options.widgets.length; i++) {
+                  if(options.widgets[i].type == type) {
+                    index++;
+                  }
+                }
+
+              } else {
+                displace = parseInt(displace);
+                var places = panel.checkPanePlaces(displace, widget);
+                __data.top = places[0];
+                __data.left = places[1];
+                var index = 0;
+                for(var i = 0; i < options.panes[displace].widgets.length; i++) {
+                  if(options.panes[displace].widgets[i].type == type) {
+                    index++;
+                  }
+                }
+              }
+              __data.id = type + '_' + index;
+              __data.height = widget.height;
+              __data.width = widget.width;
+
+              if(displace == 'float') {
+                options.widgets.push(__data);
+                panel.showFlash('Виджет добавлен. Обновите страницу чтобы его увидеть.', 'message', 5000);
+              } else {
+                options.panes[displace].widgets.push(__data);
+                if($('#pane-' + displace).length) {
+                  /// заставляем панель перерисовать окно
+                  $('#pane-' + displace).remove();
+                }
+                panel.showFlash('Виджет добавлен', 'message', 5000);
+              }
+            }
+
+
+            panel.setOptions(options);
+
+            $('#settings-form-popup').popup('close');
             jQuery('.pane-bubble.drag-over').removeClass('drag-over');
             return false;
           })
@@ -323,7 +370,7 @@
               jQuery('<a data-rel="popup" data-transition="slideup" href="#settings-form-popup" id="add-widget-' + widget_name + '" \
                 class="ui-btn ui-btn-inline ui-btn-icon-right ui-icon-plus">Добавить</a>')
               .click(function() {
-                panel_settings_form(widget);
+                panel_settings_form(widget, 'widget', widget_name);
                 return true;
               })
             )
@@ -338,7 +385,6 @@
         }
         var default_data = {};
         if(jQuery.type(widget.config_params) == 'array') {
-          console.log(widget);
           for(var i = 0; i < widget.config_params.length; i++) {
             default_data[widget.config_params[i]] = widget.config_defaults[i];
           }

@@ -179,3 +179,7 @@
 #settings-form-popup .ui-collapsible-content .ui-listview li {
   padding: 0 5px;
 }
+
+#settings-form-popup .radio-wrapper {
+  display: inline-block;
+}
