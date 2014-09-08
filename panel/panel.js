@@ -252,7 +252,9 @@ var Panel2 = new function() {
                   }
 
                   if( left + (is_widget? widget_width: 1) > options.panes[paneID].width || 
-                      top + (is_widget? widget_height: 1) > options.panes[paneID].height) {
+                      top + (is_widget? widget_height: 1) > options.panes[paneID].height ||
+                      left < 0 ||
+                      top < 0) {
                     /// Элемент за  пределами окна, возвращаем на родину
                     that.draggable('option', 'revert', true);
                   } else if(not_empty) {
