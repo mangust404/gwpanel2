@@ -1014,15 +1014,12 @@ var Panel2 = new function() {
         $('<div id="qunit"></div>').prependTo(document.body);
         instance.loadCSS('../../lib/qunit-1.15.0.css');
         instance.onload(function() {
-          var tests = window.panel_tests || [];
-          tests.unshift('lib/qunit-1.15.0.js');
-
-          instance.loadScript(tests, function() {
-            setTimeout(function() {
-              if(jQuery.type(QUnit.config.semaphore) == 'undefined') {
-                QUnit.load();
-              }
-            }, 100);
+          instance.loadScript('lib/qunit-1.15.0.js', function() {
+            var tests = window.panel_tests || [];
+            instance.loadScript(tests, function() {
+              QUnit.load();
+              QUnit.start();
+            });
           });
         });
       }      
