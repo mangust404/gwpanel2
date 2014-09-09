@@ -62,12 +62,14 @@ var Panel2 = new function() {
   * Обработчик перетаскивания кнопок и виджетов в другие окна
   */
   function dragOverPanes(e) {
+    console.log(e.pageY);
     /// Наведение мышки на баблы
     $('.pane-bubble.external').each(function() {
       var paneID = this.id.split('-')[2];
       var that = this;
+      var scrollTop = $(document).scrollTop();
       if(e.pageX > this.offsetLeft - 15 && e.pageX < this.offsetLeft + this.clientWidth + 15 && 
-         e.pageY > this.offsetTop - 3 && e.pageY < this.offsetTop + this.clientHeight + 3) {
+         e.pageY - scrollTop > this.offsetTop - 3 && e.pageY - scrollTop < this.offsetTop + this.clientHeight + 3) {
         $(this).addClass('drag-over');
       } else {
         if($(this).hasClass('drag-over')) $(this).removeClass('drag-over');
