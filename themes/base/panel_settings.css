@@ -14,6 +14,10 @@
   transform-style: preserve-3d;  
 }
 
+#panel-settings-editor .container {
+  height: 100%;
+}
+
 #panel-settings-editor h1 {
   margin: 0 0 10px;
   font-size: 24px;

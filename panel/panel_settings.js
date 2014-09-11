@@ -354,30 +354,32 @@
       var apply = panel_apply;
 
       editor = jQuery('<div id="panel-settings-editor" class="ui-page-theme-a ui-popup ui-overlay-shadow ui-corner-all" data-role="tabs">\
-  <div data-grid="c" data-role="navbar" class="first-view">\
-    <ul class="ui-grid-c">\
-      <li><a href="#edit-buttons-wrapper" data-ajax="false" data-icon="grid"><span>Кнопки</span></a></li>\
-      <li><a href="#edit-widgets-wrapper" data-ajax="false" data-icon="bars"><span>Виджеты</span></a></li>\
-      <li><a href="#edit-modules-wrapper" data-ajax="false" data-icon="gear"><span>Модули</span></a></li>\
-      <li><a href="#edit-other-wrapper" data-ajax="false" data-icon="edit"><span>Другое</span></a></li>\
-    </ul>\
+  <div class="container">\
+    <div data-grid="c" data-role="navbar" class="first-view">\
+      <ul class="ui-grid-c">\
+        <li><a href="#edit-buttons-wrapper" data-ajax="false" data-icon="grid"><span>Кнопки</span></a></li>\
+        <li><a href="#edit-widgets-wrapper" data-ajax="false" data-icon="bars"><span>Виджеты</span></a></li>\
+        <li><a href="#edit-modules-wrapper" data-ajax="false" data-icon="gear"><span>Модули</span></a></li>\
+        <li><a href="#edit-other-wrapper" data-ajax="false" data-icon="edit"><span>Другое</span></a></li>\
+      </ul>\
+    </div>\
+    <div id="edit-buttons-wrapper" style="display: none;" class="edit-wrapper">\
+      <h3 class="footer">Кликните на кнопку из коллекции чтобы посмотреть опции и добавить в одно из окон</h3>\
+    </div>\
+    <div id="edit-widgets-wrapper" style="display: none;" class="edit-wrapper">\
+      <h3 class="footer">Для добавления виджета, кликните на кнопку "Добавить" под виджетом</h3>\
+    </div>\
+    <div id="edit-modules-wrapper" style="display: none;" class="edit-wrapper">\
+      <h3 class="footer">Вы можете отключить ненужные для вас функции, убрав галочку с соответствующей опции</h3>\
+    </div> \
+    <div id="edit-other-wrapper" style="display: none;" class="edit-wrapper">\
+    <h2>Опции:</h2>\
+    </div> \
+    <hr class="footer-delim" />\
+    <a class="close-settings ui-btn ui-btn-icon-right ui-icon-delete ui-btn-inline" onclick="jQuery(\'#panel-settings-editor\').fadeOut(); return false;">Закрыть</a>\
+    <div id="settings-form-popup" data-role="popup" data-position-to="window">\
+    test</div>\
   </div>\
-  <div id="edit-buttons-wrapper" style="display: none;" class="edit-wrapper">\
-    <h3 class="footer">Кликните на кнопку из коллекции чтобы посмотреть опции и добавить в одно из окон</h3>\
-  </div>\
-  <div id="edit-widgets-wrapper" style="display: none;" class="edit-wrapper">\
-    <h3 class="footer">Для добавления виджета, кликните на кнопку "Добавить" под виджетом</h3>\
-  </div>\
-  <div id="edit-modules-wrapper" style="display: none;" class="edit-wrapper">\
-    <h3 class="footer">Вы можете отключить ненужные для вас функции, убрав галочку с соответствующей опции</h3>\
-  </div> \
-  <div id="edit-other-wrapper" style="display: none;" class="edit-wrapper">\
-  <h2>Опции:</h2>\
-  </div> \
-  <hr class="footer-delim" />\
-  <a class="close-settings ui-btn ui-btn-icon-right ui-icon-delete ui-btn-inline" onclick="jQuery(\'#panel-settings-editor\').fadeOut(); return false;">Закрыть</a>\
-  <div id="settings-form-popup" data-role="popup" data-position-to="window">\
-  test</div>\
 </div>')
         .appendTo(document.body);
 
