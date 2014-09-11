@@ -1,6 +1,6 @@
 (function(panel) {
 jQuery.extend(panel, {
-  home_durability: function() {
+  home_durability: function(options) {
     __panel.loadScript('data/items.js', function() {
     for(var i = 0; i < document.links.length; i++) {
       if(document.links[i].href.indexOf('?item_id=') != -1 && (document.links[i].innerHTML.indexOf('<img') != -1 || document.links[i].innerHTML.indexOf('<IMG') != -1)) {
@@ -32,6 +32,4 @@ jQuery.extend(panel, {
     });
   }
 });
-
-panel.home_durability.description = 'Отображение прочности предметов на домашней страничке';
 })(window.__panel);

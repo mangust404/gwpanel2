@@ -5,20 +5,45 @@
   "title": "Статистика по опыту и умениям",
   "weight": 6, 
   "apply": {
-    "/me/": {
-      "stat_update_personal": "stat.personal.js", 
-      "stat_draw_main_counters": "stat.personal.js", 
-      "stat_check_update_achievements": "stat.js"
-    },
-    "/info.php": {
-      "stat_update_info_personal": "stat.personal.js", 
-      "stat_draw_info_counters": "stat.personal.js"
-    },
-    "/info.ach.php": {
-      "stat_update_achievements": "stat.ach.js", 
-      "stat_draw_achievements": "stat.ach.js"
-    }
+    "/me/": [
+      "stat_update_personal", 
+      "stat_draw_main_counters", 
+      "stat_check_update_achievements"
+    ],
+    "/info.php": [
+      "stat_update_info_personal", 
+      "stat_draw_info_counters"
+    ],
+    "/info.ach.php": [
+      "stat_update_achievements",
+      "stat_draw_achievements"
+    ]
   }, 
+
+  "settings": {
+    "stat_update_personal": {
+      "file": "stat.personal.js"
+    },
+    "stat_draw_main_counters": {
+      "file": "stat.personal.js"
+    },
+    "stat_check_update_achievements": {
+      "file": "stat.js"
+    },
+    "stat_update_info_personal": {
+      "file": "stat.personal.js"
+    },
+    "stat_draw_info_counters": {
+      "file": "stat.personal.js"
+    },
+    "stat_update_achievements": {
+      "file": "stat.ach.js"
+    },
+    "stat_draw_achievements": {
+      "file": "stat.ach.js"
+    }
+  },
+
   "event": {
     "stat_ach": {
       "callback": "stat_get_achievements",

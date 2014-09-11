@@ -3,13 +3,110 @@
   var editor;
   /// приватные функции
   /**
+  * Функция вывода дополнительных настроек
+  */
+  function panel_configure_form(params, widget, append_to, change_callback) {
+    jQuery.each(params || [], function(param) {
+      if(widget.arguments && widget.arguments[param]) {
+        var current_value = widget.arguments[param];
+      } else {
+        var current_value = this.default;
+      }
+
+      /// Если в значении было выражение, то преобразуем его
+      if(jQuery.type(this.options) == 'string' && this.options.indexOf('__panel.') == 0) {
+        this.options = eval(this.options);
+      }
+
+      switch(this.type) {
+        case 'checkboxes':
+          var ul = jQuery('<div data-role="collapsible">' + 
+                  '<h4>' + this.title + '</h4>' + 
+                  '<ul data-role="listview"></ul></div>').appendTo(append_to).find('ul');
+          var is_array = jQuery.type(this.options) == 'array';
+          jQuery.each(this.options, function(key) {
+            if(is_array) {
+              var value = this;
+            } else {
+              var value = key;
+            }
+            var li = jQuery('<li></li>').appendTo(ul);
+            jQuery('<label for="param-' + value + '-' + param + '">' + 
+              this + '</label>').appendTo(li);
+            jQuery('<input name="' + param + '" id="param-' + value + '-' + param + '"' +
+                (current_value.indexOf(this) == -1? '': ' checked="checked"') +
+                ' type="checkbox" data-mini="true" value="' + value + '">')
+                .appendTo(li)
+                .change(function() {
+                  var checked_list = [];
+                  jQuery('input[name=' + param + ']').each(function() {
+                    if(this.checked) {
+                      checked_list.push(this.value);
+                    }
+                  })
+                  change_callback(param, checked_list);
+                });
+          });
+        break;
+        case 'select':
+          var s = jQuery('<select name="' + param + '"></select>');
+          var is_array = jQuery.type(this.options) == 'array';
+          s.append('<option value=""' + 
+                '>Укажите ' + this.title + '</option>');
+          jQuery.each(this.options, function(key) {
+            if(is_array) {
+              s.append('<option value="' + this + '"' + 
+                (this == current_value? ' selected="selected"': '') + 
+                '>' + this + '</option>');
+            } else {
+              s.append('<option value="' + key + '"' + 
+                (key == current_value? ' selected="selected"': '') + 
+                '>' + this + '</option>');
+            }
+          });
+          s.appendTo(append_to).change(function() {
+            change_callback(param, jQuery(this).val());
+          });
+        break;
+        case 'checkbox':
+          jQuery('<label for="param-' + param + '">' + this.title + '</label>').appendTo(append_to);
+          jQuery('<input name="' + param + '" id="param-' + param + '"' +
+            (current_value? ' checked="checked"': '') +
+            ' type="checkbox">')
+            .appendTo(append_to)
+            .change(function() {
+              change_callback(param, this.checked);
+            });
+        break;
+        case 'text':
+          jQuery('<input name="' + param + '" id="param-' + param + '"' +
+            ' type="text" value="' + 
+              (current_value == this.default? '': current_value) + '"' + 
+              ' placeholder="' + (this.title == undefined? '': this.title + ' ') + 
+              this.default + '">')
+            .appendTo(append_to)
+            .change(function() {
+              change_callback(param, this.value);
+            });
+        break;
+        default: 
+          //default_data[widget.config_params[i]] = '';
+        break;
+      }
+    });
+  }
+  /**
   * Функция вывода формы настроек виджета или кнопки
   */
   function panel_settings_form (widget, kind, type) {
-    $('#settings-form-popup').html('')
-      .append('<h2>Добавить виджет "' + widget.title + '</h2>');
+    var current_options = panel.getOptions();
 
-    if(widget.configure) {
+    var __data = {};
+    $('#settings-form-popup').html('')
+      .append('<h2>Добавить ' + (kind == 'widget'? 'виджет': 'кнопку') + 
+        ' "' + widget.title + '</h2>');
+
+    if(widget.configure || kind == 'button') {
       var setting_content = jQuery('<div class="ui-corner-all custom-corners">\
   <div class="ui-bar ui-bar-a">\
     <h3>Настройки</h3>\
@@ -21,86 +118,26 @@
 </div>').appendTo('#settings-form-popup').trigger('create').find('fieldset');
       var widget_data = {};
 
-      jQuery.each(widget.config_params, function(i) {
-        var param = this;
-        var param_type = widget.config_types[i];
-        var title = widget.config_titles[i];
-        var __options = widget.config_values[i];
-        var default_value = widget.config_defaults[i];
-        widget_data[param] = default_value;
+      /// Для кнопок добавляем возможность редактировать текст
+      if(kind == 'button') {
+        jQuery('<input maxlength="32" name="title" id="param-title"' +
+          ' type="text" value="' + (type.title == undefined? '': type.title) + 
+            '" placeholder="текст кнопки">')
+          .appendTo(setting_content)
+          .change(function() {
+            __data.title = this.value;
+          });
+      }
 
-        var current_value = default_value || '';
+      /// проходим по всем опциям и собираем дефолтные значения
+      jQuery.each(widget.configure || [], function(param) {
+        widget_data[param] = this.default;
+      });
 
-        /// Если в значении было выражение, то преобразуем его
-        if(jQuery.type(__options) == 'string' && __options.indexOf('__panel.') == 0) {
-          __options = eval(__options);
-        }
-
-        switch(param_type) {
-          case 'checkboxes':
-            current_value = jQuery.type(current_value) == 'array'? current_value: [current_value];
-            widget_data[param] = current_value;
-            var ul = jQuery('<div data-role="collapsible">' + 
-                    '<h4>' + title + '</h4>' + 
-                    '<ul data-role="listview"></ul></div>').appendTo(setting_content).find('ul');
-            var is_array = jQuery.type(__options) == 'array';
-            jQuery.each(__options, function(key) {
-              if(is_array) {
-                var value = this;
-              } else {
-                var value = key;
-              }
-              var li = jQuery('<li></li>').appendTo(ul);
-              jQuery('<label for="param-' + value + '-' + param + '">' + 
-                this + '</label>').appendTo(li);
-              jQuery('<input name="' + param + '" id="param-' + value + '-' + param + '"' +
-                  (current_value.indexOf(this) == -1? '': ' checked="checked"') +
-                  ' type="checkbox" data-mini="true">')
-                  .appendTo(li)
-                  .change(function() {
-                    var ind = widget_data[param].indexOf(value);
-                    if(this.checked) {
-                      if(ind == -1) {
-                        widget_data[param].push(value);
-                      }
-                    } else if(ind > -1) {
-                      widget_data[param].splice(ind, 1);
-                    }
-                  });
-            });
-          break;
-          case 'select':
-            var s = jQuery('<select name="' + param + '" multiple="multiple"></select>');
-            var is_array = jQuery.type(__options) == 'array';
-            jQuery.each(__options, function(key) {
-              if(is_array) {
-                s.append('<option value="' + this + '"' + 
-                  (this == default_value? ' selected="selected"': '') + 
-                  '>' + this + '</option>');
-              } else {
-                s.append('<option value="' + key + '"' + 
-                  (key == default_value? ' selected="selected"': '') + 
-                  '>' + this + '</option>');
-              }
-            });
-            s.appendTo(setting_content).change(function() {
-              widget_data[param] = jQuery(this).val();
-            });
-          break;
-          case 'checkbox':
-            jQuery('<label for="param-' + param + '">' + title + '</label>').appendTo(setting_content);
-            jQuery('<input name="' + param + '" id="param-' + param + '"' +
-              (current_value? ' checked="checked"': '') +
-              ' type="checkbox">')
-              .appendTo(setting_content)
-              .change(function() {
-                widget_data[param] = this.checked;
-              });
-          break;
-          default: 
-            //default_data[widget.config_params[i]] = '';
-          break;
-        }
+      console.log(widget.configure);
+      panel_configure_form(widget.configure, widget, setting_content, function(name, value) {
+        widget_data[name] = value;
+        console.log(widget_data);
       });
       setting_content.trigger('create');
     }
@@ -115,13 +152,11 @@
   </div>\
 </div>').appendTo('#settings-form-popup').find('fieldset');
 
-    var options = panel.getOptions();
-
     function draw_pane(num) {
       var is_valid = true;
       var reason = '';
 
-      if(!widget.width || options.panes[num].width >= widget.width) {
+      if(!widget.width || current_options.panes[num].width >= widget.width) {
         var places = panel.checkPanePlaces(num, widget);
         if(!places) {
           is_valid = false;
@@ -138,8 +173,10 @@
 
     }
     draw_pane(0); draw_pane(1);
-    displace_div.append('<div class="radio-wrapper"><label for="select-pane-float">Плавающий</label>' + 
+    if(kind != 'button') {
+      displace_div.append('<div class="radio-wrapper"><label for="select-pane-float">Плавающий</label>' + 
           '<input name="displace" type="radio" id="select-pane-float" value="float"></div>');
+    }
 
     draw_pane(2); draw_pane(3);
 
@@ -167,7 +204,6 @@
               return false;
             }
 
-            var __data = {};
             __data.arguments = widget_data;
             __data.type = type;
 
@@ -178,8 +214,8 @@
                 __data.top = 100;
 
                 var index = 0;
-                for(var i = 0; i < options.widgets.length; i++) {
-                  if(options.widgets[i].type == type) {
+                for(var i = 0; i < current_options.widgets.length; i++) {
+                  if(current_options.widgets[i].type == type) {
                     index++;
                   }
                 }
@@ -190,8 +226,8 @@
                 __data.top = places[0];
                 __data.left = places[1];
                 var index = 0;
-                for(var i = 0; i < options.panes[displace].widgets.length; i++) {
-                  if(options.panes[displace].widgets[i].type == type) {
+                for(var i = 0; i < current_options.panes[displace].widgets.length; i++) {
+                  if(current_options.panes[displace].widgets[i].type == type) {
                     index++;
                   }
                 }
@@ -201,20 +237,36 @@
               __data.width = widget.width;
 
               if(displace == 'float') {
-                options.widgets.push(__data);
+                current_options.widgets.push(__data);
                 panel.showFlash('Виджет добавлен. Обновите страницу чтобы его увидеть.', 'message', 5000);
               } else {
-                options.panes[displace].widgets.push(__data);
-                if($('#pane-' + displace).length) {
-                  /// заставляем панель перерисовать окно
-                  $('#pane-' + displace).remove();
-                }
+                current_options.panes[displace].widgets.push(__data);
                 panel.showFlash('Виджет добавлен', 'message', 5000);
+              }
+            } else if(kind == 'button') {
+              for(var i = 0; i < current_options.panes[displace].buttons.length; i++) {
+                if(current_options.panes[displace].buttons[i].type == type) {
+                  index++;
+                }
+              }
+              displace = parseInt(displace);
+              var places = panel.checkPanePlaces(displace, widget);
+              __data.id = type + '_' + index;
+              __data.top = places[0];
+              __data.left = places[1];
+              var index = 0;
+              current_options.panes[displace].buttons.push(__data);
+              panel.showFlash('Кнопка добавлена. Обновите страницу чтобы его увидеть.', 'message', 5000);
+            }
+
+            if(!isNaN(displace)) {
+              if($('#pane-' + displace).length) {
+                /// заставляем панель перерисовать окно
+                $('#pane-' + displace).remove();
               }
             }
 
-
-            panel.setOptions(options);
+            panel.setOptions(current_options);
 
             $('#settings-form-popup').popup('close');
             jQuery('.pane-bubble.drag-over').removeClass('drag-over');
@@ -286,6 +338,7 @@
         }
       }
     }
+    var current_options = panel.getOptions();
     panel.loadScript(scripts, function() {
       /// Редактирование настроек
 
@@ -298,7 +351,6 @@
         return;
       }
 
-      var options = panel.getOptions();
       var apply = panel_apply;
 
       editor = jQuery('<div id="panel-settings-editor" class="ui-page-theme-a ui-popup ui-overlay-shadow ui-corner-all" data-role="tabs">\
@@ -329,27 +381,29 @@
 </div>')
         .appendTo(document.body);
 
-      for(var key in panel_apply.buttons) {
-        var button = panel_apply.buttons[key];
+      jQuery.each(panel_apply.buttons, function(button_name) {
+        var button = this;
         var img = button.img;
         if(img && img.indexOf('http:') != 0) {
           img = __panel.path_to_theme() + img;
         }
-        var id = 'button_' + key;
+        var id = 'button_' + button_name;
         jQuery('<div class="button-wrapper"></div>').append(
-          jQuery('<div class="button ' + key + '" id="' + id + '"></div>').append(
+          jQuery('<div class="button ' + button_name + '" id="' + id + '"></div>').append(
             jQuery('<a><div class="img">' + 
               (img? '<img src="' + img + '"/>': 
                 '<span class="icon"></span>') +
               '</div><h3>' + button.title + '</h3></a>')
               .click(function(e) {
+                panel_settings_form(button, 'button', button_name);
+                $('#settings-form-popup').popup('open');
                 return false;
               })
           )
         ).append(
           jQuery('<div class="description">' + (button.description? button.description: '') + '</div>')
         ).appendTo('#edit-buttons-wrapper').trigger('create');
-      }
+      });
 
       jQuery.each(panel_apply.widgets, function(widget_name) {
         var widget = this;
@@ -361,8 +415,8 @@
            .append(
            __widget = jQuery('<div class="widget '+ widget_name + '" id="' + id + '"></div>')
              .css({
-              width: options.system.btnwidth * widget.width,
-              height: options.system.btnheight * widget.height
+              width: current_options.system.btnwidth * widget.width,
+              height: current_options.system.btnheight * widget.height
             })
           )
           .append(
@@ -384,29 +438,28 @@
           }
         }
         var default_data = {};
-        if(jQuery.type(widget.config_params) == 'array') {
-          for(var i = 0; i < widget.config_params.length; i++) {
-            default_data[widget.config_params[i]] = widget.config_defaults[i];
-          }
-        }
+        jQuery.each(widget.configure || {}, function(param){
+          default_data[param] = this.default;
+        });
+
         __arguments.push(default_data);
         panel[widget['callback']].apply(__widget, __arguments);
       });
 
       /// Модули
       var modules_ul = jQuery('<ul data-role="collapsibleset" data-filter="true" data-filter-placeholder="Поиск настроек"></ul>');
-      for(var module_name in panel_apply.modules) {
-        if(module_name == 'panel') continue;
-        var module = panel_apply.modules[module_name];
+      jQuery.each(panel_apply.modules, function(module_name) {
+        if(module_name == 'panel') return;
+        var module = this;
         
         var configurable_funcs = [];
         var configurable_desc = [];
 
-        for(var func_name in panel_apply.scripts) {
-          if(panel_apply.scripts[func_name].indexOf(module_name + '/') == 0) {
-            if(panel[func_name] && panel[func_name].description) {
+        for(var func_name in panel_apply.settings) {
+          if(panel_apply.settings[func_name].module == module_name) {
+            if(panel_apply.settings[func_name].description) {
               configurable_funcs.push(func_name);
-              configurable_desc.push(panel[func_name].description);
+              configurable_desc.push(panel_apply.settings[func_name].description);
             }
           }
         }
@@ -416,16 +469,70 @@
             (module.description? '<div class="description">' + module.description: '')
           + '</li>');
 
-          var li_settings = jQuery('<ul data-role="listview"></ul>').appendTo(li);
+          var settings_ul = jQuery('<ul data-role="listview"></ul>').appendTo(li);
           li.attr('data-role', 'collapsible');
-          for(var i = 0; i < configurable_funcs.length; i++) {
-            li_settings.append('<li><label><input type="checkbox">' + 
-              configurable_desc[i] + '</label>' + '</li>');
-          }
+          jQuery.each(configurable_funcs, function(i, func_name) {
+            var current_options = panel.getOptions();
+            var is_blacklisted = current_options.blacklist && current_options.blacklist.indexOf(func_name) > -1;
+            var checkbox_li = jQuery('<li><label><input name="' + func_name + '" type="checkbox"' + 
+              (is_blacklisted? '': 
+                ' checked="checked"') + '>' + configurable_desc[i] + '</label>' + '</li>')
+              .appendTo(settings_ul).find('input').change(function() {
+              if(this.checked) {
+                /// удаляем из чёрного списка
+                var index = current_options.blacklist.indexOf(this.name);
+                if(index > -1) {
+                  current_options.blacklist.splice(index, 1);
+                  panel.setOptions(current_options);
+                }
+                jQuery(this).parents('li').find('.add-settings').removeClass('ui-disabled');
+              } else {
+                ///добавляем в чёрный список, эта функция нигде подключаться не будет
+                current_options.blacklist = current_options.blacklist || [];
+                if(current_options.blacklist.indexOf(this.name) == -1)
+                  current_options.blacklist.push(this.name);
+                panel.setOptions(current_options);
+                jQuery(this).parents('li').find('.add-settings').addClass('ui-disabled');
+              }
+            }).end();
+            if(panel_apply.settings[func_name].configure) {
+              /// Дополнительные настройки
+              var add_fieldset = jQuery('<div class="' + 
+                (is_blacklisted? 'ui-disabled': '') + 
+                ' add-settings ui-corner-all custom-corners ui-mini">\
+  <div class="ui-bar ui-bar-a">\
+    <h3>Дополнительные настройки</h3>\
+  </div>\
+  <div class="ui-body ui-body-a">\
+    <fieldset data-role="controlgroup">\
+    </fieldset>\
+  </div>\
+</div>').appendTo(checkbox_li).find('fieldset');
+
+              var current_options = panel.getOptions();
+              var __settings = {};
+              if(current_options.settings && 
+                 current_options.settings[module_name] && 
+                 current_options.settings[module_name][func_name]) {
+                __settings = current_options.settings[module_name][func_name];
+              }
+              panel_configure_form(panel_apply.settings[func_name].configure, 
+                {arguments: __settings}, add_fieldset, function(param, value) {
+                  var current_options = panel.getOptions();
+                  if(!current_options.settings) current_options.settings = {};
+                  if(!current_options.settings[module_name]) 
+                    current_options.settings[module_name] = {};
+                  if(!current_options.settings[module_name][func_name]) 
+                    current_options.settings[module_name][func_name] = {};
+                  current_options.settings[module_name][func_name][param] = value;
+                  panel.setOptions(current_options);
+                });
+            }
+          });
           li.appendTo(modules_ul);
         }
+      });
 
-      }
       modules_ul.appendTo('#edit-modules-wrapper').trigger('create');
 
       editor.trigger('create')

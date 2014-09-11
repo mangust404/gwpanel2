@@ -62,7 +62,6 @@ var Panel2 = new function() {
   * Обработчик перетаскивания кнопок и виджетов в другие окна
   */
   function dragOverPanes(e) {
-    console.log(e.pageY);
     /// Наведение мышки на баблы
     $('.pane-bubble.external').each(function() {
       var paneID = this.id.split('-')[2];
@@ -117,7 +116,7 @@ var Panel2 = new function() {
             return;
           }
           var that = this;
-          var img = (that.img || type.img);
+          var img = (that.img || type.img || 'no-icon');
           if(img.indexOf('http:') != 0) {
             img = __panel.path_to_theme() + img;
           }
@@ -842,30 +841,21 @@ var Panel2 = new function() {
           pages = panel_apply.pages[location.pathname];
         }
         if(jQuery.type(panel_apply.pages['*']) == 'array') {
-          for(var i = 0; i < panel_apply.pages['*'].length; i++)
-            pages.push(panel_apply.pages['*'][i]);
-        }
-        jQuery(pages).each(function(index, func) {
-          if(jQuery.type(func) == 'object') {
-            for(var key in func) {
-              var condition = func[key];
-              func = key;
-              break;
-            }
-            if(condition) {
-              try {
-                if(!eval(condition)) return;
-              } catch(e) {
-                instance.dispatchException(e, 'condition for loaded script error: ');
-                return;
-              }
+          for(var i = 0; i < panel_apply.pages['*'].length; i++) {
+            if(pages.indexOf(panel_apply.pages['*'][i]) == -1) {
+              pages.push(panel_apply.pages['*'][i]);
             }
           }
-          instance.loadScript(panel_apply.scripts[func], function() {
+        }
+        jQuery(pages).each(function(index, func) {
+          instance.loadScript(panel_apply.settings[func].module + '/' + panel_apply.settings[func].file, function() {
             if(jQuery.type(instance[func]) == 'undefined') {
-              throw('Function ' + func + ' in module ' + panel_apply.scripts[func] + ' not found');
+              throw('Function ' + func + ' in module ' + panel_apply.settings[func].module + ' not found');
             } else {
-              instance[func].apply(instance, [options[panel_apply.scripts[func].split('/')[0]] || {}]);
+              try {
+                var settings = options.settings[panel_apply.settings[func].module][func];
+              } catch(e) {}
+              instance[func].apply(instance, [settings || {}]);
             }
           });
         });

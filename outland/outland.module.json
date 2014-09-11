@@ -4,47 +4,47 @@
   "title": "Модуль для Outland",
   "weight": 5, 
   "apply": {
-    "/walk.php": {
-      "outland_init": "outland.js"
-    },
-    "/walk.op.php": {
-      "outland_init": "outland.js"
-    },
-    "/walk.ep.php": {
-      "outland_init": "outland.js"
-    }
+    "/walk.php": ["outland_init"],
+    "/walk.op.php": ["outland_init"],
+    "/walk.ep.php": ["outland_init"]
   },
   "settings": {
-    "check_set": {
-      "type": "select",
-      "title": "Проверять комплект",
-      "options": "__panel.items_get_sets()",
-      "options_file": "items/items.js",
-      "default_value": 0
-    },
-    "autos": {
-      "type": "checkbox",
-      "title": "Автоматически отплывать, ага",
-      "default_value": 0, 
-      "description": "В сочетании с предыдущей настройкой при нажатии на якорь само отплывает ;-}"
-    },
-    "fightas": {
-      "type": "checkbox",
-      "title": "Автоматически закрывать заявку",
-      "default_value": 0, 
-      "description": "Автоматом закрывает заявку как только вошли"
-    },
-    "takeas": {
-      "type": "checkbox",
-      "title": "Автоматически подбирать вещи",
-      "default_value": 0, 
-      "description": "Автоматом подбирает предмет, как только оказываемся рядом"
-    },
-    "highlight": {
-      "type": "checkbox",
-      "title": "Подкрашивать клетки, на которые можно перейти",
-      "default_value": 1, 
-      "description": "Слегка затемняет фон кликабельных клеток"
+    "outland_init": {
+      "description": "основные функции на ауте",
+      "file": "outland.js",
+      "configure": {
+        "check_set": {
+          "type": "select",
+          "title": "комплект",
+          "options": ["test1", "test2"],
+          "options_file": "items/items.js",
+          "default": 0
+        },
+        "autos": {
+          "type": "checkbox",
+          "title": "Автоматически отплывать, ага",
+          "default": 0, 
+          "description": "В сочетании с предыдущей настройкой при нажатии на якорь само отплывает ;-}"
+        },
+        "fightas": {
+          "type": "checkbox",
+          "title": "Автоматически закрывать заявку",
+          "default": 0, 
+          "description": "Автоматом закрывает заявку как только вошли"
+        },
+        "takeas": {
+          "type": "checkbox",
+          "title": "Автоматически подбирать вещи",
+          "default": 0, 
+          "description": "Автоматом подбирает предмет, как только оказываемся рядом"
+        },
+        "highlight": {
+          "type": "checkbox",
+          "title": "Подкрашивать клетки, на которые можно перейти",
+          "default": 1, 
+          "description": "Слегка затемняет фон кликабельных клеток"
+        }
+      }
     }
   }
 }

@@ -5,35 +5,40 @@
   "title": "Дополнения для домашней странички",
   "weight": 1, 
   "apply": {
-    "/me/": {
-      "home_durability": "home.js"
-    },
-    "*": {
-      "home_health": "home_health.js"
-    }
+    "/me/": ["home_durability"],
+    "*": ["home_health"]
   }, 
   "settings": {
-    "nohht": {
-      "type": "checkbox",
-      "title": "Не показывать таймеры на домашней страничке",
-      "default_value": 0
+    "home_durability": {
+      "file": "home.js",
+      "description": "Отображение прочности предметов"
     },
-    "nodura": {
-      "type": "checkbox",
-      "title": "Не показывать прочность предметов на домашней страничке",
-      "default_value": 0
+    "home_health": {
+      "file": "home_health.js"
     }
   },
   
   "widgets": {
     "health_widget": {
       "title": "Индикатор выздоровления",
-      "configure": true,
-      "config_params": ["timers", "autohide", "size"],
-      "config_types": ["checkbox", "checkbox", "select"],
-      "config_titles": ["Показывать таймеры", "Скрывать когда здоровье 100%", "Высота"],
-      "config_values": [1, 1, {"2": "средний", "1": "маленький", "3": "большой"}],
-      "config_defaults": [1, 1, "2"],
+      "configure": {
+        "timers": {
+          "type": "checkbox",
+          "title": "Показывать таймеры",
+          "default": true
+        },
+        "autohide": {
+          "type": "checkbox",
+          "title": "Скрывать когда здоровье 100%",
+          "default": true
+        },
+        "size": {
+          "type": "select",
+          "title": "высоту",
+          "options": {"1": "маленький", "2": "средний", "3": "большой"},
+          "default": "2"
+        }
+      },
       "callback": "home_health_widget",
       "file": "home_widgets.js", 
       "width": 2,

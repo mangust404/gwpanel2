@@ -2,45 +2,46 @@
   "title": "Ядро",
   "weight": -100,
   "apply": {
-    "/me/": {
-      "panel_homepage": "panel.js"
-    },
-    "/login.php": {
-      "panel_login": "panel.js"
-    }
+    "/me/": ["panel_homepage"],
+    "/login.php": ["panel_login"]
   },
 
   "settings": {
-    "theme": {
-      "title": "Тема оформления", 
-      "type": "radios", 
-      "options": "__panel.getThemes()", 
-      "default_value": "base"
+    "panel_homepage": {
+      "file": "panel.js"
     },
-    "theme_m": {
-      "type": "textfield", 
-      "title": "Указать путь к своей теме (на локальном диске или удаленном сервере)", 
-      "default_value": "", 
-      "description": "Если вы укажете что-нибудь в этом поле, то панель будет пытаться загрузить тему из этого каталога. Эта опция нужна для тех кто хочет разработать собственную темку. Пример:<br /><li>file:///home/myaccount/mytheme</li><li>http://localhost/mytheme</li>"
+    "panel_login": {
+      "file": "panel.js"
     }
   },
 
   "buttons": {
     "link": {
       "title": "Ссылка",
-      "configure": true, 
-      "config_params": ["link", "blank", "icon"],
-      "config_types": ["text", "checkbox", "icon"], 
-      "config_titles": ["Ссылка для перехода", "В новом окне?", "Иконка"], 
-      "config_values": ["", 0, ""], 
-      "config_defaults": ["http://www.ganjawars.ru/me/", 0, "icon-action"],
+      "configure": {
+        "link": {
+          "type": "text",
+          "title": "Ссылка для перехода, например http://www.ganjawars.ru/me/",
+          "default": ""
+        },
+        "blank": {
+          "type": "checkbox",
+          "title": "В новом окне?",
+          "default": false
+        },
+        "icon": {
+          "type": "icon",
+          "title": "Иконка",
+          "default": "icon-action"
+        }
+      }, 
       "callback": "panel_link", 
       "file": "panel_buttons.js",
-      "description": "Любая ссылка на любую страницу"
+      "description": "Любая ссылка на любую страницу",
+      "img": "icons/link.png"
     },
     "settings": {
       "title": "Настройки",
-      "configure": false,
       "callback": "panel_settings_editor",
       "file": "panel_settings.js",
       "img": "icons/settings.png",
@@ -48,7 +49,6 @@
     },
     "exit": {
       "title": "Выход",
-      "configure": false,
       "callback": "panel_exit",
       "img": "icons/exit.png",
       "description": "Кнопка выхода из игры"

@@ -104,6 +104,4 @@ jQuery.extend(panel, {
   }
   
 });
-
-__panel.map_links.description = 'Добавление ссылок быстрого перехода в сектор';
 })(window.__panel);

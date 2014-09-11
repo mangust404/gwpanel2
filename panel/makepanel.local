@@ -78,7 +78,7 @@ function panel_standalone_local() {
     $localURL = str_replace('file://', 'file:///', $localURL);
   }
   
-  $apply_pages = $apply_scripts = $apply_events = array();
+  $apply_pages = $apply_scripts = $apply_events = $apply_settings = array();
   /// Получаем данные модулей
   $plugins = array();
   global $modules;
@@ -102,31 +102,8 @@ function panel_standalone_local() {
     if(is_array($plugin['apply'])) {
       foreach($plugin['apply'] as $page => $scripts) {
         if(!is_array($scripts)) continue;
-        $is_array = FALSE;
-        foreach($scripts as $func => $file) {
-          if(is_array($file)) {
-            $apply_scripts[$func] = $plugin_name . '/' . $file['file'];
-            $is_array = TRUE;
-          } else {
-            $apply_scripts[$func] = $plugin_name . '/' . $file;
-          }
-        }
-        if($is_array) {
-          if(!isset($apply_pages[$page])) $apply_pages[$page] = array();
-          foreach($scripts as $key => $value) {
-            if(is_array($value)) {
-              $apply_pages[$page][] = array($key => $value['condition']);
-            } else {
-              $apply_pages[$page][] = $key;
-            }
-          }
-        } else {
-          if(isset($apply_pages[$page]) && is_array($apply_pages[$page])) {
-            $apply_pages[$page] = array_merge($apply_pages[$page], array_keys($scripts));
-          } else {
-            $apply_pages[$page]  = is_array($scripts)? array_keys($scripts): '';
-          }
-        }
+        if(!isset($apply_pages[$page])) $apply_pages[$page] = array();
+        $apply_pages[$page] = array_merge($apply_pages[$page], $scripts);
       }
       //$apply_scripts[$plugin_name] = $plugin['applyScript'];
     }
@@ -137,6 +114,15 @@ function panel_standalone_local() {
         $apply_events[$event][] = $listener;
         $apply_scripts[$listener['callback']] = $plugin_name . '/' . $listener['file'];
       }
+    }
+
+    if(isset($plugin['settings']) && is_array($plugin['settings'])) {
+      foreach($plugin['settings'] as $key => $val) {
+        if(!isset($plugin['settings'][$key]['module'])) {
+          $plugin['settings'][$key]['module'] = $plugin_name;
+        }
+      }
+      $apply_settings= array_merge($apply_settings, $plugin['settings']);
     }
 
     if(isset($plugin['buttons']) && is_array($plugin['buttons'])) {
@@ -171,6 +157,7 @@ function panel_standalone_local() {
   $apply = array();
   $apply['pages'] = $apply_pages;
   $apply['scripts'] = $apply_scripts;
+  $apply['settings'] = $apply_settings;
   $apply['events'] = $apply_events;
   $apply['widgets'] = $widget_classes;
   $apply['buttons'] = $button_classes;

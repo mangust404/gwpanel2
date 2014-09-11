@@ -4,82 +4,90 @@
   "title": "Модуль для карты и передвижений",
   "weight": 3, 
   "apply": {
-    "/me/": {
-      "map_sector": "map.js"
-    },
-    "/map.move.php": {
-      "map_mmupdate": "map.js"
-    },
-    "/map.moving.php": {
-      "map_mmupdate": "map.js"
-    },
-    "/npc.php": {
-      "map_links": "map.js"
-    },
-    "/info.php": {
-      "map_links": "map.js"
-    },
-    "/object.php": {
-      "map_links": "map.js"
-    },
-    "/statlist.php": {
-      "map_links": "map.js"
-    },
-    "/objects-bar.php": {
-      "map_links": "map.js"
-    }
+    "/me/": ["map_sector"],
+    "/map.move.php": ["map_mmupdate"],
+    "/map.moving.php": ["map_mmupdate"],
+    "/npc.php": ["map_links"],
+    "/info.php": ["map_links"],
+    "/object.php": ["map_links"],
+    "/statlist.php": ["map_links"],
+    "/objects-bar.php": ["map_links"]
   }, 
+
+  "settings": {
+    "map_sector": {
+      "file": "map.js"
+    },
+    "map_mmupdate": {
+      "file": "map.js"
+    },
+    "map_links": {
+      "file": "map.js",
+      "description": "Добавлять ссылки быстрого перехода в сектор"
+    }
+  },
 
   "buttons": {
     "gohome": {
       "title": "Домой",
-      "configure": true,
+      "configure": {
+        "sector": {
+          "type": "select",
+          "title": "Домашний сектор",
+          "options": "__panel.map_names",
+          "default": "__panel.map_current_sector_coords()",
+          "file": "map_sectors.js"
+        }
+      },
       "img": "icons/home.png", 
-      "config_params": ["sector"],
-      "config_types": ["select"],
-      "config_titles": ["Домашний сектор"],
-      "config_values": ["__panel.map_names"],
-      "config_defaults": ["__panel.map_current_sector_coords()"],
-      "config_files": ["map/map_sectors.js"],
       "callback": "map_gohome", 
       "file": "map_buttons.js",
       "description": "Переход в домашний сектор"
     },
     "goport": {
       "title": "В порт",
-      "configure": true,
+      "configure": {
+        "sector": {
+          "type": "select",
+          "title": "Домашний порт",
+          "options": "__panel.map_get_ports_names()",
+          "default": "",
+          "file": "map_sectors.js"
+        }
+      },
       "img": "icons/anchor.png", 
-      "config_params": ["sector"],
-      "config_types": ["select"],
-      "config_titles": ["Домашний порт"],
-      "config_values": ["__panel.map_get_ports_names()"],
-      "config_defaults": [""],
       "callback": "map_goport", 
       "file": "map_buttons.js",
-      "description": "Переход в домашний порт"
+      "description": "Переход в портовый сектор"
     },
     "goout": {
       "title": "Outland",
-      "configure": true,
+      "configure": {
+        "port": {
+          "type": "select",
+          "title": "Порт отбытия",
+          "options": "__panel.map_get_ports_ids()",
+          "default": "",
+          "file": "map_sectors.js"
+        }
+      },
       "img": "icons/outland.png", 
-      "config_params": ["port"],
-      "config_types": ["select"],
-      "config_titles": ["Порт отбытия"],
-      "config_values": ["__panel.map_get_ports_ids()"],
-      "config_defaults": [""],
       "callback": "map_goout", 
       "file": "map_buttons.js",
       "description": "Кнопка отплытия на Outland"
     },
     "gooverlord": {
       "title": "Overlord",
-      "configure": true,
+      "configure": {
+        "port": {
+          "type": "select",
+          "title": "Порт отбытия",
+          "options": "__panel.map_get_ports_ids()",
+          "default": "",
+          "file": "map_sectors.js"
+        }
+      },
       "img": "icons/overlord.png", 
-      "config_params": ["port"],
-      "config_types": ["select"],
-      "config_titles": ["Порт отбытия"],
-      "config_values": ["__panel.map_get_ports_ids()"],
-      "config_defaults": [""],
       "callback": "map_gooverlord", 
       "file": "map_buttons.js",
       "description": "Кнопка отплытия в Overlord"
