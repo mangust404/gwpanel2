@@ -6,14 +6,14 @@ function waitPanelInitialization(__window, callback) {
       return;
     }
     setTimeout(check, 10);
-  }
+  };
   check();
 }
 
 QUnit.assert.function_exists = function(needle, haystack, message) {
   var exists = String(typeof(haystack)).toLowerCase() == 'function';
   QUnit.push(exists, exists, needle, 'функция ' + needle + ' существует');
-}
+};
 
 QUnit.test("Тест объекта __panel", function(assert) {
   assert.equal('object', String(typeof(window.__panel)).toLowerCase(), 
@@ -26,7 +26,7 @@ QUnit.test("Тест объекта __panel", function(assert) {
      'currentPlayerName', 'getOptionsID', 'panel_homepage', 'panel_login',
      'setEnv', 'getEnv']).each(function() {
     assert.function_exists('__panel.' + this, __panel[this]);
-  })
+  });
 
   assert.deepEqual('array', jQuery.type(__panel.failedScripts), 
                     'массив незагруженных скриптов');
@@ -1299,7 +1299,7 @@ QUnit.asyncTest("Тест добавления виджета", function(assert)
         /// Создаём виртуальный класс виджетов
         that.contentWindow.__panel.panel_foo_widget = function(options) {
           this.append('<p>Panel foo widget</p>');
-        }
+        };
 
         that.contentWindow.panel_apply.widgets['panel_foo_widget'] = {
           callback: 'panel_foo_widget',
@@ -1308,7 +1308,7 @@ QUnit.asyncTest("Тест добавления виджета", function(assert)
           width: 6,
           file: 'panel.js',
           module: 'panel'
-        }
+        };
         /// кликаем по бабблу
         $('.pane-bubble:first').click();
         var pane = $('.pane:visible');
@@ -1376,15 +1376,15 @@ QUnit.asyncTest("Тест формы добавления и настройки 
           $.each(options, function(key, val) {
             that.append('<p>' + key + '=' + val + '</p>');
           });
-        }
+        };
 
         that.contentWindow.__panel.test_checkboxes_options = function() {
           return ['test1', 'test2', 'test3'];
-        }
+        };
 
         that.contentWindow.__panel.test_checkboxes_options_assoc = function() {
           return {'test1': 'Тест1', 'test2': 'Тест2', 'test3': 'Тест3'};
-        }
+        };
 
         that.contentWindow.panel_apply.widgets['panel_foo_widget'] = {
           callback: 'panel_foo_widget',
@@ -1456,7 +1456,7 @@ QUnit.asyncTest("Тест формы добавления и настройки 
               title: 'Тест text2',
               type: 'text',
               default: 'тест'
-            },
+            }
 
           },
           title: 'Тестовый виджет',
@@ -1464,7 +1464,7 @@ QUnit.asyncTest("Тест формы добавления и настройки 
           width: 2,
           file: 'panel.js',
           module: 'panel'
-        }
+        };
         /// кликаем по бабблу
         $('.pane-bubble:first').click();
         var pane = $('.pane:visible');
@@ -1723,4 +1723,27 @@ QUnit.asyncTest("Тест изменения настроек модулей", f
     }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
   });
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
+});
+
+// Тест конвертации денег в число, и обратно.
+QUnit.test("Тест конвертации денег в число, и обратно", function(assert) {
+    assert.equal(__panel.convertingMoney('$1,000,000'), 1000000, "Converting: '$1,000,000' > 1000000");
+    assert.equal(__panel.convertingMoney('$1'), 1, "Converting: '$1' > 1");
+    assert.equal(__panel.convertingMoney('$10.526'), 10526, "Converting: '$10.526' > 10526");
+    assert.equal(__panel.convertingMoney('$-123456'), -123456, "Converting: '-123456' > -123456");
+    assert.equal(__panel.convertingMoney('-$10.00 00,0-'), -1000000, "Converting: '-$10.00 00,0-' > -1000000");
+    assert.equal(__panel.convertingMoney('$1 000 000'), 1000000, "Converting: '$1 000 000' > 1000000");
+    assert.equal(__panel.convertingMoney('FakeNumber'), false, "Converting: 'FakeNumber' > false");
+    assert.equal(__panel.convertingMoney('-$FakeNumber'), false, "Converting: '-$FakeNumber' > false");
+    assert.equal(__panel.convertingMoney(1000000), '$1,000,000', "Converting: -1000000 > '$1,000,000'");
+    assert.equal(__panel.convertingMoney(100), '$100', "Converting: 100 > '$100'");
+    assert.equal(__panel.convertingMoney(1250), '$1,250', "Converting: 1250 > '$1,250'");
+    assert.equal(__panel.convertingMoney(1), '$1', "Converting: 1 > '$1'");
+    assert.equal(__panel.convertingMoney(-100), '$-100', "Converting: -100 > '$-100'");
+    assert.equal(__panel.convertingMoney(-1158), '$-1,158', "Converting: -1158 > '$-1,158'");
+    assert.equal(__panel.convertingMoney(-100006), '$-100,006', "Converting: -100006 > '$-100,006'");
+    assert.equal(__panel.convertingMoney(1.84), '$1', "Converting: 1.84 > '$1'");
+    assert.equal(__panel.convertingMoney(-1000.56), '$-1,000', "Converting: -1000.56 > '$-1,000'");
+    assert.equal(__panel.convertingMoney({}), false, "Converting: {} > false");
+    assert.equal(__panel.convertingMoney(new String("String")), false, "Converting: new String('String') > false");
 });
