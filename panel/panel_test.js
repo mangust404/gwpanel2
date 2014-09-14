@@ -1659,9 +1659,6 @@ QUnit.asyncTest("Тест изменения настроек модулей", f
           panel_apply.pages[document.location.pathname] = [];
         }
         panel_apply.pages[document.location.pathname].push('panel_test_func');
-        __panel.panel_test_func = function(params) {
-          console.log(params);
-        }
         panel_apply.settings['panel_test_func'] = {
           file: 'panel.js',
           module: 'panel',
@@ -1678,6 +1675,9 @@ QUnit.asyncTest("Тест изменения настроек модулей", f
       var that = this;
       waitPanelInitialization(this.contentWindow, function() {
         (function($) {
+        this.__panel.panel_test_func = function(params) {
+          console.log(params);
+        }
         $('.pane-bubble:first').click();
         var pane = $('.pane:visible');
         /// Ждём прорисовки виджета
