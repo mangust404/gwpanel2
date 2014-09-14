@@ -202,6 +202,7 @@
           img = __panel.path_to_theme() + img;
         }
         var id = 'button_' + button_name;
+        button.id = id;
         jQuery('<div class="button-wrapper"></div>').append(
           jQuery('<div class="button ' + button_name + '" id="' + id + '"></div>').append(
             jQuery('<a><div class="img">' + 
@@ -209,9 +210,8 @@
                 '<span class="icon"></span>') +
               '</div><h3>' + button.title + '</h3></a>')
               .click(function(e) {
-                panel_settings_form(button, 'button', {type: button_name});
+                panel.panel_settings_form(button, 'button', {type: button_name});
                 jQuery('#settings-form-popup').popup('open');
-                jQuery('#settings-form-popup').popup('init');
                 return false;
               })
           )
@@ -421,10 +421,7 @@
           jQuery('<input maxlength="32" name="title" id="param-title"' +
             ' type="text" value="' + (__data.title == undefined? '': __data.title) + 
               '" placeholder="текст кнопки">')
-            .appendTo(setting_content)
-            .change(function() {
-              __data.title = this.value;
-            });
+            .appendTo(setting_content);
         }
 
         /// проходим по всем опциям и собираем дефолтные значения
@@ -496,7 +493,7 @@
           )
         ).append(
           jQuery('<div class="ui-block-b"></div>').append(
-            jQuery('<a href="#" class="ui-shadow ui-btn ui-corner-all">' + 
+            jQuery('<a href="#" class="widget-save ui-shadow ui-btn ui-corner-all">' + 
               (isEdit? 'Сохранить': 'Добавить') + '</a>').click(function() {
               var displace;
               if(widgetKind == 'float') {
@@ -516,14 +513,14 @@
               __data.type = widgetData.type;
 
 
+              var index = 0;
               if(widgetKind == 'widget' || widgetKind == 'float') {
                 if(displace == 'float') {
                   __data.left = isNaN(__data.left)? 200: __data.left;
                   __data.top = isNaN(__data.top)? 100: __data.top;
 
-                  var index = 0;
                   for(var i = 0; i < current_options.widgets.length; i++) {
-                    if(current_options.widgets[i].type == widgetClass.type) {
+                    if(current_options.widgets[i].type == widgetData.type) {
                       index++;
                     }
                   }
@@ -535,15 +532,14 @@
                     __data.top = places[0];
                     __data.left = places[1];
                   }
-                  var index = 0;
                   for(var i = 0; i < current_options.panes[displace].widgets.length; i++) {
-                    if(current_options.panes[displace].widgets[i].type == widgetClass.type) {
+                    if(current_options.panes[displace].widgets[i].type == widgetData.type) {
                       index++;
                     }
                   }
                 }
                 if(!__data.id) {
-                  __data.id = widgetClass.type + '_' + index;
+                  __data.id = widgetData.type + '_' + index;
                 }
                 __data.height = widgetClass.height;
                 __data.width = widgetClass.width;
@@ -566,16 +562,18 @@
                 }
               } else if(widgetKind == 'button') {
                 for(var i = 0; i < current_options.panes[displace].buttons.length; i++) {
-                  if(current_options.panes[displace].buttons[i].type == widgetClass.type) {
+                  if(current_options.panes[displace].buttons[i].type == widgetData.type) {
                     index++;
                   }
                 }
+
+                __data.title = jQuery('#param-title').val() || __data.title || '';
                 displace = parseInt(displace);
                 if(!__data.id) {
-                  __data.id = widgetClass.type + '_' + index;
+                  __data.id = widgetData.type + '_' + index;
                 }
                 if(isNaN(__data.top) || isNaN(__data.left)) {
-                  var places = panel.checkPanePlaces(displace, widget);
+                  var places = panel.checkPanePlaces(displace, widgetData);
                   __data.top = places[0];
                   __data.left = places[1];
                 }

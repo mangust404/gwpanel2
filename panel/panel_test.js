@@ -1170,3 +1170,111 @@ QUnit.asyncTest("Тест функции __panel.currentPlayerName()", function(
     QUnit.start();
   });
 });
+
+QUnit.asyncTest("Тест открытия окна настроек", function(assert) {
+  var options = jQuery.extend({}, panelSettingsCollection.default);
+  /// Создаём конфигурацию с пустыми окнами
+  for(var i = 0; i < 4; i++) {
+    options.panes[i].buttons = options.panes[i].widgets = [];
+  }
+
+  __panel.setOptions(options, undefined, function() {
+    $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
+       + '?gwpanel_testing&continue"></iframe>').load(function() {
+      var that = this;
+      waitPanelInitialization(this.contentWindow, function() {
+        (function($) {
+        assert.equal($('.pane-bubble:visible').length, 1, 
+          'При пустой концигурации кнопка настроек должна появиться в первом окне');
+        /// кликаем по бабблу
+        $('.pane-bubble:first').click();
+        var pane = $('.pane:visible');
+        /// Ждём прорисовки виджета
+        assert.ok(pane.length > 0, 'Открылось окошко');
+        var button = pane.find('.button');
+
+        assert.ok(button.length > 0,
+                  'Кнопка видна');
+
+        button.find('a').click();
+
+        setTimeout(function() {
+          assert.equal($('#panel-settings-editor:visible').length, 1, 
+            'Открылось окошко настроек');
+          assert.equal($('#panel-settings-editor div[data-role=navbar] a.ui-link').length,
+            4, 'Видны 4 кнопки настроек');
+          QUnit.start();
+        }, 1000);
+      }).apply(that.contentWindow, [that.contentWindow.jQuery])
+      });
+    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+  });
+  //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
+
+});
+
+QUnit.asyncTest("Тест добавления кнопки", function(assert) {
+  var options = jQuery.extend({}, panelSettingsCollection.default);
+  /// Создаём конфигурацию с пустыми окнами
+  for(var i = 0; i < 4; i++) {
+    options.panes[i].buttons = options.panes[i].widgets = [];
+  }
+
+  __panel.setOptions(options, undefined, function() {
+    $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
+       + '?gwpanel_testing&continue"></iframe>').load(function() {
+      var that = this;
+      waitPanelInitialization(this.contentWindow, function() {
+        (function($) {
+        assert.equal($('.pane-bubble:visible').length, 1, 
+          'При пустой концигурации кнопка настроек должна появиться в первом окне');
+        /// кликаем по бабблу
+        $('.pane-bubble:first').click();
+        var pane = $('.pane:visible');
+        /// Ждём прорисовки виджета
+        assert.ok(pane.length > 0, 'Открылось окошко');
+        var button = pane.find('.button');
+
+        assert.ok(button.length > 0,
+                  'Кнопка видна');
+
+        button.find('a').click();
+
+        setTimeout(function() {
+          $('a[href=#edit-buttons-wrapper]').click();
+
+          $('#button_panel_settings a').click();
+          assert.equal($('#settings-form-popup:visible').length, 1,
+            'окошко добавления кнопки должно появиться');
+          $('#param-title').val('Тестовая кнопка');
+          $('#select-pane-1').attr('checked', 'checked');
+          $('#settings-form-popup .widget-save').click();
+
+          assert.ok($('.panel-flash').text().indexOf('добавлен') > -1, 
+            'Должно выйти сообщение');
+
+          $('#panel-settings-editor .close-settings').click();
+
+          $('#pane-bubble-1').click();
+
+          setTimeout(function() {
+            assert.equal($('#panel-settings-editor:visible').length, 0, 
+              'Окно настроек должно закрыться');
+            assert.equal($('#pane-1:visible').length, 1, 'Окно №2 должно открыться');
+            assert.equal($('#pane-1 .button.panel_settings').length, 1, 
+              'Добавленная кнопка должна быть видна');
+
+            assert.equal($('#pane-1 .button.panel_settings').text(), 'Тестовая кнопка',
+              'проверка текста кнопки');
+            assert.equal(that.contentWindow.__panel.getOptions().panes[1].buttons[0].id,
+              'panel_settings_0', 'проверка ID кнопки');
+            QUnit.start();
+          }, 500);
+        }, 1000);
+      }).apply(that.contentWindow, [that.contentWindow.jQuery])
+      });
+    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+  });
+  //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
+
+});
