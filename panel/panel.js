@@ -1634,36 +1634,44 @@ var Panel2 = new function() {
 
     /*
     * Функция возвращает куки в виде хеша
+    * @return хеш кук
     */
     getCookies: function() {
-        var cookie, i, length, keyValue;
-        if(__cookies != undefined) {
-            return __cookies;
-        }
-        __cookies = {};
-        cookie = document.cookie.split('; ');
-        for(i = 0, length = cookie.length; i < length; i++){
-            keyValue = cookie[i].split("=");
-            __cookies[keyValue[0]] = encodeURIComponent(keyValue[1]);
-        }
-        return __cookies;
+      var cookie, i, length, keyValue;
+      if(__cookies != undefined) {
+          return __cookies;
+      }
+      __cookies = {};
+      cookie = document.cookie.split('; ');
+      for(i = 0, length = cookie.length; i < length; i++){
+          keyValue = cookie[i].split("=");
+          __cookies[keyValue[0]] = encodeURIComponent(keyValue[1]);
+      }
+      return __cookies;
     },
+
     /**
     * Функция возвращает ID текущего игрока (из кук)
     */
     currentPlayerID: function() {
       return instance.getCookies()['au'];
     },
+
     /**
     * Функция возвращает имя текущего игрока
+    * @param callback - метод, вызываемый после получения имени
+    * использование: 
+    * __panel.currentPlayerName(function(name) {
+    *   ...
+    * })
     */
-
     currentPlayerName: function(callback) {
       instance.get('panel_currentPlayerName', callback);
     },
 
-
-
+    /**
+    * Обработчик для домашней странички
+    */
     panel_homepage: function(){
         var name, id;
         if(location.search == "?logged"){
@@ -1674,6 +1682,9 @@ var Panel2 = new function() {
         }
     },
 
+    /**
+    * Обработчик события входа игрока в игру
+    */
     panel_login: function(){
         var name, id;
         name = "__notLogged";
@@ -1684,6 +1695,13 @@ var Panel2 = new function() {
 
     /**
     * Функция выставления окружения
+    * @param env - строка, название окружения
+    * возможные значения: 
+    *  -dev - режим разработки
+    *  -production - боевой режим
+    *  -deploy - режим для тестирования и вылавливания багов перед релизом на production
+    *  -testing - этот режим используется в тестах, чтобы настройки и пр. были изолированы
+    *             от других окружений
     */
     setEnv: function(env) {
       var possible_values = ['dev', 'production', 'deploy', 'testing'];
@@ -1720,6 +1738,10 @@ var Panel2 = new function() {
 
     /**
     * Функция для отображения сообщения пользователю
+    * @param text - текст сообщения
+    * @param type - тип: message, warning, error
+    * @param timeout - время отображения, в миллисекундах.
+    * Если не указано, то выводится на 20 секунд.
     */
     showFlash: function(text, type, timeout) {
       var types = ['message', 'warning', 'error'];
@@ -1755,6 +1777,12 @@ var Panel2 = new function() {
       };
     },
 
+    /**
+    * Функция проверки свободных мест
+    * @param paneID - порядковый номер окна, от 0 до 3
+    * @param widget - данные виджета
+    * @return массив [x, y] - место для виджета, либо false если места не нашлось
+    */
     checkPanePlaces: function(paneID, widget) {
       var element_height = widget.height || 1;
       var element_width = widget.width || 1;
@@ -1814,6 +1842,10 @@ var Panel2 = new function() {
       return false;
     },
 
+    /**
+    * Функция прорисовки плавающих виджетов
+    * прорисовывает виджеты, которые ещё не были прорисованы
+    */
     redrawFloatWidgets: function() {
       initFloatWidgets(true);
     },
