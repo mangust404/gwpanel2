@@ -1288,7 +1288,6 @@ QUnit.asyncTest("Тест добавления виджета", function(assert)
   options.panes[1].width = 4;
   options.panes[2].width = 6;
 
-  console.log(options);
   options.widgets = [];
 
   __panel.setOptions(options, undefined, function() {
@@ -1483,55 +1482,56 @@ QUnit.asyncTest("Тест формы добавления и настройки 
           assert.equal($('#settings-form-popup').length, 1,
             'Открылся попап добавления');
 
-          assert.notEqual($('#param-checkbox1').attr('checked'), 'checked',
+          assert.notEqual($('#param-panel_foo_widget-checkbox1').attr('checked'), 'checked',
             'Чекбокс 1 должен быть отжат');
-          assert.equal($('#param-checkbox2').attr('checked'), 'checked',
+          assert.equal($('#param-panel_foo_widget-checkbox2').attr('checked'), 'checked',
             'Чекбокс 2 должен быть нажат');
 
-          assert.equal($('input[name=checkboxes1][checked=checked]').length, 0,
+          assert.equal($('input[name=panel_foo_widget_checkboxes1][checked=checked]').length, 0,
             'Чекбоксы №1 не должны содержать значение');
-          assert.equal($('input[name=checkboxes2][checked=checked]').attr('id'),
-            'param-test1-checkboxes2', 'Чекбоксы №2 должны быть равны [test1]');
-          assert.equal($('input[name=checkboxes3][checked=checked]').length, 0,
+          assert.equal($('input[name=panel_foo_widget_checkboxes2][checked=checked]').attr('id'),
+            'param-panel_foo_widget-test1-checkboxes2', 'Чекбоксы №2 должны быть равны [test1]');
+          assert.equal($('input[name=panel_foo_widget_checkboxes3][checked=checked]').length, 0,
             'Чекбоксы №3 не должны содержать значение');
-          assert.equal($('input[name=checkboxes4][checked=checked]').attr('id'),
-            'param-test3-checkboxes4', 'Чекбоксы №4 должны быть равны [test3]');
+          assert.equal($('input[name=panel_foo_widget_checkboxes4][checked=checked]').attr('id'),
+            'param-panel_foo_widget-test3-checkboxes4', 'Чекбоксы №4 должны быть равны [test3]');
 
-          assert.equal($('#param-select1').val(), '',
+          assert.equal($('#param-panel_foo_widget-select1').val(), '',
             'Селекты №1 не должны содержать значение');
-          assert.equal($('#param-select2').val(),
+          assert.equal($('#param-panel_foo_widget-select2').val(),
             'test1', 'Селекты №2 должны быть равны test1');
-          assert.equal($('#param-select3').val(), '',
+          assert.equal($('#param-panel_foo_widget-select3').val(), '',
             'Селекты №3 не должны содержать значение');
-          assert.equal($('#param-select4').val(),
+          assert.equal($('#param-panel_foo_widget-select4').val(),
             'test3', 'Селекты №4 должны быть равны test3');
 
-          assert.equal($('#param-text1').val(), '',
+          assert.equal($('#param-panel_foo_widget-text1').val(), '',
             'Текстовый инпут 1 не должен содержать значение');
-          assert.equal($('#param-text2').val(), 'тест',
+          assert.equal($('#param-panel_foo_widget-text2').val(), 'тест',
             'Текстовый инпут 2 должен содержать дефолтное значение "тест"');
 
           /// Меняем значения и добавляем виджет
-          $('#param-checkbox1').attr('checked', 'checked').change();
-          $('#param-checkbox2').removeAttr('checked').change();
+          $('#param-panel_foo_widget-checkbox1').attr('checked', 'checked').change();
+          $('#param-panel_foo_widget-checkbox2').removeAttr('checked').change();
 
-          $('input[name=checkboxes1]').attr('checked', 'checked').change();
-          $('input[name=checkboxes2]').removeAttr('checked').change();
-          $('input[name=checkboxes3]').attr('checked', 'checked').change();
-          $('input[name=checkboxes4]').removeAttr('checked').change();
+          $('input[name=panel_foo_widget_checkboxes1]').attr('checked', 'checked').change();
+          $('input[name=panel_foo_widget_checkboxes2]').removeAttr('checked').change();
+          $('input[name=panel_foo_widget_checkboxes3]').attr('checked', 'checked').change();
+          $('input[name=panel_foo_widget_checkboxes4]').removeAttr('checked').change();
 
-          $('#param-select1').val('test1').change();
-          $('#param-select2').val('').change();
-          $('#param-select3').val('test3').change();
-          $('#param-select4').val('').change();
+          $('#param-panel_foo_widget-select1').val('test1').change();
+          $('#param-panel_foo_widget-select2').val('').change();
+          $('#param-panel_foo_widget-select3').val('test3').change();
+          $('#param-panel_foo_widget-select4').val('').change();
 
-          $('#param-text1').val('тест').change();
-          $('#param-text2').val('').change();
+          $('#param-panel_foo_widget-text1').val('тест').change();
+          $('#param-panel_foo_widget-text2').val('').change();
 
           $('#select-pane-float').click();
 
           $('.widget-save').click();
 
+          console.log(that.contentWindow.__panel.getOptions().widgets);
           var widget = that.contentWindow.__panel.getOptions().widgets[0];
 
           assert.equal(widget.arguments.checkbox1, true, 'Проверка checkbox1');
@@ -1562,54 +1562,53 @@ QUnit.asyncTest("Тест формы добавления и настройки 
             assert.equal($('#settings-form-popup').length, 1,
               'Открылся попап редактирования');
 
-            assert.equal($('#param-checkbox1').attr('checked'), 'checked',
+            assert.equal($('#param-panel_foo_widget-checkbox1').attr('checked'), 'checked',
               'Чекбокс 1 должен быть нажат');
-            assert.notEqual($('#param-checkbox2').attr('checked'), 'checked',
+            assert.notEqual($('#param-panel_foo_widget-checkbox2').attr('checked'), 'checked',
               'Чекбокс 2 должен быть отжат');
 
-            assert.equal($('input[name=checkboxes1][checked=checked]').length, 3,
+            assert.equal($('input[name=panel_foo_widget_checkboxes1][checked=checked]').length, 3,
               'Чекбоксы №1 должны содержать 3 значения');
-            assert.equal($('input[name=checkboxes2][checked=checked]').length, 0,
+            assert.equal($('input[name=panel_foo_widget_checkboxes2][checked=checked]').length, 0,
               'Чекбоксы №2 не должны содержать значения');
-            assert.equal($('input[name=checkboxes3][checked=checked]').length, 3,
+            assert.equal($('input[name=panel_foo_widget_checkboxes3][checked=checked]').length, 3,
               'Чекбоксы №3 должны содержать 3 значения');
-            assert.equal($('input[name=checkboxes4][checked=checked]').length, 0,
+            assert.equal($('input[name=panel_foo_widget_checkboxes4][checked=checked]').length, 0,
               'Чекбоксы №4 не должны содержать значения');
 
-            assert.equal($('#param-select1').val(), 'test1',
+            assert.equal($('#param-panel_foo_widget-select1').val(), 'test1',
               'Селекты №1 должны быть равны test1');
-            assert.equal($('#param-select2').val(), '', 
+            assert.equal($('#param-panel_foo_widget-select2').val(), '', 
               'Селекты №2 не должны содержать значение');
-            assert.equal($('#param-select3').val(), 'test3',
+            assert.equal($('#param-panel_foo_widget-select3').val(), 'test3',
               'Селекты №3 должны быть равны test3');
-            assert.equal($('#param-select4').val(), '',
+            assert.equal($('#param-panel_foo_widget-select4').val(), '',
               'Селекты №2 не должны содержать значение');
 
-            assert.equal($('#param-text1').val(), 'тест',
+            assert.equal($('#param-panel_foo_widget-text1').val(), 'тест',
               'Текстовый инпут 1 должен содержать дефолтное значение "тест"');
-            assert.equal($('#param-text2').val(), '',
+            assert.equal($('#param-panel_foo_widget-text2').val(), '',
               'Текстовый инпут 2 не должен содержать значение');
 
-            $('#param-checkbox1').attr('checked', 'checked').change();
-            $('#param-checkbox2').removeAttr('checked').change();
+            $('#param-panel_foo_widget-checkbox1').attr('checked', 'checked').change();
+            $('#param-panel_foo_widget-checkbox2').removeAttr('checked').change();
 
-            $('input[name=checkboxes1]').attr('checked', 'checked').change();
-            $('input[name=checkboxes2]').removeAttr('checked').change();
-            $('input[name=checkboxes3]').attr('checked', 'checked').change();
-            $('input[name=checkboxes4]').removeAttr('checked').change();
+            $('input[name=panel_foo_widget_checkboxes1]').attr('checked', 'checked').change();
+            $('input[name=panel_foo_widget_checkboxes2]').removeAttr('checked').change();
+            $('input[name=panel_foo_widget_checkboxes3]').attr('checked', 'checked').change();
+            $('input[name=panel_foo_widget_checkboxes4]').removeAttr('checked').change();
 
-            $('#param-select1').val('test1').change();
-            $('#param-select2').val('').change();
-            $('#param-select3').val('test3').change();
-            $('#param-select4').val('').change();
+            $('#param-panel_foo_widget-select1').val('test1').change();
+            $('#param-panel_foo_widget-select2').val('').change();
+            $('#param-panel_foo_widget-select3').val('test3').change();
+            $('#param-panel_foo_widget-select4').val('').change();
 
-            $('#param-text1').val('тест').change();
-            $('#param-text2').val('').change();
+            $('#param-panel_foo_widget-text1').val('тест').change();
+            $('#param-panel_foo_widget-text2').val('').change();
 
             $('.widget-save').click();
 
             setTimeout(function() {
-               console.log($('#settings-form-popup:visible'));
               assert.equal($('#settings-form-popup:visible').length, 0,
                 'Попап редактирования закрылся');
 
@@ -1633,6 +1632,91 @@ QUnit.asyncTest("Тест формы добавления и настройки 
               QUnit.start();
             }, 500);
           }, 500);
+        }, 1000);
+      }).apply(that.contentWindow, [that.contentWindow.jQuery])
+      });
+    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+  });
+  //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
+});
+
+QUnit.asyncTest("Тест изменения настроек модулей", function(assert) {
+  var options = jQuery.extend({}, panelSettingsCollection.default);
+  /// Создаём конфигурацию с модулем на текущей странице
+  if(!panel_apply.pages[document.location.pathname]) {
+    panel_apply.pages[document.location.pathname] = [];
+  }
+  panel_apply.pages[document.location.pathname].push('panel_test_func');
+  __panel.panel_test_func = function(options) {
+    console.log(options);
+  }
+
+  __panel.setOptions(options, undefined, function() {
+    $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
+       + '?gwpanel_testing&continue"></iframe>').load(function() {
+      with(this.contentWindow) {
+        if(!panel_apply.pages[document.location.pathname]) {
+          panel_apply.pages[document.location.pathname] = [];
+        }
+        panel_apply.pages[document.location.pathname].push('panel_test_func');
+        this.contentWindow.__panel.panel_test_func = function(params) {
+          console.log(params);
+        }
+        panel_apply.settings['panel_test_func'] = {
+          file: 'panel.js',
+          module: 'panel',
+          description: 'тестовая функция',
+          configure: {
+            checkbox: {
+              type: 'checkbox',
+              title: 'тестовый checkbox',
+              default: true
+            }
+          }
+        }
+      }
+      var that = this;
+      waitPanelInitialization(this.contentWindow, function() {
+        (function($) {
+        $('.pane-bubble:first').click();
+        var pane = $('.pane:visible');
+        /// Ждём прорисовки виджета
+        var button = pane.find('.button..panel_settings');
+        button.find('a').click();
+
+        setTimeout(function() {
+          $('a[href=#edit-modules-wrapper]').click();
+
+          $('.ui-collapsible-heading-toggle').each(function() {
+            if($(this).text().indexOf('Базовый модуль GWPanel 2') != -1) {
+              $(this).click();
+              assert.equal($('input[name=panel_test_func]:visible').length, 1,
+                'чекбокс включения-выключения модуля должен быть виден');
+
+              assert.equal($('input[name=panel_test_func][checked=checked]').length, 1,
+                'чекбокс должен быть включен');
+
+              assert.equal($('#param-panel_test_func-checkbox').length, 1,
+                'чекбокс настроек должен быть виден');
+              assert.equal($('#param-panel_test_func-checkbox').attr('checked'), 'checked',
+                'чекбокс настроек должен быть включен');
+
+              $('label[for=param-panel_test_func-checkbox]').click();
+
+              var options = that.contentWindow.__panel.getOptions();
+              assert.equal(options.settings.panel.panel_test_func.checkbox, false,
+                'чекбокс в настройках должен быть отключен');
+
+              $('input[name=panel_test_func]').prev().click();
+
+              var options = that.contentWindow.__panel.getOptions();
+
+              assert.notEqual(options.blacklist.indexOf('panel_test_func'), -1,
+                'panel_test_func должен быть в чёрном списке');
+
+              QUnit.start();
+            }
+          });
         }, 1000);
       }).apply(that.contentWindow, [that.contentWindow.jQuery])
       });

@@ -1,5 +1,5 @@
 {
-  "title": "Ядро",
+  "title": "Базовый модуль GWPanel 2",
   "weight": -100,
   "apply": {
     "/me/": ["panel_homepage"],

@@ -4,6 +4,15 @@
   /// приватные функции
   /**
   * Функция вывода дополнительных настроек
+  * @param params - хеш настраиваемых опций
+  * @param widget - класс виджета, для которого осуществлятся настройка
+  * @param append_to - jQuery-объект, куда надо добавить виджет
+  * @change_callback - функция, которая будет вызываться при изменении какой-либо из настроек
+  *   формат функции: function(param, value) {
+  *     param - название опции
+  *     value - новое значение опции
+  *   }
+  }
   */
   function panel_configure_form(params, widget, append_to, change_callback) {
     jQuery.each(params || [], function(param) {
@@ -29,15 +38,16 @@
               var value = key;
             }
             var li = jQuery('<li></li>').appendTo(ul);
-            jQuery('<label for="param-' + value + '-' + param + '">' + 
+            jQuery('<label for="param-' + widget.id + '-' + value + '-' + param + '">' + 
               this + '</label>').appendTo(li);
-            jQuery('<input name="' + param + '" id="param-' + value + '-' + param + '"' +
+            jQuery('<input name="' + widget.id + '_' + param + 
+              '" id="param-' + widget.id + '-' + value + '-' + param + '"' +
                 (current_value.indexOf(value) == -1? '': ' checked="checked"') +
                 ' type="checkbox" data-mini="true" value="' + value + '">')
                 .appendTo(li)
                 .change(function() {
                   var checked_list = [];
-                  jQuery('input[name=' + param + ']').each(function() {
+                  jQuery('input[name=' + widget.id + '_' + param + ']').each(function() {
                     if(this.checked) {
                       checked_list.push(this.value);
                     }
@@ -47,7 +57,8 @@
           });
         break;
         case 'select':
-          var s = jQuery('<select id="param-' + param + '" name="' + param + '"></select>');
+          var s = jQuery('<select id="param-' + widget.id + '-' + param + 
+            '" name="' + widget.id + '_' + param + '"></select>');
           var is_array = jQuery.type(this.options) == 'array';
           s.append('<option value=""' + 
                 '>Укажите ' + this.title + '</option>');
@@ -67,8 +78,9 @@
           });
         break;
         case 'checkbox':
-          jQuery('<label for="param-' + param + '">' + this.title + '</label>').appendTo(append_to);
-          jQuery('<input name="' + param + '" id="param-' + param + '"' +
+          jQuery('<label for="param-' + widget.id + '-' + param + '">' + this.title + '</label>').appendTo(append_to);
+          jQuery('<input name="' + widget.id + '_' + param + 
+            '" id="param-' + widget.id + '-' + param + '"' +
             (current_value? ' checked="checked"': '') +
             ' type="checkbox">')
             .appendTo(append_to)
@@ -77,7 +89,8 @@
             });
         break;
         case 'text':
-          jQuery('<input name="' + param + '" id="param-' + param + '"' +
+          jQuery('<input name="' + widget.id + '_' + param + 
+            '" id="param-' + widget.id + '-' + param + '"' +
             ' type="text" value="' + 
               current_value + '"' + 
               ' placeholder="' + (this.title == undefined? '': this.title + ' ') + 
@@ -95,6 +108,10 @@
   }
 
   jQuery.extend(panel, {
+    /**
+    * Инициализация настроек
+    * @param callback - функция, вызываемая после загрузки всех скриптов
+    */
     panel_settings_init: function(callback) {
       panel.loadCSS(['../../lib/gw.css',
                      '../../lib/jquery.mobile.icons.min.css', 
@@ -148,6 +165,9 @@
       panel.loadScript(scripts, callback);
     },
 
+    /**
+    * Функция, открывающая окно настроек
+    */
     panel_settings_editor: function() {
     var current_options = panel.getOptions();
     panel.panel_settings_init(function() {
@@ -270,7 +290,7 @@
       /// Модули
       var modules_ul = jQuery('<ul data-role="collapsibleset" data-filter="true" data-filter-placeholder="Поиск настроек"></ul>');
       jQuery.each(panel_apply.modules, function(module_name) {
-        if(module_name == 'panel') return;
+        //if(module_name == 'panel') return;
         var module = this;
         
         var configurable_funcs = [];
@@ -338,7 +358,7 @@
                 __settings = current_options.settings[module_name][func_name];
               }
               panel_configure_form(panel_apply.settings[func_name].configure, 
-                {arguments: __settings}, add_fieldset, function(param, value) {
+                {arguments: __settings, id: func_name}, add_fieldset, function(param, value) {
                   var current_options = panel.getOptions();
                   if(!current_options.settings) current_options.settings = {};
                   if(!current_options.settings[module_name]) 
@@ -370,6 +390,10 @@
 
     /**
     * Функция вывода формы настроек виджета или кнопки
+    * @param widgetClass - хеш, класс виджета из panel_apply.widgets
+    * @param widgetKind - строка, тип виджета. Возможные значения: button, widget, float
+    * @param widgetData - данные виджета
+    * @param isEdit - флаг, если = true, то это редактирование
     */
     panel_settings_form: function(widgetClass, widgetKind, widgetData, isEdit) {
       var current_options = panel.getOptions();
@@ -435,6 +459,7 @@
           widget_data[param] = widgetData.arguments[param] == undefined? this.default:
                                widgetData.arguments[param];
         });
+        widgetData.id = widgetData.type;
         panel_configure_form(widgetClass.configure, widgetData, setting_content, function(name, value) {
           widget_data[name] = value;
         });
@@ -544,7 +569,7 @@
                     }
                   }
                 }
-                if(!__data.id) {
+                if(!isEdit) {
                   __data.id = widgetData.type + '_' + index;
                 }
                 __data.height = widgetClass.height;
@@ -568,15 +593,15 @@
                   panel.showFlash('Виджет добавлен', 'message', 5000);
                 }
               } else if(widgetKind == 'button') {
-                for(var i = 0; i < current_options.panes[displace].buttons.length; i++) {
-                  if(current_options.panes[displace].buttons[i].type == widgetData.type) {
-                    index++;
-                  }
-                }
-
                 __data.title = jQuery('#param-title').val() || __data.title || '';
                 displace = parseInt(displace);
-                if(!__data.id) {
+                if(!isEdit) {
+                  /// Создаём идентификатор
+                  for(var i = 0; i < current_options.panes[displace].buttons.length; i++) {
+                    if(current_options.panes[displace].buttons[i].type == widgetData.type) {
+                      index++;
+                    }
+                  }
                   __data.id = widgetData.type + '_' + index;
                 }
                 if(isNaN(__data.top) || isNaN(__data.left)) {
