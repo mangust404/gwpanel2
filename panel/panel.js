@@ -603,6 +603,10 @@ var Panel2 = new function() {
       for(var j = 0; j < options.widgets.length; j++) {
         var type = options.widgets[j].type;
         var module = panel_apply.widgets[type];
+        if(!type) {
+          options.widgets.splice(j, 1);
+          continue;
+        }
         if(jQuery.type(modules[module.module]) == 'undefined') {
           modules[module.module] = [];
         }
@@ -610,11 +614,16 @@ var Panel2 = new function() {
           modules[module.module].push({file: module.file, widget: options.widgets[j], index: j});
       }
     }
+    var index = 0;
     jQuery.each(modules, function(module) {
       jQuery.each(this, function(i) {
         var __module = this;
         var widget = this.widget;
-        widget.index = this.index;
+        if(!this.widget.type) {/// ошибочный виджет
+          options.widgets.splice(this.index, 1);
+          return;
+        }
+        widget.index = index;
         widget.float = true;
         instance.loadScript(module + '/' + this.file, function() {
           var type = panel_apply.widgets[widget.type];
@@ -630,6 +639,15 @@ var Panel2 = new function() {
                 top: widget.top, 
                 width: width,
                 height: height
+              })
+              .dblclick(function() {
+                instance.loadScript('panel/panel_settings.js', function() {
+                  instance.panel_settings_init(function() {
+                    instance.panel_settings_form(panel_apply.widgets[widget.type], 
+                      'float', widget, true);
+                  });
+
+                });
               })
               .appendTo(document.body);
             if(widget.left + width> jQuery(window).width()) __widget.css({left: jQuery(window).width() - width - 12});
@@ -698,6 +716,7 @@ var Panel2 = new function() {
         
           }
         });
+        index++;
       });
     });
     instance.bind('float_widget_move', function(data) {

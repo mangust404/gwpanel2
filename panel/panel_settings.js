@@ -7,7 +7,7 @@
   */
   function panel_configure_form(params, widget, append_to, change_callback) {
     jQuery.each(params || [], function(param) {
-      if(widget.arguments && widget.arguments[param]) {
+      if(widget.arguments && widget.arguments[param] != undefined) {
         var current_value = widget.arguments[param];
       } else {
         var current_value = this.default;
@@ -34,7 +34,7 @@
             jQuery('<label for="param-' + value + '-' + param + '">' + 
               this + '</label>').appendTo(li);
             jQuery('<input name="' + param + '" id="param-' + value + '-' + param + '"' +
-                (current_value.indexOf(this) == -1? '': ' checked="checked"') +
+                (current_value.indexOf(value) == -1? '': ' checked="checked"') +
                 ' type="checkbox" data-mini="true" value="' + value + '">')
                 .appendTo(li)
                 .change(function() {
@@ -95,251 +95,64 @@
       }
     });
   }
-  /**
-  * Функция вывода формы настроек виджета или кнопки
-  */
-  function panel_settings_form (widget, kind, type) {
-    var current_options = panel.getOptions();
-
-    var __data = {};
-    $('#settings-form-popup').html('')
-      .append('<h2>Добавить ' + (kind == 'widget'? 'виджет': 'кнопку') + 
-        ' "' + widget.title + '</h2>');
-
-    if(widget.configure || kind == 'button') {
-      var setting_content = jQuery('<div class="ui-corner-all custom-corners">\
-  <div class="ui-bar ui-bar-a">\
-    <h3>Настройки</h3>\
-  </div>\
-  <div class="ui-body ui-body-a">\
-    <fieldset data-role="controlgroup">\
-    </fieldset>\
-  </div>\
-</div>').appendTo('#settings-form-popup').trigger('create').find('fieldset');
-      var widget_data = {};
-
-      /// Для кнопок добавляем возможность редактировать текст
-      if(kind == 'button') {
-        jQuery('<input maxlength="32" name="title" id="param-title"' +
-          ' type="text" value="' + (type.title == undefined? '': type.title) + 
-            '" placeholder="текст кнопки">')
-          .appendTo(setting_content)
-          .change(function() {
-            __data.title = this.value;
-          });
-      }
-
-      /// проходим по всем опциям и собираем дефолтные значения
-      jQuery.each(widget.configure || [], function(param) {
-        widget_data[param] = this.default;
-      });
-
-      console.log(widget.configure);
-      panel_configure_form(widget.configure, widget, setting_content, function(name, value) {
-        widget_data[name] = value;
-        console.log(widget_data);
-      });
-      setting_content.trigger('create');
-    }
-
-    var displace_div = jQuery('<div class="ui-corner-all custom-corners">\
-  <div class="ui-bar ui-bar-a">\
-    <h3>Куда размещать</h3>\
-  </div>\
-  <div class="ui-body ui-body-a">\
-    <fieldset data-role="controlgroup" data-type="horizontal">\
-    </fieldset>\
-  </div>\
-</div>').appendTo('#settings-form-popup').find('fieldset');
-
-    function draw_pane(num) {
-      var is_valid = true;
-      var reason = '';
-
-      if(!widget.width || current_options.panes[num].width >= widget.width) {
-        var places = panel.checkPanePlaces(num, widget);
-        if(!places) {
-          is_valid = false;
-          reason = 'в окне ' + (num + 1) + ' нет свободного места';
-        }
-      } else {
-        is_valid = false;
-        reason = 'окно ' + (num + 1) + ' слишком узкое для этого элемента';
-      }
-      displace_div.append('<div class="radio-wrapper"' + (reason? ' title="' + reason + '"': '') + 
-        '><label for="select-pane-' + num + '" ' + '>Окно ' + (num +  1) + '</label>' + 
-        '<input name="displace" type="radio" id="select-pane-' + num + '" value="' + 
-        num + '" ' + (is_valid? '': ' disabled="disabled"') + '></div>');
-
-    }
-    draw_pane(0); draw_pane(1);
-    if(kind != 'button') {
-      displace_div.append('<div class="radio-wrapper"><label for="select-pane-float">Плавающий</label>' + 
-          '<input name="displace" type="radio" id="select-pane-float" value="float"></div>');
-    }
-
-    draw_pane(2); draw_pane(3);
-
-    jQuery('#settings-form-popup')
-      .append(
-      jQuery('<div class="ui-grid-a"></div>').append(
-        jQuery('<div class="ui-block-a"></div>').append(
-          jQuery('<a href="#" class="ui-shadow ui-btn ui-corner-all">Отменить</a>').click(function() {
-            jQuery('#settings-form-popup').popup('close');
-            jQuery('.pane-bubble.drag-over').removeClass('drag-over');
-            return false;
-          })
-        )
-      ).append(
-        jQuery('<div class="ui-block-b"></div>').append(
-          jQuery('<a href="#" class="ui-shadow ui-btn ui-corner-all">Добавить</a>').click(function() {
-            var displace;
-            jQuery('input[name=displace]').each(function() {
-              if(this.checked) {
-                displace = this.value;
-              }
-            });
-            if(!displace) {
-              panel.showFlash('Пожалуйста, укажите место размещения', 'warning', 5000);
-              return false;
-            }
-
-            __data.arguments = widget_data;
-            __data.type = type;
-
-
-            if(kind == 'widget') {
-              if(displace == 'float') {
-                __data.left = 200;
-                __data.top = 100;
-
-                var index = 0;
-                for(var i = 0; i < current_options.widgets.length; i++) {
-                  if(current_options.widgets[i].type == type) {
-                    index++;
-                  }
-                }
-
-              } else {
-                displace = parseInt(displace);
-                var places = panel.checkPanePlaces(displace, widget);
-                __data.top = places[0];
-                __data.left = places[1];
-                var index = 0;
-                for(var i = 0; i < current_options.panes[displace].widgets.length; i++) {
-                  if(current_options.panes[displace].widgets[i].type == type) {
-                    index++;
-                  }
-                }
-              }
-              __data.id = type + '_' + index;
-              __data.height = widget.height;
-              __data.width = widget.width;
-
-              if(displace == 'float') {
-                current_options.widgets.push(__data);
-                panel.showFlash('Виджет добавлен. Обновите страницу чтобы его увидеть.', 'message', 5000);
-              } else {
-                current_options.panes[displace].widgets.push(__data);
-                panel.showFlash('Виджет добавлен', 'message', 5000);
-              }
-            } else if(kind == 'button') {
-              for(var i = 0; i < current_options.panes[displace].buttons.length; i++) {
-                if(current_options.panes[displace].buttons[i].type == type) {
-                  index++;
-                }
-              }
-              displace = parseInt(displace);
-              var places = panel.checkPanePlaces(displace, widget);
-              __data.id = type + '_' + index;
-              __data.top = places[0];
-              __data.left = places[1];
-              var index = 0;
-              current_options.panes[displace].buttons.push(__data);
-              panel.showFlash('Кнопка добавлена. Обновите страницу чтобы его увидеть.', 'message', 5000);
-            }
-
-            if(!isNaN(displace)) {
-              if($('#pane-' + displace).length) {
-                /// заставляем панель перерисовать окно
-                $('#pane-' + displace).remove();
-              }
-            }
-
-            panel.setOptions(current_options);
-
-            $('#settings-form-popup').popup('close');
-            jQuery('.pane-bubble.drag-over').removeClass('drag-over');
-            return false;
-          })
-        )
-      )
-    ).trigger('create');
-
-    jQuery('input[name=displace]').change(function() {
-      jQuery('.pane-bubble.drag-over').removeClass('drag-over');
-      if(this.checked) {
-        var id = parseInt(this.id.split('-')[2]);
-        if(!isNaN(id)) {
-          jQuery('#pane-bubble-' + id).show().addClass('drag-over').css({'zIndex': 99});
-        }
-      }
-    });
-  }
 
   jQuery.extend(panel, {
-    panel_settings_editor: function() {
-    panel.loadCSS(['../../lib/gw.css',
-                   '../../lib/jquery.mobile.icons.min.css', 
-                   '../../lib/jquery.mobile.custom.structure.min.css',
-                   //'../../lib/jquery.mobile.structure-1.4.3.min.css',
-                   'panel_settings.css']);
-    jQuery(document).bind("mobileinit", function () {
-      jQuery.mobile.ajaxEnabled = false;
-    });
+    panel_settings_init: function(callback) {
+      panel.loadCSS(['../../lib/gw.css',
+                     '../../lib/jquery.mobile.icons.min.css', 
+                     '../../lib/jquery.mobile.custom.structure.min.css',
+                     //'../../lib/jquery.mobile.structure-1.4.3.min.css',
+                     'panel_settings.css']);
+      jQuery(document).bind("mobileinit", function () {
+        jQuery.mobile.ajaxEnabled = false;
+      });
 
-    /// подгружаем АБСОЛЮТНО все скрипты
-    var scripts = [
-                    //'lib/jquery.mobile-1.4.3.min.js'
-                    'lib/jquery.mobile.custom.min.js'
-                  ];
-    for(var key in panel_apply.scripts) {
-      if(scripts.indexOf(panel_apply.scripts[key]) == -1) {
-        scripts.push(panel_apply.scripts[key]);
+      /// подгружаем АБСОЛЮТНО все скрипты
+      var scripts = [
+                      //'lib/jquery.mobile-1.4.3.min.js'
+                      'lib/jquery.mobile.custom.min.js'
+                    ];
+      for(var key in panel_apply.scripts) {
+        if(scripts.indexOf(panel_apply.scripts[key]) == -1) {
+          scripts.push(panel_apply.scripts[key]);
+        }
       }
-    }
-    for(var key in panel_apply.buttons) {
-      var button = panel_apply.buttons[key];
-      if(button.file && 
-        scripts.indexOf(button.module + '/' + button.file) == -1) {
-        scripts.push(button.module + '/' +button.file);
-      }
-      if(button.config_files && 
-          jQuery.type(button.config_files) == 'array') {
-        for(var i = 0; i < button.config_files.length; i++) {
-          if(scripts.indexOf(button.config_files[i]) == -1) {
-            scripts.push(button.config_files[i]);
+      for(var key in panel_apply.buttons) {
+        var button = panel_apply.buttons[key];
+        if(button.file && 
+          scripts.indexOf(button.module + '/' + button.file) == -1) {
+          scripts.push(button.module + '/' +button.file);
+        }
+        if(button.config_files && 
+            jQuery.type(button.config_files) == 'array') {
+          for(var i = 0; i < button.config_files.length; i++) {
+            if(scripts.indexOf(button.config_files[i]) == -1) {
+              scripts.push(button.config_files[i]);
+            }
           }
         }
       }
-    }
-    for(var key in panel_apply.widgets) {
-      var widget = panel_apply.widgets[key];
-      if(widget.file && 
-        scripts.indexOf(widget.module + '/' + widget.file) == -1) {
-        scripts.push(widget.module + '/' + widget.file);
-      }
-      if(widget.config_files && 
-          jQuery.type(widget.config_files) == 'array') {
-        for(var i = 0; i < widget.config_files.length; i++) {
-          if(scripts.indexOf(widget.config_files[i]) == -1) {
-            scripts.push(widget.config_files[i]);
+      for(var key in panel_apply.widgets) {
+        var widget = panel_apply.widgets[key];
+        if(widget.file && 
+          scripts.indexOf(widget.module + '/' + widget.file) == -1) {
+          scripts.push(widget.module + '/' + widget.file);
+        }
+        if(widget.config_files && 
+            jQuery.type(widget.config_files) == 'array') {
+          for(var i = 0; i < widget.config_files.length; i++) {
+            if(scripts.indexOf(widget.config_files[i]) == -1) {
+              scripts.push(widget.config_files[i]);
+            }
           }
         }
       }
-    }
+      panel.loadScript(scripts, callback);
+    },
+
+    panel_settings_editor: function() {
     var current_options = panel.getOptions();
-    panel.loadScript(scripts, function() {
+    panel.panel_settings_init(function() {
       /// Редактирование настроек
 
       /// скрываем активные окна
@@ -377,8 +190,7 @@
     </div> \
     <hr class="footer-delim" />\
     <a class="close-settings ui-btn ui-btn-icon-right ui-icon-delete ui-btn-inline" onclick="jQuery(\'#panel-settings-editor\').fadeOut(); return false;">Закрыть</a>\
-    <div id="settings-form-popup" data-role="popup" data-position-to="window">\
-    test</div>\
+    <div id="settings-form-popup" data-role="popup" data-position-to="window">\</div>\
   </div>\
 </div>')
         .appendTo(document.body);
@@ -397,8 +209,9 @@
                 '<span class="icon"></span>') +
               '</div><h3>' + button.title + '</h3></a>')
               .click(function(e) {
-                panel_settings_form(button, 'button', button_name);
-                $('#settings-form-popup').popup('open');
+                panel_settings_form(button, 'button', {type: button_name});
+                jQuery('#settings-form-popup').popup('open');
+                jQuery('#settings-form-popup').popup('init');
                 return false;
               })
           )
@@ -426,7 +239,7 @@
               jQuery('<a data-rel="popup" data-transition="pop" href="#settings-form-popup" id="add-widget-' + widget_name + '" \
                 class="ui-btn ui-btn-inline ui-btn-icon-right ui-icon-plus">Добавить</a>')
               .click(function() {
-                panel_settings_form(widget, 'widget', widget_name);
+                panel.panel_settings_form(widget, 'widget', {type: widget_name});
                 return true;
               })
             )
@@ -547,6 +360,266 @@
           return false;
         });
     });
+    },
+
+    /**
+    * Функция вывода формы настроек виджета или кнопки
+    */
+    panel_settings_form: function(widgetClass, widgetKind, widgetData, isEdit) {
+      var current_options = panel.getOptions();
+      var self_init = false;
+      widgetData.arguments = widgetData.arguments || {};
+
+      var __data = widgetData || {};
+      if(!jQuery('#settings-form-popup').length) {
+        jQuery('<div id="settings-form-popup" data-role="popup" data-position-to="window"></div>')
+          .appendTo('.ui-page:visible').trigger('create').popup();
+        self_init = true;
+      } else if(jQuery('#settings-form-popup').parent().parent().hasClass('ui-page')) {
+        self_init = true;
+      }
+      jQuery('#settings-form-popup').html('')
+        .append('<h2>' + (isEdit? '': 'Добавить ' + 
+                           (widgetKind == 'widget' || widgetKind == 'float'? 
+                            'виджет': 
+                            'кнопку') 
+                          ) + ' ' + widgetClass.title + '</h2>');
+      if(isEdit) {
+        jQuery('#settings-form-popup h2')
+          .append(jQuery('<a title="Удалить" class="ui-btn ui-mini ui-btn-icon-notext ui-icon-delete ui-icon-center ui-btn-inline">Удалить</a>')
+            .css({marginLeft: 10})
+            .click(function() {
+              if(confirm('Вы действительно хотите удалить ' + 
+                (widgetKind == 'button'? 'эту кнопку': 'этот виджет') + '?')) {
+                var current_options = panel.getOptions();
+                if(widgetKind == 'float') {
+                  current_options.widgets.splice(widgetData.index, 1);
+                  jQuery('#float-' + widgetData.index + '-' + widgetData.type).remove();
+                }
+                panel.showFlash('Виджет удалён');
+                panel.setOptions(current_options);
+                jQuery('#settings-form-popup').popup('close');
+                jQuery('#settings-form-popup').remove();
+              }
+            })
+          );
+      }
+      if(widgetClass.configure || widgetKind == 'button') {
+        var setting_content = jQuery('<div class="ui-corner-all custom-corners">\
+    <div class="ui-bar ui-bar-a">\
+      <h3>Настройки</h3>\
+    </div>\
+    <div class="ui-body ui-body-a">\
+      <fieldset data-role="controlgroup">\
+      </fieldset>\
+    </div>\
+  </div>').appendTo('#settings-form-popup').trigger('create').find('fieldset');
+        var widget_data = __data.arguments || {};
+
+        /// Для кнопок добавляем возможность редактировать текст
+        if(widgetKind == 'button') {
+          jQuery('<input maxlength="32" name="title" id="param-title"' +
+            ' type="text" value="' + (__data.title == undefined? '': __data.title) + 
+              '" placeholder="текст кнопки">')
+            .appendTo(setting_content)
+            .change(function() {
+              __data.title = this.value;
+            });
+        }
+
+        /// проходим по всем опциям и собираем дефолтные значения
+        jQuery.each(widgetClass.configure || [], function(param) {
+          widget_data[param] = widgetData.arguments[param] == undefined? this.default:
+                               widgetData.arguments[param];
+        });
+        panel_configure_form(widgetClass.configure, widgetData, setting_content, function(name, value) {
+          widget_data[name] = value;
+        });
+        setting_content.trigger('create');
+      }
+
+      if(widgetKind != 'float' && !isEdit) {
+        var displace_div = jQuery('<div class="ui-corner-all custom-corners">\
+    <div class="ui-bar ui-bar-a">\
+      <h3>Куда размещать</h3>\
+    </div>\
+    <div class="ui-body ui-body-a">\
+      <fieldset data-role="controlgroup" data-type="horizontal">\
+      </fieldset>\
+    </div>\
+  </div>').appendTo('#settings-form-popup').find('fieldset');
+      }
+
+      function draw_pane(num) {
+        var is_valid = true;
+        var reason = '';
+
+        if(!widgetClass.width || current_options.panes[num].width >= widgetClass.width) {
+          var places = panel.checkPanePlaces(num, widgetClass);
+          if(!places) {
+            is_valid = false;
+            reason = 'в окне ' + (num + 1) + ' нет свободного места';
+          }
+        } else {
+          is_valid = false;
+          reason = 'окно ' + (num + 1) + ' слишком узкое для этого элемента';
+        }
+        displace_div.append('<div class="radio-wrapper"' + (reason? ' title="' + reason + '"': '') + 
+          '><label for="select-pane-' + num + '" ' + '>Окно ' + (num +  1) + '</label>' + 
+          '<input name="displace" type="radio" id="select-pane-' + num + '" value="' + 
+          num + '" ' + (is_valid? '': ' disabled="disabled"') + '></div>');
+
+      }
+
+      if(widgetKind != 'float' && !isEdit) {
+        draw_pane(0); draw_pane(1);
+        if(widgetKind != 'button') {
+          displace_div.append('<div class="radio-wrapper"><label for="select-pane-float">Плавающий</label>' + 
+              '<input name="displace" type="radio" id="select-pane-float" value="float" checked="checked"></div>');
+        }
+
+        draw_pane(2); draw_pane(3);
+      }
+
+      jQuery('#settings-form-popup')
+        .append(
+        jQuery('<div class="ui-grid-a"></div>').append(
+          jQuery('<div class="ui-block-a"></div>').append(
+            jQuery('<a href="#" class="ui-shadow ui-btn ui-corner-all">Отменить</a>').click(function() {
+              jQuery('#settings-form-popup').popup('close');
+              if(self_init) {
+                jQuery('#settings-form-popup').remove();
+              }
+              jQuery('.pane-bubble.drag-over').removeClass('drag-over');
+              return false;
+            })
+          )
+        ).append(
+          jQuery('<div class="ui-block-b"></div>').append(
+            jQuery('<a href="#" class="ui-shadow ui-btn ui-corner-all">' + 
+              (isEdit? 'Сохранить': 'Добавить') + '</a>').click(function() {
+              var displace;
+              if(widgetKind == 'float') {
+                displace = 'float';
+              } else {
+                jQuery('input[name=displace]').each(function() {
+                  if(this.checked) {
+                    displace = this.value;
+                  }
+                });
+                if(!displace) {
+                  panel.showFlash('Пожалуйста, укажите место размещения', 'warning', 5000);
+                  return false;
+                }
+              }
+              __data.arguments = widget_data;
+              __data.type = widgetData.type;
+
+
+              if(widgetKind == 'widget' || widgetKind == 'float') {
+                if(displace == 'float') {
+                  __data.left = isNaN(__data.left)? 200: __data.left;
+                  __data.top = isNaN(__data.top)? 100: __data.top;
+
+                  var index = 0;
+                  for(var i = 0; i < current_options.widgets.length; i++) {
+                    if(current_options.widgets[i].type == widgetClass.type) {
+                      index++;
+                    }
+                  }
+
+                } else {
+                  displace = parseInt(displace);
+                  if(isNaN(__data.top) || isNaN(__data.left)) {
+                    var places = panel.checkPanePlaces(displace, widget);
+                    __data.top = places[0];
+                    __data.left = places[1];
+                  }
+                  var index = 0;
+                  for(var i = 0; i < current_options.panes[displace].widgets.length; i++) {
+                    if(current_options.panes[displace].widgets[i].type == widgetClass.type) {
+                      index++;
+                    }
+                  }
+                }
+                if(!__data.id) {
+                  __data.id = widgetClass.type + '_' + index;
+                }
+                __data.height = widgetClass.height;
+                __data.width = widgetClass.width;
+
+                if(displace == 'float') {
+                  if(isNaN(__data.index)) {
+                    current_options.widgets.push(__data);
+                  } else {
+                    current_options.widgets[__data.index] = __data;
+                  }
+                  panel.showFlash('Виджет ' + (isEdit? 'сохранён': 'добавлен') + 
+                    '. Обновите страницу чтобы увидеть изменения.', 'message', 5000);
+                } else {
+                  if(isNaN(__data.index)) {
+                    current_options.panes[displace].widgets.push(__data);
+                  } else {
+                    current_options.panes[displace].widgets[__data.index] = __data;
+                  }
+                  panel.showFlash('Виджет добавлен', 'message', 5000);
+                }
+              } else if(widgetKind == 'button') {
+                for(var i = 0; i < current_options.panes[displace].buttons.length; i++) {
+                  if(current_options.panes[displace].buttons[i].type == widgetClass.type) {
+                    index++;
+                  }
+                }
+                displace = parseInt(displace);
+                if(!__data.id) {
+                  __data.id = widgetClass.type + '_' + index;
+                }
+                if(isNaN(__data.top) || isNaN(__data.left)) {
+                  var places = panel.checkPanePlaces(displace, widget);
+                  __data.top = places[0];
+                  __data.left = places[1];
+                }
+                var index = 0;
+                if(isNaN(__data.index)) {
+                  current_options.panes[displace].buttons.push(__data);
+                } else {
+                  current_options.panes[displace].buttons[__data.index] = __data;
+                }
+                panel.showFlash('Кнопка ' + (isEdit? 'изменена': 'добавлена') + 
+                  '. Обновите страницу чтобы его увидеть.', 'message', 5000);
+              }
+
+              if(!isNaN(displace) && widgetKind != 'float') {
+                if($('#pane-' + displace).length) {
+                  /// заставляем панель перерисовать окно
+                  $('#pane-' + displace).remove();
+                }
+              }
+
+              panel.setOptions(current_options);
+
+              $('#settings-form-popup').popup('close');
+              jQuery('.pane-bubble.drag-over').removeClass('drag-over');
+              return false;
+            })
+          )
+        )
+      ).trigger('create');
+
+      jQuery('input[name=displace]').change(function() {
+        jQuery('.pane-bubble.drag-over').removeClass('drag-over');
+        if(this.checked) {
+          var id = parseInt(this.id.split('-')[2]);
+          if(!isNaN(id)) {
+            jQuery('#pane-bubble-' + id).show().addClass('drag-over').css({'zIndex': 99});
+          }
+        }
+      });
+
+      if(self_init) {
+        jQuery('#settings-form-popup').popup('open');
+      }
     }
+
   });
 })(__panel, jQuery);
