@@ -1817,6 +1817,41 @@ var Panel2 = new function() {
     redrawFloatWidgets: function() {
       initFloatWidgets(true);
     },
+
+    /**
+    * Метод конвертации денежной строки в число и наоборот
+    * @param money - любая строка или число
+    */
+    convertingMoney: function(money){
+        var result, _money;
+        if(!isNaN(money)){
+            result = "";
+            _money = parseInt(Math.abs(money), 10).toString();
+            for(var i = _money.length, j = 0; i >= 0; i--, j++){
+                if(j % 3 == 0 && j != 0 && i != 0){
+                    result = ',' + _money.charAt(i) + result;
+                }else{
+                    result = _money.charAt(i) + result;
+                }
+            }
+            if(money < 0) result = "-" + result;
+            result = "$" + result;
+        }else{
+            if(typeof money == 'string'){
+                result = money.match(/[0-9\$\-\., ]+/);
+                if(result != null && result[0].length == money.length){
+                    result = money.replace(/,|\$|\.| |-|/g, '');
+                    result = Number(result);
+                    if(money.search(/-\$|\$-/)!= -1) result = result * -1;
+                }else{
+                    result = false;
+                }
+            }else{
+                result = false;
+            }
+        }
+        return result;
+    },
     /**
     * Публичные аттрибуты
     */
