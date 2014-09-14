@@ -596,7 +596,7 @@ var Panel2 = new function() {
   /**
   * Инициализация и отрисовка плавающих виджетов
   */
-  function initFloatWidgets() {
+  function initFloatWidgets(redraw) {
     var modules = {};
     
     if(jQuery.type(options.widgets) == 'array') {
@@ -625,6 +625,9 @@ var Panel2 = new function() {
         }
         widget.index = index;
         widget.float = true;
+        /// Если виджет уже прорисован, выходим
+        if(jQuery('#float-' + widget.index + '-' + widget.type).length > 0) return;
+
         instance.loadScript(module + '/' + this.file, function() {
           var type = panel_apply.widgets[widget.type];
           if(jQuery.type(instance[type.callback]) == 'undefined') {
@@ -719,14 +722,16 @@ var Panel2 = new function() {
         index++;
       });
     });
-    instance.bind('float_widget_move', function(data) {
-      jQuery('#' + data.id).css({
-        left: data.left,
-        top: data.top
+    if(!redraw) {
+      instance.bind('float_widget_move', function(data) {
+        jQuery('#' + data.id).css({
+          left: data.left,
+          top: data.top
+        });
+        options.widgets[data.index].left = data.left;
+        options.widgets[data.index].top = data.top;
       });
-      options.widgets[data.index].left = data.left;
-      options.widgets[data.index].top = data.top;
-    });
+    }
   }
   
   /**
@@ -1807,6 +1812,10 @@ var Panel2 = new function() {
         return [new_top, new_left];
       }
       return false;
+    },
+
+    redrawFloatWidgets: function() {
+      initFloatWidgets(true);
     },
     /**
     * Публичные аттрибуты

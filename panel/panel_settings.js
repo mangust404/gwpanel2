@@ -24,10 +24,8 @@
                   '<h4>' + this.title + '</h4>' + 
                   '<ul data-role="listview"></ul></div>').appendTo(append_to).find('ul');
           var is_array = jQuery.type(this.options) == 'array';
-          jQuery.each(this.options, function(key) {
-            if(is_array) {
-              var value = this;
-            } else {
+          jQuery.each(this.options, function(key, value) {
+            if(!is_array) {
               var value = key;
             }
             var li = jQuery('<li></li>').appendTo(ul);
@@ -49,7 +47,7 @@
           });
         break;
         case 'select':
-          var s = jQuery('<select name="' + param + '"></select>');
+          var s = jQuery('<select id="param-' + param + '" name="' + param + '"></select>');
           var is_array = jQuery.type(this.options) == 'array';
           s.append('<option value=""' + 
                 '>Укажите ' + this.title + '</option>');
@@ -81,7 +79,7 @@
         case 'text':
           jQuery('<input name="' + param + '" id="param-' + param + '"' +
             ' type="text" value="' + 
-              (current_value == this.default? '': current_value) + '"' + 
+              current_value + '"' + 
               ' placeholder="' + (this.title == undefined? '': this.title + ' ') + 
               this.default + '">')
             .appendTo(append_to)
@@ -189,11 +187,19 @@
     <h2>Опции:</h2>\
     </div> \
     <hr class="footer-delim" />\
-    <a class="close-settings ui-btn ui-btn-icon-right ui-icon-delete ui-btn-inline" onclick="jQuery(\'#panel-settings-editor\').fadeOut(); return false;">Закрыть</a>\
+    <div class="close-button-wrapper"></div>\
     <div id="settings-form-popup" data-role="popup" data-position-to="window">\</div>\
   </div>\
 </div>')
         .appendTo(document.body);
+
+      jQuery('<a class="close-settings ui-btn ui-btn-icon-right ui-icon-delete ui-btn-inline">Закрыть</a>')
+        .click(function() {
+           jQuery('#panel-settings-editor').fadeOut(function() {
+            jQuery('#panel-settings-editor, #settings-form-popup').remove();
+          });
+          return false;
+        }).appendTo(editor.find('.close-button-wrapper'));
 
       jQuery.each(panel_apply.buttons, function(button_name) {
         var button = this;
@@ -528,7 +534,7 @@
                 } else {
                   displace = parseInt(displace);
                   if(isNaN(__data.top) || isNaN(__data.left)) {
-                    var places = panel.checkPanePlaces(displace, widget);
+                    var places = panel.checkPanePlaces(displace, widgetData);
                     __data.top = places[0];
                     __data.left = places[1];
                   }
@@ -551,7 +557,8 @@
                     current_options.widgets[__data.index] = __data;
                   }
                   panel.showFlash('Виджет ' + (isEdit? 'сохранён': 'добавлен') + 
-                    '. Обновите страницу чтобы увидеть изменения.', 'message', 5000);
+                    '.', 'message', 5000);
+                  panel.redrawFloatWidgets();
                 } else {
                   if(isNaN(__data.index)) {
                     current_options.panes[displace].widgets.push(__data);
@@ -598,6 +605,12 @@
 
               $('#settings-form-popup').popup('close');
               jQuery('.pane-bubble.drag-over').removeClass('drag-over');
+
+              if(self_init) {
+                setTimeout(function() {
+                  $('#settings-form-popup').remove();
+                }, 100);
+              }
               return false;
             })
           )

@@ -1278,3 +1278,365 @@ QUnit.asyncTest("Тест добавления кнопки", function(assert) {
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 
 });
+
+QUnit.asyncTest("Тест добавления виджета", function(assert) {
+  var options = jQuery.extend({}, panelSettingsCollection.default);
+  /// Создаём конфигурацию с пустыми окнами
+  for(var i = 0; i < 4; i++) {
+    options.panes[i].buttons = options.panes[i].widgets = [];
+  }
+  options.panes[1].width = 4;
+  options.panes[2].width = 6;
+
+  console.log(options);
+  options.widgets = [];
+
+  __panel.setOptions(options, undefined, function() {
+    $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
+       + '?gwpanel_testing&continue"></iframe>').load(function() {
+      var that = this;
+      waitPanelInitialization(this.contentWindow, function() {
+        (function($) {
+        /// Создаём виртуальный класс виджетов
+        that.contentWindow.__panel.panel_foo_widget = function(options) {
+          this.append('<p>Panel foo widget</p>');
+        }
+
+        that.contentWindow.panel_apply.widgets['panel_foo_widget'] = {
+          callback: 'panel_foo_widget',
+          title: 'Тестовый виджет',
+          height: 2,
+          width: 6,
+          file: 'panel.js',
+          module: 'panel'
+        }
+        /// кликаем по бабблу
+        $('.pane-bubble:first').click();
+        var pane = $('.pane:visible');
+        /// Ждём прорисовки виджета
+        var button = pane.find('.button');
+        button.find('a').click();
+
+        setTimeout(function() {
+          $('a[href=#edit-widgets-wrapper]').click();
+
+          assert.equal($('#add-widget-panel_foo_widget').length, 1, 
+            'Видна кнопка добавления виджета');
+          $('#add-widget-panel_foo_widget').click();
+
+          assert.equal($('#settings-form-popup').length, 1,
+            'Открылся попап добавления');
+
+          assert.equal($('#select-pane-1').attr('disabled'), 'disabled',
+            'Виджет шириной 6 не должен влазить во второе окошко');
+
+          assert.notEqual($('#select-pane-2').attr('disabled'), 'disabled',
+            'Виджет шириной 6 должен влазить в третье окошко');
+
+          $('#select-pane-2').click();
+
+          $('.widget-save').click();
+
+          $('#panel-settings-editor .close-settings').click();
+          $('#pane-bubble-2').click();
+          
+          setTimeout(function() {
+            assert.equal($('#pane-2:visible').length, 1, 
+              'Открылось второе окошко');
+
+            assert.equal($('#pane-2 #panel_foo_widget_0').length, 1,
+              'Добавленный виджет виден');
+            QUnit.start();
+          }, 100);
+        }, 1000);
+      }).apply(that.contentWindow, [that.contentWindow.jQuery])
+      });
+    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+  });
+  //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
+});
+
+QUnit.asyncTest("Тест формы добавления и настройки плавающего виджета", function(assert) {
+  var options = jQuery.extend({}, panelSettingsCollection.default);
+  /// Создаём конфигурацию с пустыми окнами
+  for(var i = 0; i < 4; i++) {
+    options.panes[i].buttons = options.panes[i].widgets = [];
+  }
+  options.widgets = [];
+
+  __panel.setOptions(options, undefined, function() {
+    $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
+       + '?gwpanel_testing&continue"></iframe>').load(function() {
+      var that = this;
+      waitPanelInitialization(this.contentWindow, function() {
+        (function($) {
+        /// Создаём виртуальный класс виджетов
+        that.contentWindow.__panel.panel_foo_widget = function(options) {
+          this.append('<p>Panel foo widget</p>');
+          var that = this;
+          $.each(options, function(key, val) {
+            that.append('<p>' + key + '=' + val + '</p>');
+          });
+        }
+
+        that.contentWindow.__panel.test_checkboxes_options = function() {
+          return ['test1', 'test2', 'test3'];
+        }
+
+        that.contentWindow.__panel.test_checkboxes_options_assoc = function() {
+          return {'test1': 'Тест1', 'test2': 'Тест2', 'test3': 'Тест3'};
+        }
+
+        that.contentWindow.panel_apply.widgets['panel_foo_widget'] = {
+          callback: 'panel_foo_widget',
+          configure: {
+            checkbox1: {
+              title: 'Тест checkbox1',
+              type: 'checkbox',
+              default: 0
+            },
+            checkbox2: {
+              title: 'Тест checkbox2',
+              type: 'checkbox',
+              default: 1
+            },
+            checkboxes1: {
+              title: 'Тест checkboxes 1',
+              type: 'checkboxes',
+              options: '__panel.test_checkboxes_options()',
+              default: []
+            },
+            checkboxes2: {
+              title: 'Тест checkboxes 2',
+              type: 'checkboxes',
+              options: '__panel.test_checkboxes_options()',
+              default: ['test1']
+            },
+            checkboxes3: {
+              title: 'Тест checkboxes 3',
+              type: 'checkboxes',
+              options: '__panel.test_checkboxes_options_assoc()',
+              default: ''
+            },
+            checkboxes4: {
+              title: 'Тест checkboxes 4',
+              type: 'checkboxes',
+              options: '__panel.test_checkboxes_options_assoc()',
+              default: ['test3']
+            },
+            select1: {
+              title: 'Тест select 1',
+              type: 'select',
+              options: '__panel.test_checkboxes_options()',
+              default: ''
+            },
+            select2: {
+              title: 'Тест select 2',
+              type: 'select',
+              options: '__panel.test_checkboxes_options()',
+              default: 'test1'
+            },            
+            select3: {
+              title: 'Тест select 3',
+              type: 'select',
+              options: '__panel.test_checkboxes_options_assoc()',
+              default: ''
+            },
+            select4: {
+              title: 'Тест select 4',
+              type: 'select',
+              options: '__panel.test_checkboxes_options_assoc()',
+              default: 'test3'
+            },
+            text1: {
+              title: 'Тест text1',
+              type: 'text',
+              default: ''
+            },
+            text2: {
+              title: 'Тест text2',
+              type: 'text',
+              default: 'тест'
+            },
+
+          },
+          title: 'Тестовый виджет',
+          height: 1,
+          width: 2,
+          file: 'panel.js',
+          module: 'panel'
+        }
+        /// кликаем по бабблу
+        $('.pane-bubble:first').click();
+        var pane = $('.pane:visible');
+        /// Ждём прорисовки виджета
+        var button = pane.find('.button');
+        button.find('a').click();
+
+        setTimeout(function() {
+          $('a[href=#edit-widgets-wrapper]').click();
+
+          assert.equal($('#add-widget-panel_foo_widget').length, 1, 
+            'Видна кнопка добавления виджета');
+          $('#add-widget-panel_foo_widget').click();
+
+          assert.equal($('#settings-form-popup').length, 1,
+            'Открылся попап добавления');
+
+          assert.notEqual($('#param-checkbox1').attr('checked'), 'checked',
+            'Чекбокс 1 должен быть отжат');
+          assert.equal($('#param-checkbox2').attr('checked'), 'checked',
+            'Чекбокс 2 должен быть нажат');
+
+          assert.equal($('input[name=checkboxes1][checked=checked]').length, 0,
+            'Чекбоксы №1 не должны содержать значение');
+          assert.equal($('input[name=checkboxes2][checked=checked]').attr('id'),
+            'param-test1-checkboxes2', 'Чекбоксы №2 должны быть равны [test1]');
+          assert.equal($('input[name=checkboxes3][checked=checked]').length, 0,
+            'Чекбоксы №3 не должны содержать значение');
+          assert.equal($('input[name=checkboxes4][checked=checked]').attr('id'),
+            'param-test3-checkboxes4', 'Чекбоксы №4 должны быть равны [test3]');
+
+          assert.equal($('#param-select1').val(), '',
+            'Селекты №1 не должны содержать значение');
+          assert.equal($('#param-select2').val(),
+            'test1', 'Селекты №2 должны быть равны test1');
+          assert.equal($('#param-select3').val(), '',
+            'Селекты №3 не должны содержать значение');
+          assert.equal($('#param-select4').val(),
+            'test3', 'Селекты №4 должны быть равны test3');
+
+          assert.equal($('#param-text1').val(), '',
+            'Текстовый инпут 1 не должен содержать значение');
+          assert.equal($('#param-text2').val(), 'тест',
+            'Текстовый инпут 2 должен содержать дефолтное значение "тест"');
+
+          /// Меняем значения и добавляем виджет
+          $('#param-checkbox1').attr('checked', 'checked').change();
+          $('#param-checkbox2').removeAttr('checked').change();
+
+          $('input[name=checkboxes1]').attr('checked', 'checked').change();
+          $('input[name=checkboxes2]').removeAttr('checked').change();
+          $('input[name=checkboxes3]').attr('checked', 'checked').change();
+          $('input[name=checkboxes4]').removeAttr('checked').change();
+
+          $('#param-select1').val('test1').change();
+          $('#param-select2').val('').change();
+          $('#param-select3').val('test3').change();
+          $('#param-select4').val('').change();
+
+          $('#param-text1').val('тест').change();
+          $('#param-text2').val('').change();
+
+          $('#select-pane-float').click();
+
+          $('.widget-save').click();
+
+          var widget = that.contentWindow.__panel.getOptions().widgets[0];
+
+          assert.equal(widget.arguments.checkbox1, true, 'Проверка checkbox1');
+          assert.equal(widget.arguments.checkbox2, false, 'Проверка checkbox2');
+          assert.deepEqual(widget.arguments.checkboxes1, 
+            ['test1', 'test2', 'test3'], 'Проверка checkboxes1');
+          assert.deepEqual(widget.arguments.checkboxes2, [], 'Проверка checkboxes2');
+          assert.deepEqual(widget.arguments.checkboxes3, 
+            ['test1', 'test2', 'test3'], 'Проверка checkboxes3');
+          assert.deepEqual(widget.arguments.checkboxes4, [], 'Проверка checkboxes4');
+          assert.deepEqual(widget.arguments.select1, 'test1', 'Проверка select1');
+          assert.deepEqual(widget.arguments.select2, '', 'Проверка select2');
+          assert.deepEqual(widget.arguments.select3, 'test3', 'Проверка select3');
+          assert.deepEqual(widget.arguments.select4, '', 'Проверка select4');
+
+          assert.deepEqual(widget.arguments.text1, 'тест', 'Проверка text1');
+          assert.deepEqual(widget.arguments.text2, '', 'Проверка text2');
+
+          $('#panel-settings-editor .close-settings').click();
+
+          assert.equal($('#float-0-panel_foo_widget:visible').length, 1, 'Виджет виден');
+          assert.equal($('#float-0-panel_foo_widget').text(), 'Panel foo widgetcheckbox1=truecheckbox2=falsecheckboxes1=test1,test2,test3checkboxes2=checkboxes3=test1,test2,test3checkboxes4=select1=test1select2=select3=test3select4=text1=тестtext2=');
+
+
+          setTimeout(function() {
+            $('#float-0-panel_foo_widget').dblclick();
+
+            assert.equal($('#settings-form-popup').length, 1,
+              'Открылся попап редактирования');
+
+            assert.equal($('#param-checkbox1').attr('checked'), 'checked',
+              'Чекбокс 1 должен быть нажат');
+            assert.notEqual($('#param-checkbox2').attr('checked'), 'checked',
+              'Чекбокс 2 должен быть отжат');
+
+            assert.equal($('input[name=checkboxes1][checked=checked]').length, 3,
+              'Чекбоксы №1 должны содержать 3 значения');
+            assert.equal($('input[name=checkboxes2][checked=checked]').length, 0,
+              'Чекбоксы №2 не должны содержать значения');
+            assert.equal($('input[name=checkboxes3][checked=checked]').length, 3,
+              'Чекбоксы №3 должны содержать 3 значения');
+            assert.equal($('input[name=checkboxes4][checked=checked]').length, 0,
+              'Чекбоксы №4 не должны содержать значения');
+
+            assert.equal($('#param-select1').val(), 'test1',
+              'Селекты №1 должны быть равны test1');
+            assert.equal($('#param-select2').val(), '', 
+              'Селекты №2 не должны содержать значение');
+            assert.equal($('#param-select3').val(), 'test3',
+              'Селекты №3 должны быть равны test3');
+            assert.equal($('#param-select4').val(), '',
+              'Селекты №2 не должны содержать значение');
+
+            assert.equal($('#param-text1').val(), 'тест',
+              'Текстовый инпут 1 должен содержать дефолтное значение "тест"');
+            assert.equal($('#param-text2').val(), '',
+              'Текстовый инпут 2 не должен содержать значение');
+
+            $('#param-checkbox1').attr('checked', 'checked').change();
+            $('#param-checkbox2').removeAttr('checked').change();
+
+            $('input[name=checkboxes1]').attr('checked', 'checked').change();
+            $('input[name=checkboxes2]').removeAttr('checked').change();
+            $('input[name=checkboxes3]').attr('checked', 'checked').change();
+            $('input[name=checkboxes4]').removeAttr('checked').change();
+
+            $('#param-select1').val('test1').change();
+            $('#param-select2').val('').change();
+            $('#param-select3').val('test3').change();
+            $('#param-select4').val('').change();
+
+            $('#param-text1').val('тест').change();
+            $('#param-text2').val('').change();
+
+            $('.widget-save').click();
+
+            setTimeout(function() {
+               console.log($('#settings-form-popup:visible'));
+              assert.equal($('#settings-form-popup:visible').length, 0,
+                'Попап редактирования закрылся');
+
+              var widget = that.contentWindow.__panel.getOptions().widgets[0];
+
+              assert.equal(widget.arguments.checkbox1, true, 'Проверка checkbox1');
+              assert.equal(widget.arguments.checkbox2, false, 'Проверка checkbox2');
+              assert.deepEqual(widget.arguments.checkboxes1, 
+                ['test1', 'test2', 'test3'], 'Проверка checkboxes1');
+              assert.deepEqual(widget.arguments.checkboxes2, [], 'Проверка checkboxes2');
+              assert.deepEqual(widget.arguments.checkboxes3, 
+                ['test1', 'test2', 'test3'], 'Проверка checkboxes3');
+              assert.deepEqual(widget.arguments.checkboxes4, [], 'Проверка checkboxes4');
+              assert.deepEqual(widget.arguments.select1, 'test1', 'Проверка select1');
+              assert.deepEqual(widget.arguments.select2, '', 'Проверка select2');
+              assert.deepEqual(widget.arguments.select3, 'test3', 'Проверка select3');
+              assert.deepEqual(widget.arguments.select4, '', 'Проверка select4');
+
+              assert.deepEqual(widget.arguments.text1, 'тест', 'Проверка text1');
+              assert.deepEqual(widget.arguments.text2, '', 'Проверка text2');
+              QUnit.start();
+            }, 500);
+          }, 500);
+        }, 1000);
+      }).apply(that.contentWindow, [that.contentWindow.jQuery])
+      });
+    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+  });
+  //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
+});
