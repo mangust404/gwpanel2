@@ -1725,25 +1725,37 @@ QUnit.asyncTest("Тест изменения настроек модулей", f
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 });
 
-// Тест конвертации денег в число, и обратно.
-QUnit.test("Тест конвертации денег в число, и обратно", function(assert) {
-    assert.equal(__panel.convertingMoney('$1,000,000'), 1000000, "Converting: '$1,000,000' > 1000000");
-    assert.equal(__panel.convertingMoney('$1'), 1, "Converting: '$1' > 1");
-    assert.equal(__panel.convertingMoney('$10.526'), 10526, "Converting: '$10.526' > 10526");
-    assert.equal(__panel.convertingMoney('$-123456'), -123456, "Converting: '-123456' > -123456");
-    assert.equal(__panel.convertingMoney('-$10.00 00,0-'), -1000000, "Converting: '-$10.00 00,0-' > -1000000");
-    assert.equal(__panel.convertingMoney('$1 000 000'), 1000000, "Converting: '$1 000 000' > 1000000");
-    assert.equal(__panel.convertingMoney('FakeNumber'), false, "Converting: 'FakeNumber' > false");
-    assert.equal(__panel.convertingMoney('-$FakeNumber'), false, "Converting: '-$FakeNumber' > false");
-    assert.equal(__panel.convertingMoney(1000000), '$1,000,000', "Converting: -1000000 > '$1,000,000'");
-    assert.equal(__panel.convertingMoney(100), '$100', "Converting: 100 > '$100'");
-    assert.equal(__panel.convertingMoney(1250), '$1,250', "Converting: 1250 > '$1,250'");
-    assert.equal(__panel.convertingMoney(1), '$1', "Converting: 1 > '$1'");
-    assert.equal(__panel.convertingMoney(-100), '$-100', "Converting: -100 > '$-100'");
-    assert.equal(__panel.convertingMoney(-1158), '$-1,158', "Converting: -1158 > '$-1,158'");
-    assert.equal(__panel.convertingMoney(-100006), '$-100,006', "Converting: -100006 > '$-100,006'");
-    assert.equal(__panel.convertingMoney(1.84), '$1', "Converting: 1.84 > '$1'");
-    assert.equal(__panel.convertingMoney(-1000.56), '$-1,000', "Converting: -1000.56 > '$-1,000'");
-    assert.equal(__panel.convertingMoney({}), false, "Converting: {} > false");
-    assert.equal(__panel.convertingMoney(new String("String")), false, "Converting: new String('String') > false");
+// Тест конвертации денег в число.
+QUnit.test("Тест конвертации денег в число", function(assert) {
+  assert.equal(__panel.convertingMoneyToInt(100), 100, "Converting: 100 > 100");
+  assert.equal(__panel.convertingMoneyToInt(-574.9), -574, "Converting: -574.9 > 574");
+  assert.equal(__panel.convertingMoneyToInt('$1,000,000'), 1000000, "Converting: '$1,000,000' > 1000000");
+  assert.equal(__panel.convertingMoneyToInt('$1'), 1, "Converting: '$1' > 1");
+  assert.equal(__panel.convertingMoneyToInt('$10.526'), 10526, "Converting: '$10.526' > 10526");
+  assert.equal(__panel.convertingMoneyToInt('$-123456'), -123456, "Converting: '-123456' > -123456");
+  assert.equal(__panel.convertingMoneyToInt('-$10.00 00,0-'), -1000000, "Converting: '-$10.00 00,0-' > -1000000");
+  assert.equal(__panel.convertingMoneyToInt('$1 000 000'), 1000000, "Converting: '$1 000 000' > 1000000");
+  assert.equal(__panel.convertingMoneyToInt('FakeNumber'), false, "Converting: 'FakeNumber' > false");
+  assert.equal(__panel.convertingMoneyToInt('-$FakeNumber'), false, "Converting: '-$FakeNumber' > false");
+  assert.equal(__panel.convertingMoneyToInt({}), false, "Converting: {} > false");
+  assert.equal(__panel.convertingMoneyToInt(new String("String")), false, "Converting: new String('String') > false");
+});
+
+// Тест конвертации числа в деньги.
+QUnit.test("Тест конвертации числа в деньги", function(assert) {
+  assert.equal(__panel.convertingIntToMoney('1000'), '$1,000', "Converting: '1000' > '$1,000'");
+  assert.equal(__panel.convertingIntToMoney('-100.4'), '$-100', "Converting: '-100.4' > '$-100'");
+  assert.equal(__panel.convertingIntToMoney('skl5024'), false, "Converting: 'skl5024' > false");
+  assert.equal(__panel.convertingIntToMoney('-5557u3jnd'), '$-5,557', "Converting: '-5557u3jnd' > '$-5,557'");
+  assert.equal(__panel.convertingIntToMoney(1000000), '$1,000,000', "Converting: -1000000 > '$1,000,000'");
+  assert.equal(__panel.convertingIntToMoney(100), '$100', "Converting: 100 > '$100'");
+  assert.equal(__panel.convertingIntToMoney(1250), '$1,250', "Converting: 1250 > '$1,250'");
+  assert.equal(__panel.convertingIntToMoney(1), '$1', "Converting: 1 > '$1'");
+  assert.equal(__panel.convertingIntToMoney(-100), '$-100', "Converting: -100 > '$-100'");
+  assert.equal(__panel.convertingIntToMoney(-1158), '$-1,158', "Converting: -1158 > '$-1,158'");
+  assert.equal(__panel.convertingIntToMoney(-100006), '$-100,006', "Converting: -100006 > '$-100,006'");
+  assert.equal(__panel.convertingIntToMoney(1.84), '$1', "Converting: 1.84 > '$1'");
+  assert.equal(__panel.convertingIntToMoney(-1000.56), '$-1,000', "Converting: -1000.56 > '$-1,000'");
+  assert.equal(__panel.convertingIntToMoney({}), false, "Converting: {} > false");
+  assert.equal(__panel.convertingIntToMoney(new String("String")), false, "Converting: new String('String') > false");
 });
