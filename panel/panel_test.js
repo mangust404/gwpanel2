@@ -1659,7 +1659,7 @@ QUnit.asyncTest("Тест изменения настроек модулей", f
           panel_apply.pages[document.location.pathname] = [];
         }
         panel_apply.pages[document.location.pathname].push('panel_test_func');
-        this.contentWindow.__panel.panel_test_func = function(params) {
+        __panel.panel_test_func = function(params) {
           console.log(params);
         }
         panel_apply.settings['panel_test_func'] = {
