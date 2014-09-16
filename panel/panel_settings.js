@@ -127,9 +127,21 @@
                       //'lib/jquery.mobile-1.4.3.min.js'
                       'lib/jquery.mobile.custom.min.js'
                     ];
-      for(var key in panel_apply.scripts) {
-        if(scripts.indexOf(panel_apply.scripts[key]) == -1) {
-          scripts.push(panel_apply.scripts[key]);
+      for(var key in panel_apply.settings) {
+        var file = panel_apply.settings[key].module + '/' + panel_apply.settings[key].file;
+        if(scripts.indexOf(file) == -1) {
+          scripts.push(file);
+        }
+        if(panel_apply.settings[key].configure) {
+          for(var config_key in panel_apply.settings[key].configure) {
+            if(panel_apply.settings[key].configure[config_key].file) {
+              var file = panel_apply.settings[key].module + '/' + 
+                panel_apply.settings[key].configure[config_key].file;
+              if(scripts.indexOf(file) == -1) {
+                scripts.push(file);
+              }
+            }
+          }
         }
       }
       for(var key in panel_apply.buttons) {
@@ -628,7 +640,9 @@
 
               panel.setOptions(current_options);
 
-              $('#settings-form-popup').popup('close');
+              if($('#settings-form-popup').length && $('#settings-form-popup').popup) {
+                $('#settings-form-popup').popup('close');
+              }
               jQuery('.pane-bubble.drag-over').removeClass('drag-over');
 
               if(self_init) {

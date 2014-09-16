@@ -69,7 +69,7 @@
         "checkboxes_example_widget": {
           "type": "checkboxes",
           "title": "Пример чекбоксов",
-          "options": "__panel.example_get_radio_options()",
+          "options": "__panel.example_assoc_radio_options()",
           "default": ["example1", "example2"],
           "file": "example_data.js",
           "description": "Можно выбрать несколько значений"
