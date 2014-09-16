@@ -1,0 +1,90 @@
+{
+  "requires": "", 
+  "excludes": "",
+  "access": "", 
+  "title": "Модуль с примерами",
+  "author": "Вася пупкин",
+  "author_link": "http://www.ganjawars.ru/info.php?id=717811",
+  "weight": 1, 
+  "apply": {
+    "/me/": ["example_func1"],
+    "*": ["example_func2"]
+  }, 
+  "settings": {
+    "example_func1": {
+      "file": "example_func1.js",
+      "description": "Функция-пример №1, вынесенная в отдельный файл",
+      "configure": {
+        "checkbox_example": {
+          "type": "checkbox",
+          "title": "Пример чекбокса",
+          "default": true
+        },
+        "select_example": {
+          "type": "select",
+          "title": "Пример селектбокса",
+          "options": "__panel.example_get_options()",
+          "default": "example1",
+          "file": "example_data.js",
+          "description": "Можно выбрать одно из списка значений"
+        },
+        "checkboxes_example": {
+          "type": "checkboxes",
+          "title": "Пример чекбоксов",
+          "options": "__panel.example_assoc_radio_options",
+          "default": ["example1", "example2"],
+          "file": "example_data.js",
+          "description": "Можно выбрать несколько значений"
+        },
+        "textinput_example": {
+          "type": "text",
+          "title": "Пример поля ввода",
+          "default": "текст",
+          "description": "Поле для свободного ввода любого текста"
+        }
+      }
+    },
+    "example_func2": {
+      "file": "example.js"
+    }
+  },
+  
+  "widgets": {
+    "example_widget": {
+      "title": "Пример виджета",
+      "configure": {
+        "checkbox_example_widget": {
+          "type": "checkbox",
+          "title": "Пример чекбокса",
+          "default": true
+        },
+        "select_example_widget": {
+          "type": "select",
+          "title": "Пример селектбокса",
+          "options": "__panel.example_get_options()",
+          "default": "example1",
+          "file": "example_data.js",
+          "description": "Можно выбрать одно из списка значений"
+        },
+        "checkboxes_example_widget": {
+          "type": "checkboxes",
+          "title": "Пример чекбоксов",
+          "options": "__panel.example_get_radio_options()",
+          "default": ["example1", "example2"],
+          "file": "example_data.js",
+          "description": "Можно выбрать несколько значений"
+        },
+        "textinput_example_widget": {
+          "type": "text",
+          "title": "Пример поля ввода",
+          "default": "текст",
+          "description": "Поле для свободного ввода любого текста"
+        }
+      },
+      "callback": "example_widget",
+      "file": "example_widgets.js", 
+      "width": 2,
+      "height": 1
+    }
+  }
+}
