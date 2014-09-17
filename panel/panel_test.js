@@ -1875,50 +1875,53 @@ QUnit.asyncTest('Тест сохранения опций для плавающ�
   var index = options.widgets.length - 1;
 
   __panel.setOptions(options, undefined, function() {
-    var iframe = $('<iframe id="float-widgets-options-save-iframe" src="' + document.location.href.split('?')[0]
+    var frame;
+
+    var check_panel = function() {
+      if(frame && frame.contentWindow && frame.contentWindow.__panel) {
+        frame.contentWindow.panel_apply.widgets['panel_foo_widget'] = {
+          callback: 'panel_foo_widget',
+          title: 'Тестовый виджет',
+          height: 2,
+          width: 6,
+          file: 'panel.js',
+          configure: {
+            param1: {
+              type: 'checkbox',
+              title: 'тестовый параметр'
+            }
+          },
+          module: 'panel'
+        };
+
+        frame.contentWindow.__panel.panel_foo_widget = function(options) {
+          assert.equal(jQuery.type(options), 'object');
+          assert.equal(options.param1, true);
+          assert.equal(options.param2, 'test');
+          assert.equal(jQuery.type(options.save), 'function', 
+            'Метод save должен присутствовать в опциях');
+          options.param1 = false;
+          options.param2 = 'test1';
+          options.save(function() {
+            assert.equal(frame.contentWindow.__panel.getOptions()
+              .widgets[index].arguments.param1, false, 
+              'Значение param1 должно поменяться');
+            assert.equal(frame.contentWindow.__panel.getOptions()
+              .widgets[index].arguments.param2, 'test1', 
+              'Значение param2 должно поменяться');
+            QUnit.start();
+          });
+        };
+        return;
+      }
+      setTimeout(check_panel, 1);
+    }
+    check_panel();
+
+    frame = $('<iframe id="float-widgets-options-save-iframe" src="' + document.location.href.split('?')[0]
        + '?gwpanel_testing&continue&gwpanel_pause"></iframe>').load(function() {
       var that = this;
       var __window = this.contentWindow;
-      __window.panel_apply.widgets['panel_foo_widget'] = {
-        callback: 'panel_foo_widget',
-        title: 'Тестовый виджет',
-        height: 2,
-        width: 6,
-        file: 'panel.js',
-        configure: {
-          param1: {
-            type: 'checkbox',
-            title: 'тестовый параметр'
-          }
-        },
-        module: 'panel'
-      };
-
-      var check_panel = function() {
-        if(__window.__panel) {
-          __window.__panel.panel_foo_widget = function(options) {
-            assert.equal(jQuery.type(options), 'object');
-            assert.equal(options.param1, true);
-            assert.equal(options.param2, 'test');
-            assert.equal(jQuery.type(options.save), 'function', 
-              'Метод save должен присутствовать в опциях');
-            options.param1 = false;
-            options.param2 = 'test1';
-            options.save(function() {
-              assert.equal(iframe.contentWindow.__panel.getOptions()
-                .widgets[index].arguments.param1, false, 
-                'Значение param1 должно поменяться');
-              assert.equal(iframe.contentWindow.__panel.getOptions()
-                .widgets[index].arguments.param2, 'test1', 
-                'Значение param2 должно поменяться');
-              QUnit.start();
-            });
-          };
-          return;
-        }
-        setTimeout(check_panel, 1);
-      }
-      check_panel();
 
       waitPanelInitialization(this.contentWindow, function() {
         setTimeout(function() {
