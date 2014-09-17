@@ -952,7 +952,7 @@ var Panel2 = new function() {
         });
       }
       checkTime('init_func');
-      
+
       /// Инициализация тестов если в запросе указан ?gwpanel_test и это не встроенный фрейм
       if(environment == 'testing' && location.search.indexOf('continue') == -1) {
         //alert('test');
@@ -1029,15 +1029,18 @@ var Panel2 = new function() {
                                     '/tmp/panelcontainer.html', function() {
         initialized = true;
         windowID = instance.crossWindow.windowID;
-        checkTime('initialization Begin');
-        jQuery(initializeStack).each(function() {
-          try {
-            this();
-          } catch(e) {
-            instance.dispatchException(e);
-          }
-        });
-        checkTime('initialization Finish');
+        setTimeout(function() {
+          checkTime('initialization Begin');
+          jQuery(initializeStack).each(function() {
+            try {
+              this();
+            } catch(e) {
+              instance.dispatchException(e);
+            }
+          });
+          checkTime('initialization Finish');
+        }, environment == 'testing' && location.search.indexOf('gwpanel_pause') > 0?
+           600: 1);
       }, 'ganjawars.ru');
 
       checkTime('crossWindow init');
@@ -1064,7 +1067,7 @@ var Panel2 = new function() {
           if(!fastInitReady) {
             if(environment == 'testing' && location.search.indexOf('gwpanel_pause') != -1) {
               /// задержка инициализации, чтобы тесты могли встроить дополнительные функции
-              setTimeout(__initFunc, 1000);
+              setTimeout(__initFunc, 200);
             } else {
               /// медленная инициализация
               __initFunc();
