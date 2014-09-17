@@ -265,6 +265,10 @@ $bootstrap = '
   var libs = ' . json_encode($libs) . ';
   var loadedLibs = 0;
 
+  var testing = location.search.indexOf(\'gwpanel_test\') != -1 && location.search.indexOf(\'continue\') == -1;
+
+  if(testing) libs.push(\'qunit-1.15.0.js\');
+
   for(var i = 0; i < libs.length; i++) {
     var s = document.createElement("script");
     s.type = "text/javascript";

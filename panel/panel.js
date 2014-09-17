@@ -952,6 +952,16 @@ var Panel2 = new function() {
         });
       }
       checkTime('init_func');
+      
+      /// Инициализация тестов если в запросе указан ?gwpanel_test и это не встроенный фрейм
+      if(environment == 'testing' && location.search.indexOf('continue') == -1) {
+        //alert('test');
+        $('<div id="qunit-fixture"></div>').prependTo(document.body);
+        $('<div id="qunit"></div>').prependTo(document.body);
+        instance.loadCSS('../../lib/qunit-1.15.0.css');
+        var tests = window.panel_tests || [];
+        instance.loadScript(tests);
+      }      
 
       if(environment == 'testing') {
         var variantID = 'default';
@@ -1097,22 +1107,6 @@ var Panel2 = new function() {
         initInterface();
       });
 
-      /// Инициализация тестов если в запросе указан ?gwpanel_test и это не встроенный фрейм
-      if(environment == 'testing' && location.search.indexOf('continue') == -1) {
-        //alert('test');
-        $('<div id="qunit-fixture"></div>').prependTo(document.body);
-        $('<div id="qunit"></div>').prependTo(document.body);
-        instance.loadCSS('../../lib/qunit-1.15.0.css');
-        instance.onload(function() {
-          instance.loadScript('lib/qunit-1.15.0.js', function() {
-            var tests = window.panel_tests || [];
-            instance.loadScript(tests, function() {
-              QUnit.load();
-              QUnit.start();
-            });
-          });
-        });
-      }      
     },
     /**
     * Обработка исключений. Если есть консоль, то выводим в консоль.

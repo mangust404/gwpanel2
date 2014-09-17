@@ -1185,13 +1185,17 @@ QUnit.asyncTest("Тест открытия окна настроек", function(
   }
 
   __panel.setOptions(options, undefined, function() {
-    $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
+    $('<iframe id="settings-open-iframe" src="' + document.location.href.split('?')[0]
        + '?gwpanel_testing&continue"></iframe>').load(function() {
       var that = this;
       waitPanelInitialization(this.contentWindow, function() {
         (function($) {
         assert.equal($('.pane-bubble:visible').length, 1, 
           'При пустой концигурации кнопка настроек должна появиться в первом окне');
+        if($('.pane-bubble:visible').length != 1) {
+          window.jQuery('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
+          return;
+        }
         /// кликаем по бабблу
         $('.pane-bubble:first').click();
         var pane = $('.pane:visible');
@@ -1223,7 +1227,8 @@ QUnit.asyncTest("Тест добавления кнопки", function(assert) {
   var options = jQuery.extend({}, panelSettingsCollection.default);
   /// Создаём конфигурацию с пустыми окнами
   for(var i = 0; i < 4; i++) {
-    options.panes[i].buttons = options.panes[i].widgets = [];
+    options.panes[i].buttons = [];
+    options.panes[i].widgets = [];
   }
 
   __panel.setOptions(options, undefined, function() {
@@ -1234,6 +1239,10 @@ QUnit.asyncTest("Тест добавления кнопки", function(assert) {
         (function($) {
         assert.equal($('.pane-bubble:visible').length, 1, 
           'При пустой концигурации кнопка настроек должна появиться в первом окне');
+        if($('.pane-bubble:visible').length != 1) {
+          window.jQuery('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
+          return;
+        }
         /// кликаем по бабблу
         $('.pane-bubble:first').click();
         var pane = $('.pane:visible');
@@ -1765,7 +1774,8 @@ QUnit.test("Тест конвертации числа в деньги", functio
 });
 
 QUnit.asyncTest('Тест сохранения опций для обработчиков встроенной функцией options.save', function(assert) {
-  var iframe = $('<iframe id="options-save-iframe" src="' + document.location.href.split('?')[0]
+  expect(5);
+  var iframe = $('<iframe id="apply-options-save-iframe" src="' + document.location.href.split('?')[0]
      + '?gwpanel_testing&continue&gwpanel_pause"></iframe>').load(function() {
     waitPanelInitialization(this.contentWindow, function() {
     });
@@ -1830,6 +1840,8 @@ QUnit.asyncTest('Тест сохранения опций для обработ�
 });
 
 QUnit.asyncTest('Тест сохранения опций для плавающих виджетов встроенной функцией options.save', function(assert) {
+  expect(6);
+
   var options = jQuery.extend({}, panelSettingsCollection.default);
   /// Создаём конфигурацию с пустыми окнами
   for(var i = 0; i < 4; i++) {
@@ -1852,7 +1864,7 @@ QUnit.asyncTest('Тест сохранения опций для плавающ�
   var index = options.widgets.length - 1;
 
   __panel.setOptions(options, undefined, function() {
-    var iframe = $('<iframe id="options-save-iframe" src="' + document.location.href.split('?')[0]
+    var iframe = $('<iframe id="float-widgets-options-save-iframe" src="' + document.location.href.split('?')[0]
        + '?gwpanel_testing&continue&gwpanel_pause"></iframe>').load(function() {
       var that = this;
       var __window = this.contentWindow;
@@ -1910,6 +1922,7 @@ QUnit.asyncTest('Тест сохранения опций для плавающ�
 });
 
 QUnit.asyncTest('Тест сохранения опций для виджетов встроенной функцией options.save', function(assert) {
+  expect(6);
   var options = jQuery.extend({}, panelSettingsCollection.default);
   /// Создаём конфигурацию с пустыми окнами
   for(var i = 0; i < 4; i++) {
@@ -1933,27 +1946,27 @@ QUnit.asyncTest('Тест сохранения опций для виджето�
   options.widgets = [];
 
   __panel.setOptions(options, undefined, function() {
-    $('<iframe id="options-save-iframe" src="' + document.location.href.split('?')[0]
-       + '?gwpanel_testing&continue"></iframe>').load(function() {
-      var that = this;
-      waitPanelInitialization(this.contentWindow, function() {
-        (function($) {
-        /// Создаём виртуальный класс виджетов
-        that.contentWindow.__panel.panel_foo_widget = function(options) {
+    assert.equal(options.panes[0].widgets.length, 1, 'Опции виджета сохранились');
+    var frame;
+
+    var panel_check_func = function() {
+      if(frame && frame.contentWindow && frame.contentWindow.__panel) {
+        frame.contentWindow.__panel.panel_foo_widget = function(options) {
           assert.equal(jQuery.type(options), 'object');
           assert.equal(options.param1, true);
           assert.equal(jQuery.type(options.save), 'function', 
             'Метод save должен присутствовать в опциях');
           options.param1 = false;
           options.save(function() {
-            assert.equal(that.contentWindow.__panel.getOptions()
+            assert.equal(frame.contentWindow.__panel.getOptions()
               .panes[0].widgets[0].arguments.param1, false, 
               'Значение должно поменяться');
             QUnit.start();
           });
         };
 
-        that.contentWindow.panel_apply.widgets['panel_foo_widget'] = {
+        /// Создаём виртуальный класс виджетов
+        frame.contentWindow.panel_apply.widgets['panel_foo_widget'] = {
           callback: 'panel_foo_widget',
           title: 'Тестовый виджет',
           height: 2,
@@ -1967,16 +1980,31 @@ QUnit.asyncTest('Тест сохранения опций для виджето�
           },
           module: 'panel'
         };
-        /// кликаем по бабблу, виджет должен прорисоваться и функция прорисовки 
-        /// виджета должна быть вызвана
-        $('.pane-bubble:first').click();
+        
+        return;
+      }
+      setTimeout(panel_check_func, 1);
+    }
+    setTimeout(panel_check_func, 1);
+
+    frame = $('<iframe id="widgets-options-save-iframe" src="' + document.location.href.split('?')[0]
+       + '?gwpanel_testing&continue&gwpanel_pause"></iframe>').load(function() {
+      var that = this;
+      waitPanelInitialization(this.contentWindow, function() {
+        (function($) {
+          assert.equal(this.__panel.getOptions().panes[0].widgets.length, 1, 
+            'в настройках должен быть один виджет');
+          /// кликаем по бабблу, виджет должен прорисоваться и функция прорисовки 
+          /// виджета должна быть вызвана
+          $('.pane-bubble:first').click();
       }).apply(that.contentWindow, [that.contentWindow.jQuery])
       });
-    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show().get(0);
   });
 });
 
 QUnit.asyncTest('Тест сохранения опций для кнопок встроенной функцией options.save', function(assert) {
+  expect(6);
   var options = jQuery.extend({}, panelSettingsCollection.default);
   /// Создаём конфигурацию с пустыми окнами
   for(var i = 0; i < 4; i++) {
@@ -1994,6 +2022,8 @@ QUnit.asyncTest('Тест сохранения опций для кнопок в
   });
 
   __panel.setOptions(options, undefined, function() {
+    assert.equal(options.panes[0].buttons.length, 1, 'Опции кнопок сохранились');
+
     var frame;
 
     var panel_check_func = function() {
@@ -2011,41 +2041,42 @@ QUnit.asyncTest('Тест сохранения опций для кнопок в
             QUnit.start();
           });
         };
+        /// Создаём виртуальный класс кнопок
+        frame.contentWindow.panel_apply.buttons['panel_test_button'] = {
+          callback: 'panel_test_button',
+          title: 'Test button',
+          file: 'panel.js',
+          configure: {
+            param1: {
+              type: 'checkbox',
+              title: 'тестовый параметр'
+            }
+          },
+          module: 'panel'
+        };
+
         return;
       }
       setTimeout(panel_check_func, 1);
     }
     setTimeout(panel_check_func, 1);
 
-    frame = $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
+    frame = $('<iframe id="button-options-save-iframe" src="' + document.location.href.split('?')[0]
        + '?gwpanel_testing&continue&gwpanel_pause"></iframe>').load(function() {
       var that = this;
 
-      that.contentWindow.panel_apply.buttons['panel_test_button'] = {
-        callback: 'panel_test_button',
-        title: 'Test button',
-        file: 'panel.js',
-        configure: {
-          param1: {
-            type: 'checkbox',
-            title: 'тестовый параметр'
-          }
-        },
-        module: 'panel'
-      };
-
       waitPanelInitialization(this.contentWindow, function() {
         (function($) {
-        /// Создаём виртуальный класс кнопок
+          assert.equal(this.__panel.getOptions().panes[0].buttons.length, 2, 
+            'в настройках должны быть две кнопки');
+          setTimeout(function() {
+            /// кликаем по бабблу, виджет должен прорисоваться и функция прорисовки 
+            /// виджета должна быть вызвана
+            $('.pane-bubble:first').click();
 
-        setTimeout(function() {
-          /// кликаем по бабблу, виджет должен прорисоваться и функция прорисовки 
-          /// виджета должна быть вызвана
-          $('.pane-bubble:first').click();
-
-          /// Кликаем по кнопке
-          $('#button_panel_test_button_0 a').click();
-        }, 500);
+            /// Кликаем по кнопке
+            $('#button_panel_test_button_0 a').click();
+          }, 500);
       }).apply(that.contentWindow, [that.contentWindow.jQuery])
       });
     }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show().get(0);
