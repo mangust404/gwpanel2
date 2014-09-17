@@ -1654,6 +1654,7 @@ QUnit.asyncTest("Тест формы добавления и настройки 
 });
 
 QUnit.asyncTest("Тест изменения настроек модулей", function(assert) {
+  expect(6);
   var options = jQuery.extend({}, panelSettingsCollection.default);
   /// Создаём конфигурацию с модулем на текущей странице
   if(!panel_apply.pages[document.location.pathname]) {
@@ -1665,26 +1666,36 @@ QUnit.asyncTest("Тест изменения настроек модулей", f
   }
 
   __panel.setOptions(options, undefined, function() {
-    $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
-       + '?gwpanel_testing&continue"></iframe>').load(function() {
-      with(this.contentWindow) {
-        if(!panel_apply.pages[document.location.pathname]) {
-          panel_apply.pages[document.location.pathname] = [];
-        }
-        panel_apply.pages[document.location.pathname].push('panel_test_func');
-        panel_apply.settings['panel_test_func'] = {
-          file: 'panel.js',
-          module: 'panel',
-          description: 'тестовая функция',
-          configure: {
-            checkbox: {
-              type: 'checkbox',
-              title: 'тестовый checkbox',
-              default: true
+    var frame;
+
+    panel_check_func = function() {
+      if(frame && frame.contentWindow && frame.contentWindow.panel_apply) {
+        with(frame.contentWindow) {
+          if(!panel_apply.pages[document.location.pathname]) {
+            panel_apply.pages[document.location.pathname] = [];
+          }
+          panel_apply.pages[document.location.pathname].push('panel_test_func');
+          panel_apply.settings['panel_test_func'] = {
+            file: 'panel.js',
+            module: 'panel',
+            description: 'тестовая функция',
+            configure: {
+              checkbox: {
+                type: 'checkbox',
+                title: 'тестовый checkbox',
+                default: true
+              }
             }
           }
         }
+        return;
       }
+      setTimeout(panel_check_func, 1);
+    }
+    panel_check_func();
+    
+    frame = $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
+       + '?gwpanel_testing&continue&gwpanel_pause"></iframe>').load(function() {
       var that = this;
       waitPanelInitialization(this.contentWindow, function() {
         (function($) {
@@ -1733,7 +1744,7 @@ QUnit.asyncTest("Тест изменения настроек модулей", f
         }, 1000);
       }).apply(that.contentWindow, [that.contentWindow.jQuery])
       });
-    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show().get(0);
   });
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 });
