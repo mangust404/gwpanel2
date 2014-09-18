@@ -1420,7 +1420,7 @@ var Panel2 = new function() {
     * Функция проверки фокуса
     * @param callback - функция, которая будет запущена если текущее окно является активным
     */
-    checkFocused: function(callback) {
+    checkFocused: function(callback, failure) {
       instance.crossWindow.get('focused', function(data) {
         if(instance.crossWindow.windowID == data) {
           try {
@@ -1428,6 +1428,8 @@ var Panel2 = new function() {
           } catch(e) {
             instance.dispatchException(e, 'Focused callback error: ');
           }
+        } else {
+          if(failure) failure();
         }
       });
     },

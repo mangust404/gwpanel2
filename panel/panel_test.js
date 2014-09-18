@@ -15,6 +15,7 @@ QUnit.assert.function_exists = function(needle, haystack, message) {
   QUnit.push(exists, exists, needle, 'функция ' + needle + ' существует');
 };
 
+
 QUnit.test("Тест объекта __panel", function(assert) {
   assert.equal('object', String(typeof(window.__panel)).toLowerCase(), 
     'объект панели был создан');
@@ -404,16 +405,16 @@ if(window.opera || jQuery.browser.msie) {
   });
 }
 
-/*QUnit.asyncTest('Проверка фокусировки', function(assert) {
-  expect(1);
-  __panel.onload(function() {
-    jQuery(window).focus();
-    __panel.checkFocused(function() {
-      assert.ok(true, 'Текущее окно в фокусе');
-      QUnit.start();
-    });
-  });
-});*/
+//QUnit.asyncTest('Проверка фокусировки', function(assert) {
+//  expect(1);
+//  __panel.onload(function() {
+//    jQuery(window).focus();
+//    __panel.checkFocused(function() {
+//      assert.ok(true, 'Текущее окно в фокусе');
+//      QUnit.start();
+//    });
+//  });
+//});
 
 QUnit.asyncTest('Проверка фокусировки другого окна', function(assert) {
   expect(1);
@@ -833,15 +834,21 @@ QUnit.asyncTest('Перетаскивание кнопок в другие ок�
           mousemove.pageX = $('#pane-bubble-2').get(0).offsetLeft;
           mousemove.pageY = $('#pane-bubble-2').get(0).offsetTop + 20;
           __window.jQuery(__window.document).trigger(mousemove);
-          /// третий запасной
-          var mousemove = $.Event('mousemove');
-          mousemove.pageX = $('#pane-bubble-2').get(0).offsetLeft + 10;
-          mousemove.pageY = $('#pane-bubble-2').get(0).offsetTop + 25;
-          __window.jQuery(__window.document).trigger(mousemove);
 
-          setTimeout(function() {
+          var tries = 0;
+          while(!$('.pane-bubble.drag-over').length && tries++ < 10) {
+            var mousemove = $.Event('mousemove');
+            mousemove.pageX = $('#pane-bubble-2').get(0).offsetLeft + 5 + (parseInt(Math.random * 10) - 5);
+            mousemove.pageY = $('#pane-bubble-2').get(0).offsetTop + 40 + (parseInt(Math.random * 20) - 10);
+            __window.jQuery(__window.document).trigger(mousemove);
+          }
+
+          if($('.pane-bubble.drag-over').length || !$.browser.mozilla) {
+            /// Когда пользователь переключился на другую вкладку в этом же окне в Firefox,
+            /// все события мышки во фрейме не работают. Мы должны предусматривать
+            /// такую возможность, не вываливать ошибки и продолжать тестирование
             assert.equal($('.pane-bubble.drag-over').length, 1, 
-              'При наведении на бабл он должен подсвечиваться');
+              'При наведении на бабл он должен подсвечиваться. Кол-во движений: ' + tries);
 
             var mouseup = $.Event('mouseup');
             mouseup.pageX = mousemove.pageX;
@@ -862,7 +869,9 @@ QUnit.asyncTest('Перетаскивание кнопок в другие ок�
 
               QUnit.start();
             }, 2000);
-          }, 100);
+          } else {
+            QUnit.start();
+          }
         }, 2000);
       }, 100);
       //QUnit.start();
@@ -1786,70 +1795,71 @@ QUnit.test("Тест конвертации числа в деньги", functio
   assert.equal(__panel.convertingIntToMoney(new String("String")), false, "Converting: new String('String') > false");
 });
 
-QUnit.asyncTest('Тест сохранения опций для обработчиков встроенной функцией options.save', function(assert) {
-  expect(5);
+
+QUnit.asyncTest('Тест сохранения опций для обработчиков встроенной функцией options', function(assert) {
+  expect(7);
+  var index = 0;
+
   var iframe = $('<iframe id="apply-options-save-iframe" src="' + document.location.href.split('?')[0]
      + '?gwpanel_testing&continue&gwpanel_pause"></iframe>').load(function() {
-    waitPanelInitialization(this.contentWindow, function() {
-    });
-  }).appendTo('#qunit-fixture').get(0);
+    assert.ok(true, 'фрейм загрузился');
+  }).get(0);
+
   var window_check = function() {
-    if(iframe.contentWindow) {
+    if(iframe && iframe.contentWindow && 
+       iframe.contentWindow.__panel && iframe.contentWindow.panel_apply) {
+      assert.ok(true, 'все объекты инициализированы, добавляем функцию');
       var __window = iframe.contentWindow;
-      var panel_apply_check = function() {
-        if(__window.panel_apply) {
-          if(!__window.panel_apply.pages[document.location.pathname]) {
-            __window.panel_apply.pages[document.location.pathname] = [];
-          }
-          __window.panel_apply.pages[document.location.pathname].push('panel_test_func');
-          __window.panel_apply.settings['panel_test_func'] = {
-            file: 'panel.js',
-            module: 'panel',
-            description: 'тестовая функция',
-            configure: {
-              checkbox: {
-                type: 'checkbox',
-                title: 'тестовый checkbox',
-                default: true
-              }
-            }
-          }
-          return;
-        }
-        setTimeout(panel_apply_check, 1);
+
+      if(!__window.panel_apply.pages[document.location.pathname]) {
+        __window.panel_apply.pages[document.location.pathname] = [];
       }
-      setTimeout(panel_apply_check, 1);
-      var panel_object_check = function() {
-        if(__window.__panel) {
-          __window.__panel.panel_test_func = function(options) {
-            assert.ok(true, 'Функция panel_test_func запустилась');
-            assert.equal(jQuery.type(options), 'object', 'Опции указаны');
-            assert.equal(jQuery.type(options.save), 'function', 
-              'Присутствует функция сохранения настроек');
-            options.test_param = 1;
-            var event_fired = false;
-            __window.__panel.bind('options_change_panel_test_func', function() {
-              event_fired = true;
-            });
-            options.save(function() {
-              assert.equal(__window.__panel.getOptions()
-                .settings['panel']['panel_test_func'].test_param, 1);
-              setTimeout(function() {
-                assert.ok(event_fired, 'Событие смены настроек отработало');
-                QUnit.start();
-              }, 100);
-            });
+      __window.panel_apply.pages[document.location.pathname].push('panel_test_func');
+      __window.panel_apply.settings['panel_test_func'] = {
+        file: 'panel.js',
+        module: 'panel',
+        description: 'тестовая функция',
+        configure: {
+          checkbox: {
+            type: 'checkbox',
+            title: 'тестовый checkbox',
+            default: true
           }
-          return;
         }
-        setTimeout(panel_object_check, 1);
       }
-      setTimeout(panel_object_check, 1);
+      __window.__panel.panel_test_func = function(options) {
+        assert.ok(true, 'Функция panel_test_func запустилась');
+        assert.equal(jQuery.type(options), 'object', 'Опции указаны');
+        assert.equal(jQuery.type(options.save), 'function', 
+          'Присутствует функция сохранения настроек');
+        options.test_param = 1;
+        var event_fired = false;
+        __window.__panel.bind('options_change_panel_test_func', function() {
+          event_fired = true;
+        });
+        options.save(function() {
+          assert.equal(__window.__panel.getOptions()
+            .settings['panel']['panel_test_func'].test_param, 1);
+          setTimeout(function() {
+            assert.ok(event_fired, 'Событие смены настроек отработало');
+            QUnit.start();
+          }, 100);
+        });
+      }
+      return;
+    }
+    index++;
+    if(index > 1000) {
+      QUnit.ok(false, 'прошло 1000 попыток дождаться загрузки фрейма, похоже что он не загрузится');
+      console.log(iframe, iframe.contentWindow);
+      QUnit.start();
       return;
     }
     setTimeout(window_check, 1);
   }
-  setTimeout(window_check, 1);
+  window_check();
+
+  $(iframe).appendTo('#qunit-fixture').css({height: 1000, width: 1000});
 });
 
 QUnit.asyncTest('Тест сохранения опций для плавающих виджетов встроенной функцией options.save', function(assert) {
