@@ -518,7 +518,7 @@ QUnit.asyncTest('переход по ссылке', function(assert) {
 });
 
 /// Тестирование интерфейса
-QUnit.test('Тестирование бабблов', function(assert) {
+/*QUnit.test('Тестирование бабблов', function(assert) {
   var options = __panel.getOptions();
   var activePanes = 0;
   for(var i = 0; i < 4; i++) {
@@ -529,7 +529,7 @@ QUnit.test('Тестирование бабблов', function(assert) {
   }
   assert.equal(activePanes, $('.pane-bubble:visible').length, 
     'Количество видимых бабблов');
-});
+});*/
 
 QUnit.asyncTest('Тестирование открытия и закрытия бабблов', function(assert) {
   expect(8);
@@ -635,7 +635,7 @@ QUnit.asyncTest('Тест drag-n-drop для перетаскивании кно
         if(isNaN(padding)) padding = 0;
         e.pageX = pane[0].offsetLeft + padding + 10;
         e.pageY = pane[0].offsetTop + padding + 10;
-        $(that).trigger(e);
+        button.trigger(e);
 
         var mousedown = $.Event('mousedown');
         /// левая кнопка мыши
@@ -645,33 +645,36 @@ QUnit.asyncTest('Тест drag-n-drop для перетаскивании кно
         var target = button.find('a');
         mousedown.target = target[0];
         button.trigger(mousedown);
-        var __window = that;
 
         setTimeout(function() {
-          assert.ok(button.hasClass('ui-draggable'), 'Drag start');
-          assert.ok(pane.find('.pane-placeholder').length > 0, 
-            'Есть доступные места для перетаскивания');
+          //that.__panel.checkFocused(function() {
+            assert.ok(button.hasClass('ui-draggable'), 'Drag start');
+            assert.ok(pane.find('.pane-placeholder').length > 0, 
+              'Есть доступные места для перетаскивания');
+            var mousemove = $.Event('mousemove');
+            mousemove.pageX = mousedown.pageX + 75;
+            mousemove.pageY = mousedown.pageY + 150;
+            button.trigger(mousemove);
 
-          var mousemove = $.Event('mousemove');
-          mousemove.pageX = mousedown.pageX + 75;
-          mousemove.pageY = mousedown.pageY + 150;
-          __window.jQuery(__window.document).trigger(mousemove);
+            var mouseup = $.Event('mouseup');
+            mouseup.pageX = mousemove.pageX;
+            mouseup.pageY = mousemove.pageY;
+            button.trigger(mouseup);
 
-          var mouseup = $.Event('mouseup');
-          mouseup.pageX = mousemove.pageX;
-          mouseup.pageY = mousemove.pageY;
-          button.trigger(mouseup);
+            assert.ok(!button.hasClass('ui-draggable'), 'Drag end');
+            assert.ok(pane.find('.pane-placeholder').length == 0, 
+              'Нет отметок для перетаскивания');
+            assert.equal(that.__panel.getOptions().panes[0].buttons[0].left, 1,
+              'Позиция кнопки слева должна быть = 1');
+            assert.equal(that.__panel.getOptions().panes[0].buttons[0].top, 2, 
+              'Позиция кнопки сверху должна быть = 2');
 
-          assert.ok(!button.hasClass('ui-draggable'), 'Drag end');
-          assert.ok(pane.find('.pane-placeholder').length == 0, 
-            'Нет отметок для перетаскивания');
-          assert.equal(__window.__panel.getOptions().panes[0].buttons[0].left, 1,
-            'Позиция кнопки слева должна быть = 1');
-          assert.equal(__window.__panel.getOptions().panes[0].buttons[0].top, 2, 
-            'Позиция кнопки сверху должна быть = 2');
-
-          QUnit.start();
-        }, 1000);
+            QUnit.start();
+/*          }, function() {
+            assert.ok(true, 'окно не в фокусе, тест не пройдёт');
+            QUnit.start();
+          });*/
+        }, 1500);
       }, 100);
       //QUnit.start();
     }).apply(that.contentWindow, [that.contentWindow.jQuery])
@@ -737,7 +740,7 @@ QUnit.asyncTest('Перетаскивание кнопок за недопуст
           var mousemove = $.Event('mousemove');
           mousemove.pageX = mousedown.pageX + 750;
           mousemove.pageY = mousedown.pageY + 350;
-          __window.jQuery(__window.document).trigger(mousemove);
+          button.trigger(mousemove);
 
           var mouseup = $.Event('mouseup');
           mouseup.pageX = mousemove.pageX;
@@ -756,7 +759,7 @@ QUnit.asyncTest('Перетаскивание кнопок за недопуст
 
             QUnit.start();
           }, 2000);
-        }, 1000);
+        }, 1500);
       }, 100);
       //QUnit.start();
     }).apply(that.contentWindow, [that.contentWindow.jQuery])
@@ -819,7 +822,7 @@ QUnit.asyncTest('Перетаскивание кнопок в другие ок�
           var mousemove = $.Event('mousemove');
           mousemove.pageX = mousedown.pageX + 5;
           mousemove.pageY = mousedown.pageY + 15;
-          __window.jQuery(__window.document).trigger(mousemove);
+          button.trigger(mousemove);
 
           assert.ok($('.pane-bubble.external').length > 0, 
             'Должны отобразиться бабблы для других окон');
@@ -828,19 +831,19 @@ QUnit.asyncTest('Перетаскивание кнопок в другие ок�
           var mousemove = $.Event('mousemove');
           mousemove.pageX = $('#pane-bubble-2').get(0).offsetLeft;
           mousemove.pageY = $('#pane-bubble-2').get(0).offsetTop + 20;
-          __window.jQuery(__window.document).trigger(mousemove);
+          button.trigger(mousemove);
           /// на второй переносится объект
           var mousemove = $.Event('mousemove');
           mousemove.pageX = $('#pane-bubble-2').get(0).offsetLeft;
           mousemove.pageY = $('#pane-bubble-2').get(0).offsetTop + 20;
-          __window.jQuery(__window.document).trigger(mousemove);
+          button.trigger(mousemove);
 
           var tries = 0;
           while(!$('.pane-bubble.drag-over').length && tries++ < 10) {
             var mousemove = $.Event('mousemove');
             mousemove.pageX = $('#pane-bubble-2').get(0).offsetLeft + 5 + (parseInt(Math.random * 10) - 5);
             mousemove.pageY = $('#pane-bubble-2').get(0).offsetTop + 40 + (parseInt(Math.random * 20) - 10);
-            __window.jQuery(__window.document).trigger(mousemove);
+            button.trigger(mousemove);
           }
 
           if($('.pane-bubble.drag-over').length || !$.browser.mozilla) {
@@ -1109,7 +1112,7 @@ QUnit.asyncTest('Перетаскивание виджетов в другие �
           if(isNaN(padding)) padding = 0;
           e.pageX = pane[0].offsetLeft + padding + 30;
           e.pageY = pane[0].offsetTop + padding + 30;
-          $(this).trigger(e);
+          widget.trigger(e);
 
           var mousedown = $.Event('mousedown');
           /// левая кнопка мыши
@@ -1125,7 +1128,7 @@ QUnit.asyncTest('Перетаскивание виджетов в другие �
             var mousemove = $.Event('mousemove');
             mousemove.pageX = mousedown.pageX + 5;
             mousemove.pageY = mousedown.pageY + 15;
-            __window.jQuery(__window.document).trigger(mousemove);
+            widget.trigger(mousemove);
 
             assert.ok($('.pane-bubble.external').length > 0, 
               'Должны отобразиться бабблы для других окон');
@@ -1134,13 +1137,12 @@ QUnit.asyncTest('Перетаскивание виджетов в другие �
             var mousemove = $.Event('mousemove');
             mousemove.pageX = $('#pane-bubble-2').get(0).offsetLeft;
             mousemove.pageY = $('#pane-bubble-2').get(0).offsetTop + 20;
-            __window.jQuery(__window.document).trigger(mousemove);
+            widget.trigger(mousemove);
             /// на второй mousemove переносится объект
             var mousemove = $.Event('mousemove');
             mousemove.pageX = $('#pane-bubble-2').get(0).offsetLeft;
             mousemove.pageY = $('#pane-bubble-2').get(0).offsetTop + 20;
-            __window.jQuery(__window.document).trigger(mousemove);
-
+            widget.trigger(mousemove);
 
             assert.equal($('.pane-bubble.drag-over').length, 1, 
               'При наведении на бабл он должен подсвечиваться');
@@ -1223,7 +1225,7 @@ QUnit.asyncTest("Тест открытия окна настроек", function(
           assert.equal($('#panel-settings-editor div[data-role=navbar] a.ui-link').length,
             4, 'Видны 4 кнопки настроек');
           QUnit.start();
-        }, 1000);
+        }, 1500);
       }).apply(that.contentWindow, [that.contentWindow.jQuery])
       });
     }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
@@ -1293,8 +1295,8 @@ QUnit.asyncTest("Тест добавления кнопки", function(assert) {
             assert.equal(that.contentWindow.__panel.getOptions().panes[1].buttons[0].id,
               'panel_settings_0', 'проверка ID кнопки');
             QUnit.start();
-          }, 500);
-        }, 1000);
+          }, 1500);
+        }, 1500);
       }).apply(that.contentWindow, [that.contentWindow.jQuery])
       });
     }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();

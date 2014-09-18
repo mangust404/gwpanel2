@@ -238,7 +238,7 @@ var Panel2 = new function() {
                   $('.pane-bubble:hidden').show();
                   $('.pane-bubble:not(#pane-bubble-' + paneID + ')')
                     .addClass('external');
-                  $(document).on('mousemove', dragOverPanes);
+                  that.on('mousemove', dragOverPanes);
                 },
                 drag: function(event, ui) {
                   var left = Math.round(ui.position.left / options.system.btnwidth);
@@ -277,7 +277,7 @@ var Panel2 = new function() {
                   }
                 },
                 stop: function() {
-                  $(document).off('mousemove', dragOverPanes);
+                  that.off('mousemove', dragOverPanes);
                   if(that[0].dragClassTO > 0) {
                     clearTimeout(that[0].dragClassTO);
                     that[0].dragClassTO = 0;
@@ -779,6 +779,13 @@ var Panel2 = new function() {
     jQuery(window).focus(function() {
       instance.crossWindow.set('focused', instance.crossWindow.windowID);
     });
+    jQuery(window).blur(function() {
+      instance.crossWindow.get('focused', function(data) {
+        if(data == instance.crossWindow.windowID) {
+          instance.crossWindow.set('focused', '');
+        }
+      });
+    });    
     jQuery(window).mousemove(function(e) {
       if(!instance.__mousestart) {
         instance.__mousestart = true;
@@ -1422,6 +1429,7 @@ var Panel2 = new function() {
     */
     checkFocused: function(callback, failure) {
       instance.crossWindow.get('focused', function(data) {
+        //parent.console.log('focused: ' + data, 'this: ', instance.crossWindow.windowID);
         if(instance.crossWindow.windowID == data) {
           try {
             callback();
