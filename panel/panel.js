@@ -938,6 +938,14 @@ var Panel2 = new function() {
                   options.settings[module][func] = {};
                 }
                 jQuery.extend(func_options, options.settings[module][func]);
+                if(jQuery.isEmptyObject(func_options) && panel_apply.settings[func].configure) {
+                  /// инициализируем опции с дефолтными значениями
+                  jQuery.each(panel_apply.settings[func].configure, function(option, configure) {
+                    if(jQuery.type(configure.default) != 'undefined') {
+                      func_options[option] = configure.default;
+                    }
+                  });
+                }
                 jQuery.extend(func_options, {
                   save: function(callback) {
                     for(var key in func_options) {
