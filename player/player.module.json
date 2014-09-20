@@ -1,0 +1,35 @@
+{
+  "requires": "", 
+  "excludes": "",
+  "access": "", 
+  "title": "Страницы игроков",
+  "author": "гном убийца",
+  "author_link": "http://www.ganjawars.ru/info.php?id=433067",
+  "weight": 1, 
+  "apply": {
+    "/info.php": ["player_casino"]
+  }, 
+  "settings": {
+    "player_casino": {
+      "file": "player_casino.js",
+      "description": "Отображение разницы азартных игр",
+      "configure": {
+        "roulette": {
+          "type": "checkbox",
+          "title": "Показывать разницу в рулетке",
+          "default": true
+        },
+        "total": {
+          "type": "checkbox",
+          "title": "Показывать разницу в тотализаторе",
+          "default": true
+        },
+        "poker": {
+          "type": "checkbox",
+          "title": "Показывать разницу в покере",
+          "default": true
+        }
+      }
+    }
+  }
+}
