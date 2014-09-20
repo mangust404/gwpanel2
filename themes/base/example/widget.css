@@ -1,0 +1,5 @@
+#example-widget {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	border: 1px dotted #333;
+}

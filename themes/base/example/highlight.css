@@ -1,0 +1,18 @@
+.player-info-div {
+	position: absolute;
+	background: #e0ffe0;
+	padding: 10px;
+	box-shadow: 2px 2px 5px #333;
+	width: 200px;
+}
+
+.player-info-div dt {
+	float: left;
+	margin-right: 5px;
+}
+
+a.player-info {
+	text-decoration: none;
+	border-bottom: 1px dashed #004400;
+	padding-bottom: 1px;
+}
