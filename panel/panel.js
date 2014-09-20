@@ -1225,43 +1225,16 @@ var Panel2 = new function() {
             /// отработал массовый вызов
             /// проходим по всем скриптам и выполяем обратные вызовы
             for(var i = 0; i < name.length; i++) {
-              instance.loadScriptFail(name[i]);
+              instance.loadCSSFail(name[i]);
             }
             if(failover) failover();
           } else {
             /// отработал одиночный вызов
-            instance.loadScriptFail(name[0]) 
+            instance.loadCSSFail(name[0]) 
           }
         }
       );
       return;
-
-      if(jQuery.type(name) != 'array') {
-        name = [name];
-      }
-      if(jQuery.type(stylesheets[name]) != 'undefined') {
-        if(stylesheets[name].loaded) {
-          try {
-            callback();
-          } catch(e) {
-            instance.dispatchException(e, 'loadCSS callback error: ');
-          }
-        } else if(callback) stylesheets[name].callbacks.push(callback);
-        return;
-      }
-      stylesheets[name] = {callbacks: [], failovers: [], loaded: false};
-      if(callback) stylesheets[name].callbacks.push(callback);
-      if(failover) stylesheets[name].failovers.push(failover);
-
-      var ar = name.split('/');
-      if(environment != 'deploy' && environment != 'dev' && 
-          ar[0] == '..' && ar[1] == '..' && ar[2] == 'lib') {
-        ar = ar.splice(2);
-        var path = ar.join('/');
-      } else {
-        var path = 'themes/' + options.system.theme + '/' + name;
-      }
-      window.__loadCSS(path, function() { instance.loadCSSComplete(name)}, failover);
     },
     
     /**

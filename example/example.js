@@ -1,13 +1,13 @@
 (function(panel) {
 jQuery.extend(panel, {
-  example_func2: function(config) {
+  example_func2: function(options) {
     //Функция example_func2 вызывается на каждой странице и
     // поскольку у неё нет description в файле example.module.json,
     // то она не может быть отключена или настроена пользователем');
   
   // но она ничего не делает
   },
-  example_highlight_players: function(config) {
+  example_highlight_players: function(options) {
     // Функция, которая также вызывается на всех страницах
     // для примера мы найдём все ссылки на странице, которые ведут на игроков, 
     // добавим им класс "player-info" и сделаем подсказку при наведении

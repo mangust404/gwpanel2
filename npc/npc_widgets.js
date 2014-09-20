@@ -9,7 +9,7 @@
     return (h > 0? (h < 9? '0' + h: h) + ':': '') + (m < 10? '0' + m: m) + ':' + (s < 10? '0' + s: s);
   }
   
-  function drawTimer(data) {
+  function drawTimer(data, widget) {
     if(!data || !data.id) return;
     if(npcIntervals[data.id]) {
       clearInterval(npcIntervals[data.id]);
@@ -23,10 +23,10 @@
             if(endTime <= now) {
               __panel.triggerEvent('npc_timer', {type: data.timer, id: data.id, timeout: data.timeout});
               clearInterval(npcIntervals[data.id]);
-              jQuery('#npc' + data.id + 'timer').html('');
+              widget.find('#npc' + data.id + 'timer').html('');
               return;
             }
-            jQuery('#npc' + data.id + 'timer').html(npc_timerFormat(parseInt((endTime - now) / 1000))).attr('title', 'Время до следующего квеста');
+            widget.find('#npc' + data.id + 'timer').html(npc_timerFormat(parseInt((endTime - now) / 1000))).attr('title', 'Время до следующего квеста');
           }, 1000);
           
         break;
@@ -37,10 +37,10 @@
             if(endTime <= now) {
               __panel.triggerEvent('npc_timer', {type: data.timer, id: data.id, timeout: data.timeout});
               clearInterval(npcIntervals[data.id]);
-              jQuery('#npc' + data.id + 'timer').html('');
+              widget.find('#npc' + data.id + 'timer').html('');
               return;
             }
-            jQuery('#npc' + data.id + 'timer').html(npc_timerFormat(parseInt((endTime - now) / 1000))).attr('title', 'Время до следующего нападения');
+            widget.find('#npc' + data.id + 'timer').html(npc_timerFormat(parseInt((endTime - now) / 1000))).attr('title', 'Время до следующего нападения');
           }, 1000);
           
         break;
@@ -50,10 +50,11 @@
   
 jQuery.extend(panel, {
   // отрисовка NPC
-  npc_widget: function(type, data) {
+  npc_widget: function(type, options) {
     __panel.loadCSS('npc/npc_widget.css');
     this.addClass('npc-widget');
-    var table = jQuery('<table></table>').appendTo(this);
+    var $table = jQuery('<table></table>').appendTo(this);
+    var $that = this;
     __panel.loadScript('npc/npc_list.js', function() {
       jQuery(__panel.npc_list_island[type]).map(function() {
         var id = this.id;
@@ -61,7 +62,7 @@ jQuery.extend(panel, {
         
         var npcMoveFunc = function(e) {
           var href = this.href;
-          var npclochref = jQuery('#npc' + id + 'loc a:last').attr('href');
+          var npclochref = $that.find('.npc' + id + 'loc a:last').attr('href');
           var ar = npclochref.split('=');
           var npcloc = ar[ar.length - 1];
           __panel.get('map_sector', function(sector) {
@@ -74,20 +75,25 @@ jQuery.extend(panel, {
           });
           return false;
         }
-        var links = jQuery('<span class="links" id="npc' + id + 'links"></span>');
-        if(data.friends.indexOf(id) != -1) {
-          links.append(jQuery('<a href="http://www.ganjawars.ru/npc.php?id=' + id + '&' + (data.undress? 'gwp': '') + 'talk=1" title="Начать разговор"><img src="http://images.ganjawars.ru/i/home/friends.gif"></a>')
+        var links = jQuery('<span class="links npc' + id + 'links"></span>');
+        if(options.friends.indexOf(id) != -1) {
+          links.append(jQuery('<a href="http://www.ganjawars.ru/npc.php?id=' + id + '&'
+             + (options.undress? 'gwp': '') + 'talk=1" title="Начать разговор">\
+             <img src="http://images.ganjawars.ru/i/home/friends.gif"></a>')
             .click(npcMoveFunc));
-        } else if(data.enemies.indexOf(id) != -1) {
-          links.append(jQuery('<a href="http://www.ganjawars.ru/npc.php?id=' + id + '&gwpattack=1" title="Напасть"><img src="http://images.ganjawars.ru/i/home/weapon.gif"></a>')
+        } else if(options.enemies.indexOf(id) != -1) {
+          links.append(jQuery('<a href="http://www.ganjawars.ru/npc.php?id=' + id + 
+            '&gwpattack=1" title="Напасть">\
+            <img src="http://images.ganjawars.ru/i/home/weapon.gif"></a>')
             .click(npcMoveFunc));
           
         }
-        
-        table.append(
-          jQuery('<tr id="npc' + id + '" class="npc' + (data.friends.indexOf(id) == -1? '': ' friend') + (data.enemies.indexOf(id) == -1? '': ' enemy') + '"></tr>')
+
+        $table.append(
+          jQuery('<tr class="npc' + id + ' npc' + (options.friends.indexOf(id) == -1? '': ' friend') + (options.enemies.indexOf(id) == -1? '': ' enemy') + '"></tr>')
           .append(jQuery('<td></td>')
-            .append('<img style="margin-right: 4px;" src="http://images.ganjawars.ru/img/synds/' + this.synd + '.gif" />')
+            .append('<img style="margin-right: 4px;" src="http://images.ganjawars.ru/img/synds/'
+              + this.synd + '.gif" />')
             .append(jQuery('<a href="http://www.ganjawars.ru/npc.php?id=' + id + '">' + name + '</a>')
               .click(function() {
                 __panel.gotoHref(this.href);
@@ -99,34 +105,35 @@ jQuery.extend(panel, {
             .append(links)
           )
           .append(jQuery('<td></td>')
-            .append('<span class="timer" id="npc' + id + 'timer"></span>')
+            .append('<span class="timer npc' + id + 'timer"></span>')
           )
           .append(jQuery('<td></td>')
-            .append('<span class="loc" id="npc' + id + 'loc"></span>')
+            .append('<span class="loc npc' + id + 'loc"></span>')
             .css({'text-align': 'right'})
           )
         );
         /// Прорисовываем таймер и всё остальное
         __panel.get('npc' + id, function(data) {
-          drawTimer(data);
+          drawTimer(data, $that);
         });
       });
     
     });
     __panel.bind('npc_update', function(data) {
-      drawTimer(data);
+      drawTimer(data, $that);
     });
     this.append(jQuery('<div class="npcupdatetime"></div>').css({'text-align': 'right'}));
-    __panel.npc_requestLocations();
-    setInterval(__panel.npc_requestLocations, 1000 * 300);
+    __panel.npc_requestLocations($that);
+    setInterval(function() { __panel.npc_requestLocations($that)}, 1000 * 300);
   },
+
   npc_requestLocations: function() {
     var d = new Date;
     
     if(!npcLocationsUpdate || !__panel.npcLocations || (npcLocationsUpdate < (d.getTime() - 1000 * 300))) {
       if(__panel.npcLocations) {
         for(id in __panel.npcLocations) {
-          var span = jQuery('#npc' + id + 'loc');
+          var span = jQuery('.npc' + id + 'loc');
           if(span) {
             span.innerHTML = ''; //<img src="' + this.options.baseURL + '/modules/gwjs/themes/' + this.options.theme + '/sets/progress.gif" />';
           }
@@ -148,7 +155,7 @@ jQuery.extend(panel, {
     var timeString = 'обновлено ' + updateTime.toLocaleString();
     
     jQuery.each(__panel.npcLocations, function(id, item) {
-      var span = jQuery('#npc' + id + 'loc').html('');
+      var span = jQuery('.npc' + id + 'loc').html('');
       if(span.length) {
         var coords = __panel.npcLocations[id].coords.split('x');
         span.append(
