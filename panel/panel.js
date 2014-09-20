@@ -812,9 +812,9 @@ var Panel2 = new function() {
     
     if(environment == 'testing' && location.search.indexOf('gwpanel_pause') != -1) {
       /// отложенный запуск прорисовки виджетов для теста
-      setTimeout(function() {
+      instance.onload(function() {
         instance.ready(initFloatWidgets);
-      }, 100);
+      });
     } else {
       instance.ready(initFloatWidgets);
     }
@@ -920,6 +920,7 @@ var Panel2 = new function() {
           }
         }
         jQuery(pages).each(function(index, func) {
+          if(options.blacklist && options.blacklist.indexOf(func) > -1) return;
           var module = panel_apply.settings[func].module;
           instance.loadScript(module + '/' + panel_apply.settings[func].file, function() {
             if(jQuery.type(instance[func]) == 'undefined') {
@@ -981,11 +982,7 @@ var Panel2 = new function() {
           options = JSON.parse(localStorage['gwp2_' + optionsID]) || 
                     window.panelSettingsCollection.default;
         }
-        if(location.search.indexOf('gwpanel_pause') == -1) {
-          fastInitReady = true;
-        } else {
-          fastInitReady = false;
-        }
+        fastInitReady = location.search.indexOf('gwpanel_pause') == -1;
       } else {
         var variantID = 'options_variant_' + instance.currentPlayerID();
         var __local_variant = localStorage['gwp2_' + variantID];
@@ -1036,7 +1033,7 @@ var Panel2 = new function() {
                                     '/tmp/panelcontainer.html', function() {
         initialized = true;
         windowID = instance.crossWindow.windowID;
-        setTimeout(function() {
+        instance.__load = function() {
           checkTime('initialization Begin');
           jQuery(initializeStack).each(function() {
             try {
@@ -1046,8 +1043,12 @@ var Panel2 = new function() {
             }
           });
           checkTime('initialization Finish');
-        }, environment == 'testing' && location.search.indexOf('gwpanel_pause') > 0?
-           600: 1);
+          instance.__load = null;
+        }
+        if(environment == 'testing' && location.search.indexOf('gwpanel_pause') != -1) {
+        } else {
+          setTimeout(instance.__load, 1);
+        }
       }, 'ganjawars.ru');
 
       checkTime('crossWindow init');
@@ -1074,7 +1075,7 @@ var Panel2 = new function() {
           if(!fastInitReady) {
             if(environment == 'testing' && location.search.indexOf('gwpanel_pause') != -1) {
               /// задержка инициализации, чтобы тесты могли встроить дополнительные функции
-              setTimeout(__initFunc, 200);
+              instance.__ready = __initFunc;
             } else {
               /// медленная инициализация
               __initFunc();
@@ -1610,31 +1611,33 @@ var Panel2 = new function() {
     *                    в котором хранятся указанные опции
     */
     setOptions: function(set_options, namespace, callback) {
-      if(jQuery.type(optionsID) == 'undefined') {
-        console.log('wrong optionsID: ' + optionsID);
-        console.log((new Error).stack);
-        return;
-      }
-      if(namespace && jQuery.type(namespace) != 'undefined') {
-        options[namespace] = set_options;
-      } else {
-        options = set_options;
-      }
-      var new_options = {};
-      for(var key in options) {
-        var type = jQuery.type(options[key]);
-        if(type != 'undefined' && options[key] !== null) {
-          new_options[key] = options[key];
+      instance.onload(function() {
+        if(jQuery.type(optionsID) == 'undefined') {
+          console.log('wrong optionsID: ' + optionsID);
+          console.log((new Error).stack);
+          return;
         }
-      }
-      options = new_options;
+        if(namespace && jQuery.type(namespace) != 'undefined') {
+          options[namespace] = set_options;
+        } else {
+          options = set_options;
+        }
+        var new_options = {};
+        for(var key in options) {
+          var type = jQuery.type(options[key]);
+          if(type != 'undefined' && options[key] !== null) {
+            new_options[key] = options[key];
+          }
+        }
+        options = new_options;
 
-      instance.set(optionsID, options, function() {
-        instance.triggerEvent('options_change', {options: options, 
-                              optionsID: optionsID, windowID: windowID});
-        if(callback) {
-          callback();
-        }
+        instance.set(optionsID, options, function() {
+          instance.triggerEvent('options_change', {options: options, 
+                                optionsID: optionsID, windowID: windowID});
+          if(callback) {
+            callback();
+          }
+        });
       });
     },
     

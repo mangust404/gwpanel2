@@ -338,14 +338,14 @@
                   current_options.blacklist.splice(index, 1);
                   panel.setOptions(current_options);
                 }
-                jQuery(this).parents('li').find('.add-settings').removeClass('ui-disabled');
+                jQuery(this).closest('li').find('.add-settings').removeClass('ui-disabled');
               } else {
                 ///добавляем в чёрный список, эта функция нигде подключаться не будет
                 current_options.blacklist = current_options.blacklist || [];
                 if(current_options.blacklist.indexOf(this.name) == -1)
                   current_options.blacklist.push(this.name);
                 panel.setOptions(current_options);
-                jQuery(this).parents('li').find('.add-settings').addClass('ui-disabled');
+                jQuery(this).closest('li').find('.add-settings').addClass('ui-disabled');
               }
             }).end();
             if(panel_apply.settings[func_name].configure) {
