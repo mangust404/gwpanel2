@@ -8,7 +8,7 @@
   "weight": 1, 
   "apply": {
     "/me/": ["example_func1"],
-    "*": ["example_func2"]
+    "*": ["example_func2", "example_highlight_players"]
   }, 
   "settings": {
     "example_func1": {
@@ -46,6 +46,10 @@
     },
     "example_func2": {
       "file": "example.js"
+    },
+    "example_highlight_players": {
+      "file": "example.js",
+      "description": "Пример подсветки игроков и аяксовой подгрузки данных"
     }
   },
   
