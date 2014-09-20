@@ -19,10 +19,11 @@ jQuery.extend(panel, {
       jQuery('b:contains("Статистика")').closest('tr').next().find('td:last').find('b').each(
         function(){
           if(this.previousSibling){
+            console.log(seekParams);
             for(var param in seekParams) {
               if(parseAndInsert(options[param], this, this.previousSibling, 
                 seekParams[param][0], seekParams[param][1], seekParams[param][2])) {
-                seekParams[param] = null;
+                delete seekParams[param];
                 break;
               }
             }
