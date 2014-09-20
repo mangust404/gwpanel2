@@ -3,12 +3,11 @@
   opacity: 1;
   position: fixed;
   padding: 20px;
-  z-index: 3;
+  z-index: 2;
   left: 20px;
   top: 10px;
   bottom: 10px;
   right: 20px;
-  z-index: 3;
   -webkit-transform-style: preserve-3d;
   -moz-transform-style: preserve-3d;
   transform-style: preserve-3d;  
@@ -200,4 +199,61 @@ body > #settings-form-popup {
 
 .ui-mobile .ui-page-active {
   overflow-x: visible !important;
+}
+
+body.panel-settings .pane-bubble:after {
+  content: '';
+  display: block;
+  height: 15px;
+  width: 15px;
+  position: fixed;
+  background: url(icons/settings.png) no-repeat left top / 100% auto;
+  margin-top: 30px;
+}
+
+body.panel-settings .pane-bubble {
+  opacity: 1;
+  z-index: 3;
+  display: block !important;
+}
+
+body.panel-settings .pane .container {
+  position: relative;
+}
+
+body.panel-settings .pane .ui-resizable-handle {
+  z-index: 10;
+  position: absolute;
+  width: 25px;
+  height: 25px;
+}
+
+body.panel-settings .pane .ui-resizable-handle.ui-resizable-se, 
+body.panel-settings .pane .ui-resizable-handle.ui-resizable-nw {
+  background: url(icons/resize-se.gif) no-repeat left top / 100% auto;
+}
+
+body.panel-settings .pane .ui-resizable-handle.ui-resizable-sw, 
+body.panel-settings .pane .ui-resizable-handle.ui-resizable-ne {
+  background: url(icons/resize-sw.gif) no-repeat left top / 100% auto;
+}
+
+body.panel-settings .pane .ui-resizable-handle.ui-resizable-se,
+body.panel-settings .pane .ui-resizable-handle.ui-resizable-ne {
+  right: 0;
+}
+
+body.panel-settings .pane .ui-resizable-handle.ui-resizable-se,
+body.panel-settings .pane .ui-resizable-handle.ui-resizable-sw {
+  bottom: 0;
+}
+
+body.panel-settings .pane .ui-resizable-handle.ui-resizable-sw,
+body.panel-settings .pane .ui-resizable-handle.ui-resizable-nw {
+  left: 0;
+}
+
+body.panel-settings .pane .ui-resizable-handle.ui-resizable-ne,
+body.panel-settings .pane .ui-resizable-handle.ui-resizable-nw {
+  top: 0;
 }

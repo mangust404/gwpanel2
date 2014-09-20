@@ -125,7 +125,8 @@
       /// подгружаем АБСОЛЮТНО все скрипты
       var scripts = [
                       //'lib/jquery.mobile-1.4.3.min.js'
-                      'lib/jquery.mobile.custom.min.js'
+                      'lib/jquery.mobile.custom.min.js',
+                      'lib/jquery-ui-1.9.2.custom.min.js'
                     ];
       for(var key in panel_apply.settings) {
         var file = panel_apply.settings[key].module + '/' + panel_apply.settings[key].file;
@@ -184,10 +185,41 @@
     var current_options = panel.getOptions();
     panel.panel_settings_init(function() {
       /// Редактирование настроек
-
+      jQuery(document.body).addClass('panel-settings');
       /// скрываем активные окна
       jQuery('.pane:visible').hide();
       jQuery('.pane-bubble.active').removeClass('active');
+
+      /// Добавляем ползунки уменьшения/увеличения окон
+      var listener = panel.bind('pane_show', function(paneID) {
+        $pane = jQuery('#pane-' + paneID)
+        /// определяем минимальные границы окна
+        var minLeft = 1;
+        var minTop = 1;
+        jQuery.each(current_options.panes[paneID].buttons, function() {
+          if(minLeft < this.left + 1) minLeft = this.left + 1;
+          if(minTop < this.top + 1) minTop = this.top + 1;
+        });
+        jQuery.each(current_options.panes[paneID].widgets, function() {
+          if(minLeft < this.left + this.width) minLeft = this.left + this.width;
+          if(minTop < this.top + this.height) minTop = this.top + this.height;
+        });
+
+        $pane.resizable({
+          grid: [current_options.system.btnwidth, current_options.system.btnheight],
+          handles: ($pane.hasClass('top')? 's': 'n') + ($pane.hasClass('left')? 'e': 'w'),
+          minWidth: minLeft * current_options.system.btnwidth,
+          minHeight: minTop * current_options.system.btnheight,
+          stop: function(event, ui) {
+            var current_options = panel.getOptions();
+            current_options.panes[paneID].width = 
+              parseInt(parseInt($pane.css('width')) / current_options.system.btnwidth) || 6;
+            current_options.panes[paneID].height = 
+              parseInt(parseInt($pane.css('height')) / current_options.system.btnheight) || 4;
+            panel.setOptions(current_options);
+          }
+        });
+      });
 
       if(jQuery('#panel-settings-editor').length) {
         jQuery('#panel-settings-editor').show();
@@ -227,6 +259,7 @@
 
       jQuery('<a class="close-settings ui-btn ui-btn-icon-right ui-icon-delete ui-btn-inline">Закрыть</a>')
         .click(function() {
+           jQuery(document.body).removeClass('panel-settings');
            jQuery('#panel-settings-editor').fadeOut(function() {
             jQuery('#panel-settings-editor, #settings-form-popup').remove();
           });

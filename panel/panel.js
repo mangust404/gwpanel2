@@ -94,6 +94,7 @@ var Panel2 = new function() {
       if(pane.css('display') == 'none') {
         hideAllPanes();
         pane.show();
+        instance.triggerEvent('pane_show', paneID);
         jQuery('#pane-bubble-' + paneID).addClass('active');
       } else if(e && e.type == 'click') {
         hideAllPanes();
@@ -199,7 +200,7 @@ var Panel2 = new function() {
             if(that[0].clicked) return false;
             that[0].dragging = true;
             if(that.hasClass('ui-draggable') || e.which != 1) return false;
-            instance.loadScript('lib/jquery-ui.custom.js', function() {
+            instance.loadScript('lib/jquery-ui-1.9.2.custom.min.js', function() {
               //alert('ui loaded');
               // Создаём placeholders ("пустые места") для перетаскивания
               var widget_height = Math.round(parseInt(that.css('height')) / options.system.btnheight);
@@ -519,6 +520,7 @@ var Panel2 = new function() {
       jQuery('.pane-bubble.active').removeClass('active');
       jQuery('#pane-bubble-' + paneID).addClass('active');
       pane.appendTo(document.body);
+      instance.triggerEvent('pane_show', paneID);
     }
     // Ловим события о перемещении из других окон
     instance.bind('widget_move', function(data) {
@@ -710,7 +712,7 @@ var Panel2 = new function() {
               if(that[0].clicked) return false;
               that[0].dragging = true;
               if(that.hasClass('ui-draggable') || e.which != 1) return false;
-              instance.loadScript('lib/jquery-ui.custom.js', function() {
+              instance.loadScript('lib/jquery-ui-1.9.2.custom.min.js', function() {
                 //alert('ui loaded');
                 // Создаём placeholders ("пустые места") для перетаскивания
                 var id = that.attr('id');
