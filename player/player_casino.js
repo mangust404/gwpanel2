@@ -1,4 +1,11 @@
 (function(panel) {
+
+var gMoney = {
+  "in": 0,
+  "out": 0,
+  "difference": 0
+};
+
 jQuery.extend(panel, {
   player_casino: function(options) {
     var labelTextOfMoney;
@@ -21,20 +28,14 @@ jQuery.extend(panel, {
 });
 
 function parseAndInsert(key, object, labelTextOfMoney, stringIn, stringOut, stringDifference){
-  var money = {
-      "in": 0,
-      "out": 0,
-      "difference": 0
-  };
-
   if(key){
     if(jQuery(labelTextOfMoney).text().search(stringIn) != -1){
-      money.in = panel.convertingMoneyToInt(jQuery(object).text());
+      gMoney.in = panel.convertingMoneyToInt(jQuery(object).text());
     }
     if(jQuery(labelTextOfMoney).text().search(stringOut) != -1){
-      money.out = panel.convertingMoneyToInt(jQuery(object).text());
-      money.difference = money.out - money.in;
-      jQuery(object).next().after("&nbsp;&nbsp;" + stringDifference + ": <b>" + panel.convertingIntToMoney(money.difference) + "</b><br>");
+      gMoney.out = panel.convertingMoneyToInt(jQuery(object).text());
+      gMoney.difference = gMoney.out - gMoney.in;
+      jQuery(object).next().after("&nbsp;&nbsp;" + stringDifference + ": <b>" + panel.convertingIntToMoney(gMoney.difference) + "</b><br>");
     }
   }
 }
