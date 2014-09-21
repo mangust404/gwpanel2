@@ -265,8 +265,8 @@ body.panel-settings .pane .configure {
   height: 100%;
   width: 100%;
   cursor: pointer;
-  background: url(icons/settings.png) no-repeat center center / 30px auto;
-  background-color: rgba(181, 230, 181, 0.25);
+  background: url(icons/settings_small.png) no-repeat center center / 30px auto;
+  background-color: rgba(100, 145, 100, 0.7);
 }
 
 .widget.configuring, .button.configuring {
