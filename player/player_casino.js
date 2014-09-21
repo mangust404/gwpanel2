@@ -8,13 +8,12 @@ var gMoney = {
 
 jQuery.extend(panel, {
   player_casino: function(options) {
-    if(jQuery('body:contains("Internal error")').length) return;                              // не перс стерт - выходим
-
     var seekParams = {
       roulette: ["Потрачено в казино", "Выигрыш в казино", "Разница в казино"],
-      total: ["Потрачено в тотализаторе", "Выигрыш в тотализаторе", "Разница в тотализаторе"],
-      poker: ["Потрачено на покер", "Получено с покера", "Разница в покере"]
+      total:    ["Потрачено в тотализаторе", "Выигрыш в тотализаторе", "Разница в тотализаторе"],
+      poker:    ["Потрачено на покер", "Получено с покера", "Разница в покере"]
     };
+
     if(options.roulette || options.total || options.poker){                              // какая-то инфа будет показана
       jQuery('b:contains("Статистика")').closest('tr').next().find('td:last').find('b').each(
         function(){
