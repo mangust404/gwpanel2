@@ -1,0 +1,8 @@
+doc/
+apply.js
+bootstrap.js
+bootstrap_pda.js
+bootstrap_container.js
+version
+version_production.js
+panel/production
