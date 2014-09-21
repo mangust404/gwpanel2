@@ -1,3 +1,14 @@
+String.prototype.hashCode = function(){
+  var hash = 0;
+  if (this.length == 0) return hash;
+  for (i = 0; i < this.length; i++) {
+    char = this.charCodeAt(i);
+    hash = ((hash<<5)-hash)+char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash;
+}
+
 var Panel2 = new function() {
   /**
   * Защищённые аттрибуты
@@ -10,6 +21,8 @@ var Panel2 = new function() {
   /// Возможные варианты: dev, production, deploy, testing
   var environment;
   var original_environment;
+  /// слушатели сброса кеша
+  var cacheListeners;
   /// текущая версия
   var version;
   /// уникальный идентификатор открытого окна
@@ -1129,6 +1142,24 @@ var Panel2 = new function() {
         initInterface();
       });
 
+      instance.onload(function() {
+        instance.get('cacheListeners', function(data) {
+          cacheListeners = data || {};
+          jQuery.each(cacheListeners, function(__event, listeners) {
+            /// слушаем событие event
+            instance.bind(__event, function() {
+              for(var i = 0; i < listeners.length; i++) {
+                /// удаляем все записи
+                instance.del(listeners[i]);
+                listeners.splice(i, 1);
+              }
+              /// Удаляем всех слушателей
+              delete cacheListeners[__event];
+              instance.set('cacheListeners', cacheListeners);
+            });
+          });
+        });
+      });
     },
     /**
     * Обработка исключений. Если есть консоль, то выводим в консоль.
@@ -1531,7 +1562,7 @@ var Panel2 = new function() {
     *                то событие отработает только в текущем окне
     */
     triggerEvent: function(type, data, local) {
-      return instance.crossWindow.triggerEvent(type, data, local);
+      return instance.crossWindow.triggerEvent(type, data || {}, local);
     },
     
     /**
@@ -1972,6 +2003,58 @@ var Panel2 = new function() {
         result = false;
       }
       return result;
+    },
+
+    /**
+     * Метод для кеширования данных
+     * @param generator {function} - функция-генератор данных
+     *   в эту функцию первым параметром передаётся callback, который вы должны вызвать
+     *   когда получите и обработаете данные, и первым аргументом передать эти данные
+     *   После этого эти данные кладутся в кеш, и при повторном вызове вернутся из кеша
+     * @param callback {function} - функция, которую нужно вызвать когда данные получены,
+     *   в ней вы должны осуществлять прорисовку, вывод и т.д.
+     * @param condition {string|int} - таймаут в секундах или строка - имя события
+     *   Если указано число, то кеш будет лежать указанное кол-во секунд, когда указанное
+     *   время истечёт, кеш будет получен и записан заново.
+     *   Если указана строка, то кеш будет сброшен после наступления этого события.
+     */
+    getCached: function(generator, callback, condition) {
+      var cid = 'cached_' + generator.toString().replace(/[\n\s\t]/g, '').hashCode();
+      instance.get(cid, function(data) {
+        if(jQuery.type(data) == 'null' || 
+          (data.type == 'time' && data.expiration < (new Date).getTime())
+          ) {
+          /// Генерируем
+          data = {
+            type: isNaN(condition)? 'event': 'time'
+          };
+          if(data.type == 'time') {
+            data.expiration = (new Date).getTime() + condition * 1000;
+          } else {
+            /// Устанавливаем слежку за событием
+            instance.bind(condition, function() {
+              instance.del(cid);
+            });
+            /// Добавляем запись кеша к слушателям кеша
+            if(!cacheListeners[condition]) cacheListeners[condition] = [];
+            if(cacheListeners[condition].indexOf(cid) == -1) {
+              cacheListeners[condition].push(cid);
+              instance.set('cacheListeners', cacheListeners);
+            }
+          }
+          /// запускаем генератор
+          generator(function(generated_data) {
+            data.data = generated_data;
+            /// Записываем данные
+            instance.set(cid, data, function() {
+              callback(data.data);
+            });
+          });
+        } else {
+          /// данные в кеше есть и они не истекли, вызываем обратную функцию
+          callback(data.data);
+        }
+      });
     },
     /**
     * Публичные аттрибуты

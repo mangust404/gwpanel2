@@ -106,7 +106,7 @@ jQuery.extend(panel, {
           .append(jQuery('<td></td>')
             .append(links)
           )
-          .append(jQuery('<td></td>')
+          .append(jQuery('<td width="60"></td>')
             .append('<span class="timer npc' + id + 'timer"></span>')
           )
           .append(jQuery('<td></td>')

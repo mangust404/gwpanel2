@@ -2245,3 +2245,109 @@ QUnit.asyncTest('Проверка функции checkPanePlaces', function(asse
   });
 
 });
+
+QUnit.asyncTest('Тестирование функции getCached с истечением по времени', function(assert) {
+  var val1 = Math.random() * 10000000;
+  var generator = 0;
+
+  __panel.getCached(function(callback) {
+    generator++;
+    callback(val1);
+  }, function(data) {
+    assert.equal(data, val1);
+  }, 2)
+  __panel.getCached(function(callback) {
+    generator++;
+    callback(val1);
+  }, function(data) {
+    assert.equal(data, val1);
+  }, 2);
+
+  setTimeout(function() {
+    __panel.getCached(function(callback) {
+      generator++;
+      callback(val1);
+    }, function(data) {
+      assert.equal(data, val1);
+    }, 2)
+  }, 1000);
+
+  setTimeout(function() {
+    __panel.getCached(function(callback) {
+      generator++;
+      callback(val1);
+    }, function(data) {
+      assert.equal(data, val1);
+      assert.equal(generator, 2, 'Генератор должен быть вызван два раза');
+      QUnit.start();
+    }, 2)
+  }, 3000);
+});
+
+QUnit.asyncTest('Тестирование функции getCached с истечением по событию', function(assert) {
+  var val2 = Math.random() * 10000000;
+  var generator = 0;
+
+  /// Для запуска теста мы должны удостовериться что данных по этому кешу нет
+  /// привязываемся к этому событию, чтобы затем вызвать его, и тем самым
+  /// очистить кеш от предыдущего запуска
+  var listen = __panel.bind('test_cached_event', function() {
+    /// теперь мы можем быть уверены что данные от предыдущего запуска стёрлись
+    /// иначе тест покажет несоответствие
+    runTest();
+  });
+
+  __panel.getCached(function(callback) {
+    generator++;
+    callback(val2);
+  }, function(data) {
+    // здесь значение из предыдущего теста
+  }, 'test_cached_event');
+
+  setTimeout(function() {
+    /// запуск события
+    __panel.triggerEvent('test_cached_event');
+  }, 1000);
+
+  function runTest() {
+    /// Теперь данные гарантированно должны быть удалены
+    /// удаляем слушателя событий чтобы тест не запустился повторно
+    __panel.unbind('test_cached_event', listen);
+    __panel.getCached(function(callback) {
+      generator++;
+      callback(val2);
+    }, function(data) {
+      assert.equal(data, val2);
+    }, 'test_cached_event')
+    __panel.getCached(function(callback) {
+      generator++;
+      callback(val2);
+    }, function(data) {
+      assert.equal(data, val2);
+    }, 'test_cached_event');
+
+    setTimeout(function() {
+      __panel.getCached(function(callback) {
+        generator++;
+        callback(val2);
+      }, function(data) {
+        assert.equal(data, val2);
+        assert.equal(generator, 2, 'Генератор должен быть вызван два раза');
+      }, 'test_cached_event');
+
+      __panel.bind('test_cached_event', function() {
+        __panel.getCached(function(callback) {
+          generator++;
+          callback(val2);
+        }, function(data) {
+          assert.equal(data, val2);
+          assert.equal(generator, 3, 'Генератор должен быть вызван три раза');
+          QUnit.start();
+        }, 'test_cached_event');
+      });
+      
+      __panel.triggerEvent('test_cached_event');
+
+    }, 2000);
+  }
+});
