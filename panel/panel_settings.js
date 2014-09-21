@@ -560,7 +560,6 @@
           } else {
             jQuery.extend(new_options, window.panelSettingsCollection[jQuery('#add-collection').val()]);
           }
-          console.log(new_options);
           panel.set(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + id, new_options, function() {
             panel.showFlash('Новый набор настроек добавлен.', 'message', 5000);
           });
@@ -592,7 +591,7 @@
                 if(jQuery('#variant-name').val() == id) {
                   jQuery('#variant-name').val('default').change();
                 }
-                variant_select.find('options[value=' + id + ']').remove();
+                variant_select.find('option[value=' + id + ']').remove();
                 jQuery(this).closest('.ui-checkbox').remove();
                 delete variants[id];
                 panel.del(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + id);
