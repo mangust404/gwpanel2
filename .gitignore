@@ -6,3 +6,5 @@ bootstrap_container.js
 version
 version_production.js
 panel/production
+/gwpanel2.user.js
+/.idea
