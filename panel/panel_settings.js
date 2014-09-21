@@ -280,7 +280,6 @@
       <h3 class="footer">Вы можете отключить ненужные для вас функции, убрав галочку с соответствующей опции</h3>\
     </div> \
     <div id="edit-other-wrapper" style="display: none;" class="edit-wrapper">\
-    <h2>Опции:</h2>\
     </div> \
     <hr class="footer-delim" />\
     <div class="close-button-wrapper"></div>\
@@ -484,6 +483,127 @@
           jQuery('#' + this.href.split('#')[1]).show();
           return false;
         });
+
+      panel.get('variants_' + panel.currentPlayerID(), function(variants) {
+
+        variants = variants || {default: 'По-умолчанию'};
+        jQuery('<label for="variant-name">Сейчас используется вариант настроек:</label>').appendTo('#edit-other-wrapper');
+        var variant_select = jQuery('<select id="variant-name" name="variant"></select>').change(function() {
+          panel.set('options_variant_' + panel.currentPlayerID(), jQuery(this).val(), function() {
+            panel.showFlash('Настройки изменены. Пожалуйста, перезагрузите страницу чтобы увидеть изменения.', 'message', 5000);
+          });
+        });
+
+        panel.get('options_variant_' + panel.currentPlayerID(), function(current_variant) {
+          jQuery.each(variants, function(name, title) {
+            variant_select.append('<option value="' + name + '"' + 
+              (current_variant == name? ' selected="selected"': '') + 
+              '>' + title + '</option>');
+          });
+        });
+        var n = jQuery('<div class="add-options-variant ui-corner-all custom-corners" data-role="collapsible">\
+  <h3>Добавить новый вариант</h3>\
+  <div class="ui-body ui-body-a">\
+  </div>');
+        var fieldset = n.find('.ui-body');
+        jQuery('<label for="add-title">Название</label><input id="add-title" name="title" type="text" />').appendTo(fieldset);
+
+        jQuery('<label for="add-title">Копировать из коллекции</label>').appendTo(fieldset);
+        var collection = jQuery('<select id="add-collection" name="collection"></select').appendTo(fieldset);
+
+        collection.append('<option value="">Пустые настройки, с нуля</option>');
+
+        jQuery.each(window.panelSettingsCollection, function(id, val) {
+          collection.append('<option value="' + id + '">' + val.title + '</option>');
+        });
+
+        jQuery('<div style="margin: 30px 0;" />').appendTo(fieldset);
+        jQuery('<input type="submit" value="Добавить">').click(function() {
+          var name = jQuery('#add-title').val();
+          if(!name) {
+            jQuery('#add-title').focus();
+            panel.showFlash('Пожалуйста, укажите имя', 'error', 5000);
+            return false;
+          }
+          for(var key in variants) {
+            if(variants[key] == name) {
+              jQuery('#add-title').focus();
+              panel.showFlash('Настройки с таким именем уже существуют', 'error', 5000);
+              return false;
+            }
+          }
+          var id = jQuery('#add-collection').val() || 'noname';
+          var index = 0;
+          for(var key in variants) {
+            if(key.search(new RegExp(id + '[0-9]+')) > -1) {
+              index = parseInt(key.substr(id.length)) + 1;
+            }
+          }
+          id += String(index);
+          variants[id] = name;
+
+          variant_select.append('<option value="' + id + '">' + name + '</option>');
+          panel.set('variants_' + panel.currentPlayerID(), variants);
+
+          var new_options = {};
+          if(jQuery('#add-collection').val() == '') {
+            /// минимальный набор настроек, чтобы панель работала
+            jQuery.extend(new_options, {
+              system: {theme: 'base', btnwidth:70, btnheight: 85},
+              panes: [ {width: 6, height: 4, buttons: [{type: 'panel_settings', left: 0, top: 0}], widgets: []}, 
+                       {width: 6, height: 4, buttons: [], widgets: []},
+                       {width: 6, height: 4, buttons: [], widgets: []},
+                       {width: 6, height: 4, buttons: [], widgets: []}
+                     ],
+              widgets: []
+            });
+          } else {
+            jQuery.extend(new_options, window.panelSettingsCollection[jQuery('#add-collection').val()]);
+          }
+          console.log(new_options);
+          panel.set(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + id, new_options, function() {
+            panel.showFlash('Новый набор настроек добавлен.', 'message', 5000);
+          });
+
+          jQuery('#add-title').val('');
+          jQuery('.add-options-variant').collapsible('collapse');
+          return false;
+        }).appendTo(fieldset);
+      
+        if(Object.keys(variants).length > 1) {
+          var d = jQuery('</div><div class="remove-options-variant ui-corner-all custom-corners" data-role="collapsible">\
+  <h3>Удалить настройки</h3>\
+  <div class="ui-body ui-body-a">\
+  </div>\
+</div>');
+          jQuery.each(variants, function(id, name) {
+            if(id == 'default') return;
+            jQuery('<label for="del-variant-' + id + '">' + name
+              + '</label><input id="del-variant-' + id + '" type="checkbox" value="' + id + '">')
+              .appendTo(d.find('.ui-body'));
+          });
+          jQuery('<input type="submit" value="Удалить" />').click(function() {
+            var names = jQuery('.remove-options-variant input[type=checkbox]:checked')
+              .prev('label').map(function() { return jQuery(this).text()})
+              .get().join(', ');
+            if(confirm('Вы действительно хотите удалить выбранные настройки? (' + names + ')')) {
+              jQuery('.remove-options-variant input[type=checkbox]:checked').each(function() {
+                var id = jQuery(this).val();
+                if(jQuery('#variant-name').val() == id) {
+                  jQuery('#variant-name').val('default').change();
+                }
+                variant_select.find('options[value=' + id + ']').remove();
+                jQuery(this).closest('.ui-checkbox').remove();
+                delete variants[id];
+                panel.del(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + id);
+              });
+              panel.set('variants_' + panel.currentPlayerID(), variants);
+            }
+            return false;
+          }).appendTo(d.find('.ui-body'));
+        }
+        jQuery('#edit-other-wrapper').append(variant_select).append(n).append(d).trigger('create');
+      });
     });
     },
 
