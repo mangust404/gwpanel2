@@ -1,6 +1,7 @@
 (function(panel) {
   /// приватные переменные
   var editor;
+  var listener;
   /// приватные функции
   /**
   * Функция вывода дополнительных настроек
@@ -57,12 +58,12 @@
           });
         break;
         case 'select':
-          var s = jQuery('<select id="param-' + widget.id + '-' + param + 
-            '" name="' + widget.id + '_' + param + '"></select>');
+          var __id = 'param-' + widget.id + '-' + param;
+          var s = jQuery('<select id="' + __id + '" name="' + widget.id + '_' + param + '"></select>');
           var is_array = jQuery.type(this.options) == 'array';
           s.append('<option value=""' + 
                 '>Укажите ' + this.title + '</option>');
-          jQuery.each(this.options, function(key) {
+          jQuery.each(this.options || {}, function(key) {
             if(is_array) {
               s.append('<option value="' + this + '"' + 
                 (this == current_value? ' selected="selected"': '') + 
@@ -76,6 +77,7 @@
           s.appendTo(append_to).change(function() {
             change_callback(param, jQuery(this).val());
           });
+          s.before('<label for="' + __id + '">' + this.title + '</label>');
         break;
         case 'checkbox':
           jQuery('<label for="param-' + widget.id + '-' + param + '">' + this.title + '</label>').appendTo(append_to);
@@ -89,12 +91,12 @@
             });
         break;
         case 'text':
-          jQuery('<input name="' + widget.id + '_' + param + 
-            '" id="param-' + widget.id + '-' + param + '"' +
-            ' type="text" value="' + 
+          var __id = 'param-' + widget.id + '-' + param;
+          jQuery('<label for="' + __id + '">' + this.title + 
+            '</label><input name="' + widget.id + '_' + param + 
+            '" id="' + __id + '" type="text" value="' + 
               current_value + '"' + 
-              ' placeholder="' + (this.title == undefined? '': this.title + ' ') + 
-              this.default + '">')
+              ' placeholder="' + this.default + '">')
             .appendTo(append_to)
             .change(function() {
               change_callback(param, this.value);
@@ -159,6 +161,11 @@
             }
           }
         }
+        jQuery.each(button.configure || {}, function(i) {
+          if(this.file && scripts.indexOf(button.module + '/' + this.file) == -1) {
+            scripts.push(button.module + '/' + this.file);
+          }
+        });
       }
       for(var key in panel_apply.widgets) {
         var widget = panel_apply.widgets[key];
@@ -174,6 +181,11 @@
             }
           }
         }
+        jQuery.each(widget.configure || {}, function(i) {
+          if(this.file && scripts.indexOf(widget.module + '/' + this.file) == -1) {
+            scripts.push(widget.module + '/' + this.file);
+          }
+        });
       }
       panel.loadScript(scripts, callback);
     },
@@ -191,7 +203,7 @@
       jQuery('.pane-bubble.active').removeClass('active');
 
       /// Добавляем ползунки уменьшения/увеличения окон
-      var listener = panel.bind('pane_show', function(paneID) {
+      listener = panel.bind('pane_show', function(paneID) {
         $pane = jQuery('#pane-' + paneID)
         /// определяем минимальные границы окна
         var minLeft = 1;
@@ -219,6 +231,26 @@
             panel.setOptions(current_options);
           }
         });
+        if(!$pane.find('.configure').length) {
+          $pane.addClass('configuring')
+            .find('.button, .widget').addClass('configuring').append(
+            jQuery('<div class="configure"></div>').click(function() {
+              var parent = $(this).closest('.button, .widget');
+              if(parent.hasClass('button')) {
+                var type = 'button';
+              } else {
+                var type = 'widget';
+              }
+              var data = current_options.panes[paneID][type + 's'][parent.attr('index')];
+              var _class = panel_apply[type + 's'][data.type];
+              data.paneID = paneID;
+              panel.panel_settings_form(_class, type, data, true);
+              jQuery('#settings-form-popup').popup('open');
+
+              return false;
+            })
+          );
+        }
       });
 
       if(jQuery('#panel-settings-editor').length) {
@@ -259,8 +291,11 @@
 
       jQuery('<a class="close-settings ui-btn ui-btn-icon-right ui-icon-delete ui-btn-inline">Закрыть</a>')
         .click(function() {
-           jQuery(document.body).removeClass('panel-settings');
-           jQuery('#panel-settings-editor').fadeOut(function() {
+          jQuery(document.body).removeClass('panel-settings');
+          jQuery('.configuring').removeClass('configuring');
+          jQuery('.configure').removeClass('configure');
+          panel.unbind('pane_show', listener);
+          jQuery('#panel-settings-editor').fadeOut(function() {
             jQuery('#panel-settings-editor, #settings-form-popup').remove();
           });
           return false;
@@ -470,6 +505,9 @@
                 if(widgetKind == 'float') {
                   current_options.widgets.splice(widgetData.index, 1);
                   jQuery('#float-' + widgetData.index + '-' + widgetData.type).remove();
+                } else {
+                  current_options.panes[widgetData.paneID][widgetKind + 's'].splice(widgetData.index, 1);
+                  jQuery('#' + widgetData.id).remove();
                 }
                 panel.showFlash('Виджет удалён');
                 panel.setOptions(current_options);
@@ -493,9 +531,9 @@
 
         /// Для кнопок добавляем возможность редактировать текст
         if(widgetKind == 'button') {
-          jQuery('<input maxlength="32" name="title" id="param-title"' +
+          jQuery('<label for="param-title">Текст кнопки</label><input maxlength="32" name="title" id="param-title"' +
             ' type="text" value="' + (__data.title == undefined? '': __data.title) + 
-              '" placeholder="текст кнопки">')
+              '" placeholder="' + widgetClass.title + '">')
             .appendTo(setting_content);
         }
 
@@ -574,6 +612,8 @@
               var displace;
               if(widgetKind == 'float') {
                 displace = 'float';
+              } else if(isEdit) {
+                displace = widgetData.paneID;
               } else {
                 jQuery('input[name=displace]').each(function() {
                   if(this.checked) {
@@ -630,17 +670,23 @@
                     '.', 'message', 5000);
                   panel.redrawFloatWidgets();
                 } else {
-                  if(isNaN(__data.index)) {
-                    current_options.panes[displace].widgets.push(__data);
-                  } else {
+                  if(isEdit) {
                     current_options.panes[displace].widgets[__data.index] = __data;
+                  } else {
+                    current_options.panes[displace].widgets.push(__data);
                   }
-                  panel.showFlash('Виджет добавлен', 'message', 5000);
+                  panel.showFlash('Виджет ' + (isEdit? 'сохранён': 'добавлен') + 
+                    '.', 'message', 5000);
                 }
               } else if(widgetKind == 'button') {
-                __data.title = jQuery('#param-title').val() || __data.title || '';
+                __data.title = jQuery('#param-title').val();
                 displace = parseInt(displace);
-                if(!isEdit) {
+                if(isEdit) {
+                  /// Меняем заголовок кнопки сразу
+                  jQuery('#pane-' + displace + ' #' + __data.id + ' a h3').html(
+                    __data.title || widgetClass.title
+                  );
+                } else {
                   /// Создаём идентификатор
                   for(var i = 0; i < current_options.panes[displace].buttons.length; i++) {
                     if(current_options.panes[displace].buttons[i].type == widgetData.type) {
@@ -655,16 +701,16 @@
                   __data.left = places[1];
                 }
                 var index = 0;
-                if(isNaN(__data.index)) {
-                  current_options.panes[displace].buttons.push(__data);
-                } else {
+                if(isEdit) {
                   current_options.panes[displace].buttons[__data.index] = __data;
+                } else {
+                  current_options.panes[displace].buttons.push(__data);
                 }
                 panel.showFlash('Кнопка ' + (isEdit? 'изменена': 'добавлена') + 
-                  '. Обновите страницу чтобы его увидеть.', 'message', 5000);
+                  '.', 'message', 5000);
               }
 
-              if(!isNaN(displace) && widgetKind != 'float') {
+              if(!isNaN(displace) && widgetKind != 'float' && !isEdit) {
                 if($('#pane-' + displace).length) {
                   /// заставляем панель перерисовать окно
                   $('#pane-' + displace).remove();
