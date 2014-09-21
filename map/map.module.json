@@ -39,7 +39,7 @@
           "file": "map_sectors.js"
         }
       },
-      "img": "icons/home.png", 
+      "img": "home.png", 
       "callback": "map_gohome", 
       "file": "map_buttons.js",
       "description": "Переход в домашний сектор"
@@ -55,7 +55,7 @@
           "file": "map_sectors.js"
         }
       },
-      "img": "icons/anchor.png", 
+      "img": "anchor.png", 
       "callback": "map_goport", 
       "file": "map_buttons.js",
       "description": "Переход в портовый сектор"
@@ -71,7 +71,7 @@
           "file": "map_sectors.js"
         }
       },
-      "img": "icons/outland.png", 
+      "img": "outland.png", 
       "callback": "map_goout", 
       "file": "map_buttons.js",
       "description": "Кнопка отплытия на Outland"
@@ -87,7 +87,7 @@
           "file": "map_sectors.js"
         }
       },
-      "img": "icons/overlord.png", 
+      "img": "overlord.png", 
       "callback": "map_gooverlord", 
       "file": "map_buttons.js",
       "description": "Кнопка отплытия в Overlord"

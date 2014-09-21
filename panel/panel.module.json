@@ -38,19 +38,19 @@
       "callback": "panel_link", 
       "file": "panel_buttons.js",
       "description": "Любая ссылка на любую страницу",
-      "img": "icons/link.png"
+      "img": "link.png"
     },
     "settings": {
       "title": "Настройки",
       "callback": "panel_settings_editor",
       "file": "panel_settings.js",
-      "img": "icons/settings.png",
+      "img": "settings.png",
       "description": "Кнопка настроек"
     },
     "exit": {
       "title": "Выход",
       "callback": "panel_exit",
-      "img": "icons/exit.png",
+      "img": "exit.png",
       "description": "Кнопка выхода из игры"
     }
   }
