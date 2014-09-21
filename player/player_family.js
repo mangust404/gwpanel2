@@ -1,13 +1,11 @@
 (function(panel) {
 jQuery.extend(panel, {
   player_family: function(options){
-    if(jQuery('body:contains("Internal error")').length) return;                              // не перс стерт - выходим
-
     var $family;
     var family, i, length;
 
     $family = jQuery('b:contains("Семья")');
-    if($family){
+    if($family.length){
       family = jQuery($family.get(0).nextSibling).text();
       if(family.search(', ') != -1){
         family = family.split(',');
@@ -24,8 +22,7 @@ jQuery.extend(panel, {
       }
       family = family.join(',');
 
-      jQuery($family.get(0).nextSibling).remove();
-      $family.after(family);
+      jQuery($family.get(0).nextSibling).replaceWith(family);
     }
   }
 });
