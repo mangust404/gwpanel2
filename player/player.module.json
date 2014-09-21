@@ -7,7 +7,10 @@
   "author_link": "http://www.ganjawars.ru/info.php?id=433067",
   "weight": 1, 
   "apply": {
-    "/info.php": ["player_casino"]
+    "/info.php": [
+      "player_casino",
+      "player_family"
+    ]
   }, 
   "settings": {
     "player_casino": {
@@ -30,6 +33,10 @@
           "default": true
         }
       }
+    },
+    "player_family": {
+      "file": "player_family.js",
+      "description": "Ссылки на персонажей семьи игрока"
     }
   }
 }
