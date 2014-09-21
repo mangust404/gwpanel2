@@ -9,7 +9,8 @@
   "apply": {
     "/info.php": [
       "player_casino",
-      "player_family"
+      "player_family",
+      "player_carma"
     ]
   }, 
   "settings": {
@@ -37,6 +38,10 @@
     "player_family": {
       "file": "player_family.js",
       "description": "Ссылки на персонажей семьи игрока"
+    },
+    "player_carma": {
+      "file": "player_carma.js",
+      "description": "Скрывать карму игроков"
     }
   }
 }
