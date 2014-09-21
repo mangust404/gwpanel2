@@ -31,24 +31,23 @@
           "title": "Друзья",
           "options": "__panel.npc_list_z",
           "default": [],
-          "file": "npc/npc_list.js"
+          "file": "npc_list.js"
         },
         "enemies": {
           "type": "checkboxes",
           "title": "Враги",
           "options": "__panel.npc_list_z",
           "default": [],
-          "file": "npc/npc_list.js"
+          "file": "npc_list.js"
         },
         "undress": {
           "type": "checkbox",
           "title": "Раздеваться при начале разговора :)",
           "options": "",
           "default": false,
-          "file": "npc/npc_list.js"
+          "file": "npc_list.js"
         }
       },
-      "config_files": ["npc/npc_list.js"],
       "callback": "npc_widget",
       "arguments": [2],
       "file": "npc_widgets.js", 
@@ -64,21 +63,21 @@
           "title": "Друзья",
           "options": "__panel.npc_list_g",
           "default": [],
-          "file": "npc/npc_list.js"
+          "file": "npc_list.js"
         },
         "enemies": {
           "type": "checkboxes",
           "title": "Враги",
           "options": "__panel.npc_list_g",
           "default": [],
-          "file": "npc/npc_list.js"
+          "file": "npc_list.js"
         },
         "undress": {
           "type": "checkbox",
           "title": "Раздеваться при начале разговора :)",
           "options": "",
           "default": false,
-          "file": "npc/npc_list.js"
+          "file": "npc_list.js"
         }
       },
       "callback": "npc_widget",
@@ -96,21 +95,21 @@
           "title": "Друзья",
           "options": "__panel.npc_list_p",
           "default": [],
-          "file": "npc/npc_list.js"
+          "file": "npc_list.js"
         },
         "enemies": {
           "type": "checkboxes",
           "title": "Враги",
           "options": "__panel.npc_list_p",
           "default": [],
-          "file": "npc/npc_list.js"
+          "file": "npc_list.js"
         },
         "undress": {
           "type": "checkbox",
           "title": "Раздеваться при начале разговора :)",
           "options": "",
           "default": false,
-          "file": "npc/npc_list.js"
+          "file": "npc_list.js"
         }
       },
       "callback": "npc_widget",

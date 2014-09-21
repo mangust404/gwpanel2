@@ -23,10 +23,10 @@
             if(endTime <= now) {
               __panel.triggerEvent('npc_timer', {type: data.timer, id: data.id, timeout: data.timeout});
               clearInterval(npcIntervals[data.id]);
-              widget.find('#npc' + data.id + 'timer').html('');
+              widget.find('.npc' + data.id + 'timer').html('');
               return;
             }
-            widget.find('#npc' + data.id + 'timer').html(npc_timerFormat(parseInt((endTime - now) / 1000))).attr('title', 'Время до следующего квеста');
+            widget.find('.npc' + data.id + 'timer').html(npc_timerFormat(parseInt((endTime - now) / 1000))).attr('title', 'Время до следующего квеста');
           }, 1000);
           
         break;
@@ -37,10 +37,10 @@
             if(endTime <= now) {
               __panel.triggerEvent('npc_timer', {type: data.timer, id: data.id, timeout: data.timeout});
               clearInterval(npcIntervals[data.id]);
-              widget.find('#npc' + data.id + 'timer').html('');
+              widget.find('.npc' + data.id + 'timer').html('');
               return;
             }
-            widget.find('#npc' + data.id + 'timer').html(npc_timerFormat(parseInt((endTime - now) / 1000))).attr('title', 'Время до следующего нападения');
+            widget.find('.npc' + data.id + 'timer').html(npc_timerFormat(parseInt((endTime - now) / 1000))).attr('title', 'Время до следующего нападения');
           }, 1000);
           
         break;
@@ -76,12 +76,12 @@ jQuery.extend(panel, {
           return false;
         }
         var links = jQuery('<span class="links npc' + id + 'links"></span>');
-        if(options.friends.indexOf(id) != -1) {
+        if(options.friends.indexOf(String(id)) != -1) {
           links.append(jQuery('<a href="http://www.ganjawars.ru/npc.php?id=' + id + '&'
              + (options.undress? 'gwp': '') + 'talk=1" title="Начать разговор">\
              <img src="http://images.ganjawars.ru/i/home/friends.gif"></a>')
             .click(npcMoveFunc));
-        } else if(options.enemies.indexOf(id) != -1) {
+        } else if(options.enemies.indexOf(String(id)) != -1) {
           links.append(jQuery('<a href="http://www.ganjawars.ru/npc.php?id=' + id + 
             '&gwpattack=1" title="Напасть">\
             <img src="http://images.ganjawars.ru/i/home/weapon.gif"></a>')
@@ -90,7 +90,9 @@ jQuery.extend(panel, {
         }
 
         $table.append(
-          jQuery('<tr class="npc' + id + ' npc' + (options.friends.indexOf(id) == -1? '': ' friend') + (options.enemies.indexOf(id) == -1? '': ' enemy') + '"></tr>')
+          jQuery('<tr class="npc' + id + ' npc' + 
+            (options.friends.indexOf(String(id)) == -1? '': ' friend') + 
+            (options.enemies.indexOf(String(id)) == -1? '': ' enemy') + '"></tr>')
           .append(jQuery('<td></td>')
             .append('<img style="margin-right: 4px;" src="http://images.ganjawars.ru/img/synds/'
               + this.synd + '.gif" />')

@@ -2195,3 +2195,53 @@ QUnit.asyncTest('Тест сохранения опций для кнопок в
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 
 });
+
+QUnit.asyncTest('Проверка функции checkPanePlaces', function(assert) {
+  var options = jQuery.extend({}, panelSettingsCollection.default);
+  /// Создаём конфигурацию с пустыми окнами
+  for(var i = 0; i < 4; i++) {
+    options.panes[i].buttons = [];
+    options.panes[i].widgets = [];
+  }
+  options.panes[0].width = 6;
+  options.panes[0].height = 4;
+  /// добавляем кнопки и виджеты, чтобы места были заняты
+  options.panes[0].buttons.push({
+    type: 'panel_test_button',
+    title: 'Test button',
+    left: 0,
+    top: 0,
+    id: 'button_panel_test_button_0'
+  });
+  options.panes[0].buttons.push({
+    type: 'panel_settings',
+    title: 'настройки',
+    left: 1,
+    top: 0,
+    id: 'button_panel_settings_button_1'
+  });
+  options.panes[0].widgets.push({
+    type: 'panel_foo_widget',
+    width: 6,
+    height: 1,
+    left: 0,
+    top: 1,
+    id: 'widget_panel_foo_widget_0'
+  });
+  
+  __panel.setOptions(options, undefined, function() {
+    var places = __panel.checkPanePlaces(0, {height: 1, width: 1});
+    assert.deepEqual(places, [0, 2], 'Свободные места должны быть [0, 2]');
+    var places = __panel.checkPanePlaces(0, {height: 1, width: 2});
+    assert.deepEqual(places, [0, 2], 'Свободные места должны быть [0, 2]');
+    var places = __panel.checkPanePlaces(0, {height: 1, width: 5});
+    assert.deepEqual(places, [2, 0], 'Свободные места должны быть [2, 0]');
+    var places = __panel.checkPanePlaces(0, {height: 1, width: 7});
+    assert.equal(places, false, 'Свободных мест для виджета такого размера быть не должно');
+
+    var places = __panel.checkPanePlaces(1, {height: 1, width: 1});
+    assert.deepEqual(places, [0, 0], 'Свободные места должны быть [0, 0]');
+    QUnit.start();
+  });
+
+});

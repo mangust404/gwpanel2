@@ -24,6 +24,7 @@ jQuery.extend(panel, {
     status.id = params['id'];
     
     this.get('npc' + params['id'], function(npcState) {
+      console.log(npcState);
       if(params['action_submit'] == 'yes') {
         // Соглашение на квест
         __panel.npc_questSubmit(status);

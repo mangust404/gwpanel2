@@ -177,6 +177,7 @@
   background: #f0fff0;
   padding: 15px 20px;
   border: 1px solid #ddd;
+  min-width: 300px;
 }
 
 #settings-form-popup .ui-collapsible-content .ui-listview li {
@@ -256,4 +257,18 @@ body.panel-settings .pane .ui-resizable-handle.ui-resizable-nw {
 body.panel-settings .pane .ui-resizable-handle.ui-resizable-ne,
 body.panel-settings .pane .ui-resizable-handle.ui-resizable-nw {
   top: 0;
+}
+
+body.panel-settings .pane .configure {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  cursor: pointer;
+  background: url(icons/settings.png) no-repeat center center / 30px auto;
+  background-color: rgba(181, 230, 181, 0.25);
+}
+
+.widget.configuring, .button.configuring {
+  display: block !important;
 }

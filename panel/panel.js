@@ -53,7 +53,8 @@ var Panel2 = new function() {
   /******************************
   *******Приватные методы********
   *******************************/
-  function hideAllPanes() {
+  function hideAllPanes(e) {
+    if(e && e.type == 'click' && jQuery('.pane:visible').hasClass('configuring')) return true;
     jQuery('.pane:visible').hide();
     jQuery('.pane-bubble.active').removeClass('active');
     $(document.body).off('click', hideAllPanes);
@@ -360,7 +361,7 @@ var Panel2 = new function() {
 
                     instance.showFlash('Если вы закончили настройку, то нажмите <strong>F5</strong>,<br />чтобы изменения вступили в силу', 'message', 5000);
                     $('.pane-bubble.drag-over').removeClass('drag-over');
-                    that.draggable('destroy');
+                    //that.draggable('destroy');
                     jQuery('.pane-placeholder').remove();
 
                     /// И последний шаг - сохраняем новые опции
@@ -1324,18 +1325,12 @@ var Panel2 = new function() {
             instance.loadScriptComplete(name[0]) 
           }
         },
-        function(e) {
+        function() {
           instance.isLoading--;
+          /// отработал одиночный вызов
+          instance.loadScriptFail(name, arguments);
           if(name.length > 1) {
-            /// отработал массовый вызов
-            /// проходим по всем скриптам и выполяем обратные вызовы
-            for(var i = 0; i < name.length; i++) {
-              instance.loadScriptFail(name[i]);
-            }
             if(failover) failover();
-          } else {
-            /// отработал одиночный вызов
-            instance.loadScriptFail(name[0]) 
           }
         }
       );
@@ -1361,16 +1356,22 @@ var Panel2 = new function() {
     * Обработчик ошибки загрузки скрипта
     * @param name - путь скрипта, например "home/home.js"
     */
-    loadScriptFail: function(name, e) {
-      scripts[name].fail = true;
-      instance.failedScripts.push(name);
-      if(console.log) console.log('Failed to load script "' + name + 
-                                  '"', e);
-      for(var i = 0; i < scripts[name].failovers.length; i++) {
-        try {
-          scripts[name].failovers[i]();
-        } catch(e) {
-          instance.dispatchException(e, 'failoverScript callback error: ');
+    loadScriptFail: function(names, e) {
+      if(jQuery.type(names) != 'array') {
+        names = [names];
+      }
+      if(console.log) console.log('Failed to load script(s) "' + names.join(', ') + 
+                                    '"', e);
+      for(var i = 0; i < names.length; i++) {
+        var name = names[i];
+        scripts[name].fail = true;
+        instance.failedScripts.push(name);
+        for(var j = 0; j < scripts[name].failovers.length; j++) {
+          try {
+            scripts[name].failovers[j]();
+          } catch(e) {
+            instance.dispatchException(e, 'failoverScript callback error: ');
+          }
         }
       }
     },
@@ -1886,7 +1887,6 @@ var Panel2 = new function() {
           }
         }
       }
-
       start:
       for(new_top = 0; new_top < p_options.height - element_height + 1; new_top++) {
         for(new_left = 0; new_left < p_options.width - element_width + 1; new_left++) {
@@ -1895,7 +1895,7 @@ var Panel2 = new function() {
           for(var __top = new_top; (new_top + element_height) > __top; __top++) {
             for(var __left = new_left; (new_left + element_width) > __left; __left++) {
               if(!hold[__top]) continue;
-              if(hold[__top] && hold[__top][__left] && hold[__top][__left] != id) {
+              if(hold[__top] && hold[__top][__left] && hold[__top][__left] != widget.id) {
                 new_pane_not_empty = true;
                 break checkout_new_pos;
               }
