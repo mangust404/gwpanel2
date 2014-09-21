@@ -120,7 +120,7 @@ var Panel2 = new function() {
           var that = this;
           var img = (that.img || type.img || 'no-icon');
           if(img.indexOf('http:') != 0) {
-            img = __panel.path_to_theme() + img;
+            img = __panel.path_to_theme() + 'icons/' + img;
           }
           if(that.id) {
             id = that.id;

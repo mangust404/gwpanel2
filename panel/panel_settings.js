@@ -284,8 +284,13 @@
     </div> \
     <hr class="footer-delim" />\
     <div class="close-button-wrapper"></div>\
-    <div id="settings-form-popup" data-role="popup" data-position-to="window">\</div>\
+    <div id="settings-form-popup" data-role="popup" data-position-to="window" class="ui-page-theme-a"></div>\
   </div>\
+</div>\
+<div id="icons-gallery" class="ui-overlay-shadow ui-popup ui-page-theme-a">\
+<h2>Галерея иконок \
+</h2><div class="container"></div>\
+<a onclick="jQuery(\'#icons-gallery\').hide(); return false;" class="ui-btn ui-mini ui-btn-inline ui-btn-icon-right ui-icon-delete">Закрыть</a>\
 </div>')
         .appendTo(document.body);
 
@@ -300,12 +305,26 @@
           });
           return false;
         }).appendTo(editor.find('.close-button-wrapper'));
-
+      /// готовим галерею иконок
+      jQuery.each(panel_apply.themes[current_options.system.theme].icons, function(index, item) {
+        var img = item;
+        if(img.indexOf('http:') != 0) {
+          img = __panel.path_to_theme() + 'icons/' + img;
+        }
+        jQuery('<div class="icon-select"></div>').append(
+          jQuery('<img src="' + img + '"></img>').click(function() {
+            jQuery('#param-img').val(item);
+            jQuery('#settings-form-popup div.img img').attr('src', img);
+            jQuery('#icons-gallery').hide();
+            return false;
+          })
+        ).appendTo('#icons-gallery .container');
+      });
       jQuery.each(panel_apply.buttons, function(button_name) {
         var button = this;
         var img = button.img;
         if(img && img.indexOf('http:') != 0) {
-          img = __panel.path_to_theme() + img;
+          img = __panel.path_to_theme() + 'icons/' + img;
         }
         var id = 'button_' + button_name;
         button.id = id;
@@ -529,8 +548,17 @@
   </div>').appendTo('#settings-form-popup').trigger('create').find('fieldset');
         var widget_data = __data.arguments || {};
 
-        /// Для кнопок добавляем возможность редактировать текст
+        /// Для кнопок добавляем возможность редактировать текст и иконку
         if(widgetKind == 'button') {
+          jQuery('<input type="hidden" id="param-img" name="img" />')
+            .appendTo(setting_content);
+          var img = (__data.img || widgetClass.img || 'no-icon');
+          if(img.indexOf('http:') != 0) {
+            img = __panel.path_to_theme() + 'icons/' + img;
+          }
+          jQuery('<div class="img"><img src="' + img + '"/></div>').click(function() {
+            jQuery('#icons-gallery').show();
+          }).insertBefore('#settings-form-popup h2');
           jQuery('<label for="param-title">Текст кнопки</label><input maxlength="32" name="title" id="param-title"' +
             ' type="text" value="' + (__data.title == undefined? '': __data.title) + 
               '" placeholder="' + widgetClass.title + '">')
@@ -680,11 +708,15 @@
                 }
               } else if(widgetKind == 'button') {
                 __data.title = jQuery('#param-title').val();
+                __data.img = jQuery('#param-img').val() || widgetClass.img;
                 displace = parseInt(displace);
                 if(isEdit) {
                   /// Меняем заголовок кнопки сразу
                   jQuery('#pane-' + displace + ' #' + __data.id + ' a h3').html(
                     __data.title || widgetClass.title
+                  );
+                  jQuery('#pane-' + displace + ' #' + __data.id + ' .img img').attr('src',
+                     jQuery('#settings-form-popup div.img img').attr('src')
                   );
                 } else {
                   /// Создаём идентификатор
