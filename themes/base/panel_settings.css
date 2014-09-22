@@ -141,6 +141,10 @@
   font-size: 11px;
 }
 
+#panel-settings-editor .ui-input-btn input {
+  height: 56px;
+}
+
 #edit-widgets-wrapper .widget {
   display: inline-block !important;
   vertical-align: top;

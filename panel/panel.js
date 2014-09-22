@@ -995,36 +995,27 @@ var Panel2 = new function() {
         instance.loadScript(tests);
       }      
 
-      if(environment == 'testing') {
-        var variantID = 'default';
-        optionsID = 'testing_' + instance.currentPlayerID() + '_default';
-        /// создаём заново опции если это не запуск подтеста во фрейме
-        if(location.search.indexOf('continue') == -1) {
-          options = window.panelSettingsCollection.default;
-          instance.set(optionsID, options);
-        } else {
-          options = JSON.parse(localStorage['gwp2_' + optionsID]) || 
-                    window.panelSettingsCollection.default;
-        }
-        fastInitReady = location.search.indexOf('gwpanel_pause') == -1;
-      } else {
-        var variantID = 'options_variant_' + instance.currentPlayerID();
-        var __local_variant = localStorage['gwp2_' + variantID];
-        /// Опции сперва привязываются к окружению (environment), затем к ID игрока
-        /// затем к выбранному варианту, если вариант не найден, то выбираем default
-        var fastInitReady = false;
-        if(__local_variant != null && 
-          __local_variant.length > 0) {
-          optionsID = environment + '_' + instance.currentPlayerID() + '_' + 
-                          __local_variant;
-          var __local_options = localStorage['gwp2_' + optionsID];
-          if(__local_options != null && 
-             __local_options.length > 0) {
-            jQuery.extend(options, JSON.parse(__local_options));
-            fastInitReady = true;
-          }
+      var variantID = environment + '_opts_var_' + instance.currentPlayerID();
+      var __local_variant = localStorage['gwp2_' + variantID];
+      /// Опции сперва привязываются к окружению (environment), затем к ID игрока
+      /// затем к выбранному варианту, если вариант не найден, то выбираем default
+      var fastInitReady = false;
+      if(__local_variant != null && 
+        __local_variant.length > 0) {
+        optionsID = environment + '_' + instance.currentPlayerID() + '_' + 
+                        __local_variant;
+        var __local_options = localStorage['gwp2_' + optionsID];
+        if(__local_options != null && 
+           __local_options.length > 0) {
+          jQuery.extend(options, JSON.parse(__local_options));
+          fastInitReady = true;
         }
       }
+
+      if(environment == 'testing') {
+        fastInitReady = location.search.indexOf('gwpanel_pause') == -1;
+      }
+
       //if(jQuery.type(__options) == 'object') jQuery.extend(options, __options);
       //if(jQuery.type__panel_apply.buttons) == 'object') panel_apply.buttons = __panel_apply.buttons;
       //if(jQuery.type__panel_apply.widgets) == 'object') panel_apply.widgets = __panel_apply.widgets;
@@ -1093,6 +1084,7 @@ var Panel2 = new function() {
           } else {
             /// дефолтные опции
             options = jQuery.extend(options, window.panelSettingsCollection.default);
+            parent.console.log('rollback to default options');
             instance.set(optionsID, options);
           }
           localStorage['gwp2_' + optionsID] = JSON.stringify(options);

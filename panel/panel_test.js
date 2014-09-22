@@ -2178,7 +2178,7 @@ QUnit.asyncTest('Тест сохранения опций для кнопок в
 
       waitPanelInitialization(this.contentWindow, function() {
         (function($) {
-          assert.equal(this.__panel.getOptions().panes[0].buttons.length, 2, 
+          assert.equal(that.contentWindow.__panel.getOptions().panes[0].buttons.length, 2, 
             'в настройках должны быть две кнопки');
           setTimeout(function() {
             /// кликаем по бабблу, виджет должен прорисоваться и функция прорисовки 
@@ -2345,9 +2345,203 @@ QUnit.asyncTest('Тестирование функции getCached с истеч
           QUnit.start();
         }, 'test_cached_event');
       });
-      
+
       __panel.triggerEvent('test_cached_event');
 
     }, 2000);
   }
+});
+
+QUnit.asyncTest('Тестирование менеджера настроек, создание с нуля', function(assert) {
+  var options = jQuery.extend({}, panelSettingsCollection.default);
+  /// Создаём конфигурацию с пустыми окнами
+  for(var i = 0; i < 4; i++) {
+    options.panes[i].buttons = [];
+    options.panes[i].widgets = [];
+  }
+
+  var salt = Math.random();
+  options.system.test = salt;
+  var variantID;
+
+  __panel.set('variants_' + __panel.currentPlayerID(), null, function() {
+  __panel.setOptions(options, undefined, function() {
+    var frame;
+
+    frame = $('<iframe id="button-options-variants-iframe" src="' + document.location.href.split('?')[0]
+       + '?gwpanel_testing&continue"></iframe>').load(function() {
+      var that = this;
+
+      waitPanelInitialization(this.contentWindow, function() {
+        (function($) {
+          if(that.contentWindow.location.search.indexOf(salt) == -1) {
+            /// кликаем по бабблу, виджет должен прорисоваться и функция прорисовки 
+            /// виджета должна быть вызвана
+            $('.pane-bubble:first').click();
+
+            /// Кликаем по кнопке
+            $('#button_panel_settings_0 a').click();
+
+            waitFor(function() {
+              return $('#panel-settings-editor .ui-icon-edit').length > 0;
+            }, function() {
+              $('#panel-settings-editor .ui-icon-edit').click();
+              $('.add-options-variant .ui-collapsible-heading-toggle:first').click();
+              $('#add-title').val('test2');
+              $('.add-options-variant input[type=submit]').click();
+
+              assert.equal($('#add-title:visible').length, 0, 'Форма добавления должна закрыться');
+
+              assert.ok($('#variant-name option:contains(test2)').length > 0, 'Вариант добавлен');
+              variantID = $('#variant-name option:contains(test2)').attr('value');
+              $('#variant-name').val(variantID).change();
+
+              that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
+                assert.equal(data, variantID, 'Вариант должен совпадать');
+                that.contentWindow.location.href = that.contentWindow.location.href + '&' + salt;
+              });
+              //QUnit.start();
+            });
+          } else if(that.contentWindow.location.search.indexOf('finish') == -1) {
+            // после обновления страницы с солью, проверяем вариант
+            var current_options = that.contentWindow.__panel.getOptions();
+            that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
+              assert.equal(data, variantID, 'Вариант в новом окне должен совпадать');
+              assert.equal(current_options.widgets.length, 0);
+              assert.equal(current_options.panes[0].buttons.length, 1);
+              assert.equal(current_options.panes[0].widgets.length, 0);
+              assert.equal(current_options.panes[1].buttons.length, 0);
+              assert.equal(current_options.panes[1].widgets.length, 0);
+              assert.equal(current_options.panes[2].buttons.length, 0);
+              assert.equal(current_options.panes[2].widgets.length, 0);
+              assert.equal(current_options.panes[3].buttons.length, 0);
+              assert.equal(current_options.panes[3].widgets.length, 0);
+
+              $('.pane-bubble:first').click();
+
+              /// Кликаем по кнопке
+              $('#button_panel_settings_0 a').click();
+
+              waitFor(function() {
+                return $('#panel-settings-editor .ui-icon-edit').length > 0;
+              }, function() {
+                $('#panel-settings-editor .ui-icon-edit').click();
+
+                $('#variant-name').val('default').change();
+                that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
+                  assert.equal(data, 'default', 'Вариант должен быть default');
+                  that.contentWindow.location.href = that.contentWindow.location.href + '&finish';
+                });
+              });
+            });
+          } else {
+            /// Окончание теста, проверяем первоначальные настройки
+            that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
+              assert.equal(data, 'default', 'Вариант в новой вкладке должен быть default');
+              var current_options = that.contentWindow.__panel.getOptions();
+              assert.equal(current_options.system.test, salt, 'Первоначальные настройки возвращены');
+              QUnit.start();
+            });
+          }
+        }).apply(that.contentWindow, [that.contentWindow.jQuery])
+      });
+    }).appendTo('#qunit-fixture').css({height: 500, width: 1000}).show().get(0);
+  });
+  });
+  //$('#qunit-fixture').css({height: 500, width: 1000, position: 'static'}).show();
+  
+});
+
+QUnit.asyncTest('Тестирование менеджера настроек, создание из шаблона', function(assert) {
+  var options = jQuery.extend({}, panelSettingsCollection.default);
+  /// Создаём конфигурацию с пустыми окнами
+  for(var i = 0; i < 4; i++) {
+    options.panes[i].buttons = [];
+    options.panes[i].widgets = [];
+  }
+
+  var salt = Math.random();
+  options.system.test = salt;
+  var variantID;
+
+  __panel.set('variants_' + __panel.currentPlayerID(), null, function() {
+  __panel.setOptions(options, undefined, function() {
+    var frame;
+
+    frame = $('<iframe id="button-options-variants-iframe" src="' + document.location.href.split('?')[0]
+       + '?gwpanel_testing&continue"></iframe>').load(function() {
+      var that = this;
+
+      waitPanelInitialization(this.contentWindow, function() {
+        (function($) {
+          if(that.contentWindow.location.search.indexOf(salt) == -1) {
+            /// кликаем по бабблу, виджет должен прорисоваться и функция прорисовки 
+            /// виджета должна быть вызвана
+            $('.pane-bubble:first').click();
+
+            /// Кликаем по кнопке
+            $('#button_panel_settings_0 a').click();
+
+            waitFor(function() {
+              return $('#panel-settings-editor .ui-icon-edit').length > 0;
+            }, function() {
+              $('#panel-settings-editor .ui-icon-edit').click();
+              $('.add-options-variant .ui-collapsible-heading-toggle:first').click();
+              $('#add-title').val('test2');
+              $('#add-collection').val('default');
+              $('.add-options-variant input[type=submit]').click();
+
+              assert.equal($('#add-title:visible').length, 0, 'Форма добавления должна закрыться');
+
+              assert.ok($('#variant-name option:contains(test2)').length > 0, 'Вариант добавлен');
+              variantID = $('#variant-name option:contains(test2)').attr('value');
+              $('#variant-name').val(variantID).change();
+
+              that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
+                assert.equal(data, variantID, 'Вариант должен совпадать');
+                that.contentWindow.location.href = that.contentWindow.location.href + '&' + salt;
+              });
+              //QUnit.start();
+            });
+          } else if(that.contentWindow.location.search.indexOf('finish') == -1) {
+            // после обновления страницы с солью, проверяем вариант
+            that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
+              assert.equal(data, variantID, 'Вариант в новом окне должен совпадать');
+              var current_options = that.contentWindow.__panel.getOptions()
+              delete current_options.settings;
+              assert.deepEqual(current_options, that.contentWindow.panelSettingsCollection.default);
+
+              $('.pane-bubble:first').click();
+
+              /// Кликаем по кнопке
+              $('.button.panel_settings a').click();
+
+              waitFor(function() {
+                return $('#panel-settings-editor .ui-icon-edit').length > 0;
+              }, function() {
+                $('#panel-settings-editor .ui-icon-edit').click();
+
+                $('#variant-name').val('default').change();
+                that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
+                  assert.equal(data, 'default', 'Вариант должен быть default');
+                  that.contentWindow.location.href = that.contentWindow.location.href + '&finish';
+                });
+              });
+            });
+          } else {
+            /// Окончание теста, проверяем первоначальные настройки
+            that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
+              assert.equal(data, 'default', 'Вариант в новой вкладке должен быть default');
+              var current_options = that.contentWindow.__panel.getOptions();
+              assert.equal(current_options.system.test, salt, 'Первоначальные настройки возвращены');
+              QUnit.start();
+            });
+          }
+        }).apply(that.contentWindow, [that.contentWindow.jQuery])
+      });
+    }).appendTo('#qunit-fixture').css({height: 500, width: 1000}).show().get(0);
+  });
+  });
+  //$('#qunit-fixture').css({height: 500, width: 1000, position: 'static'}).show();
+  
 });

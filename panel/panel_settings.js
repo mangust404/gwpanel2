@@ -489,12 +489,12 @@
         variants = variants || {default: 'По-умолчанию'};
         jQuery('<label for="variant-name">Сейчас используется вариант настроек:</label>').appendTo('#edit-other-wrapper');
         var variant_select = jQuery('<select id="variant-name" name="variant"></select>').change(function() {
-          panel.set('options_variant_' + panel.currentPlayerID(), jQuery(this).val(), function() {
+          panel.set(panel.getEnv() + '_opts_var_' + panel.currentPlayerID(), jQuery(this).val(), function() {
             panel.showFlash('Настройки изменены. Пожалуйста, перезагрузите страницу чтобы увидеть изменения.', 'message', 5000);
           });
         });
 
-        panel.get('options_variant_' + panel.currentPlayerID(), function(current_variant) {
+        panel.get(panel.getEnv() + '_opts_var_' + panel.currentPlayerID(), function(current_variant) {
           jQuery.each(variants, function(name, title) {
             variant_select.append('<option value="' + name + '"' + 
               (current_variant == name? ' selected="selected"': '') + 
@@ -585,7 +585,7 @@
             var names = jQuery('.remove-options-variant input[type=checkbox]:checked')
               .prev('label').map(function() { return jQuery(this).text()})
               .get().join(', ');
-            if(confirm('Вы действительно хотите удалить выбранные настройки? (' + names + ')')) {
+            if(location.search.indexOf('gwpanel_test') > -1 || confirm('Вы действительно хотите удалить выбранные настройки? (' + names + ')')) {
               jQuery('.remove-options-variant input[type=checkbox]:checked').each(function() {
                 var id = jQuery(this).val();
                 if(jQuery('#variant-name').val() == id) {
