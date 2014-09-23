@@ -323,3 +323,36 @@ body.panel-settings .pane .configure {
 #icons-gallery .icon-select img {
   cursor: pointer;
 }
+
+.release-note {
+  border-bottom: 1px solid #ddd;
+  padding: 12px 8px;
+  margin: 0;
+}
+
+.release-note .date {
+  float: right;
+  color: #aaa;
+}
+
+.release-note .release-num {
+  font-weight: bold;
+}
+
+.release-note.active {
+  background: #feeeee;
+}
+
+div .release-note:last-child {
+  border-bottom: 0;
+}
+
+#panel-settings-editor .options-variants {
+  border-top: 1px solid #ddd;
+  margin-top: 30px;
+  padding-top: 20px;  
+}
+
+#panel-settings-editor .options-variants > label {
+  margin-bottom: 17px;
+}

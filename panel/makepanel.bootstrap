@@ -263,10 +263,14 @@ if(get_env() == 'production') {
     $version++;
     $new_package = package_path($version);
 
+    $notes_path = dirname($new_package) . '/' . $version . '.notes.js';
+
     mkdir(dirname($new_package), 0755, TRUE);
     shell_exec('mv /tmp/package.js ' . $new_package);
 
     print "Записан файл пакета {$new_package}\n";
+    file_put_contents($notes_path, 'window.panel_release_notes = ' . json_encode($message) . '; window.panel_release_date = "' . date('c') . '";');
+    print "Записан файл заметок к версии $notes_path\n";
     file_put_contents($gwpanel_path . '/version', $version);
     print "Записан файл версии {$gwpanel_path}/version\n";
 
@@ -394,7 +398,7 @@ $bootstrap = '
           link.type = \'text/css\';
           link.rel = \'stylesheet\';
           link.id = \'css-preload-\' + path[i].replace(/[^a-z0-9]+/g, \'-\') + (new Date().getTime());
-          link.href = panelURL + "/" + path[i];
+          link.href = panelURL + "/" + path[i] + "?" + panel_version;
 
           document.getElementsByTagName(\'head\')[0].appendChild(link);
 
@@ -466,7 +470,7 @@ $bootstrap = '
           var s = document.createElement("script");
           s.type = "text/javascript";
           s.charset="UTF-8";
-          s.src = panelURL + "/" + path[i];
+          s.src = panelURL + "/" + path[i] + "?" + panel_version;
           s.addEventListener("load", function() {
             loaded++;
             if(loaded >= path.length && callback) {

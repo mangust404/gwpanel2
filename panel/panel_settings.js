@@ -193,7 +193,8 @@
     /**
     * Функция, открывающая окно настроек
     */
-    panel_settings_editor: function() {
+    panel_settings_editor: function(active_section) {
+      console.log(active_section);
     var current_options = panel.getOptions();
     panel.panel_settings_init(function() {
       /// Редактирование настроек
@@ -280,6 +281,8 @@
       <h3 class="footer">Вы можете отключить ненужные для вас функции, убрав галочку с соответствующей опции</h3>\
     </div> \
     <div id="edit-other-wrapper" style="display: none;" class="edit-wrapper">\
+      <div class="versions"></div>\
+      <div class="options-variants"></div>\
     </div> \
     <hr class="footer-delim" />\
     <div class="close-button-wrapper"></div>\
@@ -487,7 +490,7 @@
       panel.get('variants_' + panel.currentPlayerID(), function(variants) {
 
         variants = variants || {default: 'По-умолчанию'};
-        jQuery('<label for="variant-name">Сейчас используется вариант настроек:</label>').appendTo('#edit-other-wrapper');
+        jQuery('<label for="variant-name">Сейчас используется вариант настроек:</label>').appendTo('#edit-other-wrapper .options-variants');
         var variant_select = jQuery('<select id="variant-name" name="variant"></select>').change(function() {
           panel.set(panel.getEnv() + '_opts_var_' + panel.currentPlayerID(), jQuery(this).val(), function() {
             panel.showFlash('Настройки изменены. Пожалуйста, перезагрузите страницу чтобы увидеть изменения.', 'message', 5000);
@@ -601,8 +604,68 @@
             return false;
           }).appendTo(d.find('.ui-body'));
         }
-        jQuery('#edit-other-wrapper').append(variant_select).append(n).append(d).trigger('create');
+        jQuery('#edit-other-wrapper .options-variants').append(variant_select).append(n).append(d).trigger('create');
       });
+
+      jQuery('<h2>Текущая версия: <span class="current-version">' + panel.getVersion() + '</span></h2>').append(
+        jQuery('<a class="ui-btn ui-btn-inline ui-mini ui-btn-icon-right ui-icon-refresh">проверить</a>').click(function() {
+          var $that = jQuery(this);
+          panel.checkVersion(function(remote_version) {
+            if(remote_version != panel.getVersion()) {
+              $that.html('обновлено');
+              panel.updateVersion(remote_version, function(notes) { 
+                jQuery('#edit-other-wrapper .versions .release-note:first').parent().prepend(
+                  '<p class="release-note active release-note-' + remote_version +
+                  '">Выпуск #<span class="release-num">' + remote_version + 
+                  '</span>: <span class="notes">' + notes.notes + 
+                  '</span><span class="date">' + notes.date + 
+                  '</span></p>'
+                );
+              });
+              jQuery('.current-version').html(remote_version);
+            } else {
+              $that.html('у вас самая свежая версия').addClass('ui-btn-active ui-focus');
+            }
+            $that.removeClass('ui-icon-refresh').addClass('ui-icon-check');
+          })
+          return false;
+        }).css({marginLeft: 30})
+      ).appendTo('#edit-other-wrapper .versions');
+
+      var releases = jQuery('<div class="releases" data-role="collapsible"' + 
+        (active_section == 'release_notes'? 'data-collapsed="false"': '') + 
+        '><h3>Примечания к выпускам</h3></div>')
+        .appendTo('#edit-other-wrapper .versions');
+      panel.get('release_notes', function(release_notes) {
+        var keys = Object.keys(release_notes);
+        keys = jQuery.map(keys, function(val) {
+          return parseInt(val);
+        }).sort(function(a, b) {
+          if(a > b) return -1; 
+          else if(a < b) return 1; 
+          return 0
+        });
+        for(var i = 0; i < keys.length; i++) {
+          if(typeof(release_notes[keys[i]]) == 'object') {
+            jQuery('<p class="release-note ' + 
+              (active_section == 'release_notes' && keys[i] == panel.getVersion()? 'active ': '') + 
+              'release-note-' + keys[i] +
+              '">Выпуск #<span class="release-num">' + keys[i] + 
+              '</span>: <span class="notes">' + release_notes[keys[i]].notes + 
+              '</span><span class="date">' + release_notes[keys[i]].date + 
+              '</span></p>').appendTo(releases);
+            if(i > 10) return;
+          }
+        }
+      });
+
+      jQuery('#edit-other-wrapper .versions').trigger('create');
+
+      console.log(active_section);
+      if(active_section == 'release_notes') {
+        jQuery('#edit-other-wrapper').show();
+        jQuery('#panel-settings-editor .ui-navbar.first-view').removeClass('first-view');
+      }
     });
     },
 

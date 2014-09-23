@@ -867,7 +867,6 @@ var Panel2 = new function() {
     } else {
       environment = original_environment;
     }
-    version = panel_apply.version;
     baseURL = __baseURL;
     
     var ar = document.domain.split('.');
@@ -993,7 +992,10 @@ var Panel2 = new function() {
         instance.loadCSS('../../lib/qunit-1.15.0.css');
         var tests = window.panel_tests || [];
         instance.loadScript(tests);
-      }      
+      }
+
+      version = parseInt(instance.getCookies()['gwp2_v']) || 1;
+      console.log(version);
 
       var variantID = environment + '_opts_var_' + instance.currentPlayerID();
       var __local_variant = localStorage['gwp2_' + variantID];
@@ -1084,7 +1086,6 @@ var Panel2 = new function() {
           } else {
             /// дефолтные опции
             options = jQuery.extend(options, window.panelSettingsCollection.default);
-            parent.console.log('rollback to default options');
             instance.set(optionsID, options);
           }
           localStorage['gwp2_' + optionsID] = JSON.stringify(options);
@@ -1151,6 +1152,13 @@ var Panel2 = new function() {
             });
           });
         });
+
+        /// Проверка обновлений
+        instance.getCached(instance.checkVersion, function(new_version) {
+          if(new_version != version) {
+            instance.updateVersion(new_version);
+          }
+        }, 1800);
       });
     },
     /**
@@ -1162,15 +1170,6 @@ var Panel2 = new function() {
                     ((new Error).stack || arguments.callee.toString()).split("\n")[1]);
         console.log(e);
       }
-    },
-    
-    /**
-    * Установка версии
-    * @param __version - номер версии (число)
-    * устанавливается юзерскриптом, либо после инициализации через сервер
-    */
-    setVersion: function(__version) {
-      version = __version;
     },
     
     /**
@@ -2012,8 +2011,9 @@ var Panel2 = new function() {
      */
     getCached: function(generator, callback, condition) {
       var cid = 'cached_' + generator.toString().replace(/[\n\s\t]/g, '').hashCode();
+      console.log(cid);
       instance.get(cid, function(data) {
-        if(jQuery.type(data) == 'null' || 
+        if(!condition || jQuery.type(data) == 'null' || 
           (data.type == 'time' && data.expiration < (new Date).getTime())
           ) {
           /// Генерируем
@@ -2047,6 +2047,83 @@ var Panel2 = new function() {
           callback(data.data);
         }
       });
+    },
+
+    /**
+    * Функция удаления данных из кеша
+    */
+    clearCached: function(generator) {
+      var cid = 'cached_' + generator.toString().replace(/[\n\s\t]/g, '').hashCode();
+      instance.del(cid);
+    },
+    /**
+    * Функция проверки последней версии
+    */
+    checkVersion: function(callback) {
+      //var s = $('<script src="http://gwpanel.org/panel2/version_production.js"></script>');
+      var s = document.createElement("script");
+      s.type = "text/javascript";
+      s.src = 'http://gwpanel.org/panel2/version_production.js?' + (new Date).getTime();
+      s.addEventListener('load', function() {
+        console.log('loaded version_production: ', window.current_panel_version);
+        if(callback) callback(window.current_panel_version);
+      }, false);
+      document.getElementsByTagName("head")[0].appendChild(s);
+    },
+
+    /**
+    * Функция обновления
+    */
+    updateVersion: function(new_version, callback) {
+      console.log('new_version: ', new_version);
+      console.log((new Error).stack);
+      /// Очищаем предыдущий пакет
+      if(window.__clearCache) window.__clearCache();
+      /// очищаем кеш версии
+      instance.clearCached(instance.checkVersion);
+
+      /// Получаем release notes
+      var path = 'http://gwpanel.org/panel2/panel/production';
+      str_version = String(new_version);
+      for(var i = 0; i < str_version.length; i++) {
+        path += "/" + str_version.charAt(i);
+      }
+      path += "/" + str_version + ".notes.js";
+      var s = document.createElement('script');
+      s.type = 'text/javascript';
+      s.src = path;
+      s.addEventListener('load', function() {
+        instance.get('release_notes', function(notes) {
+          notes = notes || {};
+          notes[new_version] = {
+            notes: window.panel_release_notes || 'не указано',
+            date: window.panel_release_date
+          }
+          if(callback) callback(notes[new_version]);
+          
+          __panel.showFlash('Произошло обновление системы. Новая версия: ' 
+            + new_version + '.' + 
+            (jQuery('#panel-settings-editor:visible').length? '': 
+              '<br />Посмотреть <a href="#release-notes" onclick="__panel.loadScript(&quot;panel/panel_settings.js&quot;, function() { __panel.panel_settings_editor(&quot;release_notes&quot;); }); return false;">заметки к выпуску</a>.'), 
+            'message');
+            instance.set('release_notes', notes);
+        });
+      }, false);
+      document.getElementsByTagName("head")[0].appendChild(s);
+
+      /// Выставляем версию
+      version = new_version;
+      var myDate = new Date();
+      myDate.setMonth(myDate.getMonth() + 120);
+      document.cookie = "gwp2_v=" + new_version + ";expires=" + myDate 
+                       + ";domain=.ganjawars.ru;path=/";
+    },
+
+    /**
+    * Получение текущей версии
+    */
+    getVersion: function() {
+      return version;
     },
     /**
     * Публичные аттрибуты
