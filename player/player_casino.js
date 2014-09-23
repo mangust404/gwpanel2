@@ -15,7 +15,7 @@ jQuery.extend(panel, {
     };
 
     if(options.roulette || options.total || options.poker){                              // какая-то инфа будет показана
-      jQuery('b:contains("Статистика")').closest('tr').next().find('td:last').find('b').each(
+      jQuery('td:contains("Статистика")').closest('tr').next().find('td:last').find('b').each(
         function(){
           if(this.previousSibling){
             for(var param in seekParams) {
