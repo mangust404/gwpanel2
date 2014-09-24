@@ -27,7 +27,7 @@ function waitFor(condition_func, success_func, timeout) {
       QUnit.start();
       return;
     }
-    setTimeout(f, 5);
+    setTimeout(f, 10);
   }
   f();
 }
@@ -408,9 +408,15 @@ QUnit.asyncTest('Подгрузка стилей', function(assert) {
   assert.notEqual($('#qunit-fixture .foo-bar').css('font-size'), '32px', 
                      'Стилей не должно быть');
   __panel.loadCSS('test.css', function () {
-    assert.deepEqual($('#qunit-fixture .foo-bar').css('font-size'), '32px', 
-                     'Стили загружены');
-    QUnit.start();
+    // на деплое и в продакшне событие загрузки стилей не приводит к мгновенной
+    // активации правил из этой таблицы. Мы должны немного подождать...
+    waitFor(function() {
+      return $('#qunit-fixture .foo-bar').css('font-size') == '32px';
+    }, function() {
+      assert.deepEqual($('#qunit-fixture .foo-bar').css('font-size'), '32px', 
+                       'Стили загружены');
+      QUnit.start();
+    }, 5000);
   }, function() {
     assert.ok(false, 'Таблица стилей не загружена');
     QUnit.start();
@@ -1730,14 +1736,8 @@ QUnit.asyncTest("Тест формы добавления и настройки 
 QUnit.asyncTest("Тест изменения настроек модулей", function(assert) {
   expect(6);
   var options = jQuery.extend({}, panelSettingsCollection.default);
-  /// Создаём конфигурацию с модулем на текущей странице
-  if(!panel_apply.pages[document.location.pathname]) {
-    panel_apply.pages[document.location.pathname] = [];
-  }
-  panel_apply.pages[document.location.pathname].push('panel_test_func');
-  __panel.panel_test_func = function(options) {
-    console.log(options);
-  }
+
+  var apply_initialized;
 
   __panel.setOptions(options, undefined, function() {
     var frame;
@@ -1766,12 +1766,14 @@ QUnit.asyncTest("Тест изменения настроек модулей", f
           }
         }
         __panel.panel_test_func = function(params) {
-          console.log(params);
         }
+
+        apply_initialized = true;
+
         __panel.__ready();
         __panel.__load();
       }
-    });
+    }, 5000);
     
     frame = $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
        + '?gwpanel_testing&continue&gwpanel_pause"></iframe>').load(function() {
@@ -1832,6 +1834,8 @@ QUnit.asyncTest("Тест отключения функций", function(assert)
   var options = jQuery.extend({}, panelSettingsCollection.default);
   options.blacklist = ['panel_test_func'];
 
+  var apply_initialized;
+
   __panel.setOptions(options, undefined, function() {
     var frame;
     waitFor(function() {
@@ -1864,6 +1868,8 @@ QUnit.asyncTest("Тест отключения функций", function(assert)
         /// инициализируем панель
         __panel.__ready();
         __panel.__load();
+
+        apply_initialized = true;
       }
     })
     
@@ -1871,8 +1877,12 @@ QUnit.asyncTest("Тест отключения функций", function(assert)
        + '?gwpanel_testing&continue&gwpanel_pause"></iframe>').load(function() {
       var that = this;
       waitPanelInitialization(this.contentWindow, function() {
-        QUnit.ok(true, 'Отключенная функция не запустилась');
-        QUnit.start();
+        waitFor(function() {
+          return apply_initialized;
+        }, function() {
+          QUnit.ok(true, 'Отключенная функция не запустилась');
+          QUnit.start();
+        });
       });
     }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show().get(0);
   });
@@ -1936,6 +1946,9 @@ QUnit.asyncTest('Тест сохранения опций для плавающ�
     },
     module: 'panel'
   });
+
+  var apply_initialized;
+
   var index = options.widgets.length - 1;
 
   __panel.setOptions(options, undefined, function() {
@@ -1989,6 +2002,8 @@ QUnit.asyncTest('Тест сохранения опций для плавающ�
       /// инициализируем панель
       __window.__panel.__ready();
       __window.__panel.__load();
+
+      apply_initialized = true;
     });
 
     frame = $('<iframe id="float-widgets-options-save-iframe" src="' + document.location.href.split('?')[0]
@@ -1997,9 +2012,11 @@ QUnit.asyncTest('Тест сохранения опций для плавающ�
       var __window = this.contentWindow;
 
       waitPanelInitialization(this.contentWindow, function() {
-        setTimeout(function() {
+        waitFor(function() {
+          return apply_initialized;
+        }, function() {
           __window.__panel.redrawFloatWidgets();
-        }, 200);
+        }, 5000);
       });
 
     }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).get(0);
@@ -2031,6 +2048,8 @@ QUnit.asyncTest('Тест сохранения опций для виджето�
   });
 
   options.widgets = [];
+
+  var apply_initialized;
 
   __panel.setOptions(options, undefined, function() {
     console.log('test2 options set: ', __panel.getOptions());
@@ -2080,6 +2099,8 @@ QUnit.asyncTest('Тест сохранения опций для виджето�
       /// инициализируем панель
       __window.__panel.__ready();
       __window.__panel.__load();
+
+      apply_initialized = true;
     });
 
     frame = $('<iframe id="widgets-options-save-iframe" src="' + document.location.href.split('?')[0]
@@ -2091,7 +2112,11 @@ QUnit.asyncTest('Тест сохранения опций для виджето�
             'в настройках должен быть один виджет');
           /// кликаем по бабблу, виджет должен прорисоваться и функция прорисовки 
           /// виджета должна быть вызвана
-          $('.pane-bubble:first').click();
+          waitFor(function() {
+            return apply_initialized;
+          }, function() {
+            $('.pane-bubble:first').click();
+          });
       }).apply(that.contentWindow, [that.contentWindow.jQuery])
       });
     }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show().get(0);
@@ -2124,6 +2149,8 @@ QUnit.asyncTest('Тест сохранения опций для кнопок в
       param1: true
     }
   });
+
+  var apply_initialized;
 
   __panel.setOptions(options, undefined, function() {
     assert.equal(options.panes[0].buttons.length, 2, 'Опции кнопок сохранились');
@@ -2170,6 +2197,8 @@ QUnit.asyncTest('Тест сохранения опций для кнопок в
       /// инициализируем панель
       __window.__panel.__ready();
       __window.__panel.__load();
+
+      apply_initialized = true;
     });
 
     frame = $('<iframe id="button-options-save-iframe" src="' + document.location.href.split('?')[0]
@@ -2180,14 +2209,16 @@ QUnit.asyncTest('Тест сохранения опций для кнопок в
         (function($) {
           assert.equal(that.contentWindow.__panel.getOptions().panes[0].buttons.length, 2, 
             'в настройках должны быть две кнопки');
-          setTimeout(function() {
+          waitFor(function() {
+            return apply_initialized;
+          }, function() {
             /// кликаем по бабблу, виджет должен прорисоваться и функция прорисовки 
             /// виджета должна быть вызвана
             $('.pane-bubble:first').click();
 
             /// Кликаем по кнопке
             $('#button_panel_test_button_0 a').click();
-          }, 500);
+          }, 5000);
       }).apply(that.contentWindow, [that.contentWindow.jQuery])
       });
     }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show().get(0);
