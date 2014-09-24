@@ -115,7 +115,14 @@
     * @param callback - функция, вызываемая после загрузки всех скриптов
     */
     panel_settings_init: function(callback) {
-      panel.loadCSS(['../../lib/gw.css',
+      /// Убиваем лайвинтернет, иначе он поганит всю страницу, да и все скрипты с document.write
+      jQuery.each(document.scripts, function(i, script) {
+        if(!script.src && script.innerHTML.indexOf('document.write') != -1) {
+          jQuery(script).remove();
+        }
+      });
+
+      panel.loadCSS(['../../lib/jquery_mobile_gw.css',
                      '../../lib/jquery.mobile.icons.min.css', 
                      '../../lib/jquery.mobile.custom.structure.min.css',
                      //'../../lib/jquery.mobile.structure-1.4.3.min.css',
@@ -194,9 +201,15 @@
     * Функция, открывающая окно настроек
     */
     panel_settings_editor: function(active_section) {
-      console.log(active_section);
     var current_options = panel.getOptions();
     panel.panel_settings_init(function() {
+      /// Мы должны отключить Илюшины стили, иначе они конфликтуют с jQuery mobile-овскими
+      jQuery.each(document.styleSheets, function(i, stylesheet) {
+        if(!stylesheet.href || stylesheet.href.indexOf('/i/gw.css') != -1) {
+          stylesheet.disabled = true;
+        }
+      });
+
       /// Редактирование настроек
       jQuery(document.body).addClass('panel-settings');
       /// скрываем активные окна
@@ -302,6 +315,11 @@
           jQuery('.configuring').removeClass('configuring');
           jQuery('.configure').removeClass('configure');
           panel.unbind('pane_show', listener);
+          /// возвращаем стили на место
+          jQuery.each(document.styleSheets, function(i, stylesheet) {
+            if(stylesheet.disabled) stylesheet.disabled = false;
+          });
+
           jQuery('#panel-settings-editor').fadeOut(function() {
             jQuery('#panel-settings-editor, #settings-form-popup').remove();
           });
@@ -661,7 +679,6 @@
 
       jQuery('#edit-other-wrapper .versions').trigger('create');
 
-      console.log(active_section);
       if(active_section == 'release_notes') {
         jQuery('#edit-other-wrapper').show();
         jQuery('#panel-settings-editor .ui-navbar.first-view').removeClass('first-view');

@@ -2063,7 +2063,6 @@ var Panel2 = new function() {
       s.type = "text/javascript";
       s.src = 'http://gwpanel.org/panel2/version_production.js?' + (new Date).getTime();
       s.addEventListener('load', function() {
-        console.log('loaded version_production: ', window.current_panel_version);
         if(callback) callback(window.current_panel_version);
       }, false);
       document.getElementsByTagName("head")[0].appendChild(s);
