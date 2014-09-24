@@ -22,7 +22,7 @@ function waitFor(condition_func, success_func, timeout) {
       return;
     }
     count++;
-    if(count * 5 > timeout) {
+    if(count * 10 > timeout) {
       QUnit.ok(false, 'Превышен интервал ожидания waitFor: ' + condition_func.toString());
       QUnit.start();
       return;
@@ -1780,46 +1780,50 @@ QUnit.asyncTest("Тест изменения настроек модулей", f
       var that = this;
       waitPanelInitialization(this.contentWindow, function() {
         (function($) {
-        $('.pane-bubble:first').click();
-        var pane = $('.pane:visible');
-        /// Ждём прорисовки виджета
-        var button = pane.find('.button.panel_settings');
-        button.find('a').click();
-
         waitFor(function() {
-          return $('a[href=#edit-modules-wrapper]').length > 0;
+          return apply_initialized;
         }, function() {
-          $('a[href=#edit-modules-wrapper]').click();
+          $('.pane-bubble:first').click();
+          var pane = $('.pane:visible');
+          /// Ждём прорисовки виджета
+          var button = pane.find('.button.panel_settings');
+          button.find('a').click();
 
-          $('.ui-collapsible-heading-toggle').each(function() {
-            if($(this).text().indexOf('Базовый модуль GWPanel 2') != -1) {
-              $(this).click();
-              assert.equal($('input[name=panel_test_func]:visible').length, 1,
-                'чекбокс включения-выключения модуля должен быть виден');
+          waitFor(function() {
+            return $('a[href=#edit-modules-wrapper]').length > 0;
+          }, function() {
+            $('a[href=#edit-modules-wrapper]').click();
 
-              assert.equal($('input[name=panel_test_func][checked=checked]').length, 1,
-                'чекбокс должен быть включен');
+            $('.ui-collapsible-heading-toggle').each(function() {
+              if($(this).text().indexOf('Базовый модуль GWPanel 2') != -1) {
+                $(this).click();
+                assert.equal($('input[name=panel_test_func]:visible').length, 1,
+                  'чекбокс включения-выключения модуля должен быть виден');
 
-              assert.equal($('#param-panel_test_func-checkbox').length, 1,
-                'чекбокс настроек должен быть виден');
-              assert.equal($('#param-panel_test_func-checkbox').attr('checked'), 'checked',
-                'чекбокс настроек должен быть включен');
+                assert.equal($('input[name=panel_test_func][checked=checked]').length, 1,
+                  'чекбокс должен быть включен');
 
-              $('label[for=param-panel_test_func-checkbox]').click();
+                assert.equal($('#param-panel_test_func-checkbox').length, 1,
+                  'чекбокс настроек должен быть виден');
+                assert.equal($('#param-panel_test_func-checkbox').attr('checked'), 'checked',
+                  'чекбокс настроек должен быть включен');
 
-              var options = that.contentWindow.__panel.getOptions();
-              assert.equal(options.settings.panel.panel_test_func.checkbox, false,
-                'чекбокс в настройках должен быть отключен');
+                $('label[for=param-panel_test_func-checkbox]').click();
 
-              $('input[name=panel_test_func]').prev().click();
+                var options = that.contentWindow.__panel.getOptions();
+                assert.equal(options.settings.panel.panel_test_func.checkbox, false,
+                  'чекбокс в настройках должен быть отключен');
 
-              var options = that.contentWindow.__panel.getOptions();
+                $('input[name=panel_test_func]').prev().click();
 
-              assert.notEqual(options.blacklist.indexOf('panel_test_func'), -1,
-                'panel_test_func должен быть в чёрном списке');
+                var options = that.contentWindow.__panel.getOptions();
 
-              QUnit.start();
-            }
+                assert.notEqual(options.blacklist.indexOf('panel_test_func'), -1,
+                  'panel_test_func должен быть в чёрном списке');
+
+                QUnit.start();
+              }
+            });
           });
         });
       }).apply(that.contentWindow, [that.contentWindow.jQuery])
