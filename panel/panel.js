@@ -1126,7 +1126,7 @@ var Panel2 = new function() {
         var href = location.href;
         if(href.charAt(location.href.length - 1) == '?' || href.charAt(location.href.length - 1) == '&')
           href = location.href.substr(0, location.href.length - 1);
-        window.parent.postMessage(toJSON({'type': 'frame', 'title': document.title, 'href': href}), '*');
+        window.parent.postMessage(JSON.stringify({'type': 'frame', 'title': document.title, 'href': href}), '*');
       }
 
       instance.ready(function() {
@@ -1669,7 +1669,7 @@ var Panel2 = new function() {
     */
     gotoHref: function(href) {
       if(contentFrame) {
-        contentFrame.contentWindow.postMessage(toJSON({'type': 'location', 'href': href}), '*');
+        contentFrame.contentWindow.postMessage(JSON.stringify({'type': 'location', 'href': href}), '*');
         jQuery('.pane:visible').hide();
         jQuery('.pane-bubble.active').removeClass('active');
       } else {
