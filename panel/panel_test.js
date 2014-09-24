@@ -142,6 +142,7 @@ QUnit.asyncTest("Тест передачи длинной строки", functio
   });
 });
 
+if(!jQuery.browser.safari) {
 QUnit.asyncTest("Тест передачи большого массива", function(assert) {
   expect(2);
   var huge_array = [];
@@ -157,6 +158,7 @@ QUnit.asyncTest("Тест передачи большого массива", fun
     });
   });
 });
+}
 
 QUnit.asyncTest("Тест передачи русских символов", function(assert) {
   expect(2);
@@ -212,6 +214,7 @@ QUnit.asyncTest("Тест событий из чужого окна (iframe)", f
   }).appendTo('#qunit-fixture');
 });
 
+if(!jQuery.browser.safari) {
 QUnit.asyncTest("Массовый тест событий", function(assert) {
   expect(2);
   var counter = 0;
@@ -267,6 +270,7 @@ QUnit.asyncTest("Массовый тест событий", function(assert) {
     }).appendTo('#qunit-fixture');
   });
 });
+}
 
 QUnit.asyncTest("Отвязка событий", function(assert) {
   expect(1);
