@@ -205,7 +205,7 @@
     panel.panel_settings_init(function() {
       /// Мы должны отключить Илюшины стили, иначе они конфликтуют с jQuery mobile-овскими
       jQuery.each(document.styleSheets, function(i, stylesheet) {
-        if(!stylesheet.href || stylesheet.href.indexOf('/i/gw.css') != -1) {
+        if((!stylesheet.href && !stylesheet.gwpanel) || stylesheet.href.indexOf('/i/gw.css') != -1) {
           stylesheet.disabled = true;
         }
       });
