@@ -995,7 +995,6 @@ var Panel2 = new function() {
       }
 
       version = parseInt(instance.getCookies()['gwp2_v']) || 1;
-      console.log(version);
 
       var variantID = environment + '_opts_var_' + instance.currentPlayerID();
       var __local_variant = localStorage['gwp2_' + variantID];
@@ -2011,7 +2010,6 @@ var Panel2 = new function() {
      */
     getCached: function(generator, callback, condition) {
       var cid = 'cached_' + generator.toString().replace(/[\n\s\t]/g, '').hashCode();
-      console.log(cid);
       instance.get(cid, function(data) {
         if(!condition || jQuery.type(data) == 'null' || 
           (data.type == 'time' && data.expiration < (new Date).getTime())

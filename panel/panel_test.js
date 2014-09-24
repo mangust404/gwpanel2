@@ -23,7 +23,7 @@ function waitFor(condition_func, success_func, timeout) {
     }
     count++;
     if(count * 5 > timeout) {
-      QUnit.ok(false, 'Превышен интервал ожидания waitFor');
+      QUnit.ok(false, 'Превышен интервал ожидания waitFor: ' + condition_func.toString());
       QUnit.start();
       return;
     }
