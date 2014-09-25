@@ -48,7 +48,8 @@ jQuery.extend(panel, {
       $forumHeader = $tempList.find('b:contains("' + forumsDefine[section].header + '")');
 
       for(i = 0; i < length; i++){
-        $tempList.find('a[href="/threads.php?fid=' + dataSection[i] + '"]').closest('tr').remove();
+        console.log(dataSection[i]);
+        $tempList.find('a[href="/threads.php?' + dataSection[i] + '"]').closest('tr').remove();
       }
       if(length == forumsDefine[section].count){
         $forumHeader.closest('tr').remove();
