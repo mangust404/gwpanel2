@@ -697,10 +697,11 @@ var Panel2 = new function() {
           if(widget.height + height> jQuery(window).height()) __widget.css({height: jQuery(window).height() - height - 12});
           __widget[0].widget = widget;
 
+          var __args = type.arguments || [];
+
           var __options = {};
           if(widget.arguments && jQuery.type(widget.arguments) == 'object') 
             jQuery.extend(__options, widget.arguments);
-
           jQuery.extend(__options, {
             save: function(callback) {
               for(var key in __options) {
@@ -715,7 +716,8 @@ var Panel2 = new function() {
             }
           });
 
-          instance[type.callback].apply(__widget, [__options]);
+          __args.push(__options);
+          instance[type.callback].apply(__widget, __args);
           __widget.mousedown(function(e) {
             if(jQuery(e.target).hasClass('float-widget')) var that = jQuery(e.target);
             else var that = jQuery(e.target).parents('.float-widget');

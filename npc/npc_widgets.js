@@ -154,6 +154,11 @@ jQuery.extend(panel, {
       drawTimer(data, $that);
     });
     this.append(jQuery('<div class="npcupdatetime"></div>').css({'text-align': 'right'}));
+  },
+
+  /// Пустая функция для обратной совместимости со скриптом npc_list.js
+  npcUpdateLocations: function() {
+
   }
   
 });
