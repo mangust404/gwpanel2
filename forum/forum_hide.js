@@ -1,7 +1,7 @@
 (function(panel) {
   var forumsDefine = {
     "main_forums" : {"count": 16, "header": "Основные форумы"},
-    "trade_forums": {"count": 12, "header": "Торговые форумы"},
+    "trade_forums": {"count": 12, "header": "Торговля"},
     "sud_forums"  : {"count": 4, "header": "Суд"},
     "tech_forums" : {"count": 5, "header": "Технические вопросы"},
     "rh_forums"   : {"count": 1, "header": "Автономные районы"}
@@ -55,16 +55,7 @@ jQuery.extend(panel, {
       } else {
         $tip = jQuery("<div>").html(" Скрыто форумов: " + i).addClass('tip_forumHeader');
         $tip.prop("title", "Их номера: " + dataSection.join(", "));
-
-        if(section == "trade_forums"){
-          jQuery(
-            '<div>' +
-              '<b><a style="color: #990000" href="/forum.php?gid=2">Торговые форумы »</a></b>' +
-              '&nbsp;&nbsp; | <span style="font-size:7pt;">Торговые форумы вынесены в отдельный подраздел</span>' +
-            '</div>').addClass('def_forumHeader');
-        } else {
-          $forumHeader.addClass('def_forumHeader');
-        }
+        $forumHeader.addClass('def_forumHeader');
         $forumHeader.after($tip);
       }
     }
