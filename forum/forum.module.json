@@ -1,0 +1,62 @@
+{
+  "requires": "", 
+  "excludes": "",
+  "access": "", 
+  "title": "Форум",
+  "author": "гном убийца",
+  "author_link": "http://www.ganjawars.ru/info.php?id=433067",
+  "weight": 1, 
+  "apply": {
+    "/forum.php": [
+      "forum_hide"
+    ]
+  }, 
+  "settings": {
+    "forum_hide": {
+      "file": "forum_hide.js",
+      "description": "Скрыть ненужные разделы форума",
+      "configure":{
+        "main_forums": {
+          "type": "checkboxes",
+          "title": "Основные форумы",
+          "options": "__panel.forum_hide_main",
+          "default": {},
+          "file": "forum_data.js",
+          "description": "Можно выбрать несколько значений"
+        },
+        "trade_forums": {
+          "type": "checkboxes",
+          "title": "Торговые форумы",
+          "options": "__panel.forum_hide_trade",
+          "default": {},
+          "file": "forum_data.js",
+          "description": "Можно выбрать несколько значений"
+        },
+        "sud_forums": {
+          "type": "checkboxes",
+          "title": "Судебные форумы",
+          "options": "__panel.forum_hide_sud",
+          "default": {},
+          "file": "forum_data.js",
+          "description": "Можно выбрать несколько значений"
+        },
+        "tech_forums": {
+          "type": "checkboxes",
+          "title": "Технические вопросы",
+          "options": "__panel.forum_hide_tech",
+          "default": {},
+          "file": "forum_data.js",
+          "description": "Можно выбрать несколько значений"
+        },
+        "rh_forums": {
+          "type": "checkboxes",
+          "title": "Автономные районы",
+          "options": "__panel.forum_hide_rh",
+          "default": {},
+          "file": "forum_data.js",
+          "description": "Можно выбрать несколько значений"
+        }
+      }
+    }
+  }
+}
