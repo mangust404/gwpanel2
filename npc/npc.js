@@ -24,7 +24,6 @@ jQuery.extend(panel, {
     status.id = params['id'];
     
     this.get('npc' + params['id'], function(npcState) {
-      console.log(npcState);
       if(params['action_submit'] == 'yes') {
         // Соглашение на квест
         __panel.npc_questSubmit(status);
@@ -47,9 +46,10 @@ jQuery.extend(panel, {
           if(time > 0) {
             npcState.starttime = (new Date()).getTime();
             npcState.timeout = time;
-            npcState.data = 'next_quest';
-            __panel.set('npc' + npcState.id, npcState);
-            __panel.triggerEvent('npc_update', npcState);
+            npcState.timer = 'next_quest';
+            __panel.set('npc' + npcState.id, npcState, function() {
+              __panel.triggerEvent('npc_update', npcState);
+            });
           }
         }
       };

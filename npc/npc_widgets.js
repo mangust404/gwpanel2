@@ -1,6 +1,5 @@
 (function(panel) {
   var npcLocationsUpdate, npcLocationsUpdateScript;
-  var npcIntervals = {};
   
   function npc_timerFormat(s) {
     var h = Math.floor(s / 3600);
@@ -11,18 +10,18 @@
   
   function drawTimer(data, widget) {
     if(!data || !data.id) return;
-    if(npcIntervals[data.id]) {
-      clearInterval(npcIntervals[data.id]);
+    if(widget.npcIntervals[data.id]) {
+      clearInterval(widget.npcIntervals[data.id]);
     }
     if(data.timer && (data.starttime + data.timeout * 1000) > (new Date).getTime()) {
       switch(data.timer) {
         case 'next_quest':
           var endTime = data.starttime + data.timeout * 1000;
-          npcIntervals[data.id] = setInterval(function() {
+          widget.npcIntervals[data.id] = setInterval(function() {
             var now = (new Date()).getTime();
             if(endTime <= now) {
               panel.triggerEvent('npc_timer', {type: data.timer, id: data.id, timeout: data.timeout});
-              clearInterval(npcIntervals[data.id]);
+              clearInterval(widget.npcIntervals[data.id]);
               widget.find('.npc' + data.id + 'timer').html('');
               return;
             }
@@ -32,11 +31,11 @@
         break;
         case 'attack':
           var endTime = data.starttime + data.timeout * 1000;
-          npcIntervals[data.id] = setInterval(function() {
+          widget.npcIntervals[data.id] = setInterval(function() {
             var now = (new Date()).getTime();
             if(endTime <= now) {
               panel.triggerEvent('npc_timer', {type: data.timer, id: data.id, timeout: data.timeout});
-              clearInterval(npcIntervals[data.id]);
+              clearInterval(widget.npcIntervals[data.id]);
               widget.find('.npc' + data.id + 'timer').html('');
               return;
             }
@@ -55,6 +54,7 @@ jQuery.extend(panel, {
     this.addClass('npc-widget');
     var $table = jQuery('<table></table>').appendTo(this);
     var $that = this;
+    $that.npcIntervals = {};
     panel.loadScript('npc/npc_list.js', function() {
       panel.getCached(function(callback) {
         // судя по всему jQuery не цепляет .load событие на скрипты с чужого домена

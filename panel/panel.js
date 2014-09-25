@@ -1578,7 +1578,7 @@ var Panel2 = new function() {
           listenerID += index++;
         }
 
-
+console.log('pre init bind', type);
         instance.ready(function() {
           return instance.crossWindow.bind(type, callback, listenerID);
         })
@@ -2124,6 +2124,25 @@ var Panel2 = new function() {
     getVersion: function() {
       return version;
     },
+
+    /**
+    * Вывод читаемой фразы с количеством
+    * @param {int} count - количество
+    * @param {string} one - текст на 1, 21, 31... etc
+    * @param {string} two - текст на 2, 3, 4
+    * @param {string} many - текст на 5, 6, ..., 11, 12, ... 20...
+    */
+    pluralize: function(count, one, two, many) {
+      if((count % 10) == 1 && (count % 100) != 11) {
+        return one;
+      } else if( (count % 10) >= 2 && (count % 10) <= 4 && 
+        ( count % 100 < 10 || count % 100 >=20 )) {
+        return two;
+      } else {
+        return many;
+      }
+    },
+
     /**
     * Публичные аттрибуты
     */
