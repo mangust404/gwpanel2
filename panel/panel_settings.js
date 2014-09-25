@@ -459,12 +459,10 @@
             }).end();
             if(panel_apply.settings[func_name].configure) {
               /// Дополнительные настройки
-              var add_fieldset = jQuery('<div class="' + 
+              var add_fieldset = jQuery('<div data-role="collapsible" class="' + 
                 (is_blacklisted? 'ui-disabled': '') + 
                 ' add-settings ui-corner-all custom-corners ui-mini">\
-  <div class="ui-bar ui-bar-a">\
-    <h3>Дополнительные настройки</h3>\
-  </div>\
+  <h3>Дополнительные настройки</h3>\
   <div class="ui-body ui-body-a">\
     <fieldset data-role="controlgroup">\
     </fieldset>\
