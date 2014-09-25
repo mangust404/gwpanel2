@@ -67,7 +67,12 @@ jQuery.extend(panel, {
       }, function(data) {
         var d = (new Date);
         d.setTime(data.npcUpdateTime * 1000);
-        var timeString = 'обновлено ' + d.toLocaleString();
+        var seconds_ago = ((new Date).getTime() / 1000 - data.npcUpdateTime);
+        var minutes_ago = Math.floor(seconds_ago / 60);
+        var timeString = 'обновлено ' + (seconds_ago < 20? 'только что': (seconds_ago < 60? 'минуту назад': 
+                          minutes_ago + ' ' + 
+                          panel.pluralize(minutes_ago, 'минуту', 'минуты', 'минут')
+                          + ' назад'));
         jQuery(panel.npc_list_island[type]).map(function() {
           var id = this.id;
           var name = this.name;
