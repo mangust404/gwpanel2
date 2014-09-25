@@ -127,6 +127,14 @@
   z-index: 2;
 }
 
+.float-widget.fixed {
+  position: fixed;
+}
+
+.float-widget.no-opacity {
+  opacity: 1;
+}
+
 .pane-bubble.drag-over {
   border: 2px dashed red;
   opacity: 1;

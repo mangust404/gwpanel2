@@ -697,6 +697,7 @@
       var current_options = panel.getOptions();
       var self_init = false;
       widgetData.arguments = widgetData.arguments || {};
+      var $widget = this;
 
       var __data = widgetData || {};
       if(!jQuery('#settings-form-popup').length) {
@@ -817,6 +818,73 @@
         }
 
         draw_pane(2); draw_pane(3);
+      }
+
+      if(widgetKind == 'float') {
+        /// Настройки, специфичные только для плавающих виджетов
+        var $visibility = jQuery('<div data-role="collapsible">\
+<h3>Настройки видимости</h3>\
+<div class="ui-body"></div>\
+</div>').appendTo('#settings-form-popup').find('.ui-body');
+
+        $visibility.append('<label for="fixed">Зафиксирован</label>')
+        .append(jQuery('<input type="checkbox" id="fixed"' + 
+            (widgetData.fixed? ' checked="checked"': '') + ' />').change(function() {
+          if(this.checked) {
+            widgetData.fixed = true;
+            console.log(widgetData);
+            $widget.addClass('fixed');
+          } else {
+            delete widgetData.fixed;
+            $widget.removeClass('fixed');
+          }
+        }))
+        .append('<label for="no-opacity">Непрозрачный</label>')
+        .append(jQuery('<input type="checkbox" id="no-opacity"' + 
+            (widgetData.no_opacity? ' checked="checked"': '') + ' />').change(function() {
+          if(this.checked) {
+            widgetData.no_opacity = true;
+            $widget.addClass('no-opacity');
+          } else {
+            delete widgetData.no_opacity;
+            $widget.removeClass('no-opacity');
+          }
+        }));
+
+        if(isEdit) {
+          $visibility.append('<label for="blacklist-page">Не показывать на этой странице</label>')
+          .append(jQuery('<input type="checkbox" id="blacklist-page"' + 
+            (jQuery.type(widgetData.blacklist) == 'array' 
+              && widgetData.blacklist.indexOf(location.pathname) > -1? 
+              ' checked="checked"': '') + '>').change(function() {
+            if(this.checked) {
+              if(jQuery.type(widgetData.blacklist) == 'array') {
+                if(widget.blacklist.indexOf(location.pathname) == -1) {
+                  widgetData.blacklist.push(location.pathname);
+                }
+              } else {
+                widgetData.blacklist = [location.pathname];
+              }
+              jQuery('#only-page').removeAttr('checked').checkboxradio('refresh');
+              delete widgetData.only_page;
+            } else {
+              var ind = widgetData.blacklist.indexOf(location.pathname);
+              if(ind > -1) widgetData.blacklist.splice(i, 1);
+              if(widgetData.blacklist.length == 0) delete widgetData.blacklist;
+            }
+          }))
+          .append('<label for="only-page">Показывать только на этой странице</label>')
+          .append(jQuery('<input type="checkbox" id="only-page"' + 
+            (widgetData.only_page? ' checked="checked"': '') + '>').change(function() {
+            if(this.checked) {
+              widgetData.only_page = location.pathname;
+              jQuery('#blacklist-page').removeAttr('checked').checkboxradio('refresh');
+              delete widgetData.blacklist;
+            } else {
+              delete widgetData.only_page;
+            }
+          }));
+        }
       }
 
       jQuery('#settings-form-popup')

@@ -640,24 +640,6 @@ var Panel2 = new function() {
   function initFloatWidgets(redraw) {
     var modules = {};
     
-/*    if(jQuery.type(options.widgets) == 'array') {
-      for(var j = 0; j < options.widgets.length; j++) {
-        var type = options.widgets[j].type;
-        var module = panel_apply.widgets[type];
-        if(!type) {
-          options.widgets.splice(j, 1);
-          continue;
-        }
-        if(!module) {
-          continue;
-        };
-        if(jQuery.type(modules[module.module]) == 'undefined') {
-          modules[module.module] = [];
-        }
-        if(modules[module.module].indexOf(module.file) == -1)
-          modules[module.module].push({file: module.file, widget: options.widgets[j], index: j});
-      }
-    }*/
     var index = 0;
     jQuery.each(options.widgets, function(index) {
       if(!this.type || !panel_apply.widgets[this.type]) return;
@@ -665,6 +647,14 @@ var Panel2 = new function() {
       var widget = this;
       widget.index = index;
       widget.float = true;
+      /// Виджет выводится только на одной странице
+      if(jQuery.type(widget.only_page) == 'string') {
+        if(widget.only_page != location.pathname) return;
+      } else if(jQuery.type(widget.blacklist) == 'array') {
+        /// виджет не должен выводиться на этой странице
+        if(widget.blacklist.indexOf(location.pathname) > -1) return;
+      }
+
       /// Если виджет уже прорисован, выходим
       if(jQuery('#float-' + widget.index + '-' + widget.type).length > 0) return;
 
@@ -675,7 +665,7 @@ var Panel2 = new function() {
         } else {
           var width = type.width * options.system.btnwidth;
           var height = type.height * options.system.btnheight;
-          var __widget = jQuery('<div class="float-widget ' + widget.type + '"></div>')
+          var $widget = jQuery('<div class="float-widget ' + widget.type + '"></div>')
             .attr('id', 'float-' + widget.index + '-' + widget.type)
             .css({
               left: widget.left,
@@ -686,16 +676,20 @@ var Panel2 = new function() {
             .dblclick(function() {
               instance.loadScript('panel/panel_settings.js', function() {
                 instance.panel_settings_init(function() {
-                  instance.panel_settings_form(panel_apply.widgets[widget.type], 
-                    'float', widget, true);
+                  instance.panel_settings_form.apply($widget, [panel_apply.widgets[widget.type], 
+                    'float', widget, true]);
                 });
 
               });
             })
             .appendTo(document.body);
-          if(widget.left + width> jQuery(window).width()) __widget.css({left: jQuery(window).width() - width - 12});
-          if(widget.height + height> jQuery(window).height()) __widget.css({height: jQuery(window).height() - height - 12});
-          __widget[0].widget = widget;
+          if(widget.left + width> jQuery(window).width()) $widget.css({left: jQuery(window).width() - width - 12});
+          if(widget.height + height> jQuery(window).height()) $widget.css({height: jQuery(window).height() - height - 12});
+
+          if(widget.fixed) $widget.addClass('fixed');
+          if(widget.no_opacity) $widget.addClass('no-opacity');
+
+          $widget[0].widget = widget;
 
           var __args = type.arguments || [];
 
@@ -717,8 +711,8 @@ var Panel2 = new function() {
           });
 
           __args.push(__options);
-          instance[type.callback].apply(__widget, __args);
-          __widget.mousedown(function(e) {
+          instance[type.callback].apply($widget, __args);
+          $widget.mousedown(function(e) {
             if(jQuery(e.target).hasClass('float-widget')) var that = jQuery(e.target);
             else var that = jQuery(e.target).parents('.float-widget');
             if(!that.length) return false;
