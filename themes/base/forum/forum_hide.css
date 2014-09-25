@@ -1,0 +1,10 @@
+.tip_forumHeader {
+    font-size: 10px;
+    font-style: italic;
+    cursor: default;
+    text-align: right;
+    text-decoration: dotted;
+}
+.def_forumHeader{
+    float: left;
+}
