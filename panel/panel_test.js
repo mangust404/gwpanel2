@@ -1700,6 +1700,14 @@ QUnit.asyncTest("Тест формы добавления и настройки 
               $('#param-panel_foo_widget-text1').val('тест').change();
               $('#param-panel_foo_widget-text2').val('').change();
 
+              assert.equal($('#fixed').length, 1, 'Должен быть чекбокс фиксации');
+              $('#fixed').attr('checked', 'checked').change().checkboxradio('refresh');
+              assert.equal($('#no-opacity').length, 1, 'Должен быть чекбокс убирания прозрачности');
+              $('#no-opacity').attr('checked', 'checked').change().checkboxradio('refresh');
+              assert.equal($('#blacklist-page').length, 1, 'Должен быть чекбокс не показывать на этой странице');
+              assert.equal($('#only-page').length, 1, 'Должен быть чекбокс показывать только на этой странице');
+              $('#only-page').attr('checked', 'checked').change().checkboxradio('refresh');
+              
               $('.widget-save').click();
 
               waitFor(function() {
@@ -1725,13 +1733,113 @@ QUnit.asyncTest("Тест формы добавления и настройки 
 
                 assert.deepEqual(widget.arguments.text1, 'тест', 'Проверка text1');
                 assert.deepEqual(widget.arguments.text2, '', 'Проверка text2');
-                QUnit.start();
+
+                assert.deepEqual(widget.fixed, true, 'Проверка fixed');
+                assert.deepEqual(widget.no_opacity, true, 'Проверка no_opacity');
+                assert.deepEqual(widget.only_page, location.pathname, 'Проверка only_page');
+
+                /// переходим на другую страницу
               });
             });
           });
         });
       }).apply(that.contentWindow, [that.contentWindow.jQuery])
       });
+    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+  });
+  //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
+});
+
+QUnit.asyncTest("Тест изменения видимости плавающих виджетов", function(assert) {
+  var options = jQuery.extend({}, panelSettingsCollection.default);
+  /// Создаём конфигурацию с пустыми окнами
+  for(var i = 0; i < 4; i++) {
+    options.panes[i].buttons = options.panes[i].widgets = [];
+  }
+  options.widgets = [];
+  options.widgets.push({
+    type: 'panel_foo_widget',
+    width: 6,
+    height: 1,
+    left: 100,
+    top: 200,
+    arguments: {},
+    module: 'panel'
+  });
+
+  var current = location.pathname;
+  var suff = '?gwpanel_testing&continue&gwpanel_pause';
+  var dest = (current == '/forum.php'? '/me/': '/forum.php');
+
+  var $widget;
+
+  __panel.setOptions(options, undefined, function() {
+    $('<iframe id="goto-href-iframe" src="' + current + suff + '"></iframe>').load(function() {
+      var __window = this.contentWindow;
+      waitFor(function() {
+        return __window.__panel && __window.__panel.__ready && __window.__panel.__load;
+      }, function() {
+        var $ = __window.jQuery;
+        __window.__panel.panel_foo_widget = function(options) {
+          $widget = this;
+          this.append('<p>Panel foo widget</p>');
+          var that = this;
+          $.each(options, function(key, val) {
+            if(key == 'save') return;
+            that.append('<p>' + key + '=' + val + '</p>');
+          });
+        };
+
+        __window.panel_apply.widgets['panel_foo_widget'] = {
+          callback: 'panel_foo_widget',
+          configure: {},
+          title: 'Тестовый виджет',
+          height: 1,
+          width: 2,
+          file: 'panel.js',
+          module: 'panel'
+        };
+
+        __window.__panel.__ready();
+        __window.__panel.__load();
+
+        if(__window.location.pathname == current) {
+          if (__window.location.search.indexOf('test-finish') > -1) {
+            /// это завершение теста, мы отрубили виджет на этой странице
+            assert.equal($('.panel_foo_widget:visible').length, 0, 'Виджета не должно быть на этой странице');
+            QUnit.start();
+          }
+          /// на этой странице мы выставляем настройки виджета
+          $widget.dblclick();
+          waitFor(function() {
+            return $('#only-page').length > 0;
+          }, function() {
+            if(__window.location.search.indexOf('test-blacklist') > -1) {
+              $('#blacklist-page').attr('checked', 'checked').change().checkboxradio('refresh');
+              $('.widget-save').click();
+              __window.location.href = dest + suff + '&blacklist=1';
+            } else {
+              $('#only-page').attr('checked', 'checked').change().checkboxradio('refresh');
+              $('.widget-save').click();
+              __window.location.href = dest + suff + '&only-page=1';
+            }
+          });
+        } else if(__window.location.pathname == dest) {
+          /// на этой странице мы проверяем видимость
+          if(__window.location.search.indexOf('only-page') > -1) {
+            assert.equal(__window.__panel.getOptions().widgets[0].only_page, current);
+            assert.equal($('.panel_foo_widget:visible').length, 0, 'Виджета не должно быть на этой странице');
+            /// возвращаемся на предыдущую страницу и тестируем blacklist
+            __window.location.href = current + suff + '&test-blacklist';
+          } else if(__window.location.search.indexOf('blacklist') > -1) {
+            assert.deepEqual(__window.__panel.getOptions().widgets[0].blacklist, ['/me/']);
+            assert.equal($('.panel_foo_widget:visible').length, 1, 'Виджета должен быть на этой странице');
+            /// переходим на основную
+            __window.location.href = current + suff + '&test-finish';
+          }
+        }
+      });
+
     }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
   });
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();

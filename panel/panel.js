@@ -1572,7 +1572,6 @@ var Panel2 = new function() {
           listenerID += index++;
         }
 
-console.log('pre init bind', type);
         instance.ready(function() {
           return instance.crossWindow.bind(type, callback, listenerID);
         })
