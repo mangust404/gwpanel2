@@ -2007,6 +2007,71 @@ QUnit.asyncTest("Тест отключения функций", function(assert)
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 });
 
+QUnit.asyncTest("Тест включения функций, отключенных по-дефолту", function(assert) {
+  expect(1);
+  var options = jQuery.extend({}, panelSettingsCollection.default);
+  options.whitelist = ['panel_test_func'];
+
+  var apply_initialized;
+
+  var completed = false;
+  __panel.setOptions(options, undefined, function() {
+    var frame;
+    waitFor(function() {
+      return frame && frame.contentWindow && frame.contentWindow.__panel 
+             && frame.contentWindow.__panel.__ready 
+             && frame.contentWindow.__panel.__load;
+    }, function() {
+
+      with(frame.contentWindow) {
+        if(!panel_apply.pages[document.location.pathname]) {
+          panel_apply.pages[document.location.pathname] = [];
+        }
+        panel_apply.pages[document.location.pathname].push('panel_test_func');
+        panel_apply.settings['panel_test_func'] = {
+          file: 'panel.js',
+          module: 'panel',
+          description: 'тестовая функция, которая по-дефолту отключена',
+          configure: {
+            checkbox: {
+              type: 'checkbox',
+              title: 'тестовый checkbox',
+              default: true
+            }
+          },
+          default: false
+        }
+        __panel.panel_test_func = function(params) {
+          QUnit.ok(true, 'Эта функция должна была запуститься');
+          completed = true;
+          QUnit.start();
+        }
+        /// инициализируем панель
+        __panel.__ready();
+        __panel.__load();
+
+        apply_initialized = true;
+      }
+    })
+    
+    frame = $('<iframe id="goto-href-iframe" src="' + document.location.href.split('?')[0]
+       + '?gwpanel_testing&continue&gwpanel_pause"></iframe>').load(function() {
+      var that = this;
+      waitPanelInitialization(this.contentWindow, function() {
+        waitFor(function() {
+          return apply_initialized;
+        }, function() {
+          if(!completed) {
+            QUnit.ok(false, 'Отключенная функция не запустилась');
+            QUnit.start();
+          }
+        });
+      });
+    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show().get(0);
+  });
+  //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
+});
+
 // Тест конвертации денег в число.
 QUnit.test("Тест конвертации денег в число", function(assert) {
   assert.equal(__panel.convertingMoneyToInt(100), 100, "Converting: 100 > 100");

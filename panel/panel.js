@@ -931,7 +931,13 @@ var Panel2 = new function() {
           }
         }
         jQuery(pages).each(function(index, func) {
-          if(options.blacklist && options.blacklist.indexOf(func) > -1) return;
+          if(
+              /// если функция в чёрном списке
+              (options.blacklist && options.blacklist.indexOf(func) > -1) ||
+              /// или функция по-дефолту отключена и не в белом списке, либо белого списка нет
+              (panel_apply.settings[func].default === false 
+                && (!options.whitelist || options.whitelist.indexOf(func) == -1))
+            ) return;
           var module = panel_apply.settings[func].module;
           instance.loadScript(module + '/' + panel_apply.settings[func].file, function() {
             if(jQuery.type(instance[func]) == 'undefined') {

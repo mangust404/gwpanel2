@@ -41,7 +41,8 @@
     },
     "player_carma": {
       "file": "player_carma.js",
-      "description": "Скрывать карму игроков"
+      "description": "Скрывать карму игроков",
+      "default": false
     }
   }
 }

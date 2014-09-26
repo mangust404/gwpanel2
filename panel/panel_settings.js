@@ -435,24 +435,45 @@
           li.attr('data-role', 'collapsible');
           jQuery.each(configurable_funcs, function(i, func_name) {
             var current_options = panel.getOptions();
-            var is_blacklisted = current_options.blacklist && current_options.blacklist.indexOf(func_name) > -1;
+            if(panel_apply.settings[func_name].default === false) 
+              var is_blacklisted = !(current_options.whitelist && current_options.whitelist.indexOf(func_name) > -1);
+            else
+              var is_blacklisted = current_options.blacklist && current_options.blacklist.indexOf(func_name) > -1;
+
             var checkbox_li = jQuery('<li><label><input name="' + func_name + '" type="checkbox"' + 
               (is_blacklisted? '': 
                 ' checked="checked"') + '>' + configurable_desc[i] + '</label>' + '</li>')
               .appendTo(settings_ul).find('input').change(function() {
               if(this.checked) {
-                /// удаляем из чёрного списка
-                var index = current_options.blacklist.indexOf(this.name);
-                if(index > -1) {
-                  current_options.blacklist.splice(index, 1);
+                if(panel_apply.settings[func_name].default === false) {
+                  /// добавляем в белый список
+                  current_options.whitelist = current_options.whitelist || [];
+                  if(current_options.whitelist.indexOf(this.name) == -1)
+                    current_options.whitelist.push(this.name);
                   panel.setOptions(current_options);
+                } else {
+                  /// удаляем из чёрного списка
+                  var index = current_options.blacklist.indexOf(this.name);
+                  if(index > -1) {
+                    current_options.blacklist.splice(index, 1);
+                    panel.setOptions(current_options);
+                  }
                 }
                 jQuery(this).closest('li').find('.add-settings').removeClass('ui-disabled');
               } else {
-                ///добавляем в чёрный список, эта функция нигде подключаться не будет
-                current_options.blacklist = current_options.blacklist || [];
-                if(current_options.blacklist.indexOf(this.name) == -1)
-                  current_options.blacklist.push(this.name);
+                if(panel_apply.settings[func_name].default === false) {
+                  /// Удаляем из белого списка
+                  var index = current_options.whitelist.indexOf(this.name);
+                  if(index > -1) {
+                    current_options.whitelist.splice(index, 1);
+                    panel.setOptions(current_options);
+                  }
+                } else {
+                  ///добавляем в чёрный список, эта функция нигде подключаться не будет
+                  current_options.blacklist = current_options.blacklist || [];
+                  if(current_options.blacklist.indexOf(this.name) == -1)
+                    current_options.blacklist.push(this.name);
+                }
                 panel.setOptions(current_options);
                 jQuery(this).closest('li').find('.add-settings').addClass('ui-disabled');
               }
