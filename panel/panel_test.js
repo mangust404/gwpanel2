@@ -1967,6 +1967,7 @@ QUnit.asyncTest("Тест отключения функций", function(assert)
           panel_apply.pages[document.location.pathname] = [];
         }
         panel_apply.pages[document.location.pathname].push('panel_test_func');
+        panel_apply.pages[document.location.pathname].push('panel_test_func_default_false');
         panel_apply.settings['panel_test_func'] = {
           file: 'panel.js',
           module: 'panel',
@@ -1979,8 +1980,25 @@ QUnit.asyncTest("Тест отключения функций", function(assert)
             }
           }
         }
+        panel_apply.settings['panel_test_func_default_false'] = {
+          file: 'panel.js',
+          module: 'panel',
+          description: 'тестовая функция',
+          configure: {
+            checkbox: {
+              type: 'checkbox',
+              title: 'тестовый checkbox',
+              default: true
+            }
+          },
+          default: false
+        }
         __panel.panel_test_func = function(params) {
-          QUnit.ok(false, 'Эта функция не должна была запуститься');
+          QUnit.ok(false, 'функция panel_test_func не должна была запуститься');
+          QUnit.start();
+        }
+        __panel.panel_test_func_default_false = function(params) {
+          QUnit.ok(false, 'функция panel_test_func_default_false не должна была запуститься');
           QUnit.start();
         }
         /// инициализируем панель
