@@ -12,27 +12,6 @@
     var width = Math.round(100 * 100 * this.hp_current / health.hp_max) / 100;
     this.progressBar.css({width: width + '%'});
     //this.progressContainer.attr('title', width + '%');
-    if(width >= 80) {
-      if(this.progressImg.css('opacity') == 0.2) {
-        var width = parseInt(this.progressImg.css({opacity: 0.9}).attr('width'));
-        var count = 0;
-        var blinkInterval = setInterval(function() {
-          if(count > 5) {
-            clearInterval(blinkInterval);
-            return; 
-          }
-          var curWidth = parseInt(this.progressImg.attr('width'));
-          if(curWidth == width) {
-            this.progressImg.css({margin: '-2px 0 0 -2px'}).attr('width', width + 4);
-          } else {
-            this.progressImg.css({margin: '0'}).attr('width', width);
-          }
-          count++;
-        }, 150);
-      }
-    } else {
-      this.progressImg.css({opacity: 0.2});
-    }
     var text;
     switch(this.timerType) {
       case 0: 
@@ -95,41 +74,41 @@
   
 jQuery.extend(panel, {
   home_health_widget: function(options) {
-    var that = this;
+    var $widget = this;
+    $widget.hide();
     this.options = options;
     options.size = options.size || 2;
-    this.progressImg = jQuery('<img src="' + __panel.path_to_theme() + '/icons/heart.png" width=' + (options.size * 11 + 5) + '"/>');
-    this.hide().css({
+    panel.loadCSS('home/home_widget.css', function() {
+      if(!options.autohide) $widget.show();
+    });
+
+    if(options.size == 3) $widget.addClass('big');
+    if(options.size == 2) $widget.addClass('medium');
+    if(options.size == 1) $widget.addClass('small');
+
+    $widget.progressImg = jQuery('<img src="' + __panel.path_to_theme() + '/icons/heart.png"/>');
+    $widget.css({
       height: 'auto'
-    }).append(this.progressImg);
-    if(!options.autohide) this.show();
-    __panel.loadCSS('home/home_widget.css');
-    this.progressBarText = jQuery('<div class="progress-bar-text"></div>');
-    this.progressBar = jQuery('<div class="progress-bar"></div>').css({
-      height: options.size * 10, 
-      'line-height': options.size * 10 + 'px'
-    }).append(this.progressBarText);
-    this.progressText = jQuery('<div class="text"></div>')
-      .css({'line-height': options.size * 10 + 'px'});
-    this.timerType = options.type;
+    }).append($widget.progressImg);
+    $widget.progressBarText = jQuery('<div class="progress-bar-text"></div>');
+    $widget.progressBar = jQuery('<div class="progress-bar"></div>').append($widget.progressBarText);
+    $widget.progressText = jQuery('<div class="text"></div>');
+    $widget.timerType = options.type;
     
-    this.progressContainer = jQuery('<div class="progress-container"></div>')
-      .append(this.progressBar)
-      .append(this.progressText)
-      .appendTo(this)
-      .css({
-        height: options.size * 10
-      })
-      .attr('title', 'Нажмите для переключения вида')
+    $widget.progressContainer = jQuery('<div class="progress-container">', 
+      {title: 'Нажмите для переключения вида'})
+      .append($widget.progressBar)
+      .append($widget.progressText)
+      .appendTo($widget)
       .click(function() {
         options.type++;
         if(options.type > 2 || isNaN(options.type)) options.type = 0;
-        that.timerType = options.type;
-        __panel.setWidgetOptions(options, that);
-        __panel.get('health', function(health) {
-          home_health_timer.apply(that, [health]);
+        $widget.timerType = options.type;
+        panel.setWidgetOptions(options, $widget);
+        panel.get('health', function(health) {
+          home_health_timer.apply($widget, [health]);
         });
-        switch(that.timerType) {
+        switch($widget.timerType) {
           case 0:
             jQuery(this).attr('title', 'Процент выздоровления, от 0% до 100%');
           break;
@@ -142,28 +121,18 @@ jQuery.extend(panel, {
         }
         return false;
       });
-    this.timer100 = jQuery('<div class="this.timer100"></div>');
-    this.timer80 = jQuery('<div class="this.timer80"></div>');
+    $widget.timer100 = jQuery('<div class="this.timer100"></div>');
+    $widget.timer80 = jQuery('<div class="this.timer80"></div>');
     jQuery('<div class="timers"></div>')
-      .append(this.timer100)
-      .append(this.timer80)
-      .appendTo(this);
-    switch(options.size) {
-      case 1:
-        this.progressBarText.css({'font-size': '10px'});
-        this.progressText.css({'font-size': '10px'});
-      break;
-      case 2:
-        this.progressBarText.css({'font-size': '12px'});
-        this.progressText.css({'font-size': '12px'});
-      break;
-    }
-    __panel.get('health', function(health) {
-      home_health_progress.apply(that, [false, health]);
+      .append($widget.timer100)
+      .append($widget.timer80)
+      .appendTo($widget);
+    panel.get('health', function(health) {
+      home_health_progress.apply($widget, [false, health]);
     });
-    __panel.bind('hp_update', function(health) {
-      __panel.set('health', health);
-      home_health_progress.apply(that, [true, health]);
+    panel.bind('hp_update', function(health) {
+      panel.set('health', health);
+      home_health_progress.apply($widget, [true, health]);
     });
   }
 });

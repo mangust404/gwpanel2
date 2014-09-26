@@ -8,6 +8,18 @@
   position: absolute;
 }
 
+.home_health_widget.small img {
+  width: 16px;
+}
+
+.home_health_widget.medium img {
+  width: 27px;
+}
+
+.home_health_widget.big img {
+  width: 37px;
+}
+
 .home_health_widget .progress-container {
   width: 100px;
   border: 1px solid #990000;
@@ -15,6 +27,18 @@
   height: 30px;
   float: right;
   cursor: pointer;
+}
+
+.home_health_widget.small .progress-container {
+  height: 10px;
+}
+
+.home_health_widget.medium .progress-container {
+  height: 20px;
+}
+
+.home_health_widget.big .progress-container {
+  height: 30px;
 }
 
 .home_health_widget .progress-bar {
@@ -27,6 +51,23 @@
   overflow: hidden;
 }
 
+.home_health_widget.small .progress-bar {
+  height: 10px;
+  line-height: 10px;
+  font-size: 10px;
+}
+
+.home_health_widget.medium .progress-bar {
+  height: 20px;
+  line-height: 20px;
+  font-size: 12px;
+}
+
+.home_health_widget.big .progress-bar {
+  height: 30px;
+  line-height: 30px;
+}
+
 .home_health_widget .progress-container .text {
   font-size: 14px;
   color: #990000;
@@ -34,10 +75,35 @@
   text-align: center;
 }
 
+.home_health_widget.small .progress-container .text {
+  line-height: 10px;
+  font-size: 10px;
+}
+
+.home_health_widget.medium .progress-container .text {
+  line-height: 20px;
+  font-size: 12px;
+}
+
+.home_health_widget.big .progress-container .text {
+  line-height: 30px;
+}
+
 .home_health_widget .progress-bar .progress-bar-text {
   width: 100px;
   text-align: center;
-  font-size: 14px;
   color: #fff;
   font-weight: bold;
+}
+
+.home_health_widget.small .progress-bar .progress-bar-text {
+  font-size: 10px;
+}
+
+.home_health_widget.medium .progress-bar .progress-bar-text {
+  font-size: 12px;
+}
+
+.home_health_widget.big .progress-bar .progress-bar-text {
+  font-size: 14px;
 }

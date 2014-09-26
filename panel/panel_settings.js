@@ -293,7 +293,7 @@
       <h3 class="footer">Для добавления виджета, кликните на кнопку "Добавить" под виджетом</h3>\
     </div>\
     <div id="edit-modules-wrapper" style="display: none;" class="edit-wrapper">\
-      <h3 class="footer">Вы можете отключить ненужные для вас функции, убрав галочку с соответствующей опции</h3>\
+      <h3 class="footer">Отключите галочку с пункта и он перестанет работать</h3>\
     </div> \
     <div id="edit-other-wrapper" style="display: none;" class="edit-wrapper">\
       <div class="versions"></div>\
