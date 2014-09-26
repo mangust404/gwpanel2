@@ -1738,6 +1738,7 @@ QUnit.asyncTest("Тест формы добавления и настройки 
                 assert.deepEqual(widget.no_opacity, true, 'Проверка no_opacity');
                 assert.deepEqual(widget.only_page, location.pathname, 'Проверка only_page');
 
+                QUnit.start();
                 /// переходим на другую страницу
               });
             });
@@ -1808,6 +1809,7 @@ QUnit.asyncTest("Тест изменения видимости плавающи
             /// это завершение теста, мы отрубили виджет на этой странице
             assert.equal($('.panel_foo_widget:visible').length, 0, 'Виджета не должно быть на этой странице');
             QUnit.start();
+            return;
           }
           /// на этой странице мы выставляем настройки виджета
           $widget.dblclick();
