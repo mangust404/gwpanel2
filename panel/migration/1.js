@@ -6,10 +6,10 @@ window.panel_release_migration.push(function() {
     options.panes[4] = {width: 6, height: 5};
   }
   if(jQuery.type(options.panes[5]) != 'object') {
-    options.panes[4] = {width: 6, height: 5};
+    options.panes[5] = {width: 6, height: 5};
   }
   if(jQuery.type(options.panes[6]) != 'object') {
-    options.panes[4] = {width: 6, height: 5};
+    options.panes[6] = {width: 6, height: 5};
   }
   /// сохраняем
   __panel.setOptions(options);

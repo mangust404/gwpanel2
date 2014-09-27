@@ -2130,24 +2130,33 @@ var Panel2 = new function() {
       instance.clearCached(instance.checkVersion);
 
       /// Получаем release notes
-      var path = 'http://gwpanel.org/panel2/panel/production';
+      var prod_path = 'http://gwpanel.org/panel2/panel/production';
 
-      for(var version_index = old_version; version_index < new_version; version_index++) {
-        str_version = String(version_index);
-        for(var i = 0; i < str_version.length; i++) {
-          path += "/" + str_version.charAt(i);
+      var loaded = 0;
+      instance.get('release_notes', function(notes) {
+        /// проходим по каждой версии, которые мы ещё не получали 
+        var versions = [];
+
+        for(var version_index = old_version + 1; version_index <= new_version; version_index++) {
+          versions.push(version_index); 
         }
-        path += "/" + str_version + ".notes.js";
-        var s = document.createElement('script');
-        s.type = 'text/javascript';
-        s.src = path;
-        s.addEventListener('load', function() {
-          instance.get('release_notes', function(notes) {
+        jQuery.each(versions, function(i, version_index) {
+          str_version = String(version_index);
+          var path = prod_path; 
+          for(var i = 0; i < str_version.length; i++) {
+            path += "/" + str_version.charAt(i);
+          }
+          path += "/" + str_version + ".notes.js";
+          var s = document.createElement('script');
+          s.type = 'text/javascript';
+          s.src = path;
+          s.addEventListener('load', function() {
             notes = notes || {};
             notes[version_index] = {
-              notes: window.panel_release_notes || 'не указано',
-              date: window.panel_release_date
+              notes: window.panel_release_notes[version_index] || 'не указано',
+              date: window.panel_release_date[version_index]
             }
+            /// если в notes есть миграции, то выполняем их все  
             if(jQuery.type(window.panel_release_migration) == 'array'
                 && window.panel_release_migration.length > 0) {
               for(var m = 0; m < window.panel_release_migration.length; m++) {
@@ -2158,26 +2167,30 @@ var Panel2 = new function() {
                 }
               }
             }
-            if(version_index == new_version) {
+            if(callback) callback(notes[version_index], version_index);
+
+            loaded++;
+
+            if(loaded >= new_version - old_version) {
               /// всё обновлено до последней версии
-              if(callback) callback(notes[version_index]);
               __panel.showFlash('Произошло обновление системы. Новая версия: ' 
                 + new_version + '.' + 
                 (jQuery('#panel-settings-editor:visible').length? '': 
                   '<br />Посмотреть <a href="#release-notes" onclick="__panel.loadScript(&quot;panel/panel_settings.js&quot;, function() { __panel.panel_settings_editor(&quot;release_notes&quot;); }); return false;">заметки к выпуску</a>.'), 
                 'message');
+              instance.set('release_notes', notes);
+              /// Выставляем версию
+              version = new_version;
+              var myDate = new Date();
+              myDate.setMonth(myDate.getMonth() + 120);
+              document.cookie = "gwp2_v=" + new_version + ";expires=" + myDate 
+                               + ";domain=.ganjawars.ru;path=/";
+
             }
-            instance.set('release_notes', notes);
-          });
-        }, false);
-        document.getElementsByTagName("head")[0].appendChild(s);
-      }
-      /// Выставляем версию
-      version = new_version;
-      var myDate = new Date();
-      myDate.setMonth(myDate.getMonth() + 120);
-      document.cookie = "gwp2_v=" + new_version + ";expires=" + myDate 
-                       + ";domain=.ganjawars.ru;path=/";
+          }, false);
+          document.getElementsByTagName("head")[0].appendChild(s);
+        });
+      });
     },
 
     /**

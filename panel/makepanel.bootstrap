@@ -277,16 +277,21 @@ if(get_env() == 'production') {
       $migrate = 0;
     }
     $migrate_str = '';
+    $new_migrate = $migrate;
     foreach(glob($gwpanel_path . '/panel/migration/*.js') as $migration_file) {
       list($num, $ext) = explode('.', basename($migration_file));
       $num = intval($num);
       if($num > 0 && $num > $migrate) {
         /// добавляем содержимое файла в миграцию
         $migrate_str .= "\n" . file_get_contents($migration_file);
+        $new_migrate = $num;
       }
     }
+    file_put_contents($gwpanel_path . '/migrate', strval($new_migrate));
 
-    file_put_contents($notes_path, 'window.panel_release_notes = ' . json_encode($message) . '; window.panel_release_date = "' . date('c') . '";' . $migrate_str);
+    file_put_contents($notes_path, 'window.panel_release_notes = window.panel_release_notes || {};
+window.panel_release_date = window.panel_release_date || {};
+window.panel_release_notes[' . $version . '] = ' . json_encode($message) . '; window.panel_release_date[' . $version . '] = "' . date('c') . '";' . $migrate_str);
     print "Записан файл заметок к версии $notes_path\n";
     file_put_contents($gwpanel_path . '/version', $version);
     print "Записан файл версии {$gwpanel_path}/version\n";

@@ -652,10 +652,10 @@
           panel.checkVersion(function(remote_version) {
             if(remote_version != panel.getVersion()) {
               $that.html('обновлено');
-              panel.updateVersion(remote_version, function(notes) { 
+              panel.updateVersion(remote_version, function(notes, version) { 
                 jQuery('#edit-other-wrapper .versions .release-note:first').parent().prepend(
-                  '<p class="release-note active release-note-' + remote_version +
-                  '">Выпуск #<span class="release-num">' + remote_version + 
+                  '<p class="release-note active release-note-' + version +
+                  '">Выпуск #<span class="release-num">' + version + 
                   '</span>: <span class="notes">' + notes.notes + 
                   '</span><span class="date">' + notes.date + 
                   '</span></p>'
