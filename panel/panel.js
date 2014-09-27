@@ -2190,6 +2190,20 @@ var Panel2 = new function() {
           }, false);
           document.getElementsByTagName("head")[0].appendChild(s);
         });
+        if(new_version < old_version) {
+          /// Откат версии
+          for(var i = old_version; i > new_version; i--) {
+            delete notes[i];
+          }
+          instance.set('release_notes', notes);
+          __panel.showFlash('Произошло обновление системы, была возвращена предыдущая версия.', 
+            'message');
+          version = new_version;
+          var myDate = new Date();
+          myDate.setMonth(myDate.getMonth() + 120);
+          document.cookie = "gwp2_v=" + new_version + ";expires=" + myDate 
+                           + ";domain=.ganjawars.ru;path=/";
+        }
       });
     },
 
