@@ -67,6 +67,10 @@
   z-index: 3;
 }
 
+.pane * {
+  -webkit-touch-callout: none !important; 
+}
+
 .pane .container {
   position: relative;
   width: 100%;
