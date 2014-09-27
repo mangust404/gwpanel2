@@ -40,8 +40,10 @@ var Panel2 = new function() {
     panes: { 0: {}}
   };
   /// mouseDelta и mouseSpeed - переменные, необходимые для слежения за поведением курсора мыши
-  var mouseDelta = 0;
-  var mouseSpeed = 0;
+  var mouseDeltaX = 0;
+  var mouseSpeedX = 0;
+  var mouseDeltaY = 0;
+  var mouseSpeedY = 0;
   /// список подгружаемых пользовательских скриптов
   var scripts = {
     'panel/panel.js': {loaded: true, callbacks: [], failovers: []}
@@ -95,7 +97,7 @@ var Panel2 = new function() {
   */
   function activatePane(e) {
     var $this = jQuery(this);
-    if($this.hasClass('right') && (!e || e.type != 'click') && !$('.pane:visible').length) {
+    if($this.hasClass('right') && !$this.hasClass('footer') && (!e || e.type != 'click') && !$('.pane:visible').length) {
       /// Правые панели не активируем при наведении, потому что там из-за скроллбара ложные срабатывания
       return false;
     }
@@ -115,7 +117,11 @@ var Panel2 = new function() {
         return false;
       }
     } else {
-      pane = jQuery('<div id="pane-' + paneID + '" class="pane' + (paneID < 2? ' left': ' right') + (paneID % 2 > 0? ' bottom': ' top') + '"></div>')
+      pane = jQuery('<div id="pane-' + paneID + '" class="pane' + 
+        (paneID < 4? (paneID < 2? ' left': ' right') + 
+                      (paneID % 2 > 0? ' bottom': ' top'): 
+                     ' footer' + (paneID == 4? ' left': paneID == 5? 
+                      ' center': ' right')) + '"></div>')
         .css({
           width: options.system.btnwidth * pane_options.width,
           height: options.system.btnheight * pane_options.height
@@ -557,13 +563,32 @@ var Panel2 = new function() {
   */
   function activatePaneCheck() {
     var that = this;
-    if((Math.abs(mouseDelta) > 0.05 && Math.abs(mouseSpeed) > 0.01) || Math.abs(mouseSpeed) > 0.05 ||  jQuery('.pane:visible').length > 0) {
+    if((Math.abs(mouseDeltaX) > 0.05 && Math.abs(mouseSpeedX) > 0.01) || Math.abs(mouseSpeedX) > 0.05 ||  jQuery('.pane:visible').length > 0) {
       instance.ready(function() {
         activatePane.apply(that, []);
       });
     }
     instance.__mousestart = false;
-    mouseDelta = 0;
+    mouseDeltaX = 0;
+    if(instance.__mousestartTO > 0) {
+      clearTimeout(instance.__mousestartTO);
+      instance.__mousestartTO = 0;
+    }
+  }
+
+  /**
+  * Функция аналогичная activatePaneCheck(), 
+  * только работает для бабблов внизу страницы
+  */
+  function activateFloorPaneCheck() {
+    var that = this;
+    if((Math.abs(mouseDeltaY) > 0.05 && Math.abs(mouseSpeedY) > 0.01) || Math.abs(mouseSpeedY) > 0.05 ||  jQuery('.pane:visible').length > 0) {
+      instance.ready(function() {
+        activatePane.apply(that, []);
+      });
+    }
+    instance.__mousestart = false;
+    mouseDeltaY = 0;
     if(instance.__mousestartTO > 0) {
       clearTimeout(instance.__mousestartTO);
       instance.__mousestartTO = 0;
@@ -618,6 +643,24 @@ var Panel2 = new function() {
       if(jQuery.type(options.panes[i]) == 'object') {
         jQuery('<div id="pane-bubble-' + i + '" class="pane-bubble' + (i < 2? ' left': ' right') + (i % 2 > 0? ' bottom': ' top') + '"></div>')
           .mouseover(activatePaneCheck)
+          .click(function(e) {
+            var that = this;
+            instance.ready(function() {
+              activatePane.apply(that, [e])
+            });
+            return false;
+          })
+          .attr('paneID', i)
+          .css({'display': ((options.panes[i].widgets && options.panes[i].widgets.length) + 
+                           (options.panes[i].buttons && options.panes[i].buttons.length)) > 0? 
+                           '': 'none'})
+          .appendTo(document.body);
+      }
+    }
+    for(var i = 4; i < 7; i++) {
+      if(jQuery.type(options.panes[i]) == 'object') {
+        jQuery('<div id="pane-bubble-' + i + '" class="pane-bubble' + (i == 4? ' left': (i == 5? ' center': ' right')) + ' footer"></div>')
+          .mouseover(activateFloorPaneCheck)
           .click(function(e) {
             var that = this;
             instance.ready(function() {
@@ -802,24 +845,31 @@ var Panel2 = new function() {
       if(!instance.__mousestart) {
         instance.__mousestart = true;
         instance.__mousestartx = e.clientX;
-        mouseDelta = 0;
-        mouseSpeed = 0;
+        instance.__mousestarty = e.clientY;
+        mouseDeltaX = 0;
+        mouseDeltaY = 0;
+        mouseSpeedX = 0;
+        mouseSpeedY = 0;
         instance.__mousestartTime = (new Date()).getTime();
         if(instance.__mousestartTO > 0) {
           clearTimeout(instance.__mousestartTO);
           instance.__mousestartTO = 0;
         }
       } else {
-        mouseDelta = (e.clientX - instance.__mousestartx) /jQuery(window).width();
-        mouseSpeed = (instance.__mouseprevx - e.clientX) / (instance.__mousestartTime - (new Date()).getTime());
+        mouseDeltaX = (e.clientX - instance.__mousestartx) /jQuery(window).width();
+        mouseDeltaY = (e.clientY - instance.__mousestarty) /jQuery(window).width();
+        mouseSpeedX = (instance.__mouseprevx - e.clientX) / (instance.__mousestartTime - (new Date()).getTime());
+        mouseSpeedY = (instance.__mouseprevy - e.clientY) / (instance.__mousestartTime - (new Date()).getTime());
         if(instance.__mousestartTO > 0) clearTimeout(instance.__mousestartTO);
         instance.__mousestartTO = setTimeout(function() {
           instance.__mousestart = false;
-          mouseDelta = 0;
+          mouseDeltaX = 0;
+          mouseDeltaY = 0;
           instance.__mousestartTO = 0;
         }, 200);
       }
       instance.__mouseprevx = e.clientX;
+      instance.__mouseprevy = e.clientY;
     });
     
     if(environment == 'testing' && location.search.indexOf('gwpanel_pause') != -1) {
