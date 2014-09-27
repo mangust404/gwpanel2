@@ -2123,8 +2123,7 @@ var Panel2 = new function() {
     * Функция обновления
     */
     updateVersion: function(new_version, callback) {
-      console.log('new_version: ', new_version);
-      console.log((new Error).stack);
+      var old_version = version;
       /// Очищаем предыдущий пакет
       if(window.__clearCache) window.__clearCache();
       /// очищаем кеш версии
@@ -2132,33 +2131,47 @@ var Panel2 = new function() {
 
       /// Получаем release notes
       var path = 'http://gwpanel.org/panel2/panel/production';
-      str_version = String(new_version);
-      for(var i = 0; i < str_version.length; i++) {
-        path += "/" + str_version.charAt(i);
-      }
-      path += "/" + str_version + ".notes.js";
-      var s = document.createElement('script');
-      s.type = 'text/javascript';
-      s.src = path;
-      s.addEventListener('load', function() {
-        instance.get('release_notes', function(notes) {
-          notes = notes || {};
-          notes[new_version] = {
-            notes: window.panel_release_notes || 'не указано',
-            date: window.panel_release_date
-          }
-          if(callback) callback(notes[new_version]);
-          
-          __panel.showFlash('Произошло обновление системы. Новая версия: ' 
-            + new_version + '.' + 
-            (jQuery('#panel-settings-editor:visible').length? '': 
-              '<br />Посмотреть <a href="#release-notes" onclick="__panel.loadScript(&quot;panel/panel_settings.js&quot;, function() { __panel.panel_settings_editor(&quot;release_notes&quot;); }); return false;">заметки к выпуску</a>.'), 
-            'message');
-            instance.set('release_notes', notes);
-        });
-      }, false);
-      document.getElementsByTagName("head")[0].appendChild(s);
 
+      for(var version_index = old_version; version_index < new_version; version_index++) {
+        str_version = String(version_index);
+        for(var i = 0; i < str_version.length; i++) {
+          path += "/" + str_version.charAt(i);
+        }
+        path += "/" + str_version + ".notes.js";
+        var s = document.createElement('script');
+        s.type = 'text/javascript';
+        s.src = path;
+        s.addEventListener('load', function() {
+          instance.get('release_notes', function(notes) {
+            notes = notes || {};
+            notes[version_index] = {
+              notes: window.panel_release_notes || 'не указано',
+              date: window.panel_release_date
+            }
+            if(jQuery.type(window.panel_release_migration) == 'array'
+                && window.panel_release_migration.length > 0) {
+              for(var m = 0; m < window.panel_release_migration.length; m++) {
+                try {
+                  window.panel_release_migration[m]();
+                } catch(e) {
+                  /// что же делать в случае корявой миграции?
+                }
+              }
+            }
+            if(version_index == new_version) {
+              /// всё обновлено до последней версии
+              if(callback) callback(notes[version_index]);
+              __panel.showFlash('Произошло обновление системы. Новая версия: ' 
+                + new_version + '.' + 
+                (jQuery('#panel-settings-editor:visible').length? '': 
+                  '<br />Посмотреть <a href="#release-notes" onclick="__panel.loadScript(&quot;panel/panel_settings.js&quot;, function() { __panel.panel_settings_editor(&quot;release_notes&quot;); }); return false;">заметки к выпуску</a>.'), 
+                'message');
+            }
+            instance.set('release_notes', notes);
+          });
+        }, false);
+        document.getElementsByTagName("head")[0].appendChild(s);
+      }
       /// Выставляем версию
       version = new_version;
       var myDate = new Date();

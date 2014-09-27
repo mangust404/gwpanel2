@@ -269,7 +269,24 @@ if(get_env() == 'production') {
     shell_exec('mv /tmp/package.js ' . $new_package);
 
     print "Записан файл пакета {$new_package}\n";
-    file_put_contents($notes_path, 'window.panel_release_notes = ' . json_encode($message) . '; window.panel_release_date = "' . date('c') . '";');
+
+    /// Определяем последнюю миграцию, и если найдены новые файлы миграции, то добавляем в notes последнюю миграцию
+    if(file_exists($gwpanel_path . '/migrate')) {
+      $migrate = intval(file_get_contents($gwpanel_path . '/migrate'));
+    } else {
+      $migrate = 0;
+    }
+    $migrate_str = '';
+    foreach(glob($gwpanel_path . '/panel/migration/*.js') as $migration_file) {
+      list($num, $ext) = explode('.', basename($migration_file));
+      $num = intval($num);
+      if($num > 0 && $num > $migrate) {
+        /// добавляем содержимое файла в миграцию
+        $migrate_str .= "\n" . file_get_contents($migration_file);
+      }
+    }
+
+    file_put_contents($notes_path, 'window.panel_release_notes = ' . json_encode($message) . '; window.panel_release_date = "' . date('c') . '";' . $migrate_str);
     print "Записан файл заметок к версии $notes_path\n";
     file_put_contents($gwpanel_path . '/version', $version);
     print "Записан файл версии {$gwpanel_path}/version\n";
