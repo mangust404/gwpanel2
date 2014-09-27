@@ -601,4 +601,5 @@ $bootstrap_container = '
 file_put_contents($gwpanel_path . '/bootstrap_container.js', $bootstrap_container);
 print 'Bootstrap container written to ' . $gwpanel_path . '/bootstrap_container.js' . "\n";
 
-?>
+//создаём список файлов для синхронизации с ганей
+shell_exec('/usr/bin/find ./ ! \( -iwholename *\.git* \) ! \( -iwholename "\./doc/*" \) ! \( -iname version \) -regextype posix-egrep -regex ".*\.(js|css|png|gif)"  -type f | /usr/bin/sort | /bin/gzip > ' . $gwpanel_path . '/package.gz');
