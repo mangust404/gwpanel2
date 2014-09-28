@@ -1,0 +1,21 @@
+{
+  "requires": "", 
+  "excludes": "",
+  "access": "", 
+  "title": "Общее (на всех страницах игры)",
+  "author": "гном убийца",
+  "author_link": "http://www.ganjawars.ru/info.php?id=433067",
+  "weight": 1, 
+  "apply": {
+    "*": [
+      "common_playersToolWindow"
+    ]
+  }, 
+  "settings": {
+    "common_playersToolWindow": {
+      "file": "common_playersToolWindow.js",
+      "description": "Окно с дополнительным набором быстрых действий, на ссылках у персонажей в игре",
+      "default": true
+    }
+  }
+}
