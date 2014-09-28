@@ -62,7 +62,7 @@
           var s = jQuery('<select id="' + __id + '" name="' + widget.id + '_' + param + '"></select>');
           var is_array = jQuery.type(this.options) == 'array';
           s.append('<option value=""' + 
-                '>Укажите ' + this.title + '</option>');
+                '>Укажите</option>');
           jQuery.each(this.options || {}, function(key) {
             if(is_array) {
               s.append('<option value="' + this + '"' + 

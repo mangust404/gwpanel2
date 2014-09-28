@@ -323,6 +323,11 @@ $bootstrap = '
   for(var i = 0; i < libs.length; i++) {
     var s = document.createElement("script");
     s.type = "text/javascript";
+    if((libs[i] == "jquery.min.js" || libs[i] == "jquery.js") && 
+      window.jQuery) {
+      libs.splice(i, 1);
+      continue;
+    }
     s.src = panelURL + "/lib/" + libs[i];
     s.addEventListener("load", function() {
       loadedLibs++;

@@ -54,6 +54,30 @@
   opacity: 1;
 }
 
+.pane-bubble.left {
+  box-shadow: 1px 1px 3px rgba(208, 238, 208, 5);
+}
+
+.pane-bubble.left.active, .pane-bubble.left:hover {
+  box-shadow: 1px 1px 3px rgba(208, 238, 208, 0.25);
+}
+
+.pane-bubble.right {
+  box-shadow: -1px 1px 3px rgba(208, 238, 208, 5);
+}
+
+.pane-bubble.right.active, .pane-bubble.right:hover {
+  box-shadow: -1px 1px 3px rgba(208, 238, 208, 0.25);
+}
+
+.pane-bubble.footer {
+  box-shadow: 1px -1px 3px rgba(208, 238, 208, 5);
+}
+
+.pane-bubble.footer.active, .pane-bubble.footer:hover {
+  box-shadow: 1px -1px 3px rgba(208, 238, 208, 0.25);
+}
+
 .threads-php .pane-bubble:hover, .threads-php .pane-bubble.active, .forum-php .pane-bubble:hover, .forum-php .pane-bubble.active, .messages-php .pane-bubble:hover, .messages-php .pane-bubble.active {
   opacity: 0.7; 
 }
@@ -88,16 +112,16 @@
 
 .pane.left {
  left: 2%; 
-  box-shadow: 2px 2px 6px #000;
+  box-shadow: 2px 2px 6px rgba(0, 51, 0, 0.5);
 }
 
 .pane.right {
  right: 2%; 
-  box-shadow: -2px 2px 6px #000;
+  box-shadow: -2px 2px 6px rgba(0, 51, 0, 0.5);
 }
 
 .pane.footer {
-  box-shadow: -2px 2px 6px #000;
+  box-shadow: -2px 2px 6px rgba(0, 51, 0, 0.5);
   bottom: 30px;
 }
 
