@@ -18,3 +18,7 @@
 .npc-widget .links img {
   width: 12px;
 }
+
+tr.npc td {
+  white-space: nowrap;
+}

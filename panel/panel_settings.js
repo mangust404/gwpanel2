@@ -115,8 +115,6 @@
     * @param callback - функция, вызываемая после загрузки всех скриптов
     */
     panel_settings_init: function(callback) {
-      jQuery.mobile.loading("show");
-
       /// Убиваем лайвинтернет, иначе он поганит всю страницу, да и все скрипты с document.write
       jQuery.each(document.scripts, function(i, script) {
         if(!script.src && script.innerHTML.indexOf('document.write') != -1) {
@@ -137,9 +135,11 @@
       var scripts = [];
       if(!jQuery.mobile) {
         scripts.push('lib/jquery.mobile.custom.min.js');
+      }
+      if(!jQuery.ui) {
         scripts.push('lib/jquery-ui-1.9.2.custom.min.js');
       }
-
+      
       for(var key in panel_apply.settings) {
         var file = panel_apply.settings[key].module + '/' + panel_apply.settings[key].file;
         if(scripts.indexOf(file) == -1) {
