@@ -8,12 +8,12 @@
   "weight": 1, 
   "apply": {
     "*": [
-      "common_playersToolWindow"
+      "common_players_tooltip"
     ]
   }, 
   "settings": {
-    "common_playersToolWindow": {
-      "file": "common_playersToolWindow.js",
+    "common_players_tooltip": {
+      "file": "common_players.js",
       "description": "Окно с дополнительным набором быстрых действий, на ссылках у персонажей в игре",
       "default": true
     }

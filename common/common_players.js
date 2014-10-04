@@ -1,6 +1,6 @@
 (function(panel) {
   jQuery.extend(panel, {
-    common_playersToolWindow: function(options){
+    common_players_tooltip: function(options){
       var $player, $toolWindow, $playerLink;
       var showWaitId, hideWaitId;
 
