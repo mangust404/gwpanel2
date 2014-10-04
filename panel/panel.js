@@ -15,6 +15,7 @@ var Panel2 = new function() {
   * Доступны из приватных и публичных функций 
   * Снаружи объекта Panel2 вы их никак не увидите. Инкапсуляция однако.
   */
+  var domain;
   /// Объект панели
   var instance;
   /// Окружение
@@ -563,7 +564,7 @@ var Panel2 = new function() {
   */
   function activatePaneCheck() {
     var that = this;
-    if((Math.abs(mouseDeltaX) > 0.05 && Math.abs(mouseSpeedX) > 0.01) || Math.abs(mouseSpeedX) > 0.05 ||  jQuery('.pane:visible').length > 0) {
+    if((Math.abs(mouseDeltaX) > 0.05 && Math.abs(mouseSpeedX) > 0.01) || Math.abs(mouseSpeedX) > 0.05 ||  jQuery('body > .pane:visible').length > 0) {
       instance.ready(function() {
         activatePane.apply(that, []);
       });
@@ -582,7 +583,7 @@ var Panel2 = new function() {
   */
   function activateFloorPaneCheck() {
     var that = this;
-    if((Math.abs(mouseDeltaY) > 0.05 && Math.abs(mouseSpeedY) > 0.01) || Math.abs(mouseSpeedY) > 0.05 ||  jQuery('.pane:visible').length > 0) {
+    if((Math.abs(mouseDeltaY) > 0.05 && Math.abs(mouseSpeedY) > 0.01) || Math.abs(mouseSpeedY) > 0.05 ||  jQuery('body > .pane:visible').length > 0) {
       instance.ready(function() {
         activatePane.apply(that, []);
       });
@@ -939,6 +940,7 @@ var Panel2 = new function() {
     * объект window.__panel чтобы успешно подгрузить внешние модули
     */
     init: function() {
+      domain = document.domain.indexOf('gwpanel.org') > -1? 'gwpanel.org': 'ganjawars.ru';
       /// Если в localStorage на текущем домене есть копия нужных опций, 
       /// то эта функция будет запущена сразу
       /// если копии нет, то сперва получаем опции из контейнера с ganjawars.ru
@@ -1117,7 +1119,7 @@ var Panel2 = new function() {
         } else {
           setTimeout(instance.__load, 1);
         }
-      }, 'ganjawars.ru');
+      }, domain);
 
       checkTime('crossWindow init');
       /// функция полной готовности окна
@@ -1533,7 +1535,7 @@ var Panel2 = new function() {
 
       var __callback = function() {
         /// выставляем на текущий домен чтобы затем сразу возвращать
-        if(document.domain != 'ganjawars.ru') {
+        if(document.domain != domain) {
           localStorage['gwp2_' + key] = JSON.stringify(value);
         }
         if(callback) callback();
@@ -1557,7 +1559,7 @@ var Panel2 = new function() {
       checkTime('get ' + key);
       /// Пытаемся найти значение на текущем домене
       if(jQuery.type(localStorage['gwp2_' + key]) != 'undefined' && 
-         document.domain != 'ganjawars.ru') {
+         document.domain != domain) {
         try {
           var val = JSON.parse(localStorage['gwp2_' + key]);
           checkTime('get ' + key + ' from local storage');
@@ -1857,7 +1859,7 @@ var Panel2 = new function() {
       var myDate = new Date();
       myDate.setMonth(myDate.getMonth() + 120);
       document.cookie = "gwp2_e=" + env + ";expires=" + myDate 
-                     + ";domain=.ganjawars.ru;path=/";
+                     + ";domain=." + domain + ";path=/";
       console.log('Reload page to commit environment change');
     },
     /**
@@ -2162,6 +2164,7 @@ var Panel2 = new function() {
               for(var m = 0; m < window.panel_release_migration.length; m++) {
                 try {
                   window.panel_release_migration[m]();
+                  delete window.panel_release_migration[m];
                 } catch(e) {
                   /// что же делать в случае корявой миграции?
                 }
@@ -2184,7 +2187,7 @@ var Panel2 = new function() {
               var myDate = new Date();
               myDate.setMonth(myDate.getMonth() + 120);
               document.cookie = "gwp2_v=" + new_version + ";expires=" + myDate 
-                               + ";domain=.ganjawars.ru;path=/";
+                               + ";domain=." + domain + ";path=/";
 
             }
           }, false);
@@ -2192,8 +2195,12 @@ var Panel2 = new function() {
         });
         if(new_version < old_version) {
           /// Откат версии
-          for(var i = old_version; i > new_version; i--) {
-            delete notes[i];
+          if(notes) {
+            for(var i = old_version; i > new_version; i--) {
+              delete notes[i];
+            }
+          } else {
+            notes = {};
           }
           instance.set('release_notes', notes);
           __panel.showFlash('Произошло обновление системы, была возвращена предыдущая версия.', 
@@ -2202,7 +2209,7 @@ var Panel2 = new function() {
           var myDate = new Date();
           myDate.setMonth(myDate.getMonth() + 120);
           document.cookie = "gwp2_v=" + new_version + ";expires=" + myDate 
-                           + ";domain=.ganjawars.ru;path=/";
+                           + ";domain=." + domain + ";path=/";
         }
       });
     },

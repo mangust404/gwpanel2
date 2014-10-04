@@ -296,8 +296,9 @@ window.panel_release_notes[' . $version . '] = ' . json_encode($message) . '; wi
     file_put_contents($gwpanel_path . '/version', $version);
     print "Записан файл версии {$gwpanel_path}/version\n";
 
-    file_put_contents($gwpanel_path . '/version_' . get_env() . '.js', 'window.current_panel_version = ' . $version);
+    file_put_contents($gwpanel_path . '/version_production.js', 'window.current_panel_version = ' . $version);
     print "Записан файл версии для клиентов $gwpanel_path/version_" . get_env() . ".js\n";
+    file_put_contents($gwpanel_path . '/version_deploy.js', 'window.current_panel_version = ' . $version);
 
   } else {
     unlink('/tmp/package.js');
@@ -326,6 +327,9 @@ $bootstrap = '
     if((libs[i] == "jquery.min.js" || libs[i] == "jquery.js") && 
       window.jQuery) {
       libs.splice(i, 1);
+      if(libs.length == 0) setTimeout(function() {
+        initialize();
+      }, 1);
       continue;
     }
     s.src = panelURL + "/lib/" + libs[i];
@@ -401,7 +405,7 @@ $bootstrap = '
     function __checkoutVersion(callback) {
       var s = document.createElement("script");
       s.type = "text/javascript";
-      s.src = panelURL + "/version_" + environment + ".js";
+      s.src = panelURL + "/version_" + environment + ".js?_" + (new Date).getTime();
       s.addEventListener("load", function() {
         panel_version = window.current_panel_version;
         var myDate = new Date();

@@ -115,6 +115,8 @@
     * @param callback - функция, вызываемая после загрузки всех скриптов
     */
     panel_settings_init: function(callback) {
+      jQuery.mobile.loading("show");
+
       /// Убиваем лайвинтернет, иначе он поганит всю страницу, да и все скрипты с document.write
       jQuery.each(document.scripts, function(i, script) {
         if(!script.src && script.innerHTML.indexOf('document.write') != -1) {
@@ -132,11 +134,12 @@
       });
 
       /// подгружаем АБСОЛЮТНО все скрипты
-      var scripts = [
-                      //'lib/jquery.mobile-1.4.3.min.js'
-                      'lib/jquery.mobile.custom.min.js',
-                      'lib/jquery-ui-1.9.2.custom.min.js'
-                    ];
+      var scripts = [];
+      if(!jQuery.mobile) {
+        scripts.push('lib/jquery.mobile.custom.min.js');
+        scripts.push('lib/jquery-ui-1.9.2.custom.min.js');
+      }
+
       for(var key in panel_apply.settings) {
         var file = panel_apply.settings[key].module + '/' + panel_apply.settings[key].file;
         if(scripts.indexOf(file) == -1) {
@@ -203,15 +206,16 @@
     panel_settings_editor: function(active_section) {
     var current_options = panel.getOptions();
     panel.panel_settings_init(function() {
-      /// Мы должны отключить Илюшины стили, иначе они конфликтуют с jQuery mobile-овскими
-      jQuery.each(document.styleSheets, function(i, stylesheet) {
-        if(!stylesheet) return;
-        if((!stylesheet.href && !jQuery(stylesheet.ownerNode).attr('gwpanel')) 
-            || (stylesheet.href && stylesheet.href.indexOf('/i/gw.css') != -1)) {
-          stylesheet.disabled = true;
-        }
-      });
-
+      if(document.domain.indexOf('gwpanel.org') == -1) {
+        /// Мы должны отключить Илюшины стили, иначе они конфликтуют с jQuery mobile-овскими
+        jQuery.each(document.styleSheets, function(i, stylesheet) {
+          if(!stylesheet) return;
+          if((!stylesheet.href && !jQuery(stylesheet.ownerNode).attr('gwpanel')) 
+              || (stylesheet.href && stylesheet.href.indexOf('/i/gw.css') != -1)) {
+            stylesheet.disabled = true;
+          }
+        });
+      }
       /// Редактирование настроек
       jQuery(document.body).addClass('panel-settings');
       /// скрываем активные окна
@@ -270,6 +274,7 @@
       });
 
       if(jQuery('#panel-settings-editor').length) {
+        jQuery.mobile.loading("hide");
         jQuery('#panel-settings-editor').show();
         return;
       }
@@ -485,10 +490,8 @@
                 ' add-settings ui-corner-all custom-corners ui-mini">\
   <h3>Дополнительные настройки</h3>\
   <div class="ui-body ui-body-a">\
-    <fieldset data-role="controlgroup">\
-    </fieldset>\
   </div>\
-</div>').appendTo(checkbox_li).find('fieldset');
+</div>').appendTo(checkbox_li).find('div.ui-body');
 
               var current_options = panel.getOptions();
               var __settings = {};
@@ -676,6 +679,7 @@
         '><h3>Примечания к выпускам</h3></div>')
         .appendTo('#edit-other-wrapper .versions');
       panel.get('release_notes', function(release_notes) {
+        release_notes = release_notes || {};
         var keys = Object.keys(release_notes);
         keys = jQuery.map(keys, function(val) {
           return parseInt(val);
@@ -704,6 +708,7 @@
         jQuery('#edit-other-wrapper').show();
         jQuery('#panel-settings-editor .ui-navbar.first-view').removeClass('first-view');
       }
+      jQuery.mobile.loading("hide");
     });
     },
 
@@ -715,6 +720,8 @@
     * @param isEdit - флаг, если = true, то это редактирование
     */
     panel_settings_form: function(widgetClass, widgetKind, widgetData, isEdit) {
+      jQuery.mobile.loading("hide");
+
       var current_options = panel.getOptions();
       var self_init = false;
       widgetData.arguments = widgetData.arguments || {};
@@ -804,13 +811,15 @@
       <h3>Куда размещать</h3>\
     </div>\
     <div class="ui-body ui-body-a">\
-      <fieldset data-role="controlgroup" data-type="horizontal">\
+      <fieldset class="panes-displace" data-role="controlgroup" data-type="horizontal">\
       </fieldset>\
     </div>\
   </div>').appendTo('#settings-form-popup').find('fieldset');
+        var footer_displace_div = jQuery('<fieldset class="footer-displace" data-role="controlgroup" data-type="horizontal">\
+</fieldset>\'').appendTo(displace_div.parent());
       }
 
-      function draw_pane(num) {
+      function draw_pane(num, footer) {
         var is_valid = true;
         var reason = '';
 
@@ -824,7 +833,9 @@
           is_valid = false;
           reason = 'окно ' + (num + 1) + ' слишком узкое для этого элемента';
         }
-        displace_div.append('<div class="radio-wrapper"' + (reason? ' title="' + reason + '"': '') + 
+        var elem = displace_div;
+        if(footer) elem = footer_displace_div;
+        elem.append('<div id="radio-wrapper-' + (num + 1) + '" class="top-panes-wrapper radio-wrapper"' + (reason? ' title="' + reason + '"': '') + 
           '><label for="select-pane-' + num + '" ' + '>Окно ' + (num +  1) + '</label>' + 
           '<input name="displace" type="radio" id="select-pane-' + num + '" value="' + 
           num + '" ' + (is_valid? '': ' disabled="disabled"') + '></div>');
@@ -834,11 +845,12 @@
       if(widgetKind != 'float' && !isEdit) {
         draw_pane(0); draw_pane(1);
         if(widgetKind != 'button') {
-          displace_div.append('<div class="radio-wrapper"><label for="select-pane-float">Плавающий</label>' + 
+          displace_div.append('<div id="radio-wrapper-float" class="radio-wrapper"><label for="select-pane-float">Плавающий</label>' + 
               '<input name="displace" type="radio" id="select-pane-float" value="float" checked="checked"></div>');
         }
 
         draw_pane(2); draw_pane(3);
+        draw_pane(4, true); draw_pane(5, true); draw_pane(6, true);
       }
 
       if(widgetKind == 'float') {
@@ -853,7 +865,6 @@
             (widgetData.fixed? ' checked="checked"': '') + ' />').change(function() {
           if(this.checked) {
             widgetData.fixed = true;
-            console.log(widgetData);
             $widget.addClass('fixed');
           } else {
             delete widgetData.fixed;
@@ -993,6 +1004,7 @@
                   }
                   panel.showFlash('Виджет ' + (isEdit? 'сохранён': 'добавлен') + 
                     '.', 'message', 5000);
+                  jQuery('#pane-bubble-' + displace).show();
                 }
               } else if(widgetKind == 'button') {
                 __data.title = jQuery('#param-title').val();
@@ -1060,7 +1072,7 @@
         if(this.checked) {
           var id = parseInt(this.id.split('-')[2]);
           if(!isNaN(id)) {
-            jQuery('#pane-bubble-' + id).show().addClass('drag-over').css({'zIndex': 99});
+            jQuery('#pane-bubble-' + id).show().addClass('drag-over').css({'zIndex': 9999});
           }
         }
       });

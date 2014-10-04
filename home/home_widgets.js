@@ -48,6 +48,7 @@
   }
   
   function home_health_progress(init, health) {
+    if(!health) return;
     if(((!this.hp_current && health.hp_start != health.hp_max) || this.hp_current < health.hp_start || init)) {
       if(this.healthUpdInterval) {
         clearInterval(this.healthUpdInterval);
