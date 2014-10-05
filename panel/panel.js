@@ -1,3 +1,5 @@
+(function($) {
+
 String.prototype.hashCode = function(){
   var hash = 0;
   if (this.length == 0) return hash;
@@ -9,7 +11,7 @@ String.prototype.hashCode = function(){
   return hash;
 }
 
-var Panel2 = new function() {
+window.Panel2 = new function() {
   /**
   * Защищённые аттрибуты
   * Доступны из приватных и публичных функций 
@@ -70,9 +72,9 @@ var Panel2 = new function() {
   *******Приватные методы********
   *******************************/
   function hideAllPanes(e) {
-    if(e && e.type == 'click' && jQuery('.pane:visible').hasClass('configuring')) return true;
-    jQuery('.pane:visible').hide();
-    jQuery('.pane-bubble.active').removeClass('active');
+    if(e && e.type == 'click' && $('.pane:visible').hasClass('configuring')) return true;
+    $('.pane:visible').hide();
+    $('.pane-bubble.active').removeClass('active');
     $(document.body).off('click', hideAllPanes);
   }
   /**
@@ -97,7 +99,7 @@ var Panel2 = new function() {
   * Создаёт все кнопки и виджеты внутри панели и привязывает события только после команды активации
   */
   function activatePane(e) {
-    var $this = jQuery(this);
+    var $this = $(this);
     if($this.hasClass('right') && !$this.hasClass('footer') && (!e || e.type != 'click') && !$('.pane:visible').length) {
       /// Правые панели не активируем при наведении, потому что там из-за скроллбара ложные срабатывания
       return false;
@@ -107,18 +109,18 @@ var Panel2 = new function() {
     var pane_options = options.panes[paneID];
     var hold_positions = {};
     
-    if((pane = jQuery('#pane-' + paneID)).length) {
+    if((pane = $('#pane-' + paneID)).length) {
       if(pane.css('display') == 'none') {
         hideAllPanes();
         pane.show();
         instance.triggerEvent('pane_show', paneID);
-        jQuery('#pane-bubble-' + paneID).addClass('active');
+        $('#pane-bubble-' + paneID).addClass('active');
       } else if(e && e.type == 'click') {
         hideAllPanes();
         return false;
       }
     } else {
-      pane = jQuery('<div id="pane-' + paneID + '" class="pane' + 
+      pane = $('<div id="pane-' + paneID + '" class="pane' + 
         (paneID < 4? (paneID < 2? ' left': ' right') + 
                       (paneID % 2 > 0? ' bottom': ' top'): 
                      ' footer' + (paneID == 4? ' left': paneID == 5? 
@@ -127,10 +129,10 @@ var Panel2 = new function() {
           width: options.system.btnwidth * pane_options.width,
           height: options.system.btnheight * pane_options.height
         });
-      var paneContainer = jQuery('<div class="container"></div>').appendTo(pane);
+      var paneContainer = $('<div class="container"></div>').appendTo(pane);
       var buttons = pane_options.buttons;
       if(pane_options.buttons && pane_options.buttons.length > 0) {
-        jQuery(buttons).each(function(index) {
+        $(buttons).each(function(index) {
         //for(var i = 0; i < buttons.length; i++) {
           var type = panel_apply.buttons[this.type];
           if(!type) {
@@ -148,8 +150,8 @@ var Panel2 = new function() {
             id = 'button_' + that.type + '_' + index;
             options.panes[paneID].buttons[index].id = id;
           }
-          var __button = jQuery('<div class="button ' + that.type + '" id="' + id + '"></div>').append(
-            jQuery('<a><div class="img"><img src="' + img + '" /></div><h3>' + 
+          var __button = $('<div class="button ' + that.type + '" id="' + id + '"></div>').append(
+            $('<a><div class="img"><img src="' + img + '" /></div><h3>' + 
               (that.title? that.title: type.title) + 
               '</h3></a>').click(function(e) {
               if(this.parentNode.dragging) {
@@ -170,10 +172,10 @@ var Panel2 = new function() {
                 var callback = instance[type.callback];
                 var __options = {};
                 if(that.arguments) {
-                  jQuery.extend(__options, that.arguments);
+                  $.extend(__options, that.arguments);
                 }
 
-                jQuery.extend(__options, {
+                $.extend(__options, {
                   save: function(callback) {
                     for(var key in __options) {
                       if(key == 'save') continue;
@@ -211,7 +213,7 @@ var Panel2 = new function() {
          (pane_options.widgets && pane_options.widgets.length > 0)) {
 
         paneContainer.mousedown(function(e) {
-          var that = jQuery(e.target).parents('.button, .widget');
+          var that = $(e.target).parents('.button, .widget');
           if(!that.length) return false;
           var is_widget = that.hasClass('widget');
           that.clicked = false;
@@ -232,7 +234,7 @@ var Panel2 = new function() {
               for(var i = 0; i < pane_options.width; i++) {
                 for(var j = 0; j < pane_options.height; j++) {
                   if((hold_positions[j] && hold_positions[j][i]) && hold_positions[j][i] != id) continue;
-                  jQuery('<div class="pane-placeholder"></div>')
+                  $('<div class="pane-placeholder"></div>')
                     .attr('top', j)
                     .attr('left', i)
                     .css({
@@ -326,7 +328,7 @@ var Panel2 = new function() {
                       that.draggable('option', 'revert', true);
                       instance.showFlash('В этом окне нет места!', 'warning', 5000);
                       that.draggable('destroy');
-                      jQuery('.pane-placeholder').remove();
+                      $('.pane-placeholder').remove();
                       that.draggable('element').animate({
                         top: parseInt(that.attr('top')) * options.system.btnheight,
                         left: parseInt(that.attr('left')) * options.system.btnwidth
@@ -382,7 +384,7 @@ var Panel2 = new function() {
                     instance.showFlash('Если вы закончили настройку, то нажмите <strong>F5</strong>,<br />чтобы изменения вступили в силу', 'message', 5000);
                     $('.pane-bubble.drag-over').removeClass('drag-over');
                     //that.draggable('destroy');
-                    jQuery('.pane-placeholder').remove();
+                    $('.pane-placeholder').remove();
 
                     /// И последний шаг - сохраняем новые опции
                     instance.setOptions(options);
@@ -437,7 +439,7 @@ var Panel2 = new function() {
                   that.removeAttr('ntop');
                   
                   that.draggable('destroy');
-                  jQuery('.pane-placeholder').remove();
+                  $('.pane-placeholder').remove();
                 }
               }).data('draggable')._mouseDown(e);
               that[0].dragClassTO = setTimeout(function() {
@@ -453,7 +455,7 @@ var Panel2 = new function() {
       }
       var widgets = options.panes[paneID].widgets;
       if(widgets && widgets.length > 0) {
-        jQuery(widgets).each(function(index) {
+        $(widgets).each(function(index) {
         //for(var i = 0; i < widgets.length; i++) {
           var type = panel_apply.widgets[this.type];
           if(!type) {
@@ -479,7 +481,7 @@ var Panel2 = new function() {
               var id = 'widget_' + that.type + '_' + index;
               options.panes[paneID].widgets[index].id = id;
             }
-            var __widget = jQuery('<div class="widget '+ that.type + '" id="' + id + '"></div>')
+            var __widget = $('<div class="widget '+ that.type + '" id="' + id + '"></div>')
               .css({
                 width: options.system.btnwidth * widget_width,
                 height: options.system.btnheight * widget_height, 
@@ -510,9 +512,9 @@ var Panel2 = new function() {
             }
             var __options = {};
             if(that.arguments) {
-              jQuery.extend(__options, that.arguments);
+              $.extend(__options, that.arguments);
             }
-            jQuery.extend(__options, {
+            $.extend(__options, {
               save: function(callback) {
                 for(var key in __options) {
                   if(key == 'save') continue;
@@ -537,15 +539,15 @@ var Panel2 = new function() {
           }
         });
       }
-      jQuery('.pane:visible').hide();
-      jQuery('.pane-bubble.active').removeClass('active');
-      jQuery('#pane-bubble-' + paneID).addClass('active');
+      $('.pane:visible').hide();
+      $('.pane-bubble.active').removeClass('active');
+      $('#pane-bubble-' + paneID).addClass('active');
       pane.appendTo(document.body);
       instance.triggerEvent('pane_show', paneID);
     }
     // Ловим события о перемещении из других окон
     instance.bind('widget_move', function(data) {
-      jQuery('#' + data.id).css({
+      $('#' + data.id).css({
         left: data.left * options.system.btnwidth,
         top: data.top * options.system.btnheight
       }).attr('left', data.left).attr('top', data.top);
@@ -564,7 +566,7 @@ var Panel2 = new function() {
   */
   function activatePaneCheck() {
     var that = this;
-    if((Math.abs(mouseDeltaX) > 0.05 && Math.abs(mouseSpeedX) > 0.01) || Math.abs(mouseSpeedX) > 0.05 ||  jQuery('body > .pane:visible').length > 0) {
+    if((Math.abs(mouseDeltaX) > 0.05 && Math.abs(mouseSpeedX) > 0.01) || Math.abs(mouseSpeedX) > 0.05 ||  $('body > .pane:visible').length > 0) {
       instance.ready(function() {
         activatePane.apply(that, []);
       });
@@ -583,7 +585,7 @@ var Panel2 = new function() {
   */
   function activateFloorPaneCheck() {
     var that = this;
-    if((Math.abs(mouseDeltaY) > 0.05 && Math.abs(mouseSpeedY) > 0.01) || Math.abs(mouseSpeedY) > 0.05 ||  jQuery('body > .pane:visible').length > 0) {
+    if((Math.abs(mouseDeltaY) > 0.05 && Math.abs(mouseSpeedY) > 0.01) || Math.abs(mouseSpeedY) > 0.05 ||  $('body > .pane:visible').length > 0) {
       instance.ready(function() {
         activatePane.apply(that, []);
       });
@@ -603,7 +605,7 @@ var Panel2 = new function() {
     var buttons = 0;
     var have_settings_button;
     for(var i = 0; i < 4; i++) {
-      if(jQuery.type(options.panes[i].buttons) == 'array') {
+      if($.type(options.panes[i].buttons) == 'array') {
         buttons += options.panes[i].buttons.length;
         if(!have_settings_button) {
           for(var j = 0; j < options.panes[i].buttons.length; j++) {
@@ -641,8 +643,8 @@ var Panel2 = new function() {
       }
     }
     for(var i = 0; i < 4; i++) {
-      if(jQuery.type(options.panes[i]) == 'object') {
-        jQuery('<div id="pane-bubble-' + i + '" class="pane-bubble' + (i < 2? ' left': ' right') + (i % 2 > 0? ' bottom': ' top') + '"></div>')
+      if($.type(options.panes[i]) == 'object') {
+        $('<div id="pane-bubble-' + i + '" class="pane-bubble' + (i < 2? ' left': ' right') + (i % 2 > 0? ' bottom': ' top') + '"></div>')
           .mouseover(activatePaneCheck)
           .click(function(e) {
             var that = this;
@@ -659,8 +661,8 @@ var Panel2 = new function() {
       }
     }
     for(var i = 4; i < 7; i++) {
-      if(jQuery.type(options.panes[i]) == 'object') {
-        jQuery('<div id="pane-bubble-' + i + '" class="pane-bubble' + (i == 4? ' left': (i == 5? ' center': ' right')) + ' footer"></div>')
+      if($.type(options.panes[i]) == 'object') {
+        $('<div id="pane-bubble-' + i + '" class="pane-bubble' + (i == 4? ' left': (i == 5? ' center': ' right')) + ' footer"></div>')
           .mouseover(activateFloorPaneCheck)
           .click(function(e) {
             var that = this;
@@ -685,33 +687,33 @@ var Panel2 = new function() {
     var modules = {};
     
     var index = 0;
-    jQuery.each(options.widgets, function(index) {
+    $.each(options.widgets, function(index) {
       if(!this.type || !panel_apply.widgets[this.type]) return;
       this.module = panel_apply.widgets[this.type].module;
       var widget = this;
       widget.index = index;
       widget.float = true;
       /// Виджет выводится только на одной странице
-      if(jQuery.type(widget.only_page_class) == 'string') {
+      if($.type(widget.only_page_class) == 'string') {
         if(widget.only_page_class != location.pathname) return;
-      } else if(jQuery.type(widget.only_page) == 'string') {
+      } else if($.type(widget.only_page) == 'string') {
         if(widget.only_page != location.pathname + location.search) return;
-      } else if(jQuery.type(widget.blacklist) == 'array') {
+      } else if($.type(widget.blacklist) == 'array') {
         /// виджет не должен выводиться на этой странице
         if(widget.blacklist.indexOf(location.pathname) > -1) return;
       }
 
       /// Если виджет уже прорисован, выходим
-      if(jQuery('#float-' + widget.index + '-' + widget.type).length > 0) return;
+      if($('#float-' + widget.index + '-' + widget.type).length > 0) return;
 
       instance.loadScript(this.module + '/' + panel_apply.widgets[this.type].file, function() {
         var type = panel_apply.widgets[widget.type];
-        if(jQuery.type(instance[type.callback]) == 'undefined') {
+        if($.type(instance[type.callback]) == 'undefined') {
           throw('Function ' + type.callback + ' for widget ' + widget.type + ' not found');
         } else {
           var width = type.width * options.system.btnwidth;
           var height = type.height * options.system.btnheight;
-          var $widget = jQuery('<div class="float-widget ' + widget.type + '"></div>')
+          var $widget = $('<div class="float-widget ' + widget.type + '"></div>')
             .attr('id', 'float-' + widget.index + '-' + widget.type)
             .css({
               left: widget.left,
@@ -729,8 +731,8 @@ var Panel2 = new function() {
               });
             })
             .appendTo(document.body);
-          if(widget.left + width> jQuery(window).width()) $widget.css({left: jQuery(window).width() - width - 12});
-          if(widget.height + height> jQuery(window).height()) $widget.css({height: jQuery(window).height() - height - 12});
+          if(widget.left + width> $(window).width()) $widget.css({left: $(window).width() - width - 12});
+          if(widget.height + height> $(window).height()) $widget.css({height: $(window).height() - height - 12});
 
           if(widget.fixed) $widget.addClass('fixed');
           if(widget.no_opacity) $widget.addClass('no-opacity');
@@ -740,9 +742,9 @@ var Panel2 = new function() {
           var __args = type.arguments || [];
 
           var __options = {};
-          if(widget.arguments && jQuery.type(widget.arguments) == 'object') 
-            jQuery.extend(__options, widget.arguments);
-          jQuery.extend(__options, {
+          if(widget.arguments && $.type(widget.arguments) == 'object') 
+            $.extend(__options, widget.arguments);
+          $.extend(__options, {
             save: function(callback) {
               for(var key in __options) {
                 if(key == 'save') continue;
@@ -759,8 +761,8 @@ var Panel2 = new function() {
           __args.push(__options);
           instance[type.callback].apply($widget, __args);
           $widget.mousedown(function(e) {
-            if(jQuery(e.target).hasClass('float-widget')) var that = jQuery(e.target);
-            else var that = jQuery(e.target).parents('.float-widget');
+            if($(e.target).hasClass('float-widget')) var that = $(e.target);
+            else var that = $(e.target).parents('.float-widget');
             if(!that.length) return false;
             that.clicked = false;
             // Запуск перетаскивания
@@ -816,7 +818,7 @@ var Panel2 = new function() {
     });
     if(!redraw) {
       instance.bind('float_widget_move', function(data) {
-        jQuery('#' + data.id).css({
+        $('#' + data.id).css({
           left: data.left,
           top: data.top
         });
@@ -834,17 +836,17 @@ var Panel2 = new function() {
       // Prototype переопределяет эту функцию, поэтому возвращаем ей дефолтное состояние
       delete document.getElementsByClassName;
     }
-    jQuery(window).focus(function() {
+    $(window).focus(function() {
       instance.crossWindow.set('focused', instance.crossWindow.windowID);
     });
-    jQuery(window).blur(function() {
+    $(window).blur(function() {
       instance.crossWindow.get('focused', function(data) {
         if(data == instance.crossWindow.windowID) {
           instance.crossWindow.set('focused', '');
         }
       });
     });    
-    jQuery(window).mousemove(function(e) {
+    $(window).mousemove(function(e) {
       if(!instance.__mousestart) {
         instance.__mousestart = true;
         instance.__mousestartx = e.clientX;
@@ -859,8 +861,8 @@ var Panel2 = new function() {
           instance.__mousestartTO = 0;
         }
       } else {
-        mouseDeltaX = (e.clientX - instance.__mousestartx) /jQuery(window).width();
-        mouseDeltaY = (e.clientY - instance.__mousestarty) /jQuery(window).width();
+        mouseDeltaX = (e.clientX - instance.__mousestartx) /$(window).width();
+        mouseDeltaY = (e.clientY - instance.__mousestarty) /$(window).width();
         mouseSpeedX = (instance.__mouseprevx - e.clientX) / (instance.__mousestartTime - (new Date()).getTime());
         mouseSpeedY = (instance.__mouseprevy - e.clientY) / (instance.__mousestartTime - (new Date()).getTime());
         if(instance.__mousestartTO > 0) clearTimeout(instance.__mousestartTO);
@@ -934,7 +936,7 @@ var Panel2 = new function() {
   *******Публичные методы********
   *******************************/
 
-  jQuery.extend(Panel2.prototype, {
+  $.extend(Panel2.prototype, {
     /**
     * Функция инициализации
     * Была вынесена из конструктора потому что если для загрузки 
@@ -949,7 +951,7 @@ var Panel2 = new function() {
       var __initFunc = function() {
         // Инициализация слушателей событий
         for(var key in panel_apply.events) {
-          jQuery(panel_apply.events[key]).each(function(index, type) {
+          $(panel_apply.events[key]).each(function(index, type) {
             if(type.condition) {
               try {
                 if(!eval(type.condition)) return;
@@ -962,7 +964,7 @@ var Panel2 = new function() {
               var that = this;
               var _args = arguments;
               instance.loadScript(panel_apply.scripts[type.callback], function() {
-                if(jQuery.type(instance[type.callback]) == 'undefined') {
+                if($.type(instance[type.callback]) == 'undefined') {
                   throw('Function ' + type + ' in module ' + panel_apply.scripts[type] + ' not found');
                 } else {
                   instance[type.callback].apply(that, _args);
@@ -974,17 +976,17 @@ var Panel2 = new function() {
 
         // Инициализация подгружаемых скриптов
         var pages = [];
-        if(jQuery.type(panel_apply.pages[location.pathname]) == 'array') {
+        if($.type(panel_apply.pages[location.pathname]) == 'array') {
           pages = panel_apply.pages[location.pathname];
         }
-        if(jQuery.type(panel_apply.pages['*']) == 'array') {
+        if($.type(panel_apply.pages['*']) == 'array') {
           for(var i = 0; i < panel_apply.pages['*'].length; i++) {
             if(pages.indexOf(panel_apply.pages['*'][i]) == -1) {
               pages.push(panel_apply.pages['*'][i]);
             }
           }
         }
-        jQuery(pages).each(function(index, func) {
+        $(pages).each(function(index, func) {
           if(
               /// если функция в чёрном списке
               (options.blacklist && options.blacklist.indexOf(func) > -1) ||
@@ -994,7 +996,7 @@ var Panel2 = new function() {
             ) return;
           var module = panel_apply.settings[func].module;
           instance.loadScript(module + '/' + panel_apply.settings[func].file, function() {
-            if(jQuery.type(instance[func]) == 'undefined') {
+            if($.type(instance[func]) == 'undefined') {
               throw('Function ' + func + ' in module ' + panel_apply.settings[func].module + ' not found');
             } else {
               var func_options = {};
@@ -1008,16 +1010,16 @@ var Panel2 = new function() {
                 if(!options.settings[module][func]) {
                   options.settings[module][func] = {};
                 }
-                jQuery.extend(func_options, options.settings[module][func]);
-                if(jQuery.isEmptyObject(func_options) && panel_apply.settings[func].configure) {
+                $.extend(func_options, options.settings[module][func]);
+                if($.isEmptyObject(func_options) && panel_apply.settings[func].configure) {
                   /// инициализируем опции с дефолтными значениями
-                  jQuery.each(panel_apply.settings[func].configure, function(option, configure) {
-                    if(jQuery.type(configure.default) != 'undefined') {
+                  $.each(panel_apply.settings[func].configure, function(option, configure) {
+                    if($.type(configure.default) != 'undefined') {
                       func_options[option] = configure.default;
                     }
                   });
                 }
-                jQuery.extend(func_options, {
+                $.extend(func_options, {
                   save: function(callback) {
                     for(var key in func_options) {
                       if(key == 'save') continue;
@@ -1064,7 +1066,7 @@ var Panel2 = new function() {
         var __local_options = localStorage['gwp2_' + optionsID];
         if(__local_options != null && 
            __local_options.length > 0) {
-          jQuery.extend(options, JSON.parse(__local_options));
+          $.extend(options, JSON.parse(__local_options));
           fastInitReady = true;
         }
       }
@@ -1073,9 +1075,9 @@ var Panel2 = new function() {
         fastInitReady = location.search.indexOf('gwpanel_pause') == -1;
       }
 
-      //if(jQuery.type(__options) == 'object') jQuery.extend(options, __options);
-      //if(jQuery.type__panel_apply.buttons) == 'object') panel_apply.buttons = __panel_apply.buttons;
-      //if(jQuery.type__panel_apply.widgets) == 'object') panel_apply.widgets = __panel_apply.widgets;
+      //if($.type(__options) == 'object') $.extend(options, __options);
+      //if($.type__panel_apply.buttons) == 'object') panel_apply.buttons = __panel_apply.buttons;
+      //if($.type__panel_apply.widgets) == 'object') panel_apply.widgets = __panel_apply.widgets;
   /*    if(!localStorage.options) {
         localStorage.options = JSON.stringify(panelSettingsCollection.default);
         localStorage.options_upd = (new Date).getTime();
@@ -1083,7 +1085,7 @@ var Panel2 = new function() {
         try {
           var local_options = JSON.parse(localStorage.options);
         } catch(e) {}
-        jQuery.extend(options, local_options);
+        $.extend(options, local_options);
       }*/
       /// если быстрая инициализация доступна
       checkTime('fastInitReady');
@@ -1107,7 +1109,7 @@ var Panel2 = new function() {
         windowID = instance.crossWindow.windowID;
         instance.__load = function() {
           checkTime('initialization Begin');
-          jQuery(initializeStack).each(function() {
+          $(initializeStack).each(function() {
             try {
               this();
             } catch(e) {
@@ -1136,11 +1138,11 @@ var Panel2 = new function() {
         optionsID = environment + '_' + instance.currentPlayerID() + '_' + __variant;
         instance.get(optionsID, function(__options) {
           checkTime('get optionsID ' + optionsID);
-          if(__options != null && jQuery.type(__options) == 'object') {
-            options = jQuery.extend(options, __options);
+          if(__options != null && $.type(__options) == 'object') {
+            options = $.extend(options, __options);
           } else {
             /// дефолтные опции
-            options = jQuery.extend(options, window.panelSettingsCollection.default);
+            options = $.extend(options, window.panelSettingsCollection.default);
             instance.set(optionsID, options);
           }
           localStorage['gwp2_' + optionsID] = JSON.stringify(options);
@@ -1156,7 +1158,7 @@ var Panel2 = new function() {
           is_ready = true;
           checkTime('panel ready stack launch');
 
-          jQuery(readyStack).each(function() {
+          $(readyStack).each(function() {
             try {
               this();
             } catch(e) {
@@ -1173,11 +1175,11 @@ var Panel2 = new function() {
       // следим за сменой опций из других окон
       instance.bind('options_change', function(data) {
         if(data.optionsID == optionsID && data.windowID != windowID) {
-          jQuery.extend(options, data.options);
+          $.extend(options, data.options);
         }
       });
       
-      jQuery(document.body).addClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
+      $(document.body).addClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
       if(location.hostname != 'www.ganjawars.ru') {
         var href = location.href;
         if(href.charAt(location.href.length - 1) == '?' || href.charAt(location.href.length - 1) == '&')
@@ -1193,7 +1195,7 @@ var Panel2 = new function() {
       instance.onload(function() {
         instance.get('cacheListeners', function(data) {
           cacheListeners = data || {};
-          jQuery.each(cacheListeners, function(__event, listeners) {
+          $.each(cacheListeners, function(__event, listeners) {
             /// слушаем событие event
             instance.bind(__event, function() {
               for(var i = 0; i < listeners.length; i++) {
@@ -1233,7 +1235,7 @@ var Panel2 = new function() {
     * @param name - название таблицы стилей, пока не используется
     */
     loadCSS: function(name, callback, failover) {
-      if(jQuery.type(name) != 'array') {
+      if($.type(name) != 'array') {
         name = [name];
       }
 
@@ -1241,7 +1243,7 @@ var Panel2 = new function() {
       var loaded = 0;
 
       for(var i = 0; i < name.length; i++) {
-        if(jQuery.type(stylesheets[name[i]]) != 'undefined') {
+        if($.type(stylesheets[name[i]]) != 'undefined') {
           /// запись скрипта не инициализирована
           if(stylesheets[name[i]].loaded) {
             /// скрипт уже был загружен, загружать не нужно
@@ -1333,7 +1335,7 @@ var Panel2 = new function() {
                         скрипта, либо всех скриптов если указан массив
     */
     loadScript: function(name, callback, failover) {
-      if(jQuery.type(name) != 'array') {
+      if($.type(name) != 'array') {
         name = [name];
       }
 
@@ -1341,7 +1343,7 @@ var Panel2 = new function() {
       var loaded = 0;
 
       for(var i = 0; i < name.length; i++) {
-        if(jQuery.type(scripts[name[i]]) != 'undefined') {
+        if($.type(scripts[name[i]]) != 'undefined') {
           /// запись скрипта не инициализирована
           if(scripts[name[i]].loaded) {
             /// скрипт уже был загружен, загружать не нужно
@@ -1434,7 +1436,7 @@ var Panel2 = new function() {
     * @param name - путь скрипта, например "home/home.js"
     */
     loadScriptFail: function(names, e) {
-      if(jQuery.type(names) != 'array') {
+      if($.type(names) != 'array') {
         names = [names];
       }
       if(console.log) console.log('Failed to load script(s) "' + names.join(', ') + 
@@ -1531,7 +1533,7 @@ var Panel2 = new function() {
         throw('Error: you can\'t set protected property directly');
       }
       /// Если значение есть на текущем домене, то выставляем и его
-      if(jQuery.type(localStorage['gwp2_' + key]) != 'undefined') {
+      if($.type(localStorage['gwp2_' + key]) != 'undefined') {
         localStorage['gwp2_' + key] = JSON.stringify(value);
       }
 
@@ -1560,7 +1562,7 @@ var Panel2 = new function() {
     get: function(key, callback) {
       checkTime('get ' + key);
       /// Пытаемся найти значение на текущем домене
-      if(jQuery.type(localStorage['gwp2_' + key]) != 'undefined' && 
+      if($.type(localStorage['gwp2_' + key]) != 'undefined' && 
          document.domain != domain) {
         try {
           var val = JSON.parse(localStorage['gwp2_' + key]);
@@ -1593,7 +1595,7 @@ var Panel2 = new function() {
     * @param callback - функция, которая будет вызвана после удаления значения
     */    
     del: function(key, callback) {
-      if(jQuery.type(localStorage['gwp2_' + key]) != 'undefined') {
+      if($.type(localStorage['gwp2_' + key]) != 'undefined') {
         localStorage.removeItem('gwp2_' + key);
       }
       var __key = key;
@@ -1672,19 +1674,19 @@ var Panel2 = new function() {
     */
     setOptions: function(set_options, namespace, callback) {
       instance.onload(function() {
-        if(jQuery.type(optionsID) == 'undefined') {
+        if($.type(optionsID) == 'undefined') {
           console.log('wrong optionsID: ' + optionsID);
           console.log((new Error).stack);
           return;
         }
-        if(namespace && jQuery.type(namespace) != 'undefined') {
+        if(namespace && $.type(namespace) != 'undefined') {
           options[namespace] = set_options;
         } else {
           options = set_options;
         }
         var new_options = {};
         for(var key in options) {
-          var type = jQuery.type(options[key]);
+          var type = $.type(options[key]);
           if(type != 'undefined' && options[key] !== null) {
             new_options[key] = options[key];
           }
@@ -1708,9 +1710,9 @@ var Panel2 = new function() {
     */
     setWidgetOptions: function(set_options, widget) {
       if(widget[0].widget.float) {
-        jQuery.extend(options.widgets[widget[0].widget.index].arguments, set_options);
+        $.extend(options.widgets[widget[0].widget.index].arguments, set_options);
       } else {
-        jQuery.extend(options.panes[widget[0].widget.paneID].widgets[widget[0].widget.index].arguments, set_options);
+        $.extend(options.panes[widget[0].widget.paneID].widgets[widget[0].widget.index].arguments, set_options);
       }
       instance.setOptions(options);
     },
@@ -1725,8 +1727,8 @@ var Panel2 = new function() {
     gotoHref: function(href) {
       if(contentFrame) {
         contentFrame.contentWindow.postMessage(JSON.stringify({'type': 'location', 'href': href}), '*');
-        jQuery('.pane:visible').hide();
-        jQuery('.pane-bubble.active').removeClass('active');
+        $('.pane:visible').hide();
+        $('.pane-bubble.active').removeClass('active');
       } else {
         location.href = href;
       }
@@ -2066,7 +2068,7 @@ var Panel2 = new function() {
     getCached: function(generator, callback, condition) {
       var cid = 'cached_' + generator.toString().replace(/[\n\s\t]/g, '').hashCode();
       instance.get(cid, function(data) {
-        if(!condition || jQuery.type(data) == 'null' || 
+        if(!condition || $.type(data) == 'null' || 
           (data.type == 'time' && data.expiration < (new Date).getTime())
           ) {
           /// Генерируем
@@ -2144,7 +2146,7 @@ var Panel2 = new function() {
         for(var version_index = old_version + 1; version_index <= new_version; version_index++) {
           versions.push(version_index); 
         }
-        jQuery.each(versions, function(i, version_index) {
+        $.each(versions, function(i, version_index) {
           str_version = String(version_index);
           var path = prod_path; 
           for(var i = 0; i < str_version.length; i++) {
@@ -2161,7 +2163,7 @@ var Panel2 = new function() {
               date: window.panel_release_date[version_index]
             }
             /// если в notes есть миграции, то выполняем их все  
-            if(jQuery.type(window.panel_release_migration) == 'array'
+            if($.type(window.panel_release_migration) == 'array'
                 && window.panel_release_migration.length > 0) {
               for(var m = 0; m < window.panel_release_migration.length; m++) {
                 try {
@@ -2181,7 +2183,7 @@ var Panel2 = new function() {
               /// всё обновлено до последней версии
               __panel.showFlash('Произошло обновление системы. Новая версия: ' 
                 + new_version + '.' + 
-                (jQuery('#panel-settings-editor:visible').length? '': 
+                ($('#panel-settings-editor:visible').length? '': 
                   '<br />Посмотреть <a href="#release-notes" onclick="__panel.loadScript(&quot;panel/panel_settings.js&quot;, function() { __panel.panel_settings_editor(&quot;release_notes&quot;); }); return false;">заметки к выпуску</a>.'), 
                 'message');
               instance.set('release_notes', notes);
@@ -2255,3 +2257,5 @@ var Panel2 = new function() {
   
   return Panel2;
 };
+
+})(jQuery);

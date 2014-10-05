@@ -557,7 +557,7 @@ $bootstrap = '
                               "panel/panel.js", 
                               "lib/crosswindow.js", 
                               "apply.js"], function() {
-          window.__panel = new Panel2(environment, panelURL);
+          window.__panel = new window.Panel2(environment, panelURL);
           window.__panel.init();
         });
       });

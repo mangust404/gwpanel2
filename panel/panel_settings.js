@@ -1,4 +1,4 @@
-(function(panel) {
+(function(panel, $) {
   /// приватные переменные
   var editor;
   var listener;
@@ -16,7 +16,7 @@
   }
   */
   function panel_configure_form(params, widget, append_to, change_callback) {
-    jQuery.each(params || [], function(param) {
+    $.each(params || [], function(param) {
       if(widget.arguments && widget.arguments[param] != undefined) {
         var current_value = widget.arguments[param];
       } else {
@@ -28,25 +28,25 @@
       var drawFunc = function() {
         switch(that.type) {
           case 'checkboxes':
-            var ul = jQuery('<div data-role="collapsible">' + 
+            var ul = $('<div data-role="collapsible">' + 
                     '<h4>' + that.title + '</h4>' + 
                     '<ul data-role="listview"></ul></div>').appendTo(append_to).find('ul');
-            var is_array = jQuery.type(that.options) == 'array';
-            jQuery.each(that.options, function(key, value) {
+            var is_array = $.type(that.options) == 'array';
+            $.each(that.options, function(key, value) {
               if(!is_array) {
                 var value = key;
               }
-              var li = jQuery('<li></li>').appendTo(ul);
-              jQuery('<label for="param-' + widget.id + '-' + value + '-' + param + '">' + 
+              var li = $('<li></li>').appendTo(ul);
+              $('<label for="param-' + widget.id + '-' + value + '-' + param + '">' + 
                 this + '</label>').appendTo(li);
-              jQuery('<input name="' + widget.id + '_' + param + 
+              $('<input name="' + widget.id + '_' + param + 
                 '" id="param-' + widget.id + '-' + value + '-' + param + '"' +
                   (current_value.indexOf(value) == -1? '': ' checked="checked"') +
                   ' type="checkbox" data-mini="true" value="' + value + '">')
                   .appendTo(li)
                   .change(function() {
                     var checked_list = [];
-                    jQuery('input[name=' + widget.id + '_' + param + ']').each(function() {
+                    $('input[name=' + widget.id + '_' + param + ']').each(function() {
                       if(this.checked) {
                         checked_list.push(this.value);
                       }
@@ -57,11 +57,11 @@
           break;
           case 'select':
             var __id = 'param-' + widget.id + '-' + param;
-            var s = jQuery('<select id="' + __id + '" name="' + widget.id + '_' + param + '"></select>');
-            var is_array = jQuery.type(that.options) == 'array';
+            var s = $('<select id="' + __id + '" name="' + widget.id + '_' + param + '"></select>');
+            var is_array = $.type(that.options) == 'array';
             s.append('<option value=""' + 
                   '>Укажите</option>');
-            jQuery.each(that.options || {}, function(key) {
+            $.each(that.options || {}, function(key) {
               if(is_array) {
                 s.append('<option value="' + this + '"' + 
                   (this == current_value? ' selected="selected"': '') + 
@@ -73,13 +73,13 @@
               }
             });
             s.appendTo(append_to).change(function() {
-              change_callback(param, jQuery(this).val());
+              change_callback(param, $(this).val());
             });
             s.before('<label for="' + __id + '">' + that.title + '</label>');
           break;
           case 'checkbox':
-            jQuery('<label for="param-' + widget.id + '-' + param + '">' + that.title + '</label>').appendTo(append_to);
-            jQuery('<input name="' + widget.id + '_' + param + 
+            $('<label for="param-' + widget.id + '-' + param + '">' + that.title + '</label>').appendTo(append_to);
+            $('<input name="' + widget.id + '_' + param + 
               '" id="param-' + widget.id + '-' + param + '"' +
               (current_value? ' checked="checked"': '') +
               ' type="checkbox">')
@@ -90,7 +90,7 @@
           break;
           case 'text':
             var __id = 'param-' + widget.id + '-' + param;
-            jQuery('<label for="' + __id + '">' + that.title + 
+            $('<label for="' + __id + '">' + that.title + 
               '</label><input name="' + widget.id + '_' + param + 
               '" id="' + __id + '" type="text" value="' + 
                 current_value + '"' + 
@@ -106,7 +106,7 @@
         }
       }
       /// Если в значении было выражение, то преобразуем его
-      if(jQuery.type(that.options) == 'string' && that.options.indexOf('__panel.') == 0) {
+      if($.type(that.options) == 'string' && that.options.indexOf('__panel.') == 0) {
         if(that.options.indexOf('_async') == -1) {
           this.options = eval(that.options);
           drawFunc();
@@ -121,16 +121,19 @@
     });
   }
 
-  jQuery.extend(panel, {
+  $.extend(panel, {
     /**
     * Инициализация настроек
     * @param callback - функция, вызываемая после загрузки всех скриптов
     */
     panel_settings_init: function(callback) {
       /// Убиваем лайвинтернет, иначе он поганит всю страницу, да и все скрипты с document.write
-      jQuery.each(document.scripts, function(i, script) {
+      $.each(document.scripts, function(i, script) {
         if(!script.src && script.innerHTML.indexOf('document.write') != -1) {
-          jQuery(script).remove();
+          $(script).remove();
+        }
+        if(script.src.indexOf('prototype') != -1) {
+          $(script).remove();
         }
       });
 
@@ -139,16 +142,16 @@
                      '../../lib/jquery.mobile.custom.structure.min.css',
                      //'../../lib/jquery.mobile.structure-1.4.3.min.css',
                      'panel_settings.css']);
-      jQuery(document).bind("mobileinit", function () {
-        jQuery.mobile.ajaxEnabled = false;
+      $(document).bind("mobileinit", function () {
+        $.mobile.ajaxEnabled = false;
       });
 
       /// подгружаем АБСОЛЮТНО все скрипты
       var scripts = [];
-      if(!jQuery.mobile) {
+      if(!$.mobile) {
         scripts.push('lib/jquery.mobile.custom.min.js');
       }
-      if(!jQuery.fn.resizable) {
+      if(!$.fn.resizable) {
         scripts.push('lib/jquery-ui-1.9.2.custom.min.js');
       }
       
@@ -176,14 +179,14 @@
           scripts.push(button.module + '/' +button.file);
         }
         if(button.config_files && 
-            jQuery.type(button.config_files) == 'array') {
+            $.type(button.config_files) == 'array') {
           for(var i = 0; i < button.config_files.length; i++) {
             if(scripts.indexOf(button.config_files[i]) == -1) {
               scripts.push(button.config_files[i]);
             }
           }
         }
-        jQuery.each(button.configure || {}, function(i) {
+        $.each(button.configure || {}, function(i) {
           if(this.file && scripts.indexOf(button.module + '/' + this.file) == -1) {
             scripts.push(button.module + '/' + this.file);
           }
@@ -196,14 +199,14 @@
           scripts.push(widget.module + '/' + widget.file);
         }
         if(widget.config_files && 
-            jQuery.type(widget.config_files) == 'array') {
+            $.type(widget.config_files) == 'array') {
           for(var i = 0; i < widget.config_files.length; i++) {
             if(scripts.indexOf(widget.config_files[i]) == -1) {
               scripts.push(widget.config_files[i]);
             }
           }
         }
-        jQuery.each(widget.configure || {}, function(i) {
+        $.each(widget.configure || {}, function(i) {
           if(this.file && scripts.indexOf(widget.module + '/' + this.file) == -1) {
             scripts.push(widget.module + '/' + this.file);
           }
@@ -220,31 +223,31 @@
     panel.panel_settings_init(function() {
       if(document.domain.indexOf('gwpanel.org') == -1) {
         /// Мы должны отключить Илюшины стили, иначе они конфликтуют с jQuery mobile-овскими
-        jQuery.each(document.styleSheets, function(i, stylesheet) {
+        $.each(document.styleSheets, function(i, stylesheet) {
           if(!stylesheet) return;
-          if((!stylesheet.href && !jQuery(stylesheet.ownerNode).attr('gwpanel')) 
+          if((!stylesheet.href && !$(stylesheet.ownerNode).attr('gwpanel')) 
               || (stylesheet.href && stylesheet.href.indexOf('/i/gw.css') != -1)) {
             stylesheet.disabled = true;
           }
         });
       }
       /// Редактирование настроек
-      jQuery(document.body).addClass('panel-settings');
+      $(document.body).addClass('panel-settings');
       /// скрываем активные окна
-      jQuery('.pane:visible').hide();
-      jQuery('.pane-bubble.active').removeClass('active');
+      $('.pane:visible').hide();
+      $('.pane-bubble.active').removeClass('active');
 
       /// Добавляем ползунки уменьшения/увеличения окон
       listener = panel.bind('pane_show', function(paneID) {
-        $pane = jQuery('#pane-' + paneID)
+        $pane = $('#pane-' + paneID)
         /// определяем минимальные границы окна
         var minLeft = 1;
         var minTop = 1;
-        jQuery.each(current_options.panes[paneID].buttons, function() {
+        $.each(current_options.panes[paneID].buttons, function() {
           if(minLeft < this.left + 1) minLeft = this.left + 1;
           if(minTop < this.top + 1) minTop = this.top + 1;
         });
-        jQuery.each(current_options.panes[paneID].widgets, function() {
+        $.each(current_options.panes[paneID].widgets, function() {
           if(minLeft < this.left + this.width) minLeft = this.left + this.width;
           if(minTop < this.top + this.height) minTop = this.top + this.height;
         });
@@ -266,7 +269,7 @@
         if(!$pane.find('.configure').length) {
           $pane.addClass('configuring')
             .find('.button, .widget').addClass('configuring').append(
-            jQuery('<div class="configure"></div>').click(function() {
+            $('<div class="configure"></div>').click(function() {
               var parent = $(this).closest('.button, .widget');
               if(parent.hasClass('button')) {
                 var type = 'button';
@@ -277,7 +280,7 @@
               var _class = panel_apply[type + 's'][data.type];
               data.paneID = paneID;
               panel.panel_settings_form(_class, type, data, true);
-              jQuery('#settings-form-popup').popup('open');
+              $('#settings-form-popup').popup('open');
 
               return false;
             })
@@ -285,15 +288,15 @@
         }
       });
 
-      if(jQuery('#panel-settings-editor').length) {
-        jQuery.mobile.loading("hide");
-        jQuery('#panel-settings-editor').show();
+      if($('#panel-settings-editor').length) {
+        $.mobile.loading("hide");
+        $('#panel-settings-editor').show();
         return;
       }
 
       var apply = panel_apply;
 
-      editor = jQuery('<div id="panel-settings-editor" class="ui-page-theme-a ui-popup ui-overlay-shadow ui-corner-all" data-role="tabs">\
+      editor = $('<div id="panel-settings-editor" class="ui-page-theme-a ui-popup ui-overlay-shadow ui-corner-all" data-role="tabs">\
   <div class="container">\
     <div data-grid="c" data-role="navbar" class="first-view">\
       <ul class="ui-grid-c">\
@@ -324,42 +327,42 @@
 <div id="icons-gallery" class="ui-overlay-shadow ui-popup ui-page-theme-a">\
 <h2>Галерея иконок \
 </h2><div class="container"></div>\
-<a onclick="jQuery(\'#icons-gallery\').hide(); return false;" class="ui-btn ui-mini ui-btn-inline ui-btn-icon-right ui-icon-delete">Закрыть</a>\
+<a onclick="$(\'#icons-gallery\').hide(); return false;" class="ui-btn ui-mini ui-btn-inline ui-btn-icon-right ui-icon-delete">Закрыть</a>\
 </div>')
         .appendTo(document.body);
 
-      jQuery('<a class="close-settings ui-btn ui-btn-icon-right ui-icon-delete ui-btn-inline">Закрыть</a>')
+      $('<a class="close-settings ui-btn ui-btn-icon-right ui-icon-delete ui-btn-inline">Закрыть</a>')
         .click(function() {
-          jQuery(document.body).removeClass('panel-settings');
-          jQuery('.configuring').removeClass('configuring');
-          jQuery('.configure').removeClass('configure');
+          $(document.body).removeClass('panel-settings');
+          $('.configuring').removeClass('configuring');
+          $('.configure').removeClass('configure');
           panel.unbind('pane_show', listener);
           /// возвращаем стили на место
-          jQuery.each(document.styleSheets, function(i, stylesheet) {
+          $.each(document.styleSheets, function(i, stylesheet) {
             if(stylesheet.disabled) stylesheet.disabled = false;
           });
 
-          jQuery('#panel-settings-editor').fadeOut(function() {
-            jQuery('#panel-settings-editor, #settings-form-popup').remove();
+          $('#panel-settings-editor').fadeOut(function() {
+            $('#panel-settings-editor, #settings-form-popup').remove();
           });
           return false;
         }).appendTo(editor.find('.close-button-wrapper'));
       /// готовим галерею иконок
-      jQuery.each(panel_apply.themes[current_options.system.theme].icons, function(index, item) {
+      $.each(panel_apply.themes[current_options.system.theme].icons, function(index, item) {
         var img = item;
         if(img.indexOf('http:') != 0) {
           img = __panel.path_to_theme() + 'icons/' + img;
         }
-        jQuery('<div class="icon-select"></div>').append(
-          jQuery('<img src="' + img + '"></img>').click(function() {
-            jQuery('#param-img').val(item);
-            jQuery('#settings-form-popup div.img img').attr('src', img);
-            jQuery('#icons-gallery').hide();
+        $('<div class="icon-select"></div>').append(
+          $('<img src="' + img + '"></img>').click(function() {
+            $('#param-img').val(item);
+            $('#settings-form-popup div.img img').attr('src', img);
+            $('#icons-gallery').hide();
             return false;
           })
         ).appendTo('#icons-gallery .container');
       });
-      jQuery.each(panel_apply.buttons, function(button_name) {
+      $.each(panel_apply.buttons, function(button_name) {
         var button = this;
         var img = button.img;
         if(img && img.indexOf('http:') != 0) {
@@ -367,40 +370,40 @@
         }
         var id = 'button_' + button_name;
         button.id = id;
-        jQuery('<div class="button-wrapper"></div>').append(
-          jQuery('<div class="button ' + button_name + '" id="' + id + '"></div>').append(
-            jQuery('<a><div class="img">' + 
+        $('<div class="button-wrapper"></div>').append(
+          $('<div class="button ' + button_name + '" id="' + id + '"></div>').append(
+            $('<a><div class="img">' + 
               (img? '<img src="' + img + '"/>': 
                 '<span class="icon"></span>') +
               '</div><h3>' + button.title + '</h3></a>')
               .click(function(e) {
                 panel.panel_settings_form(button, 'button', {type: button_name});
-                jQuery('#settings-form-popup').popup('open');
+                $('#settings-form-popup').popup('open');
                 return false;
               })
           )
         ).append(
-          jQuery('<div class="description">' + (button.description? button.description: '') + '</div>')
+          $('<div class="description">' + (button.description? button.description: '') + '</div>')
         ).appendTo('#edit-buttons-wrapper').trigger('create');
       });
 
-      jQuery.each(panel_apply.widgets, function(widget_name) {
+      $.each(panel_apply.widgets, function(widget_name) {
         var widget = this;
         var id = 'widget_' + widget_name;
         var __widget;
 
-        var widget_wrapper = jQuery('<div class="widget-wrapper"><h2>' + 
+        var widget_wrapper = $('<div class="widget-wrapper"><h2>' + 
           widget.title + '</h2></div>')
            .append(
-           __widget = jQuery('<div class="widget '+ widget_name + '" id="' + id + '"></div>')
+           __widget = $('<div class="widget '+ widget_name + '" id="' + id + '"></div>')
              .css({
               width: current_options.system.btnwidth * widget.width,
               height: current_options.system.btnheight * widget.height
             })
           )
           .append(
-            jQuery('<p></p>').append(
-              jQuery('<a data-rel="popup" data-transition="pop" href="#settings-form-popup" id="add-widget-' + widget_name + '" \
+            $('<p></p>').append(
+              $('<a data-rel="popup" data-transition="pop" href="#settings-form-popup" id="add-widget-' + widget_name + '" \
                 class="ui-btn ui-btn-inline ui-btn-icon-right ui-icon-plus">Добавить</a>')
               .click(function() {
                 panel.panel_settings_form(widget, 'widget', {type: widget_name});
@@ -411,13 +414,13 @@
           .appendTo('#edit-widgets-wrapper').trigger('create');
 
         var __arguments = [];
-        if(jQuery.type(widget.arguments) == 'array') {
+        if($.type(widget.arguments) == 'array') {
           for(var i = 0; i < widget.arguments.length; i++) {
             __arguments.push(widget.arguments[i]);
           }
         }
         var default_data = {};
-        jQuery.each(widget.configure || {}, function(param){
+        $.each(widget.configure || {}, function(param){
           default_data[param] = this.default;
         });
 
@@ -426,8 +429,8 @@
       });
 
       /// Модули
-      var modules_ul = jQuery('<ul data-role="collapsibleset" data-filter="true" data-filter-placeholder="Поиск настроек"></ul>');
-      jQuery.each(panel_apply.modules, function(module_name) {
+      var modules_ul = $('<ul data-role="collapsibleset" data-filter="true" data-filter-placeholder="Поиск настроек"></ul>');
+      $.each(panel_apply.modules, function(module_name) {
         //if(module_name == 'panel') return;
         var module = this;
         
@@ -443,21 +446,21 @@
           }
         }
         if(configurable_funcs.length) {
-          var li = jQuery('<li><h2>' + 
+          var li = $('<li><h2>' + 
           module.title + '</h2>' + 
             (module.description? '<div class="description">' + module.description: '')
           + '</li>');
 
-          var settings_ul = jQuery('<ul data-role="listview"></ul>').appendTo(li);
+          var settings_ul = $('<ul data-role="listview"></ul>').appendTo(li);
           li.attr('data-role', 'collapsible');
-          jQuery.each(configurable_funcs, function(i, func_name) {
+          $.each(configurable_funcs, function(i, func_name) {
             var current_options = panel.getOptions();
             if(panel_apply.settings[func_name].default === false) 
               var is_blacklisted = !(current_options.whitelist && current_options.whitelist.indexOf(func_name) > -1);
             else
               var is_blacklisted = current_options.blacklist && current_options.blacklist.indexOf(func_name) > -1;
 
-            var checkbox_li = jQuery('<li><label><input name="' + func_name + '" type="checkbox"' + 
+            var checkbox_li = $('<li><label><input name="' + func_name + '" type="checkbox"' + 
               (is_blacklisted? '': 
                 ' checked="checked"') + '>' + configurable_desc[i] + '</label>' + '</li>')
               .appendTo(settings_ul).find('input').change(function() {
@@ -476,7 +479,7 @@
                     panel.setOptions(current_options);
                   }
                 }
-                jQuery(this).closest('li').find('.add-settings').removeClass('ui-disabled');
+                $(this).closest('li').find('.add-settings').removeClass('ui-disabled');
               } else {
                 if(panel_apply.settings[func_name].default === false) {
                   /// Удаляем из белого списка
@@ -492,12 +495,12 @@
                     current_options.blacklist.push(this.name);
                 }
                 panel.setOptions(current_options);
-                jQuery(this).closest('li').find('.add-settings').addClass('ui-disabled');
+                $(this).closest('li').find('.add-settings').addClass('ui-disabled');
               }
             }).end();
             if(panel_apply.settings[func_name].configure) {
               /// Дополнительные настройки
-              var add_fieldset = jQuery('<div data-role="collapsible" class="' + 
+              var add_fieldset = $('<div data-role="collapsible" class="' + 
                 (is_blacklisted? 'ui-disabled': '') + 
                 ' add-settings ui-corner-all custom-corners ui-mini">\
   <h3>Дополнительные настройки</h3>\
@@ -533,63 +536,63 @@
 
       editor.trigger('create')
         .find('.ui-navbar a.ui-btn').click(function() {
-          jQuery('.ui-navbar.first-view').removeClass('first-view');
-          jQuery('.ui-btn-active').removeClass('ui-btn-active');
-          jQuery(this).addClass('ui-btn-active');
-          jQuery('.edit-wrapper').hide();
-          jQuery('#' + this.href.split('#')[1]).show();
+          $('.ui-navbar.first-view').removeClass('first-view');
+          $('.ui-btn-active').removeClass('ui-btn-active');
+          $(this).addClass('ui-btn-active');
+          $('.edit-wrapper').hide();
+          $('#' + this.href.split('#')[1]).show();
           return false;
         });
 
       panel.get('variants_' + panel.currentPlayerID(), function(variants) {
 
         variants = variants || {default: 'По-умолчанию'};
-        jQuery('<label for="variant-name">Сейчас используется вариант настроек:</label>').appendTo('#edit-other-wrapper .options-variants');
-        var variant_select = jQuery('<select id="variant-name" name="variant"></select>').change(function() {
-          panel.set(panel.getEnv() + '_opts_var_' + panel.currentPlayerID(), jQuery(this).val(), function() {
+        $('<label for="variant-name">Сейчас используется вариант настроек:</label>').appendTo('#edit-other-wrapper .options-variants');
+        var variant_select = $('<select id="variant-name" name="variant"></select>').change(function() {
+          panel.set(panel.getEnv() + '_opts_var_' + panel.currentPlayerID(), $(this).val(), function() {
             panel.showFlash('Настройки изменены. Пожалуйста, перезагрузите страницу чтобы увидеть изменения.', 'message', 5000);
           });
         });
 
         panel.get(panel.getEnv() + '_opts_var_' + panel.currentPlayerID(), function(current_variant) {
-          jQuery.each(variants, function(name, title) {
+          $.each(variants, function(name, title) {
             variant_select.append('<option value="' + name + '"' + 
               (current_variant == name? ' selected="selected"': '') + 
               '>' + title + '</option>');
           });
         });
-        var n = jQuery('<div class="add-options-variant ui-corner-all custom-corners" data-role="collapsible">\
+        var n = $('<div class="add-options-variant ui-corner-all custom-corners" data-role="collapsible">\
   <h3>Добавить новый вариант</h3>\
   <div class="ui-body ui-body-a">\
   </div>');
         var fieldset = n.find('.ui-body');
-        jQuery('<label for="add-title">Название</label><input id="add-title" name="title" type="text" />').appendTo(fieldset);
+        $('<label for="add-title">Название</label><input id="add-title" name="title" type="text" />').appendTo(fieldset);
 
-        jQuery('<label for="add-title">Копировать из коллекции</label>').appendTo(fieldset);
-        var collection = jQuery('<select id="add-collection" name="collection"></select').appendTo(fieldset);
+        $('<label for="add-title">Копировать из коллекции</label>').appendTo(fieldset);
+        var collection = $('<select id="add-collection" name="collection"></select').appendTo(fieldset);
 
         collection.append('<option value="">Пустые настройки, с нуля</option>');
 
-        jQuery.each(window.panelSettingsCollection, function(id, val) {
+        $.each(window.panelSettingsCollection, function(id, val) {
           collection.append('<option value="' + id + '">' + val.title + '</option>');
         });
 
-        jQuery('<div style="margin: 30px 0;" />').appendTo(fieldset);
-        jQuery('<input type="submit" value="Добавить">').click(function() {
-          var name = jQuery('#add-title').val();
+        $('<div style="margin: 30px 0;" />').appendTo(fieldset);
+        $('<input type="submit" value="Добавить">').click(function() {
+          var name = $('#add-title').val();
           if(!name) {
-            jQuery('#add-title').focus();
+            $('#add-title').focus();
             panel.showFlash('Пожалуйста, укажите имя', 'error', 5000);
             return false;
           }
           for(var key in variants) {
             if(variants[key] == name) {
-              jQuery('#add-title').focus();
+              $('#add-title').focus();
               panel.showFlash('Настройки с таким именем уже существуют', 'error', 5000);
               return false;
             }
           }
-          var id = jQuery('#add-collection').val() || 'noname';
+          var id = $('#add-collection').val() || 'noname';
           var index = 0;
           for(var key in variants) {
             if(key.search(new RegExp(id + '[0-9]+')) > -1) {
@@ -603,9 +606,9 @@
           panel.set('variants_' + panel.currentPlayerID(), variants);
 
           var new_options = {};
-          if(jQuery('#add-collection').val() == '') {
+          if($('#add-collection').val() == '') {
             /// минимальный набор настроек, чтобы панель работала
-            jQuery.extend(new_options, {
+            $.extend(new_options, {
               system: {theme: 'base', btnwidth:70, btnheight: 85},
               panes: [ {width: 6, height: 4, buttons: [{type: 'panel_settings', left: 0, top: 0}], widgets: []}, 
                        {width: 6, height: 4, buttons: [], widgets: []},
@@ -615,41 +618,41 @@
               widgets: []
             });
           } else {
-            jQuery.extend(new_options, window.panelSettingsCollection[jQuery('#add-collection').val()]);
+            $.extend(new_options, window.panelSettingsCollection[$('#add-collection').val()]);
           }
           panel.set(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + id, new_options, function() {
             panel.showFlash('Новый набор настроек добавлен.', 'message', 5000);
           });
 
-          jQuery('#add-title').val('');
-          jQuery('.add-options-variant').collapsible('collapse');
+          $('#add-title').val('');
+          $('.add-options-variant').collapsible('collapse');
           return false;
         }).appendTo(fieldset);
       
         if(Object.keys(variants).length > 1) {
-          var d = jQuery('</div><div class="remove-options-variant ui-corner-all custom-corners" data-role="collapsible">\
+          var d = $('</div><div class="remove-options-variant ui-corner-all custom-corners" data-role="collapsible">\
   <h3>Удалить настройки</h3>\
   <div class="ui-body ui-body-a">\
   </div>\
 </div>');
-          jQuery.each(variants, function(id, name) {
+          $.each(variants, function(id, name) {
             if(id == 'default') return;
-            jQuery('<label for="del-variant-' + id + '">' + name
+            $('<label for="del-variant-' + id + '">' + name
               + '</label><input id="del-variant-' + id + '" type="checkbox" value="' + id + '">')
               .appendTo(d.find('.ui-body'));
           });
-          jQuery('<input type="submit" value="Удалить" />').click(function() {
-            var names = jQuery('.remove-options-variant input[type=checkbox]:checked')
-              .prev('label').map(function() { return jQuery(this).text()})
+          $('<input type="submit" value="Удалить" />').click(function() {
+            var names = $('.remove-options-variant input[type=checkbox]:checked')
+              .prev('label').map(function() { return $(this).text()})
               .get().join(', ');
             if(location.search.indexOf('gwpanel_test') > -1 || confirm('Вы действительно хотите удалить выбранные настройки? (' + names + ')')) {
-              jQuery('.remove-options-variant input[type=checkbox]:checked').each(function() {
-                var id = jQuery(this).val();
-                if(jQuery('#variant-name').val() == id) {
-                  jQuery('#variant-name').val('default').change();
+              $('.remove-options-variant input[type=checkbox]:checked').each(function() {
+                var id = $(this).val();
+                if($('#variant-name').val() == id) {
+                  $('#variant-name').val('default').change();
                 }
                 variant_select.find('option[value=' + id + ']').remove();
-                jQuery(this).closest('.ui-checkbox').remove();
+                $(this).closest('.ui-checkbox').remove();
                 delete variants[id];
                 panel.del(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + id);
               });
@@ -658,17 +661,17 @@
             return false;
           }).appendTo(d.find('.ui-body'));
         }
-        jQuery('#edit-other-wrapper .options-variants').append(variant_select).append(n).append(d).trigger('create');
+        $('#edit-other-wrapper .options-variants').append(variant_select).append(n).append(d).trigger('create');
       });
 
-      jQuery('<h2>Текущая версия: <span class="current-version">' + panel.getVersion() + '</span></h2>').append(
-        jQuery('<a class="ui-btn ui-btn-inline ui-mini ui-btn-icon-right ui-icon-refresh">проверить</a>').click(function() {
-          var $that = jQuery(this);
+      $('<h2>Текущая версия: <span class="current-version">' + panel.getVersion() + '</span></h2>').append(
+        $('<a class="ui-btn ui-btn-inline ui-mini ui-btn-icon-right ui-icon-refresh">проверить</a>').click(function() {
+          var $that = $(this);
           panel.checkVersion(function(remote_version) {
             if(remote_version != panel.getVersion()) {
               $that.html('обновлено');
               panel.updateVersion(remote_version, function(notes, version) { 
-                jQuery('#edit-other-wrapper .versions .release-note:first').parent().prepend(
+                $('#edit-other-wrapper .versions .release-note:first').parent().prepend(
                   '<p class="release-note active release-note-' + version +
                   '">Выпуск #<span class="release-num">' + version + 
                   '</span>: <span class="notes">' + notes.notes + 
@@ -676,7 +679,7 @@
                   '</span></p>'
                 );
               });
-              jQuery('.current-version').html(remote_version);
+              $('.current-version').html(remote_version);
             } else {
               $that.html('у вас самая свежая версия').addClass('ui-btn-active ui-focus');
             }
@@ -686,14 +689,14 @@
         }).css({marginLeft: 30})
       ).appendTo('#edit-other-wrapper .versions');
 
-      var releases = jQuery('<div class="releases" data-role="collapsible"' + 
+      var releases = $('<div class="releases" data-role="collapsible"' + 
         (active_section == 'release_notes'? 'data-collapsed="false"': '') + 
         '><h3>Примечания к выпускам</h3></div>')
         .appendTo('#edit-other-wrapper .versions');
       panel.get('release_notes', function(release_notes) {
         release_notes = release_notes || {};
         var keys = Object.keys(release_notes);
-        keys = jQuery.map(keys, function(val) {
+        keys = $.map(keys, function(val) {
           return parseInt(val);
         }).sort(function(a, b) {
           if(a > b) return -1; 
@@ -702,7 +705,7 @@
         });
         for(var i = 0; i < keys.length; i++) {
           if(typeof(release_notes[keys[i]]) == 'object') {
-            jQuery('<p class="release-note ' + 
+            $('<p class="release-note ' + 
               (active_section == 'release_notes' && keys[i] == panel.getVersion()? 'active ': '') + 
               'release-note-' + keys[i] +
               '">Выпуск #<span class="release-num">' + keys[i] + 
@@ -714,60 +717,60 @@
         }
       });
 
-      jQuery('#edit-other-wrapper .versions').trigger('create');
+      $('#edit-other-wrapper .versions').trigger('create');
 
       panel.get('variants_' + panel.currentPlayerID(), function(variants) {
         var data = {};
 
-        jQuery.each(variants, function(variant, name) {
+        $.each(variants, function(variant, name) {
           panel.get(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + variant, function(opts) {
-            if(jQuery.type(opts) == 'object') {
+            if($.type(opts) == 'object') {
               data[variant] = {name: name, options: opts, version: panel.getVersion()};
             }
           });
         });
-        var export_t = jQuery('<textarea rows="5" cols="50"></textarea>').hide().focus(function() {
-          jQuery(this).select();
+        var export_t = $('<textarea rows="5" cols="50"></textarea>').hide().focus(function() {
+          $(this).select();
           return false;
         });
-        var export_button = jQuery('<a class="ui-btn ui-btn-icon-right ui-icon-arrow-d">Экспортировать настройки</a>').click(function() {
-          jQuery(this).hide();
+        var export_button = $('<a class="ui-btn ui-btn-icon-right ui-icon-arrow-d">Экспортировать настройки</a>').click(function() {
+          $(this).hide();
           export_t.val(JSON.stringify(data));
           export_t.show().focus();
           export_t.after('<div class="description">Нажмите Ctrl + C чтобы скопировать</div>');
           return false;
         }).appendTo('.options-variants').trigger('create');
-        jQuery('<div class="ui-body">').append(export_t)
+        $('<div class="ui-body">').append(export_t)
           .appendTo('.options-variants').trigger('create');
 
-        var import_t = jQuery('<textarea rows="5" cols="50"></textarea>').hide().focus(function() {
-          jQuery(this).select();
+        var import_t = $('<textarea rows="5" cols="50"></textarea>').hide().focus(function() {
+          $(this).select();
           return false;
         });
 
-        var import_but = jQuery('<a class="ui-btn">Импорт</a>').click(function() {
+        var import_but = $('<a class="ui-btn">Импорт</a>').click(function() {
           var that = this;
           var __success = function() {
             import_t.hide();
             import_t.next().hide();
-            jQuery(that).hide();
+            $(that).hide();
             panel.showFlash('Настройки успешно сохранены. Пожалуйста, перезагрузите страницу чтобы увидеть изменения');
             export_t.hide();
             export_t.next().hide();
             export_button.hide();
           }
-          var options_backup = jQuery.extend({}, panel.getOptions());
+          var options_backup = $.extend({}, panel.getOptions());
           try {
             var new_data = JSON.parse(import_t.val());
-            if(jQuery.type(new_data) != 'object') throw('Неправильная строка настроек');
+            if($.type(new_data) != 'object') throw('Неправильная строка настроек');
             if(!new_data.default) throw('Строка настроек не содержит базовые настройки. Возможно она была повреждена');
             var processed = 0;
 
             var __import = function() {
-              jQuery.each(new_data, function(variant, data) {
-                if(jQuery.type(data.options.panes) != 'array') throw('Строка настроек содержит неправильные данные');
+              $.each(new_data, function(variant, data) {
+                if($.type(data.options.panes) != 'array') throw('Строка настроек содержит неправильные данные');
 
-                if(jQuery.type(window.panel_release_migration) == 'array' && 
+                if($.type(window.panel_release_migration) == 'array' && 
                    window.panel_release_migration.length > 0) {
                   // Мы должны прогнать все миграции для этих настроек
                   // ставим эти опции в текущие, чтобы миграция над ними поработала
@@ -795,7 +798,7 @@
             if(new_data.default.version < panel.getVersion()) {
               /// Получаем все миграции для предыдущих версий и только потом 
               /// мы сможем сделать импорт настроек
-              jQuery.mobile.loading('show', {
+              $.mobile.loading('show', {
                 textVisible: true, 
                 html: '<p><span class="ui-icon-loading" style="opacity: 0.5"></span></p>\
 <p style="text-align: center;"><nobr>Получаем обновления:</nobr> <span id="loading-progress">0</span> из ' + (panel.getVersion() - new_data.default.version)
@@ -809,7 +812,7 @@
               var loaded = 0;
               var prod_path = 'http://gwpanel.org/panel2/panel/production';
 
-              jQuery.each(versions, function(i, version_index) {
+              $.each(versions, function(i, version_index) {
                 str_version = String(version_index);
                 var path = prod_path; 
                 for(var i = 0; i < str_version.length; i++) {
@@ -821,10 +824,10 @@
                 s.src = path;
                 s.addEventListener('load', function() {
                   loaded++;
-                  jQuery('#loading-progress').html(loaded);
+                  $('#loading-progress').html(loaded);
 
                   if(loaded >= versions.length) {
-                    jQuery.mobile.loading('hide');
+                    $.mobile.loading('hide');
                     /// все миграции загружены, выполняем импорт
                     __import();
                   }
@@ -843,23 +846,23 @@
           return false;
         }).hide();
 
-        jQuery('<a class="ui-btn ui-btn-icon-right ui-icon-arrow-u">Импортировать настройки</a>').click(function() {
-          jQuery(this).hide();
+        $('<a class="ui-btn ui-btn-icon-right ui-icon-arrow-u">Импортировать настройки</a>').click(function() {
+          $(this).hide();
           import_t.show().focus();
           import_t.after('<div class="description">Нажмите Ctrl + V чтобы вставить текст с настройками и нажмите на кнопку "Импорт"</div>');
           import_but.show();
           return false;
         }).appendTo('.options-variants').trigger('create');
 
-        jQuery('<div class="ui-body">').append(import_t).append(import_but).appendTo('.options-variants').trigger('create');
+        $('<div class="ui-body">').append(import_t).append(import_but).appendTo('.options-variants').trigger('create');
 
       });
 
       if(active_section == 'release_notes') {
-        jQuery('#edit-other-wrapper').show();
-        jQuery('#panel-settings-editor .ui-navbar.first-view').removeClass('first-view');
+        $('#edit-other-wrapper').show();
+        $('#panel-settings-editor .ui-navbar.first-view').removeClass('first-view');
       }
-      jQuery.mobile.loading("hide");
+      $.mobile.loading("hide");
     });
     },
 
@@ -871,7 +874,7 @@
     * @param isEdit - флаг, если = true, то это редактирование
     */
     panel_settings_form: function(widgetClass, widgetKind, widgetData, isEdit) {
-      jQuery.mobile.loading("hide");
+      $.mobile.loading("hide");
 
       var current_options = panel.getOptions();
       var self_init = false;
@@ -879,22 +882,22 @@
       var $widget = this;
 
       var __data = widgetData || {};
-      if(!jQuery('#settings-form-popup').length) {
-        jQuery('<div id="settings-form-popup" data-role="popup" data-position-to="window"></div>')
+      if(!$('#settings-form-popup').length) {
+        $('<div id="settings-form-popup" data-role="popup" data-position-to="window"></div>')
           .appendTo('.ui-page:visible').trigger('create').popup();
         self_init = true;
-      } else if(jQuery('#settings-form-popup').parent().parent().hasClass('ui-page')) {
+      } else if($('#settings-form-popup').parent().parent().hasClass('ui-page')) {
         self_init = true;
       }
-      jQuery('#settings-form-popup').html('')
+      $('#settings-form-popup').html('')
         .append('<h2>' + (isEdit? '': 'Добавить ' + 
                            (widgetKind == 'widget' || widgetKind == 'float'? 
                             'виджет': 
                             'кнопку') 
                           ) + ' ' + widgetClass.title + '</h2>');
       if(isEdit) {
-        jQuery('#settings-form-popup h2')
-          .append(jQuery('<a title="Удалить" class="ui-btn ui-mini ui-btn-icon-notext ui-icon-delete ui-icon-center ui-btn-inline">Удалить</a>')
+        $('#settings-form-popup h2')
+          .append($('<a title="Удалить" class="ui-btn ui-mini ui-btn-icon-notext ui-icon-delete ui-icon-center ui-btn-inline">Удалить</a>')
             .css({marginLeft: 10})
             .click(function() {
               if(confirm('Вы действительно хотите удалить ' + 
@@ -902,21 +905,21 @@
                 var current_options = panel.getOptions();
                 if(widgetKind == 'float') {
                   current_options.widgets.splice(widgetData.index, 1);
-                  jQuery('#float-' + widgetData.index + '-' + widgetData.type).remove();
+                  $('#float-' + widgetData.index + '-' + widgetData.type).remove();
                 } else {
                   current_options.panes[widgetData.paneID][widgetKind + 's'].splice(widgetData.index, 1);
-                  jQuery('#' + widgetData.id).remove();
+                  $('#' + widgetData.id).remove();
                 }
                 panel.showFlash('Виджет удалён');
                 panel.setOptions(current_options);
-                jQuery('#settings-form-popup').popup('close');
-                jQuery('#settings-form-popup').remove();
+                $('#settings-form-popup').popup('close');
+                $('#settings-form-popup').remove();
               }
             })
           );
       }
       if(widgetClass.configure || widgetKind == 'button') {
-        var setting_content = jQuery('<div class="ui-corner-all custom-corners">\
+        var setting_content = $('<div class="ui-corner-all custom-corners">\
     <div class="ui-bar ui-bar-a">\
       <h3>Настройки</h3>\
     </div>\
@@ -929,23 +932,23 @@
 
         /// Для кнопок добавляем возможность редактировать текст и иконку
         if(widgetKind == 'button') {
-          jQuery('<input type="hidden" id="param-img" name="img" />')
+          $('<input type="hidden" id="param-img" name="img" />')
             .appendTo(setting_content);
           var img = (__data.img || widgetClass.img || 'no-icon');
           if(img.indexOf('http:') != 0) {
             img = __panel.path_to_theme() + 'icons/' + img;
           }
-          jQuery('<div class="img"><img src="' + img + '"/></div>').click(function() {
-            jQuery('#icons-gallery').show();
+          $('<div class="img"><img src="' + img + '"/></div>').click(function() {
+            $('#icons-gallery').show();
           }).insertBefore('#settings-form-popup h2');
-          jQuery('<label for="param-title">Текст кнопки</label><input maxlength="32" name="title" id="param-title"' +
+          $('<label for="param-title">Текст кнопки</label><input maxlength="32" name="title" id="param-title"' +
             ' type="text" value="' + (__data.title == undefined? '': __data.title) + 
               '" placeholder="' + widgetClass.title + '">')
             .appendTo(setting_content);
         }
 
         /// проходим по всем опциям и собираем дефолтные значения
-        jQuery.each(widgetClass.configure || [], function(param) {
+        $.each(widgetClass.configure || [], function(param) {
           widget_data[param] = widgetData.arguments[param] == undefined? this.default:
                                widgetData.arguments[param];
         });
@@ -957,7 +960,7 @@
       }
 
       if(widgetKind != 'float' && !isEdit) {
-        var displace_div = jQuery('<div class="ui-corner-all custom-corners">\
+        var displace_div = $('<div class="ui-corner-all custom-corners">\
     <div class="ui-bar ui-bar-a">\
       <h3>Куда размещать</h3>\
     </div>\
@@ -966,7 +969,7 @@
       </fieldset>\
     </div>\
   </div>').appendTo('#settings-form-popup').find('fieldset');
-        var footer_displace_div = jQuery('<fieldset class="footer-displace" data-role="controlgroup" data-type="horizontal">\
+        var footer_displace_div = $('<fieldset class="footer-displace" data-role="controlgroup" data-type="horizontal">\
 </fieldset>\'').appendTo(displace_div.parent());
       }
 
@@ -1006,13 +1009,13 @@
 
       if(widgetKind == 'float') {
         /// Настройки, специфичные только для плавающих виджетов
-        var $visibility = jQuery('<div data-role="collapsible">\
+        var $visibility = $('<div data-role="collapsible">\
 <h3>Настройки видимости</h3>\
 <div class="ui-body"></div>\
 </div>').appendTo('#settings-form-popup').find('.ui-body');
 
         $visibility.append('<label for="fixed">Зафиксирован</label>')
-        .append(jQuery('<input type="checkbox" id="fixed"' + 
+        .append($('<input type="checkbox" id="fixed"' + 
             (widgetData.fixed? ' checked="checked"': '') + ' />').change(function() {
           if(this.checked) {
             widgetData.fixed = true;
@@ -1023,7 +1026,7 @@
           }
         }))
         .append('<label for="no-opacity">Непрозрачный</label>')
-        .append(jQuery('<input type="checkbox" id="no-opacity"' + 
+        .append($('<input type="checkbox" id="no-opacity"' + 
             (widgetData.no_opacity? ' checked="checked"': '') + ' />').change(function() {
           if(this.checked) {
             widgetData.no_opacity = true;
@@ -1036,19 +1039,19 @@
 
         if(isEdit) {
           $visibility.append('<label for="blacklist-page">Не показывать на страницах этого типа</label>')
-          .append(jQuery('<input type="checkbox" id="blacklist-page"' + 
-            (jQuery.type(widgetData.blacklist) == 'array' 
+          .append($('<input type="checkbox" id="blacklist-page"' + 
+            ($.type(widgetData.blacklist) == 'array' 
               && widgetData.blacklist.indexOf(location.pathname) > -1? 
               ' checked="checked"': '') + '>').change(function() {
             if(this.checked) {
-              if(jQuery.type(widgetData.blacklist) == 'array') {
+              if($.type(widgetData.blacklist) == 'array') {
                 if(widget.blacklist.indexOf(location.pathname) == -1) {
                   widgetData.blacklist.push(location.pathname);
                 }
               } else {
                 widgetData.blacklist = [location.pathname];
               }
-              jQuery('#only-page, #only-page-class').removeAttr('checked').checkboxradio('refresh');
+              $('#only-page, #only-page-class').removeAttr('checked').checkboxradio('refresh');
               delete widgetData.only_page;
               delete widgetData.only_page_class;
             } else {
@@ -1058,11 +1061,11 @@
             }
           }))
           .append('<label for="only-page">Показывать только на этой странице</label>')
-          .append(jQuery('<input type="checkbox" id="only-page"' + 
+          .append($('<input type="checkbox" id="only-page"' + 
             (widgetData.only_page? ' checked="checked"': '') + '>').change(function() {
             if(this.checked) {
               widgetData.only_page = location.pathname + location.search;
-              jQuery('#only-page-class, #blacklist-page').removeAttr('checked').checkboxradio('refresh');
+              $('#only-page-class, #blacklist-page').removeAttr('checked').checkboxradio('refresh');
               delete widgetData.blacklist;
               delete widgetData.only_page_class;
             } else {
@@ -1071,11 +1074,11 @@
           }));
           if(location.search.length > 0) {
             $visibility.append('<label for="only-page-class">Показывать на всех страницах этого типа</label>')
-            .append(jQuery('<input type="checkbox" id="only-page-class"' + 
+            .append($('<input type="checkbox" id="only-page-class"' + 
               (widgetData.only_page_class? ' checked="checked"': '') + '>').change(function() {
               if(this.checked) {
                 widgetData.only_page_class = location.pathname;
-                jQuery('#only-page, #blacklist-page').removeAttr('checked').checkboxradio('refresh');
+                $('#only-page, #blacklist-page').removeAttr('checked').checkboxradio('refresh');
                 delete widgetData.blacklist;
                 delete widgetData.only_page;
               } else {
@@ -1086,22 +1089,22 @@
         }
       }
 
-      jQuery('#settings-form-popup')
+      $('#settings-form-popup')
         .append(
-        jQuery('<div class="ui-grid-a"></div>').append(
-          jQuery('<div class="ui-block-a"></div>').append(
-            jQuery('<a href="#" class="ui-shadow ui-btn ui-corner-all">Отменить</a>').click(function() {
-              jQuery('#settings-form-popup').popup('close');
+        $('<div class="ui-grid-a"></div>').append(
+          $('<div class="ui-block-a"></div>').append(
+            $('<a href="#" class="ui-shadow ui-btn ui-corner-all">Отменить</a>').click(function() {
+              $('#settings-form-popup').popup('close');
               if(self_init) {
-                jQuery('#settings-form-popup').remove();
+                $('#settings-form-popup').remove();
               }
-              jQuery('.pane-bubble.drag-over').removeClass('drag-over');
+              $('.pane-bubble.drag-over').removeClass('drag-over');
               return false;
             })
           )
         ).append(
-          jQuery('<div class="ui-block-b"></div>').append(
-            jQuery('<a href="#" class="widget-save ui-shadow ui-btn ui-corner-all">' + 
+          $('<div class="ui-block-b"></div>').append(
+            $('<a href="#" class="widget-save ui-shadow ui-btn ui-corner-all">' + 
               (isEdit? 'Сохранить': 'Добавить') + '</a>').click(function() {
               var displace;
               if(widgetKind == 'float') {
@@ -1109,7 +1112,7 @@
               } else if(isEdit) {
                 displace = widgetData.paneID;
               } else {
-                jQuery('input[name=displace]').each(function() {
+                $('input[name=displace]').each(function() {
                   if(this.checked) {
                     displace = this.value;
                   }
@@ -1171,19 +1174,19 @@
                   }
                   panel.showFlash('Виджет ' + (isEdit? 'сохранён': 'добавлен') + 
                     '.', 'message', 5000);
-                  jQuery('#pane-bubble-' + displace).show();
+                  $('#pane-bubble-' + displace).show();
                 }
               } else if(widgetKind == 'button') {
-                __data.title = jQuery('#param-title').val();
-                __data.img = jQuery('#param-img').val() || widgetClass.img;
+                __data.title = $('#param-title').val();
+                __data.img = $('#param-img').val() || widgetClass.img;
                 displace = parseInt(displace);
                 if(isEdit) {
                   /// Меняем заголовок кнопки сразу
-                  jQuery('#pane-' + displace + ' #' + __data.id + ' a h3').html(
+                  $('#pane-' + displace + ' #' + __data.id + ' a h3').html(
                     __data.title || widgetClass.title
                   );
-                  jQuery('#pane-' + displace + ' #' + __data.id + ' .img img').attr('src',
-                     jQuery('#settings-form-popup div.img img').attr('src')
+                  $('#pane-' + displace + ' #' + __data.id + ' .img img').attr('src',
+                     $('#settings-form-popup div.img img').attr('src')
                   );
                 } else {
                   /// Создаём идентификатор
@@ -1221,7 +1224,7 @@
               if($('#settings-form-popup').length && $('#settings-form-popup').popup) {
                 $('#settings-form-popup').popup('close');
               }
-              jQuery('.pane-bubble.drag-over').removeClass('drag-over');
+              $('.pane-bubble.drag-over').removeClass('drag-over');
 
               if(self_init) {
                 setTimeout(function() {
@@ -1234,18 +1237,18 @@
         )
       ).trigger('create');
 
-      jQuery('input[name=displace]').change(function() {
-        jQuery('.pane-bubble.drag-over').removeClass('drag-over');
+      $('input[name=displace]').change(function() {
+        $('.pane-bubble.drag-over').removeClass('drag-over');
         if(this.checked) {
           var id = parseInt(this.id.split('-')[2]);
           if(!isNaN(id)) {
-            jQuery('#pane-bubble-' + id).show().addClass('drag-over').css({'zIndex': 9999});
+            $('#pane-bubble-' + id).show().addClass('drag-over').css({'zIndex': 9999});
           }
         }
       });
 
       if(self_init) {
-        jQuery('#settings-form-popup').popup('open');
+        $('#settings-form-popup').popup('open');
       }
     }
 
