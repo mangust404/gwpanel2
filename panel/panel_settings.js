@@ -704,6 +704,144 @@
 
       jQuery('#edit-other-wrapper .versions').trigger('create');
 
+      panel.get('variants_' + panel.currentPlayerID(), function(variants) {
+        var data = {};
+
+        jQuery.each(variants, function(variant, name) {
+          panel.get(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + variant, function(opts) {
+            if(jQuery.type(opts) == 'object') {
+              data[variant] = {name: name, options: opts, version: panel.getVersion()};
+            }
+          });
+        });
+        var export_t = jQuery('<textarea rows="5" cols="50"></textarea>').hide().focus(function() {
+          jQuery(this).select();
+          return false;
+        });
+        var export_button = jQuery('<a class="ui-btn ui-btn-icon-right ui-icon-arrow-d">Экспортировать настройки</a>').click(function() {
+          jQuery(this).hide();
+          export_t.val(JSON.stringify(data));
+          export_t.show().focus();
+          export_t.after('<div class="description">Нажмите Ctrl + C чтобы скопировать</div>');
+          return false;
+        }).appendTo('.options-variants').trigger('create');
+        jQuery('<div class="ui-body">').append(export_t)
+          .appendTo('.options-variants').trigger('create');
+
+        var import_t = jQuery('<textarea rows="5" cols="50"></textarea>').hide().focus(function() {
+          jQuery(this).select();
+          return false;
+        });
+
+        var import_but = jQuery('<a class="ui-btn">Импорт</a>').click(function() {
+          var that = this;
+          var __success = function() {
+            import_t.hide();
+            import_t.next().hide();
+            jQuery(that).hide();
+            panel.showFlash('Настройки успешно сохранены. Пожалуйста, перезагрузите страницу чтобы увидеть изменения');
+            export_t.hide();
+            export_t.next().hide();
+            export_button.hide();
+          }
+          var options_backup = jQuery.extend({}, panel.getOptions());
+          try {
+            var new_data = JSON.parse(import_t.val());
+            if(jQuery.type(new_data) != 'object') throw('Неправильная строка настроек');
+            if(!new_data.default) throw('Строка настроек не содержит базовые настройки. Возможно она была повреждена');
+            var processed = 0;
+
+            var __import = function() {
+              jQuery.each(new_data, function(variant, data) {
+                if(jQuery.type(data.options.panes) != 'array') throw('Строка настроек содержит неправильные данные');
+
+                if(jQuery.type(window.panel_release_migration) == 'array' && 
+                   window.panel_release_migration.length > 0) {
+                  // Мы должны прогнать все миграции для этих настроек
+                  // ставим эти опции в текущие, чтобы миграция над ними поработала
+                  panel.setOptions(data.options);
+                  for(var m = 0; m < window.panel_release_migration.length; m++) {
+                    try {
+                      window.panel_release_migration[m]();
+                    } catch(e) {
+                      /// что же делать в случае корявой миграции?
+                      if(window.console) console.log('Bad migration: ' + e);
+                    }
+                  }
+                  // 
+                  data.options = panel.getOptions();
+                }
+                panel.set(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + variant, data.options, function() {
+                  processed++;
+                  if(processed >= Object.keys(new_data).length) {
+                    __success();
+                  }
+                });
+              });
+            }
+
+            if(new_data.default.version < panel.getVersion()) {
+              /// Получаем все миграции для предыдущих версий и только потом 
+              /// мы сможем сделать импорт настроек
+              jQuery.mobile.loading('show', {
+                textVisible: true, 
+                html: '<p><span class="ui-icon-loading" style="opacity: 0.5"></span></p>\
+<p style="text-align: center;"><nobr>Получаем обновления:</nobr> <span id="loading-progress">0</span> из ' + (panel.getVersion() - new_data.default.version)
+              });
+              var versions = [];
+
+              for(var version_index = new_data.default.version + 1; version_index <= panel.getVersion(); version_index++) {
+                versions.push(version_index); 
+              }
+
+              var loaded = 0;
+              var prod_path = 'http://gwpanel.org/panel2/panel/production';
+
+              jQuery.each(versions, function(i, version_index) {
+                str_version = String(version_index);
+                var path = prod_path; 
+                for(var i = 0; i < str_version.length; i++) {
+                  path += "/" + str_version.charAt(i);
+                }
+                path += "/" + str_version + ".notes.js";
+                var s = document.createElement('script');
+                s.type = 'text/javascript';
+                s.src = path;
+                s.addEventListener('load', function() {
+                  loaded++;
+                  jQuery('#loading-progress').html(loaded);
+
+                  if(loaded >= versions.length) {
+                    jQuery.mobile.loading('hide');
+                    /// все миграции загружены, выполняем импорт
+                    __import();
+                  }
+                }, false);
+                document.getElementsByTagName("head")[0].appendChild(s);
+              });
+            } else {
+              /// версии совпадают, импортируем сразу
+              __import();
+            }
+
+          } catch(e) {
+            panel.setOptions(options_backup);
+            panel.showFlash('Не удалось импортировать настройки. Ошибка: ' + e.toString());
+          }
+          return false;
+        }).hide();
+
+        jQuery('<a class="ui-btn ui-btn-icon-right ui-icon-arrow-u">Импортировать настройки</a>').click(function() {
+          jQuery(this).hide();
+          import_t.show().focus();
+          import_t.after('<div class="description">Нажмите Ctrl + V чтобы вставить текст с настройками и нажмите на кнопку "Импорт"</div>');
+          import_but.show();
+          return false;
+        }).appendTo('.options-variants').trigger('create');
+
+        jQuery('<div class="ui-body">').append(import_t).append(import_but).appendTo('.options-variants').trigger('create');
+
+      });
       if(active_section == 'release_notes') {
         jQuery('#edit-other-wrapper').show();
         jQuery('#panel-settings-editor .ui-navbar.first-view').removeClass('first-view');
