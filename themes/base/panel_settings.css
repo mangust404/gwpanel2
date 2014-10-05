@@ -363,7 +363,8 @@ div .release-note:last-child {
 }
 
 .panes-displace {
-  height: 81px;
+  display: block !important;
+  height: 90px;
   position: relative;
 }
 
@@ -395,7 +396,7 @@ div .release-note:last-child {
 }
 
 .footer-displace {
-  display: inline-block;
+  display: block !important;
   position: relative;
   left: 50%;
   transform: translateX(-50%);

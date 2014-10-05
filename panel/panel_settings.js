@@ -136,7 +136,7 @@
       if(!jQuery.mobile) {
         scripts.push('lib/jquery.mobile.custom.min.js');
       }
-      if(!jQuery.ui) {
+      if(!jQuery.fn.resizable) {
         scripts.push('lib/jquery-ui-1.9.2.custom.min.js');
       }
       
@@ -703,7 +703,7 @@
       });
 
       jQuery('#edit-other-wrapper .versions').trigger('create');
-
+      
       if(active_section == 'release_notes') {
         jQuery('#edit-other-wrapper').show();
         jQuery('#panel-settings-editor .ui-navbar.first-view').removeClass('first-view');
