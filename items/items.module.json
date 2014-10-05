@@ -1,0 +1,32 @@
+{
+  "requires": "", 
+  "excludes": "",
+  "access": "", 
+  "title": "Модуль вооружения",
+  "author": "Riki_tiki_tavi",
+  "author_link": "http://www.ganjawars.ru/info.php?id=158249",
+  "weight": 1, 
+  "apply": {
+  }, 
+  "settings": {
+  },
+  
+  "buttons": {
+    "putset_button": {
+      "title": "Надеть комплект",
+      "configure": {
+        "set_id": {
+          "type": "select",
+          "title": "Комплект",
+          "options": "__panel.items_get_sets_async()",
+          "file": "items_data.js",
+          "description": "Укажите комплект"
+        }
+      },
+      "description": "быстрое надевание комплекта",
+      "callback": "items_putset",
+      "file": "items_buttons.js",
+      "img": "http://images.ganjawars.ru/img/forum/f30.gif"
+    }
+  }
+}

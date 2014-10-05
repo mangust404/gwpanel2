@@ -175,6 +175,23 @@
   height: 51px;
 }
 
+.pane .button.button-ok .img:after, .pane .button.button-error .img:after {
+  content: "";
+  height: 17px;
+  width: 17px;
+  position: absolute;
+  bottom: 36px;
+  left: 31px;
+}
+
+.pane .button.button-ok .img:after {
+  background: url(images/ok.png);
+}
+
+.pane .button.button-error .img:after {
+  background: url(images/error.png);
+}
+
 .pane .widget {
   overflow: hidden;
   position: absolute;
