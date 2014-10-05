@@ -27,6 +27,13 @@
       "callback": "items_putset",
       "file": "items_buttons.js",
       "img": "http://images.ganjawars.ru/img/forum/f30.gif"
+    },
+    "undress_button": {
+      "title": "Снять всё",
+      "description": "снять всё вооружение",
+      "callback": "items_undress",
+      "file": "items_buttons.js",
+      "img": "http://images.ganjawars.ru/img/forum/f18.gif"
     }
   }
 }
