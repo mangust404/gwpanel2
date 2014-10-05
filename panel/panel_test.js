@@ -1736,7 +1736,7 @@ QUnit.asyncTest("Тест формы добавления и настройки 
 
                 assert.deepEqual(widget.fixed, true, 'Проверка fixed');
                 assert.deepEqual(widget.no_opacity, true, 'Проверка no_opacity');
-                assert.deepEqual(widget.only_page, location.pathname, 'Проверка only_page');
+                assert.deepEqual(widget.only_page, location.pathname + that.contentWindow.location.search, 'Проверка only_page');
 
                 QUnit.start();
                 /// переходим на другую страницу
@@ -1804,8 +1804,10 @@ QUnit.asyncTest("Тест изменения видимости плавающи
         __window.__panel.__ready();
         __window.__panel.__load();
 
+        //console.log('current location: ', __window.location.pathname + __window.location.search + __window.location.hash);
+        //console.log('__window.location.pathname =', __window.location.pathname , 'current=', current);
         if(__window.location.pathname == current) {
-          if (__window.location.search.indexOf('test-finish') > -1) {
+          if (__window.location.hash.indexOf('test-finish') > -1) {
             /// это завершение теста, мы отрубили виджет на этой странице
             assert.equal($('.panel_foo_widget:visible').length, 0, 'Виджета не должно быть на этой странице');
             QUnit.start();
@@ -1814,30 +1816,46 @@ QUnit.asyncTest("Тест изменения видимости плавающи
           /// на этой странице мы выставляем настройки виджета
           $widget.dblclick();
           waitFor(function() {
-            return $('#only-page').length > 0;
+            return $('#blacklist-page').length > 0;
           }, function() {
-            if(__window.location.search.indexOf('test-blacklist') > -1) {
+            if(__window.location.hash.indexOf('blacklist') > -1) {
+              //console.log('Шаг 3, тестируем blacklist');
               $('#blacklist-page').attr('checked', 'checked').change().checkboxradio('refresh');
               $('.widget-save').click();
-              __window.location.href = dest + suff + '&blacklist=1';
+              __window.location.href = dest + suff + '#blacklist';
+            } else if(__window.location.hash.indexOf('only-page-class') > -1) {
+              //console.log('Шаг 2. тестируем выставление only-page-class');
+              $('#only-page-class').attr('checked', 'checked').change().checkboxradio('refresh');
+              $('.widget-save').click();
+              __window.location.href = dest + suff + '#only-page-class';
             } else {
+              //console.log('Шаг первый, выставляем "только на этой странице" и переходим на dest');
+              /// Шаг первый, выставляем "только на этой странице" и переходим на dest
               $('#only-page').attr('checked', 'checked').change().checkboxradio('refresh');
               $('.widget-save').click();
-              __window.location.href = dest + suff + '&only-page=1';
+              __window.location.href = dest + suff + '#only-page';
             }
           });
         } else if(__window.location.pathname == dest) {
           /// на этой странице мы проверяем видимость
-          if(__window.location.search.indexOf('only-page') > -1) {
-            assert.equal(__window.__panel.getOptions().widgets[0].only_page, current);
+          if(__window.location.hash.indexOf('only-page-class') > -1) {
+            //console.log('Конец шага 2, должен быть выставлен only_page_class');
+            assert.equal(__window.__panel.getOptions().widgets[0].only_page_class, current);
             assert.equal($('.panel_foo_widget:visible').length, 0, 'Виджета не должно быть на этой странице');
-            /// возвращаемся на предыдущую страницу и тестируем blacklist
-            __window.location.href = current + suff + '&test-blacklist';
-          } else if(__window.location.search.indexOf('blacklist') > -1) {
-            assert.deepEqual(__window.__panel.getOptions().widgets[0].blacklist, ['/me/']);
+            __window.location.href = current + suff + '#blacklist';
+          } else if(__window.location.hash.indexOf('only-page') > -1) {
+            /// конец шага 1, виджета не должно здесь быть, только на главной
+            //console.log('конец шага 1, виджета не должно здесь быть, только на главной');
+            assert.equal(__window.__panel.getOptions().widgets[0].only_page, current + __window.location.search);
+            assert.equal($('.panel_foo_widget:visible').length, 0, 'Виджета не должно быть на этой странице');
+            /// возвращаемся на предыдущую страницу и тестируем класс страниц
+            __window.location.href = current + suff + '#only-page-class';
+          } else if(__window.location.hash.indexOf('blacklist') > -1) {
+            //console.log('Конец шага 3, blacklist должен содержать страницу /me/');
+            assert.deepEqual(__window.__panel.getOptions().widgets[0].blacklist, [current]);
             assert.equal($('.panel_foo_widget:visible').length, 1, 'Виджета должен быть на этой странице');
             /// переходим на основную
-            __window.location.href = current + suff + '&test-finish';
+            __window.location.href = current + suff + '#test-finish';
           }
         }
       });
