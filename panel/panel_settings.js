@@ -23,89 +23,101 @@
         var current_value = this.default;
       }
 
+      var that = this;
+
+      var drawFunc = function() {
+        switch(that.type) {
+          case 'checkboxes':
+            var ul = jQuery('<div data-role="collapsible">' + 
+                    '<h4>' + that.title + '</h4>' + 
+                    '<ul data-role="listview"></ul></div>').appendTo(append_to).find('ul');
+            var is_array = jQuery.type(that.options) == 'array';
+            jQuery.each(that.options, function(key, value) {
+              if(!is_array) {
+                var value = key;
+              }
+              var li = jQuery('<li></li>').appendTo(ul);
+              jQuery('<label for="param-' + widget.id + '-' + value + '-' + param + '">' + 
+                this + '</label>').appendTo(li);
+              jQuery('<input name="' + widget.id + '_' + param + 
+                '" id="param-' + widget.id + '-' + value + '-' + param + '"' +
+                  (current_value.indexOf(value) == -1? '': ' checked="checked"') +
+                  ' type="checkbox" data-mini="true" value="' + value + '">')
+                  .appendTo(li)
+                  .change(function() {
+                    var checked_list = [];
+                    jQuery('input[name=' + widget.id + '_' + param + ']').each(function() {
+                      if(this.checked) {
+                        checked_list.push(this.value);
+                      }
+                    })
+                    change_callback(param, checked_list);
+                  });
+            });
+          break;
+          case 'select':
+            var __id = 'param-' + widget.id + '-' + param;
+            var s = jQuery('<select id="' + __id + '" name="' + widget.id + '_' + param + '"></select>');
+            var is_array = jQuery.type(that.options) == 'array';
+            s.append('<option value=""' + 
+                  '>Укажите</option>');
+            jQuery.each(that.options || {}, function(key) {
+              if(is_array) {
+                s.append('<option value="' + this + '"' + 
+                  (this == current_value? ' selected="selected"': '') + 
+                  '>' + this + '</option>');
+              } else {
+                s.append('<option value="' + key + '"' + 
+                  (key == current_value? ' selected="selected"': '') + 
+                  '>' + this + '</option>');
+              }
+            });
+            s.appendTo(append_to).change(function() {
+              change_callback(param, jQuery(this).val());
+            });
+            s.before('<label for="' + __id + '">' + that.title + '</label>');
+          break;
+          case 'checkbox':
+            jQuery('<label for="param-' + widget.id + '-' + param + '">' + that.title + '</label>').appendTo(append_to);
+            jQuery('<input name="' + widget.id + '_' + param + 
+              '" id="param-' + widget.id + '-' + param + '"' +
+              (current_value? ' checked="checked"': '') +
+              ' type="checkbox">')
+              .appendTo(append_to)
+              .change(function() {
+                change_callback(param, this.checked);
+              });
+          break;
+          case 'text':
+            var __id = 'param-' + widget.id + '-' + param;
+            jQuery('<label for="' + __id + '">' + that.title + 
+              '</label><input name="' + widget.id + '_' + param + 
+              '" id="' + __id + '" type="text" value="' + 
+                current_value + '"' + 
+                ' placeholder="' + that.default + '">')
+              .appendTo(append_to)
+              .change(function() {
+                change_callback(param, this.value);
+              });
+          break;
+          default: 
+            //default_data[widget.config_params[i]] = '';
+          break;
+        }
+      }
       /// Если в значении было выражение, то преобразуем его
-      if(jQuery.type(this.options) == 'string' && this.options.indexOf('__panel.') == 0) {
-        this.options = eval(this.options);
+      if(jQuery.type(that.options) == 'string' && that.options.indexOf('__panel.') == 0) {
+        if(that.options.indexOf('_async') == -1) {
+          this.options = eval(that.options);
+          drawFunc();
+        } else {
+          /// Асинхронная подгрузка опций
+          eval(that.options.replace('()', '(') + ' function(o) { that.options = o; drawFunc(); append_to.trigger(\'create\'); } )');
+        }
+      } else {
+        drawFunc();
       }
 
-      switch(this.type) {
-        case 'checkboxes':
-          var ul = jQuery('<div data-role="collapsible">' + 
-                  '<h4>' + this.title + '</h4>' + 
-                  '<ul data-role="listview"></ul></div>').appendTo(append_to).find('ul');
-          var is_array = jQuery.type(this.options) == 'array';
-          jQuery.each(this.options, function(key, value) {
-            if(!is_array) {
-              var value = key;
-            }
-            var li = jQuery('<li></li>').appendTo(ul);
-            jQuery('<label for="param-' + widget.id + '-' + value + '-' + param + '">' + 
-              this + '</label>').appendTo(li);
-            jQuery('<input name="' + widget.id + '_' + param + 
-              '" id="param-' + widget.id + '-' + value + '-' + param + '"' +
-                (current_value.indexOf(value) == -1? '': ' checked="checked"') +
-                ' type="checkbox" data-mini="true" value="' + value + '">')
-                .appendTo(li)
-                .change(function() {
-                  var checked_list = [];
-                  jQuery('input[name=' + widget.id + '_' + param + ']').each(function() {
-                    if(this.checked) {
-                      checked_list.push(this.value);
-                    }
-                  })
-                  change_callback(param, checked_list);
-                });
-          });
-        break;
-        case 'select':
-          var __id = 'param-' + widget.id + '-' + param;
-          var s = jQuery('<select id="' + __id + '" name="' + widget.id + '_' + param + '"></select>');
-          var is_array = jQuery.type(this.options) == 'array';
-          s.append('<option value=""' + 
-                '>Укажите</option>');
-          jQuery.each(this.options || {}, function(key) {
-            if(is_array) {
-              s.append('<option value="' + this + '"' + 
-                (this == current_value? ' selected="selected"': '') + 
-                '>' + this + '</option>');
-            } else {
-              s.append('<option value="' + key + '"' + 
-                (key == current_value? ' selected="selected"': '') + 
-                '>' + this + '</option>');
-            }
-          });
-          s.appendTo(append_to).change(function() {
-            change_callback(param, jQuery(this).val());
-          });
-          s.before('<label for="' + __id + '">' + this.title + '</label>');
-        break;
-        case 'checkbox':
-          jQuery('<label for="param-' + widget.id + '-' + param + '">' + this.title + '</label>').appendTo(append_to);
-          jQuery('<input name="' + widget.id + '_' + param + 
-            '" id="param-' + widget.id + '-' + param + '"' +
-            (current_value? ' checked="checked"': '') +
-            ' type="checkbox">')
-            .appendTo(append_to)
-            .change(function() {
-              change_callback(param, this.checked);
-            });
-        break;
-        case 'text':
-          var __id = 'param-' + widget.id + '-' + param;
-          jQuery('<label for="' + __id + '">' + this.title + 
-            '</label><input name="' + widget.id + '_' + param + 
-            '" id="' + __id + '" type="text" value="' + 
-              current_value + '"' + 
-              ' placeholder="' + this.default + '">')
-            .appendTo(append_to)
-            .change(function() {
-              change_callback(param, this.value);
-            });
-        break;
-        default: 
-          //default_data[widget.config_params[i]] = '';
-        break;
-      }
     });
   }
 
