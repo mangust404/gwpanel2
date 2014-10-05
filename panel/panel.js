@@ -692,8 +692,10 @@ var Panel2 = new function() {
       widget.index = index;
       widget.float = true;
       /// Виджет выводится только на одной странице
-      if(jQuery.type(widget.only_page) == 'string') {
-        if(widget.only_page != location.pathname) return;
+      if(jQuery.type(widget.only_page_class) == 'string') {
+        if(widget.only_page_class != location.pathname) return;
+      } else if(jQuery.type(widget.only_page) == 'string') {
+        if(widget.only_page != location.pathname + location.search) return;
       } else if(jQuery.type(widget.blacklist) == 'array') {
         /// виджет не должен выводиться на этой странице
         if(widget.blacklist.indexOf(location.pathname) > -1) return;

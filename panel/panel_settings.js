@@ -1023,7 +1023,7 @@
         }));
 
         if(isEdit) {
-          $visibility.append('<label for="blacklist-page">Не показывать на этой странице</label>')
+          $visibility.append('<label for="blacklist-page">Не показывать на страницах этого типа</label>')
           .append(jQuery('<input type="checkbox" id="blacklist-page"' + 
             (jQuery.type(widgetData.blacklist) == 'array' 
               && widgetData.blacklist.indexOf(location.pathname) > -1? 
@@ -1036,8 +1036,9 @@
               } else {
                 widgetData.blacklist = [location.pathname];
               }
-              jQuery('#only-page').removeAttr('checked').checkboxradio('refresh');
+              jQuery('#only-page, #only-page-class').removeAttr('checked').checkboxradio('refresh');
               delete widgetData.only_page;
+              delete widgetData.only_page_class;
             } else {
               var ind = widgetData.blacklist.indexOf(location.pathname);
               if(ind > -1) widgetData.blacklist.splice(i, 1);
@@ -1048,13 +1049,28 @@
           .append(jQuery('<input type="checkbox" id="only-page"' + 
             (widgetData.only_page? ' checked="checked"': '') + '>').change(function() {
             if(this.checked) {
-              widgetData.only_page = location.pathname;
-              jQuery('#blacklist-page').removeAttr('checked').checkboxradio('refresh');
+              widgetData.only_page = location.pathname + location.search;
+              jQuery('#only-page-class, #blacklist-page').removeAttr('checked').checkboxradio('refresh');
               delete widgetData.blacklist;
+              delete widgetData.only_page_class;
             } else {
               delete widgetData.only_page;
             }
           }));
+          if(location.search.length > 0) {
+            $visibility.append('<label for="only-page-class">Показывать на всех страницах этого типа</label>')
+            .append(jQuery('<input type="checkbox" id="only-page-class"' + 
+              (widgetData.only_page_class? ' checked="checked"': '') + '>').change(function() {
+              if(this.checked) {
+                widgetData.only_page_class = location.pathname;
+                jQuery('#only-page, #blacklist-page').removeAttr('checked').checkboxradio('refresh');
+                delete widgetData.blacklist;
+                delete widgetData.only_page;
+              } else {
+                delete widgetData.only_page_class;
+              }
+            }));
+          }
         }
       }
 
