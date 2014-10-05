@@ -2167,6 +2167,7 @@ var Panel2 = new function() {
                   delete window.panel_release_migration[m];
                 } catch(e) {
                   /// что же делать в случае корявой миграции?
+                  if(window.console) console.log('Bad migration: ' + e);
                 }
               }
             }
