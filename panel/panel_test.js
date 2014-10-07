@@ -2831,3 +2831,41 @@ QUnit.test('Тест функции encodeURIComponent', function(assert) {
     assert.equal(encodeURIComponent('рстуфхцчшщъыьэюя'), '%F0%F1%F2%F3%F4%F5%F6%F7%F8%F9%FA%FB%FC%FD%FE%FF', 'рстуфхцчшщъыьэюя');
   }
 });
+
+QUnit.asyncTest('Тест jQuery.fn.sendForm', function(assert) {
+  var salt = (new Date).getTime();
+  __panel.currentPlayerName(function(name) {
+    jQuery.ajax('/sms-create.php', {
+      success: function(data) {
+        jQuery('<div>').hide().appendTo(document.body)
+        .append(data)
+        .find('form').sendForm({
+          data: {
+            mailto: 'Riki_tiki_tavi',
+            subject: 'тест ' + salt,
+            msg: 'тестовое сообщение через аякс'
+          },
+          success: function() {
+            jQuery.ajax('/sms.php', {
+              success: function(data) {
+                data = jQuery(data);
+                assert.ok(data.text().indexOf('[новое] тест ' + salt), 'Письмо получено');
+                jQuery.ajax(jQuery(data).find('a:contains(тест ' + salt + ')').attr('href'), {
+                  success: function(data) {
+                    assert.ok(true, 'найдена кнопка удаления письма');
+                    jQuery.ajax(jQuery(data).find('a:contains(Удалить сообщение)').attr('href'), {
+                      success: function() {
+                        assert.ok(true, 'письмо удалено');
+                        QUnit.start();
+                      }
+                    });
+                  }
+                });
+              }
+            });
+          }
+        });
+      }
+    });
+  });
+});
