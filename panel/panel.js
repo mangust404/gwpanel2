@@ -2253,6 +2253,7 @@ window.Panel2 = new function() {
       a.href = "http://www.ganjawars.ru/encoded_str=?" + str;
       return a.href.split('encoded_str=?')[1].replace(/%20/g, '+');
     },
+
     /**
     * Публичные аттрибуты
     */

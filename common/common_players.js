@@ -10,7 +10,7 @@
                   '<a href="#"><img border=0 src="http://images.ganjawars.ru/i/home/bank.gif" title="Передать деньги"></a>&nbsp;&nbsp;' +
                   '<a href="#"><img border=0 src="http://images.ganjawars.ru/i/home/friends.gif" title="Передать предмет"></a>&nbsp;&nbsp;' +
                   '<a href="#"><img border=0 src="http://images.ganjawars.ru/i/home/ganjafoto.gif" title="Добавить в друзья"></a>&nbsp;&nbsp;'+
-                  '<a href="#"><img border=0 src="http://images.ganjawars.ru/i/home/syndicate.gif" title="Добавить в друзья"></a>&nbsp;&nbsp;'+
+                  '<a href="#"><img border=0 src="http://images.ganjawars.ru/i/home/syndicate.gif" title="Добавить в ЧС"></a>&nbsp;&nbsp;'+
                   '<a href="#"><img border=0 src="http://images.ganjawars.ru/i/home/cashsend.gif" title="Иски игрока"></a>&nbsp;&nbsp;' +
                   '<a href="#"><img border=0 src="http://images.ganjawars.ru/i/home/market.gif" title="Список аренды"></a>&nbsp;&nbsp;' +
                   '<a href="#"><img border=0 src="http://images.ganjawars.ru/i/home/iski.gif" title="Письма от персонажа ..."></a>&nbsp;&nbsp;'+
@@ -48,14 +48,17 @@
             $toolWindow.hide();
           }, 500);
         }
-      )
+      );
     }
   });
 
 function showToolWindow($playerLink){
   var $toolWindow, $urlTool;
-  var dimensions, left, top;
+  var dimensions, left, top, id, name, login;
 
+  id   = $playerLink.prop("href").match(/(\d+)/)[0];
+  name = $playerLink.text();
+  login = name.replace(/ /g, '+');
   dimensions = $playerLink.position();
 
   left = dimensions.left;
@@ -70,13 +73,36 @@ function showToolWindow($playerLink){
 
   $urlTool = $toolWindow.find('a');
 
-  $urlTool.get(0).href = "http://www.ganjawars.ru/sms-create.php?mailto=" + $playerLink.text().replace(/ /g, '+');
-  $urlTool.get(1).href = "#";
-  $urlTool.get(2).href = "#";
-  $urlTool.get(3).href = "#";
-  $urlTool.get(5).href = "#";
-  $urlTool.get(6).href = "#";
-  $urlTool.get(7).href = "#";
+  $urlTool.eq(0).prop("href", "http://www.ganjawars.ru/sms-create.php?mailto=" + login);
+  $urlTool.eq(1).prop("href", "#");
+  $urlTool.eq(2).prop("href", "#");
+  $urlTool.eq(3).unbind().click(
+    function(){
+      addToFriendOrEnemy(0, name);
+    }
+  );
+  $urlTool.eq(4).unbind().click(
+    function(){
+      addToFriendOrEnemy(1, name);
+    }
+  );
+  $urlTool.eq(5).prop("href", "http://www.ganjawars.ru/isks.php?sid=" + id + "&st=1&period=4");
+  $urlTool.eq(6).prop("href", "http://www.ganjawars.ru/info.rent.php?id=" + id);
+  $urlTool.eq(7).prop("href", "http://www.ganjawars.ru/sms.php?page=0&search=" + login);
+}
+
+function addToFriendOrEnemy(type, name){
+  var text;
+
+  jQuery.ajax({
+    type: "POST",
+    url: "http://www.ganjawars.ru/home.friends.php",
+    data: "blop=" + type + "&addfriend=" + panel.encodeDataForAjax(name),
+    success: function(data){
+      text = !type ? "Ваши друзья" : "Черный список";
+      if(jQuery(data).find('b:contains("' + text + '")').closest('table').find('b:contains("' + name + '")').length) alert("Ok, " + type);
+    }
+  });
 }
 
 })(window.__panel);

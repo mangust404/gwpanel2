@@ -2814,6 +2814,7 @@ QUnit.test('Тест функции pluralize', function(assert) {
   }
 });
 
+<<<<<<< HEAD
 QUnit.test('Тест функции encodeURIComponent', function(assert) {
   with(__panel) {
     assert.equal(encodeURIComponent('привет'), '%EF%F0%E8%E2%E5%F2', 'привет');
@@ -2829,5 +2830,29 @@ QUnit.test('Тест функции encodeURIComponent', function(assert) {
     assert.equal(encodeURIComponent('РСТУФХЦЧШЩЪЫЬЭЮЯ'), '%D0%D1%D2%D3%D4%D5%D6%D7%D8%D9%DA%DB%DC%DD%DE%DF', 'РСТУФХЦЧШЩЪЫЬЭЮЯ');
     assert.equal(encodeURIComponent('абвгдежзийклмноп'), '%E0%E1%E2%E3%E4%E5%E6%E7%E8%E9%EA%EB%EC%ED%EE%EF', 'абвгдежзийклмноп');
     assert.equal(encodeURIComponent('рстуфхцчшщъыьэюя'), '%F0%F1%F2%F3%F4%F5%F6%F7%F8%F9%FA%FB%FC%FD%FE%FF', 'рстуфхцчшщъыьэюя');
+=======
+QUnit.test("Тест конвертации строки(числа) в \"строку 1251\" для отправки через ajax", function(assert) {
+  with(__panel) {
+    assert.equal(
+      encodeDataForAjax('АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюя'),
+      '%C0%C1%C2%C3%C4%C5%C6%C7%C8%C9%CA%CB%CC%CD%CE%CF%D0%D1%D2%D3%D4%D5%D6%D7%D8%D9%DA%DB%DC%DD%DE%DF%E0%E1%E2%E3%E4%E5%E6%E7%E8%E9%EA%EB%EC%ED%EE%EF%F0%F1%F2%F3%F4%F5%F6%F7%F8%F9%FA%FB%FC%FD%FE%FF',
+      "Русские символы: АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюя"
+    );
+    assert.equal(
+      encodeDataForAjax('ЂЃ‚ѓ„…†‡€‰Љ‹ЊЌЋЏђ‘’“”•–—™љ›њќћџ ЎўЈ¤Ґ¦§Ё©Є«¬­®Ї°±Ііґµ¶·ё№є»јЅѕї'),
+      '%80%81%82%83%84%85%86%87%88%89%8A%8B%8C%8D%8E%8F%90%91%92%93%94%95%96%97%99%9A%9B%9C%9D%9E%9F%20%A1%A2%A3%A4%A5%A6%A7%A8%A9%AA%AB%AC%AD%AE%AF%B0%B1%B2%B3%B4%B5%B6%B7%B8%B9%BA%BB%BC%BD%BE%BF',
+      "Необычне символы: ЂЃ‚ѓ„…†‡€‰Љ‹ЊЌЋЏђ‘’“”•–—™љ›њќћџ ЎўЈ¤Ґ¦§Ё©Є«¬­®Ї°±Ііґµ¶·ё№є»јЅѕї"
+    );
+    assert.equal(
+      encodeDataForAjax('\\nbsp' + String.fromCharCode(13) + "   _test_/_"),
+      '%5C%6E%62%73%70%0D%A0%A0%A0%5F%74%65%73%74%5F%2F%5F',
+      "Хитрожопость (незабываем экранировать \\n): \\nbsp'перенос_строки''неубиваемый_пробел''неубиваемый_пробел''неубиваемый_пробел'_test_/_"
+    );
+    assert.equal(encodeDataForAjax([]), null, "Array - []: null");
+    assert.equal(encodeDataForAjax({}), null, "Object - {}: null");
+    assert.equal(encodeDataForAjax(new String("Test Строка")), null, "new String('Test Строка'): null");
+    assert.equal(encodeDataForAjax(12345), "%31%32%33%34%35", "Число целое: 12345");
+    assert.equal(encodeDataForAjax(12345.66), "%31%32%33%34%35%2E%36%36", "Число дробное: 12345.66");
+>>>>>>> 5a1822676596fcdfd4eff022f9cb60accb43ecf7
   }
 });
