@@ -2248,7 +2248,7 @@ window.Panel2 = new function() {
     * Перекодирование UTF в CP1251 для отправки через AJAX
     */
     encodeURIComponent: function(str) {
-      str = str.replace(/%/g, '%25').replace(/\+/g, '%2B');
+      str = String(str).replace(/%/g, '%25').replace(/\+/g, '%2B');
       var a = document.createElement('a');
       a.href = "http://www.ganjawars.ru/encoded_str=?" + str;
       return a.href.split('encoded_str=?')[1].replace(/%20/g, '+');
@@ -2267,5 +2267,28 @@ window.Panel2 = new function() {
   
   return Panel2;
 };
+
+/**
+* Функция для ajax-отправки формы
+* @param options - массив опций, передаётся в функцию jQuery.ajax
+*/
+jQuery.fn.sendForm = function(options) {
+  this.each(function() {
+    var $form = $(this);
+    options = $.extend({
+      type: String($form.attr('method') || 'post').toLowerCase()
+    }, options || {});
+    var s_data = $form.serializeArray();
+    /// Обходим функцию jQuery.param, чтобы данные не кодировались повторно
+    var params = [];
+    jQuery.each(s_data, function() {
+      params.push(this.name + '=' + __panel.encodeURIComponent(this.value || options.data[this.name]));
+    })
+    /// отдаём в data строку
+    options.data = params.join('&');
+    $.ajax($form.attr('action') || location.href, options);
+  });
+  return this;
+}
 
 })(jQuery);
