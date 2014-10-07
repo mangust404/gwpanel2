@@ -2852,8 +2852,11 @@ QUnit.asyncTest('Тест jQuery.fn.sendForm', function(assert) {
                 assert.ok(data.text().indexOf('[новое] тест ' + salt), 'Письмо получено');
                 jQuery.ajax(jQuery(data).find('a:contains(тест ' + salt + ')').attr('href'), {
                   success: function(data) {
-                    assert.ok(true, 'найдена кнопка удаления письма');
-                    jQuery.ajax(jQuery(data).find('a:contains(Удалить сообщение)').attr('href'), {
+                    data = jQuery(data);
+                    var button = data.find('a:contains(Удалить сообщение)');
+                    assert.ok(button.length > 0, 'найдена кнопка удаления письма');
+                    assert.ok(data.text().indexOf('тестовое сообщение через аякс') > 0, 'найден отправленный текст');
+                    jQuery.ajax(button.attr('href'), {
                       success: function() {
                         assert.ok(true, 'письмо удалено');
                         QUnit.start();
