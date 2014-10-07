@@ -2245,6 +2245,15 @@ window.Panel2 = new function() {
     },
 
     /**
+    * Перекодирование UTF в CP1251 для отправки через AJAX
+    */
+    encodeURIComponent: function(str) {
+      str = str.replace(/%/g, '%25').replace(/\+/g, '%2B');
+      var a = document.createElement('a');
+      a.href = "http://www.ganjawars.ru/encoded_str=?" + str;
+      return a.href.split('encoded_str=?')[1].replace(/%20/g, '+');
+    },
+    /**
     * Публичные аттрибуты
     */
     /// Скрипты с ошибками

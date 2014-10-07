@@ -2813,3 +2813,21 @@ QUnit.test('Тест функции pluralize', function(assert) {
     assert.equal(pluralize(101, 'единица', 'единицы', 'единиц'), 'единица');
   }
 });
+
+QUnit.test('Тест функции encodeURIComponent', function(assert) {
+  with(__panel) {
+    assert.equal(encodeURIComponent('привет'), '%EF%F0%E8%E2%E5%F2', 'привет');
+    assert.equal(encodeURIComponent('привет +/?'), '%EF%F0%E8%E2%E5%F2+%2B/?', 'привет +/?');
+    assert.equal(encodeURIComponent('привет +/?'), '%EF%F0%E8%E2%E5%F2+%2B/?', 'привет +/?');
+    assert.equal(encodeURIComponent('привет %20 + ?'), '%EF%F0%E8%E2%E5%F2+%2520+%2B+?', 'привет %20 + ?');
+    assert.equal(encodeURIComponent('привет привет'), '%EF%F0%E8%E2%E5%F2+%EF%F0%E8%E2%E5%F2', 'привет привет');
+    assert.equal(encodeURIComponent('привет +/? +/?'), '%EF%F0%E8%E2%E5%F2+%2B/?+%2B/?', 'привет +/? +/?');
+    assert.equal(encodeURIComponent('привет %20 + ? %20 + ?'), '%EF%F0%E8%E2%E5%F2+%2520+%2B+?+%2520+%2B+?', 'привет %20 + ? %20 + ?');
+    assert.equal(encodeURIComponent('ЂЃ‚ѓ„…†‡€‰Љ‹ЊЌЋЏ'), '%80%81%82%83%84%85%86%87%88%89%8A%8B%8C%8D%8E%8F', 'ЂЃ‚ѓ„…†‡€‰Љ‹ЊЌЋЏ');
+    assert.equal(encodeURIComponent('°±Ііґµ¶·ё№є»јЅѕї'), '%B0%B1%B2%B3%B4%B5%B6%B7%B8%B9%BA%BB%BC%BD%BE%BF', '°±Ііґµ¶·ё№є»јЅѕї');
+    assert.equal(encodeURIComponent('АБВГДЕЖЗИЙКЛМНОП'), '%C0%C1%C2%C3%C4%C5%C6%C7%C8%C9%CA%CB%CC%CD%CE%CF', 'АБВГДЕЖЗИЙКЛМНОП');
+    assert.equal(encodeURIComponent('РСТУФХЦЧШЩЪЫЬЭЮЯ'), '%D0%D1%D2%D3%D4%D5%D6%D7%D8%D9%DA%DB%DC%DD%DE%DF', 'РСТУФХЦЧШЩЪЫЬЭЮЯ');
+    assert.equal(encodeURIComponent('абвгдежзийклмноп'), '%E0%E1%E2%E3%E4%E5%E6%E7%E8%E9%EA%EB%EC%ED%EE%EF', 'абвгдежзийклмноп');
+    assert.equal(encodeURIComponent('рстуфхцчшщъыьэюя'), '%F0%F1%F2%F3%F4%F5%F6%F7%F8%F9%FA%FB%FC%FD%FE%FF', 'рстуфхцчшщъыьэюя');
+  }
+});
