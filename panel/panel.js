@@ -680,6 +680,7 @@ window.Panel2 = new function() {
     }
   }
   
+  var originalData, originalTitle;
   function ajaxifyLinks($links) {
     $links.click(function(e) {
       if(e.ctrlKey || e.altKey) return true;
@@ -712,16 +713,20 @@ window.Panel2 = new function() {
     }
     if(elem.length > 0 && history.pushState) {
       elem.nextAll().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
-      var content = $('#gw-content');
+      originalData = $('#gw-content').html();
+      originalTitle = document.title;
       ajaxifyLinks($('a[href*="http://' + document.domain + '"]:visible, a[href*="/"]:visible'));
       window.onpopstate = function(event) {
-        if(event.state.data && event.state.title) {
+        if(event.state && event.state.data && event.state.title) {
           $('#gw-content').html(event.state.data);
           document.title = event.state.title;
           __initFunc();
           ajaxifyLinks($('#gw-content').find('a[href*="http://' + document.domain + '"]:visible, a[href*="/"]:visible'));
         } else {
-          window.location = document.location;
+          $('#gw-content').html(originalData);
+          document.title = originalTitle;
+          __initFunc();
+          ajaxifyLinks($('#gw-content').find('a[href*="http://' + document.domain + '"]:visible, a[href*="/"]:visible'));
         }
       }
     }
