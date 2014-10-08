@@ -3,7 +3,8 @@
   "weight": -100,
   "apply": {
     "/me/": ["panel_homepage"],
-    "/login.php": ["panel_login"]
+    "/login.php": ["panel_login"],
+    "*": ["panel_ajaxify"]
   },
 
   "settings": {
@@ -12,6 +13,10 @@
     },
     "panel_login": {
       "file": "panel.js"
+    },
+    "panel_ajaxify": {
+      "file": "panel.js",
+      "description": "Использовать AJAX (ускоряет загрузку страниц, ЭКСПЕРИМЕНТАЛЬНАЯ функция. Может вызывать побочные эффекты и конфликтовать с user-скриптами.)"
     }
   },
 

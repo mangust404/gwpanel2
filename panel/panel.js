@@ -682,14 +682,13 @@ window.Panel2 = new function() {
   
   var originalData, originalTitle;
   function ajaxifyLinks($links) {
-    $links.click(function(e) {
+    $links.addClass('ajax').click(function(e) {
       if(e.ctrlKey || e.altKey) return true;
       var href = $(this).attr('href');
       if(document.location.toString().indexOf(href) > -1) return true;
       var link_title = $(this).text();
       $.ajax(href, {
         success: function(data) {
-          instance.clearTimeouts();
           data = data.substr(16).replace(/<script[^>]*>.*?<\/script>/ig, '');
           $('#gw-content').html(data);
           var ar  = document.title.split(' :: ');
@@ -706,31 +705,7 @@ window.Panel2 = new function() {
       return false;
     });
   }
-  function ajaxify() {
-    var elem = $('body > table[bgcolor="#f5fff5"]');
-    if(!elem.length) {
-      elem = $('body > table[bgcolor="#d0eed0"]');
-    }
-    if(elem.length > 0 && history.pushState) {
-      elem.nextAll().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
-      originalData = $('#gw-content').html();
-      originalTitle = document.title;
-      ajaxifyLinks($('a[href*="http://' + document.domain + '"]:visible, a[href*="/"]:visible'));
-      window.onpopstate = function(event) {
-        if(event.state && event.state.data && event.state.title) {
-          $('#gw-content').html(event.state.data);
-          document.title = event.state.title;
-          __initFunc();
-          ajaxifyLinks($('#gw-content').find('a[href*="http://' + document.domain + '"]:visible, a[href*="/"]:visible'));
-        } else {
-          $('#gw-content').html(originalData);
-          document.title = originalTitle;
-          __initFunc();
-          ajaxifyLinks($('#gw-content').find('a[href*="http://' + document.domain + '"]:visible, a[href*="/"]:visible'));
-        }
-      }
-    }
-  }
+
   /**
   * Инициализация и отрисовка плавающих виджетов
   */
@@ -941,7 +916,6 @@ window.Panel2 = new function() {
     
     // Прорисовка, её нужно выполнять после того как получены все опции и подгружены стили
     $(function() {
-      ajaxify();
       draw_pane_bubbles();
     });
 
@@ -2313,6 +2287,34 @@ window.Panel2 = new function() {
       var a = document.createElement('a');
       a.href = "http://www.ganjawars.ru/encoded_str=?" + str;
       return a.href.split('encoded_str=?')[1].replace(/%20/g, '+');
+    },
+
+    panel_ajaxify: function() {
+      if($('#gw-content').length > 0) return;
+      var elem = $('body > table[bgcolor="#f5fff5"]');
+      if(!elem.length) {
+        elem = $('body > table[bgcolor="#d0eed0"]');
+      }
+      if(elem.length > 0 && history.pushState) {
+        elem.nextAll().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
+        originalData = $('#gw-content').html();
+        originalTitle = document.title;
+        var selector = 'a[href*="http://' + document.domain + '"]:visible:not(.ajax), a[href*="/"]:visible:not(.ajax)';
+        ajaxifyLinks($(selector));
+        window.onpopstate = function(event) {
+          if(event.state && event.state.data && event.state.title) {
+            $('#gw-content').html(event.state.data);
+            document.title = event.state.title;
+            __initFunc();
+            ajaxifyLinks($('#gw-content').find(selector));
+          } else {
+            $('#gw-content').html(originalData);
+            document.title = originalTitle;
+            __initFunc();
+            ajaxifyLinks($('#gw-content').find(selector));
+          }
+        }
+      }
     },
 
     /**
