@@ -680,6 +680,51 @@ window.Panel2 = new function() {
     }
   }
   
+  function ajaxifyLinks($links) {
+    $links.click(function(e) {
+      if(e.ctrlKey || e.altKey) return;
+      var href = $(this).attr('href');
+      var link_title = $(this).text();
+      $.ajax(href, {
+        success: function(data) {
+          instance.clearTimeouts();
+          data = data.substr(16).replace(/<script[^>]*>.*?<\/script>/ig, '');
+          $('#gw-content').html(data);
+          var ar  = document.title.split(' :: ');
+          ar[0] = link_title;
+          document.title = ar.join(' :: ');
+          history.pushState({data: data, title: document.title}, document.title, href);
+          __initFunc();
+          ajaxifyLinks($('#gw-content').find('a[href*="http://' + document.domain + '"]:visible, a[href*="/"]:visible'));
+        },
+        error: function() {
+          window.location = href;
+        }
+      });
+      return false;
+    });
+  }
+  function ajaxify() {
+    var elem = $('body > table[bgcolor="#f5fff5"]');
+    if(!elem.length) {
+      elem = $('body > table[bgcolor="#d0eed0"]');
+    }
+    if(elem.length > 0 && history.pushState) {
+      elem.nextAll().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
+      var content = $('#gw-content');
+      ajaxifyLinks($('a[href*="http://' + document.domain + '"]:visible, a[href*="/"]:visible'));
+      window.onpopstate = function(event) {
+        if(event.state.data && event.state.title) {
+          $('#gw-content').html(event.state.data);
+          document.title = event.state.title;
+          __initFunc();
+          ajaxifyLinks($('#gw-content').find('a[href*="http://' + document.domain + '"]:visible, a[href*="/"]:visible'));
+        } else {
+          window.location = document.location;
+        }
+      }
+    }
+  }
   /**
   * Инициализация и отрисовка плавающих виджетов
   */
@@ -890,8 +935,10 @@ window.Panel2 = new function() {
     
     // Прорисовка, её нужно выполнять после того как получены все опции и подгружены стили
     $(function() {
+      ajaxify();
       draw_pane_bubbles();
     });
+
   }
   
   function checkTime(name) {
@@ -936,6 +983,99 @@ window.Panel2 = new function() {
     }
   }
   
+  function __initFunc() {
+    // Инициализация слушателей событий
+    for(var key in panel_apply.events) {
+      $(panel_apply.events[key]).each(function(index, type) {
+        if(type.condition) {
+          try {
+            if(!eval(type.condition)) return;
+          } catch(e) {
+            instance.dispatchException(e, 'condition for loaded script error: ');
+            return;
+          }
+        }
+        instance.bind(type.event, function() {
+          var that = this;
+          var _args = arguments;
+          instance.loadScript(panel_apply.scripts[type.callback], function() {
+            if($.type(instance[type.callback]) == 'undefined') {
+              throw('Function ' + type + ' in module ' + panel_apply.scripts[type] + ' not found');
+            } else {
+              instance[type.callback].apply(that, _args);
+            }
+          });
+        }, type.local);
+      });
+    }
+
+    // Инициализация подгружаемых скриптов
+    var pages = [];
+    if($.type(panel_apply.pages[location.pathname]) == 'array') {
+      pages = panel_apply.pages[location.pathname];
+    }
+    if($.type(panel_apply.pages['*']) == 'array') {
+      for(var i = 0; i < panel_apply.pages['*'].length; i++) {
+        if(pages.indexOf(panel_apply.pages['*'][i]) == -1) {
+          pages.push(panel_apply.pages['*'][i]);
+        }
+      }
+    }
+    $(pages).each(function(index, func) {
+      if(
+          /// если функция в чёрном списке
+          (options.blacklist && options.blacklist.indexOf(func) > -1) ||
+          /// или функция по-дефолту отключена и не в белом списке, либо белого списка нет
+          (panel_apply.settings[func].default === false 
+            && (!options.whitelist || options.whitelist.indexOf(func) == -1))
+        ) return;
+      var module = panel_apply.settings[func].module;
+      instance.loadScript(module + '/' + panel_apply.settings[func].file, function() {
+        if($.type(instance[func]) == 'undefined') {
+          throw('Function ' + func + ' in module ' + panel_apply.settings[func].module + ' not found');
+        } else {
+          var func_options = {};
+          try {
+            if(!options.settings) {
+              options.settings = {};
+            }
+            if(!options.settings[module]) {
+              options.settings[module] = {};
+            }
+            if(!options.settings[module][func]) {
+              options.settings[module][func] = {};
+            }
+            $.extend(func_options, options.settings[module][func]);
+            if($.isEmptyObject(func_options) && panel_apply.settings[func].configure) {
+              /// инициализируем опции с дефолтными значениями
+              $.each(panel_apply.settings[func].configure, function(option, configure) {
+                if($.type(configure.default) != 'undefined') {
+                  func_options[option] = configure.default;
+                }
+              });
+            }
+            $.extend(func_options, {
+              save: function(callback) {
+                for(var key in func_options) {
+                  if(key == 'save') continue;
+                  options.settings[module][func][key] = func_options[key];
+                }
+                instance.setOptions(options, undefined, function() {
+                  if(callback) callback();
+                  instance.triggerEvent('options_change_' + func, 
+                    func_options);
+                });
+              }
+            });
+          } catch(e) {
+            instance.dispatchException(e);
+          }
+          instance[func].apply(instance, [func_options]);
+        }
+      });
+    });
+  }
+
   /******************************
   *******Публичные методы********
   *******************************/
@@ -952,98 +1092,6 @@ window.Panel2 = new function() {
       /// Если в localStorage на текущем домене есть копия нужных опций, 
       /// то эта функция будет запущена сразу
       /// если копии нет, то сперва получаем опции из контейнера с ganjawars.ru
-      var __initFunc = function() {
-        // Инициализация слушателей событий
-        for(var key in panel_apply.events) {
-          $(panel_apply.events[key]).each(function(index, type) {
-            if(type.condition) {
-              try {
-                if(!eval(type.condition)) return;
-              } catch(e) {
-                instance.dispatchException(e, 'condition for loaded script error: ');
-                return;
-              }
-            }
-            instance.bind(type.event, function() {
-              var that = this;
-              var _args = arguments;
-              instance.loadScript(panel_apply.scripts[type.callback], function() {
-                if($.type(instance[type.callback]) == 'undefined') {
-                  throw('Function ' + type + ' in module ' + panel_apply.scripts[type] + ' not found');
-                } else {
-                  instance[type.callback].apply(that, _args);
-                }
-              });
-            }, type.local);
-          });
-        }
-
-        // Инициализация подгружаемых скриптов
-        var pages = [];
-        if($.type(panel_apply.pages[location.pathname]) == 'array') {
-          pages = panel_apply.pages[location.pathname];
-        }
-        if($.type(panel_apply.pages['*']) == 'array') {
-          for(var i = 0; i < panel_apply.pages['*'].length; i++) {
-            if(pages.indexOf(panel_apply.pages['*'][i]) == -1) {
-              pages.push(panel_apply.pages['*'][i]);
-            }
-          }
-        }
-        $(pages).each(function(index, func) {
-          if(
-              /// если функция в чёрном списке
-              (options.blacklist && options.blacklist.indexOf(func) > -1) ||
-              /// или функция по-дефолту отключена и не в белом списке, либо белого списка нет
-              (panel_apply.settings[func].default === false 
-                && (!options.whitelist || options.whitelist.indexOf(func) == -1))
-            ) return;
-          var module = panel_apply.settings[func].module;
-          instance.loadScript(module + '/' + panel_apply.settings[func].file, function() {
-            if($.type(instance[func]) == 'undefined') {
-              throw('Function ' + func + ' in module ' + panel_apply.settings[func].module + ' not found');
-            } else {
-              var func_options = {};
-              try {
-                if(!options.settings) {
-                  options.settings = {};
-                }
-                if(!options.settings[module]) {
-                  options.settings[module] = {};
-                }
-                if(!options.settings[module][func]) {
-                  options.settings[module][func] = {};
-                }
-                $.extend(func_options, options.settings[module][func]);
-                if($.isEmptyObject(func_options) && panel_apply.settings[func].configure) {
-                  /// инициализируем опции с дефолтными значениями
-                  $.each(panel_apply.settings[func].configure, function(option, configure) {
-                    if($.type(configure.default) != 'undefined') {
-                      func_options[option] = configure.default;
-                    }
-                  });
-                }
-                $.extend(func_options, {
-                  save: function(callback) {
-                    for(var key in func_options) {
-                      if(key == 'save') continue;
-                      options.settings[module][func][key] = func_options[key];
-                    }
-                    instance.setOptions(options, undefined, function() {
-                      if(callback) callback();
-                      instance.triggerEvent('options_change_' + func, 
-                        func_options);
-                    });
-                  }
-                });
-              } catch(e) {
-                instance.dispatchException(e);
-              }
-              instance[func].apply(instance, [func_options]);
-            }
-          });
-        });
-      }
       checkTime('init_func');
 
       /// Инициализация тестов если в запросе указан ?gwpanel_test и это не встроенный фрейм
