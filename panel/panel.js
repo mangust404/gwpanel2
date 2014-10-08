@@ -682,8 +682,9 @@ window.Panel2 = new function() {
   
   function ajaxifyLinks($links) {
     $links.click(function(e) {
-      if(e.ctrlKey || e.altKey) return;
+      if(e.ctrlKey || e.altKey) return true;
       var href = $(this).attr('href');
+      if(document.location.toString().indexOf(href) > -1) return true;
       var link_title = $(this).text();
       $.ajax(href, {
         success: function(data) {
