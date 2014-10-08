@@ -311,7 +311,9 @@ $bootstrap = '
 
 (function() {
   var panelURL = "http://' . $domain . $path . '";
+  var environment = document.cookie.match(/gwp2_e=([a-z]+)/)? RegExp.$1: null;
 
+  if(environment == "dev") return;
   var package;
 
   var libs = ' . json_encode($libs) . ';
@@ -343,7 +345,6 @@ $bootstrap = '
   }
 
   var initialize = function() {
-    var environment = document.cookie.match(/gwp2_e=([a-z]+)/)? RegExp.$1: null;
     if(!environment) {
       var myDate = new Date();
       myDate.setMonth(myDate.getMonth() + 120);
@@ -433,7 +434,8 @@ $bootstrap = '
 
           document.getElementsByTagName(\'head\')[0].appendChild(link);
 
-          if(navigator.userAgent.indexOf(\'MSIE\') != -1 || window.opera) {
+          if(navigator.userAgent.indexOf(\'MSIE\') != -1 || 
+            (window.opera && window.opera.version() > 13)) {
             link.onload = callback;
             link.onerror = failover;
           } else {
@@ -473,7 +475,7 @@ $bootstrap = '
               loaded++;
               if(callback && loaded == path.length) setTimeout(callback, 1);
             } else {
-              console.log("Не удалось загрузить " + path[i]);
+              if(failover) failover();
             }
           } else {
             __checkoutPackage(panel_version, function(package) {
@@ -483,7 +485,7 @@ $bootstrap = '
                 loaded++;
                 if(callback && loaded == path.length) setTimeout(callback, 1);
               } else {
-                console.log("Не удалось загрузить " + path[i]);
+                if(failover) failover();
               }
             });
           }

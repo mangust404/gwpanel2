@@ -1,4 +1,4 @@
-(function(panel) {
+(function(panel, $) {
 jQuery.extend(panel, {
   map_mmupdate: function(event) {
     //Перезаписываем функцию игры для обновления таймера при передвижении по секторам
@@ -32,7 +32,7 @@ jQuery.extend(panel, {
       }
     });
     __panel.loadScript('map/map_sectors.js', function() {
-      if(document.body.innerHTML.match(/в <nobr><b>([^<]+)<\/b>/)) {
+      if($(document.body).html.match(/в <nobr><b>([^<]+)<\/b>/)) {
         var sector = RegExp.$1;
         for(var key in __panel.map_names) {
           if(__panel.map_names[key] == sector) {
@@ -46,10 +46,12 @@ jQuery.extend(panel, {
   },
   
   map_sector: function() {
-    if(document.body.innerHTML.match(/Район: <a href=['"]*\/map\.php\?sx=([0-9]+)[^=]+sy=([0-9]+)/)) {
-      //alert(RegExp.$1 + 'x' + RegExp.$2);
-      __panel.set('map_sector', RegExp.$1 + 'x' + RegExp.$2);
-    }
+    $(function() {
+      if($(document.body).html().match(/Район: <a href=['"]*\/map\.php\?sx=([0-9]+)[^=]+sy=([0-9]+)/)) {
+        //alert(RegExp.$1 + 'x' + RegExp.$2);
+        __panel.set('map_sector', RegExp.$1 + 'x' + RegExp.$2);
+      }
+    });
   },
   
   map_formatTime: function(s) {
@@ -104,4 +106,4 @@ jQuery.extend(panel, {
   }
   
 });
-})(window.__panel);
+})(window.__panel, jQuery);

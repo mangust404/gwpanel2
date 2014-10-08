@@ -883,11 +883,15 @@ window.Panel2 = new function() {
         instance.ready(initFloatWidgets);
       });
     } else {
-      instance.ready(initFloatWidgets);
+      $(function() {
+        instance.ready(initFloatWidgets);
+      });
     }
     
     // Прорисовка, её нужно выполнять после того как получены все опции и подгружены стили
-    draw_pane_bubbles();
+    $(function() {
+      draw_pane_bubbles();
+    });
   }
   
   function checkTime(name) {
@@ -1045,11 +1049,13 @@ window.Panel2 = new function() {
       /// Инициализация тестов если в запросе указан ?gwpanel_test и это не встроенный фрейм
       if(environment == 'testing' && location.search.indexOf('continue') == -1) {
         //alert('test');
-        $('<div id="qunit-fixture"></div>').prependTo(document.body);
-        $('<div id="qunit"></div>').prependTo(document.body);
-        instance.loadCSS('../../lib/qunit-1.15.0.css');
-        var tests = window.panel_tests || [];
-        instance.loadScript(tests);
+        $(function() {
+          $('<div id="qunit-fixture"></div>').prependTo(document.body);
+          $('<div id="qunit"></div>').prependTo(document.body);
+          instance.loadCSS('../../lib/qunit-1.15.0.css');
+          var tests = window.panel_tests || [];
+          instance.loadScript(tests);
+        });
       }
 
       version = parseInt(instance.getCookies()['gwp2_v']) || 1;
@@ -1222,6 +1228,7 @@ window.Panel2 = new function() {
     * Обработка исключений. Если есть консоль, то выводим в консоль.
     */
     dispatchException: function(e, comment) {
+      if(env != 'production') throw e;
       if(window.console) {
         console.log((comment? comment + " on ": '') + 
                     ((new Error).stack || arguments.callee.toString()).split("\n")[1]);
