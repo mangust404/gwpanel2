@@ -135,6 +135,7 @@ jQuery.extend(panel, {
       panel.set('health', health);
       home_health_progress.apply($widget, [true, health]);
     });
+
   }
 });
 })(window.__panel);

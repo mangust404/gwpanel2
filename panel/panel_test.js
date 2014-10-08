@@ -427,7 +427,7 @@ QUnit.asyncTest('Подгрузка стилей', function(assert) {
   })
 });
 
-if(window.opera || jQuery.browser.msie) {
+if(!window.opera || window.opera.version() > 13) {
   QUnit.asyncTest('Подгрузка ошибочных стилей', function(assert) {
     expect(1);
     __panel.loadCSS('test_unexisted.css', function () {
