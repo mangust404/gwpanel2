@@ -348,15 +348,37 @@
           return false;
         }).appendTo(editor.find('.close-button-wrapper'));
       /// готовим галерею иконок
+      var added = [];
       $.each(panel_apply.themes[current_options.system.theme].icons, function(index, item) {
         var img = item;
         if(img.indexOf('http:') != 0) {
           img = __panel.path_to_theme() + 'icons/' + img;
         }
+        added.push(img);
         $('<div class="icon-select"></div>').append(
           $('<img src="' + img + '"></img>').click(function() {
             $('#param-img').val(item);
             $('#settings-form-popup div.img img').attr('src', img);
+            $('#icons-gallery').hide();
+            return false;
+          })
+        ).appendTo('#icons-gallery .container');
+      });
+      /// Добавляем годные иконки со страницы
+      $('img').filter(function() {
+        if(added.indexOf($(this).attr('src')) > -1) return false;
+        if(this.height > 20 && this.height < 100 && 
+           this.width > 20 && this.width < 100) {
+          added.push($(this).attr('src'));
+          return true;
+        }
+        return false;
+      }).each(function() {
+        var src = $(this).attr('src');
+        $('<div class="icon-select"></div>').append(
+          $('<img src="' + src+ '"></img>').click(function() {
+            $('#param-img').val(src);
+            $('#settings-form-popup div.img img').attr('src', src);
             $('#icons-gallery').hide();
             return false;
           })
