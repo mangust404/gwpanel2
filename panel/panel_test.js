@@ -2872,3 +2872,57 @@ QUnit.asyncTest('Тест jQuery.fn.sendForm', function(assert) {
     });
   });
 });
+
+QUnit.test('Тестирование функции __panel.fixForms', function(assert) {
+  /// все возможные варианты ошибок спрайта
+  assert.equal(__panel.fixForms('<table><form><tr><td></form></td></tr></table>'),
+    '<form><table><tr><td></td></tr></table></form>');
+  assert.equal(__panel.fixForms('<table><form><tr><td></td></tr></form></table>'),
+    '<form><table><tr><td></td></tr></table></form>');
+  assert.equal(__panel.fixForms('<table><form><tr><td></td></tr></table></form>'),
+    '<form><table><tr><td></td></tr></table></form>');
+  assert.equal(__panel.fixForms('<div><form><table><tr><td></td></tr></table></form></div>'),
+    '<div><form><table><tr><td></td></tr></table></form></div>');
+  assert.equal(__panel.fixForms('<form><table><tr><td></td></tr></table></form>'),
+    '<form><table><tr><td></td></tr></table></form>');
+  assert.equal(__panel.fixForms('<form><table><tr><td></td></form></tr></table>'),
+    '<form><table><tr><td></td></tr></table></form>');
+
+  /// всё по два раза
+  assert.equal(__panel.fixForms('<table><form><tr><td></form></td></tr></table><table><form><tr><td></form></td></tr></table>'),
+    '<form><table><tr><td></td></tr></table></form><form><table><tr><td></td></tr></table></form>');
+  assert.equal(__panel.fixForms('<table><form><tr><td></td></tr></form></table><table><form><tr><td></td></tr></form></table>'),
+    '<form><table><tr><td></td></tr></table></form><form><table><tr><td></td></tr></table></form>');
+  assert.equal(__panel.fixForms('<table><form><tr><td></td></tr></table></form><table><form><tr><td></td></tr></table></form>'),
+    '<form><table><tr><td></td></tr></table></form><form><table><tr><td></td></tr></table></form>');
+  assert.equal(__panel.fixForms('<div><form><table><tr><td></td></tr></table></form></div><div><form><table><tr><td></td></tr></table></form></div>'),
+    '<div><form><table><tr><td></td></tr></table></form></div><div><form><table><tr><td></td></tr></table></form></div>');
+  assert.equal(__panel.fixForms('<form><table><tr><td></td></tr></table></form><form><table><tr><td></td></tr></table></form>'),
+    '<form><table><tr><td></td></tr></table></form><form><table><tr><td></td></tr></table></form>');
+  assert.equal(__panel.fixForms('<form><table><tr><td></td></form></tr></table><form><table><tr><td></td></form></tr></table>'),
+    '<form><table><tr><td></td></tr></table></form><form><table><tr><td></td></tr></table></form>');
+
+  var result = __panel.fixForms('<table width=100% cellpadding=4 cellspacing=2 border=0>\
+\
+<tr><td bgcolor=#e0eee0>Ближайшее действие: <a href=/ferma.php?x=0&y=0>полить Тюльпаны</a> (через 15 мин.)</td></tr>\
+\
+<tr><td bgcolor=#f0fff0>Грядка пустая. \
+Самое время на нее что-нибудь посадить!<br>\
+На счете фермы <b>$50396</b>, получен опыт 6.576 ед.</td></tr>\
+<tr><td bgcolor=#f0fff0>\
+<center><a href=/ferma.php?x=1&y=0&section=plants>Посадки</a> | <a \
+href=/ferma.php?x=1&y=0&section=items>Постройки</a></center><form style=\'display:inline;\' action=/ferma.php method=POST>\
+<input type=hidden name=hsh value=\'df8a0\'>\
+<input type=hidden name=action value=\'plant\'>\
+<input type=hidden name=x value=1>\
+<input type=hidden name=y value=0>\
+<input type=radio name=plant_id value=\'ukrop\' id=btn_ukrop><label for=btn_ukrop><font color=#006600><b>Укроп</b>, <b>$5</b></font></label><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Зеленый укроп для зеленого салата<br><li> Время созревания: 12 минут<br>\
+<li> Премия за урожай: <font color=#990000><b>$6</b></font>, +0.007 опыта<br><br><input type=radio name=plant_id value=\'opyata\' id=btn_opyata><label for=btn_opyata><font color=#006600><b>Странные опята</b>, <b>$10</b></font></label><br><li> Время созревания: 376 минут<br>\
+<li> Премия за урожай: <font color=#990000><b>$40</b></font>, +0.204 опыта<br><br><input type=radio name=plant_id value=\'tulips\' id=btn_tulips checked ><label for=btn_tulips><font color=#006600><b>Тюльпаны</b>, <b>$20</b></font></label><br><li> Время созревания: 67 минут<br>\
+<li> Премия за урожай: <font color=#990000><b>$26</b></font>, +0.04 опыта<br><br><input type=radio name=plant_id value=\'mak\' id=btn_mak disabled ><label for=btn_mak><font color=#0066f00><b>Полевой мак</b>, <b>$12</b></font></label><br><li> Время созревания: 27 минут<br>\
+<li> Премия за урожай: <font color=#990000><b>$15</b></font>, +0.02 опыта<br><i>(Не хватает 6.924 ед. опыта)</i><br><br><center><b><a href=/ferma.php?x=1&y=0&page_id=0><font color=red>1</font></a> | <a href=/ferma.php?x=1&y=0&page_id=1>2</a> | <a href=/ferma.php?x=1&y=0&page_id=2>3</a> | <a href=/ferma.php?x=1&y=0&page_id=3>4</a> | <a href=/ferma.php?x=1&y=0&page_id=4>5</a> | <a href=/ferma.php?x=1&y=0&page_id=5>&gt;&gt;</a></b></center></td></tr><tr><td bgcolor=#d0eed0 align=center><input type=submit value=\'Посадить\'></form></td></tr></table> test test\
+');
+  jQuery(result).appendTo('#qunit-fixture');
+  assert.equal($('#qunit-fixture form').length, 1, 'форма есть');
+  assert.equal($('#qunit-fixture form input[type=submit]').length, 1, 'кнопка есть');
+});

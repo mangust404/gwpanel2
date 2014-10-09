@@ -690,10 +690,9 @@ window.Panel2 = new function() {
       $.ajax(href, {
         success: function(data) {
           data = data.substr(16).replace(/<script[^>]*>.*?<\/script>/ig, '');
+          data = instance.fixForms(data);
           $('#gw-content').html(data);
-          var ar  = document.title.split(' :: ');
-          ar[0] = link_title;
-          document.title = ar.join(' :: ');
+          document.title = link_title + ' :: Ganjawars.ru :: Ганджубасовые войны';
           history.pushState({data: data, title: document.title}, document.title, href);
           __initFunc();
           ajaxifyLinks($('#gw-content').find('a[href*="http://' + document.domain + '"]:visible, a[href*="/"]:visible'));
@@ -2289,6 +2288,9 @@ window.Panel2 = new function() {
       return a.href.split('encoded_str=?')[1].replace(/%20/g, '+');
     },
 
+    /**
+    * Обработчик для аяксифицирования ссылок
+    */
     panel_ajaxify: function() {
       if($('#gw-content').length > 0) return;
       var elem = $('body > table[bgcolor="#f5fff5"]');
@@ -2315,6 +2317,63 @@ window.Panel2 = new function() {
           }
         }
       }
+    },
+
+    /**
+    * Функция для исправления разметки с корявыми формами
+    * Поскольку Илья Спрайтович особо не заботится о валидности HTML-разметки,
+    * нам приходится делать это за него.
+    */
+    fixForms: function(data) {
+      var prev_start = 0;
+      var start, end, tr_open, tr_close, table_open, open_tags, close_tags, new_data;
+      do {
+        var start = data.indexOf('<form', prev_start);
+        if(start == -1) break;
+        
+        end = data.indexOf('</form>', start);
+
+        var form_html = data.substr(start, end - start);
+        tr_open = form_html.indexOf('<tr>');
+        tr_close = form_html.indexOf('</tr>');
+        var open_tags = form_html.match(/<([a-z]+)(\s?[^>]+)?>/g);
+        var close_tags = form_html.match(/<\/([a-z]+)>/g);
+        // console.log(open_tags, close_tags);
+
+        // console.log(tr_open, tr_close, tr_open > tr_close);
+        if(tr_open > -1 || tr_close > -1) {
+          /// форма сломанная, вытаскиваем <form> за пределы таблицы
+          table_open = data.indexOf('<table', prev_start);
+          table_close = data.indexOf('</table>', table_open);
+          var form_length = data.indexOf('>', start) - start + 1;
+          if(table_open > -1) { /// таблица есть, форма внутри таблицы
+            new_data = '';
+            if(table_open < start) {  /// Если форма внутри таблицы
+              new_data += data.substr(0, table_open) +       // начало данных до <table
+              data.substr(start, form_length) +              // <form и вcё что в нём>
+              data.substr(table_open, start - table_open);   // всё от <table> до <form> включительно
+            } else {
+              new_data += data.substr(0, start + form_length);
+            }
+
+            // всё что в <form>...</form>
+            new_data += data.substr(start + form_length, end - start - form_length);
+            
+            if(table_close > end) { /// Если закрытие формы до закрытия таблицы
+              new_data += data.substr(end + 7, table_close + 8 - end - 7) +// всё что между </form> и </table>
+              '</form>' + data.substr(table_close + 8);                    // всё оставшееся за таблицей
+            } else {
+              new_data += data.substr(end);
+            }
+            
+            data = new_data;
+          }
+        }
+        
+        prev_start = end + 1;
+      } while(start > -1);
+
+      return data;
     },
 
     /**
