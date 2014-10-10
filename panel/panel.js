@@ -680,28 +680,43 @@ window.Panel2 = new function() {
     }
   }
   
+  var loaderTO;
+
+  function ajaxGoto(href, title) {
+    if(loaderTO > 0) clearTimeout(loaderTO);
+    /// показываем крутилку если запрос длится больше 300 миллисекунд
+    loaderTO = setTimeout(function() {
+      $(document.body).addClass('ajax-loading');
+    }, 300);
+    $.ajax(href, {
+      success: function(data) {
+        data = data.substr(16).replace(/<script[^>]*>.*?<\/script>/ig, '');
+        data = instance.fixForms(data);
+        $('#gw-content').html(data);
+        if(title) document.title = title + ' :: Ganjawars.ru :: Ганджубасовые войны';
+        history.pushState({data: data, title: document.title}, document.title, href);
+        clearTimeout(loaderTO);
+        loaderTO = 0;
+        $(document.body).removeClass('ajax-loading');
+        __initFunc();
+        ajaxifyContent();
+        hideAllPanes();
+      },
+      error: function() {
+        window.location = href;
+      }
+    });
+  }
+
   var originalData, originalTitle;
   function ajaxifyLinks($links) {
     $links.addClass('ajax').click(function(e) {
-      if(e.ctrlKey || e.altKey) return true;
-      if($(this).attr('onclick')) return true;
+      if(e.ctrlKey || e.altKey) return false;
+      if($(this).attr('onclick')) return false;
       var href = $(this).attr('href');
       if(document.location.toString().indexOf(href) > -1) return true;
       var link_title = $(this).text();
-      $.ajax(href, {
-        success: function(data) {
-          data = data.substr(16).replace(/<script[^>]*>.*?<\/script>/ig, '');
-          data = instance.fixForms(data);
-          $('#gw-content').html(data);
-          document.title = link_title + ' :: Ganjawars.ru :: Ганджубасовые войны';
-          history.pushState({data: data, title: document.title}, document.title, href);
-          __initFunc();
-          ajaxifyContent();
-        },
-        error: function() {
-          window.location = href;
-        }
-      });
+      ajaxGoto(href, link_title);
       return false;
     });
   }
@@ -1852,7 +1867,7 @@ window.Panel2 = new function() {
     * Функция возвращает ID текущего игрока (из кук)
     */
     currentPlayerID: function() {
-      return instance.getCookies()['au'];
+      return instance.getCookies()['au'] || instance.getCookies()['uid'];
     },
 
     /**
@@ -2315,7 +2330,7 @@ window.Panel2 = new function() {
         originalData = $('#gw-content').html();
         originalTitle = document.title;
 
-        ajaxifyContent();
+        $(ajaxifyContent);
 
         window.onpopstate = function(event) {
           if(event.state && event.state.data && event.state.title) {
@@ -2330,22 +2345,13 @@ window.Panel2 = new function() {
         }
       }
       instance.gotoHref = function(href, element) {
-        $.ajax(href, {
-          success: function(data) {
-            data = data.substr(16).replace(/<script[^>]*>.*?<\/script>/ig, '');
-            data = instance.fixForms(data);
-            $('#gw-content').html(data);
-            var text = $(element).text();
-            if(text.length > 15) text = text.substr(0, 15) + '...';
-            document.title = text + ' :: Ganjawars.ru :: Ганджубасовые войны';
-            history.pushState({data: data, title: document.title}, document.title, href);
-            __initFunc();
-            ajaxifyLinks($('#gw-content').find('a[href*="http://' + document.domain + '"]:visible, a[href*="/"]:visible'));
-          },
-          error: function() {
-            window.location = href;
-          }
-        });
+        if(href.indexOf('http://') == 0 && href.indexOf('http://' + document.domain + '/') == -1) {
+          window.location = href;
+          return;
+        }
+        var text = $(element).text();
+        if(text.length > 15) text = text.substr(0, 15) + '...';
+        ajaxGoto(href, text);
       }
     },
 
