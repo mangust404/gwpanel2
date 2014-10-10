@@ -690,6 +690,7 @@ window.Panel2 = new function() {
     }, 300);
     $.ajax(href, {
       success: function(data) {
+        if(href.indexOf('/sms.php') > -1) $('img[src$="sms.gif"]').closest('a').remove();
         data = data.substr(16).replace(/<script[^>]*>.*?<\/script>/ig, '');
         data = instance.fixForms(data);
         $('#gw-content').html(data);
@@ -701,6 +702,8 @@ window.Panel2 = new function() {
         __initFunc();
         ajaxifyContent();
         hideAllPanes();
+        tearDownFloatWidgets();
+        initFloatWidgets();
       },
       error: function() {
         window.location = href;
@@ -711,8 +714,8 @@ window.Panel2 = new function() {
   var originalData, originalTitle;
   function ajaxifyLinks($links) {
     $links.addClass('ajax').click(function(e) {
-      if(e.ctrlKey || e.altKey) return false;
-      if($(this).attr('onclick')) return false;
+      if(e.ctrlKey || e.altKey) return true;
+      if($(this).attr('onclick')) return true;
       var href = $(this).attr('href');
       if(document.location.toString().indexOf(href) > -1) return true;
       var link_title = $(this).text();
@@ -881,6 +884,28 @@ window.Panel2 = new function() {
     }
   }
   
+  /**
+  * Функция скрывания плавающих виджетов для страниц, на которых их не должно быть
+  */
+  function tearDownFloatWidgets() {
+    $.each(options.widgets, function(index) {
+      if(!this.type || !panel_apply.widgets[this.type]) return;
+      var widget = this;
+      widget.index = index;
+      widget.float = true;
+      
+      var $elem = $('#float-' + widget.index + '-' + widget.type);
+      if(!$elem.length) return;
+
+      if($.type(widget.only_page_class) == 'string') {
+        if(widget.only_page_class != location.pathname) return $elem.remove();
+      } else if($.type(widget.only_page) == 'string') {
+        if(widget.only_page != location.pathname + location.search) return $elem.remove();
+      } else if($.type(widget.blacklist) == 'array') {
+        if(widget.blacklist.indexOf(location.pathname) > -1) return $elem.remove();
+      }
+    });
+  }
   /**
   * Инициализация всего интерфейса
   */
@@ -1081,6 +1106,13 @@ window.Panel2 = new function() {
         }
       });
     });
+
+    if(window.vote_for_post) {
+      window.vote_for_post = function(fid, tid, mid, vote, sign) {
+        $('#vote' + mid).load('/messages.php?do_vote=1&fid=' + fid + '&tid=' + 
+          tid + '&mid=' + mid + '&vote=' + vote + '&sign=' + sign);
+      }
+    }
   }
 
   /******************************
