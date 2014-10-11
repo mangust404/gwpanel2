@@ -767,8 +767,8 @@ window.Panel2 = new function() {
         if($.type(instance[type.callback]) == 'undefined') {
           throw('Function ' + type.callback + ' for widget ' + widget.type + ' not found');
         } else {
-          var width = type.width * options.system.btnwidth;
-          var height = type.height * options.system.btnheight;
+          var width = (widget.arguments.width || type.width) * options.system.btnwidth;
+          var height = (widget.arguments.height || type.height) * options.system.btnheight;
           var $widget = $('<div class="float-widget ' + widget.type + '"></div>')
             .attr('id', 'float-' + widget.index + '-' + widget.type)
             .css({
@@ -893,7 +893,7 @@ window.Panel2 = new function() {
       var widget = this;
       widget.index = index;
       widget.float = true;
-      
+
       var $elem = $('#float-' + widget.index + '-' + widget.type);
       if(!$elem.length) return;
 
@@ -1315,7 +1315,7 @@ window.Panel2 = new function() {
     * Обработка исключений. Если есть консоль, то выводим в консоль.
     */
     dispatchException: function(e, comment) {
-      if(env != 'production') throw e;
+      if(environment != 'production') throw e;
       if(window.console) {
         console.log((comment? comment + " on ": '') + 
                     ((new Error).stack || arguments.callee.toString()).split("\n")[1]);

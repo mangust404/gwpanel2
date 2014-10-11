@@ -100,6 +100,17 @@
                 change_callback(param, this.value);
               });
           break;
+          case 'textarea':
+            var __id = 'param-' + widget.id + '-' + param;
+            $('<label for="' + __id + '">' + that.title + 
+              '</label><textarea name="' + widget.id + '_' + param + 
+              '" id="' + __id + '" placeholder="' + that.default + '">'
+               + current_value + '</textarea>')
+              .appendTo(append_to)
+              .change(function() {
+                change_callback(param, this.value);
+              });
+          break;
           default: 
             //default_data[widget.config_params[i]] = '';
           break;

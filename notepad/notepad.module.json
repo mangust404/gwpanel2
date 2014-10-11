@@ -1,0 +1,55 @@
+{
+  "requires": "", 
+  "excludes": "",
+  "title": "Блокнот",
+  "description": "Модуль для хранения записей, вы можете добавлять стикеры к страницам",
+  "weight":4, 
+  "apply": {
+  }, 
+  "settings": {
+  },
+  "event": {
+  },
+  "widgets": {
+    "notepad_sticker": {
+      "title": "Стикер",
+      "configure": {
+        "title": {
+          "type": "textarea",
+          "title": "Заголовок",
+          "default": ""
+        },
+        "text": {
+          "type": "textarea",
+          "title": "Текст",
+          "default": ""
+        },
+        "height": {
+          "type": "select",
+          "title": "высота",
+          "options": [1, 2, 3, 4, 5],
+          "default": 3
+        },
+        "width": {
+          "type": "select",
+          "title": "ширина",
+          "options": [2, 3, 4, 5, 6, 7, 8, 9],
+          "default": 4
+        }
+      },
+      "callback": "notepad_sticker",
+      "file": "notepad_widgets.js", 
+      "width": 4,
+      "height": 3,
+      "description": "стикер с короткой заметкой"
+    }
+  },
+  "buttons": {
+    "notepad_button": {
+      "title": "Блокнот",
+      "description": "блокнот для любых записей",
+      "file": "notepad.js",
+      "icon": "notepad.png"
+    }
+  }
+}

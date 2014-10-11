@@ -1,0 +1,39 @@
+.notepad_notepad_sticker {
+  border-bottom: 1px solid #ba8500;
+  border-left: 1px solid #998f51;
+  border-right: 1px solid #998f51;
+  border-top: 1px solid #d4ca77;
+  border-radius: 0;
+  background: #fff88f;
+  background: -moz-linear-gradient(top,  #fff88f 0%, #fff785 1px, #f5da71 26px, #f0d265 27px, #f0d265 29px, #fcf697 30px, #faf18e 31px, #f0c756 100%);
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0px,#fff88f), color-stop(1px,#fff785), color-stop(26px%,#f5da71), color-stop(27px,#f0d265), color-stop(29px,#f0d265), color-stop(30px,#fcf697), color-stop(31px,#faf18e), color-stop(100%,#f0c756));
+  background: -webkit-linear-gradient(top,  #fff88f 0%,#fff785 1px,#f5da71 26px,#f0d265 27px,#f0d265 29px,#fcf697 30px,#faf18e 31px,#f0c756 100%);
+  background: -o-linear-gradient(top,  #fff88f 0%,#fff785 1px,#f5da71 26px,#f0d265 27px,#f0d265 29px,#fcf697 30px,#faf18e 31px,#f0c756 100%);
+  background: -ms-linear-gradient(top,  #fff88f 0%,#fff785 1px,#f5da71 26px,#f0d265 27px,#f0d265 29px,#fcf697 30px,#faf18e 31px,#f0c756 100%);
+  background: linear-gradient(to bottom,  #fff88f 0%,#fff785 1px,#f5da71 26px,#f0d265 27px,#f0d265 29px,#fcf697 30px,#faf18e 31px,#f0c756 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fff88f', endColorstr='#f0c756',GradientType=0 );
+  transition: opacity .5s ease-out;
+  -moz-transition: opacity .5s ease-out;
+  -webkit-transition: opacity .5s ease-out;
+  -o-transition: opacity .5s ease-out;
+  overflow: hidden;
+}
+
+.notepad_notepad_sticker:hover {
+  opacity: 1;
+}
+
+.notepad_notepad_sticker .title {
+  font-weight: bold;
+  padding: 5px 10px;
+  font-size: 110%;
+  height: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notepad_notepad_sticker .text {
+  padding: 10px 10px 10px;
+  white-space: pre;
+}
