@@ -2,7 +2,6 @@
 jQuery.extend(panel, {
   notepad_sticker: function(options) {
     panel.loadCSS('notepad/notepad.css');
-    this.off('dblclick');
     $widget = this;
     $('<div class="title">').text(options.title || '').appendTo($widget)
       .mousedown(function(e) {
@@ -73,6 +72,51 @@ jQuery.extend(panel, {
         $t.attr('title', options.text || '');
       }
     }, 100);
+  },
+  /// Быстрое создание стикеров
+  notepad_sticker_create: function(options) {
+    var currentOptions = panel.getOptions();
+
+    var widgetData = {
+      arguments: {
+        title: 'Новый стикер',
+        text: 'Введите текст',
+        height: 2,
+        width: 3
+      },
+      height: 2,
+      width: 3,
+      index: currentOptions.widgets.length,
+      left: 200,
+      top: 300,
+      type: 'notepad_notepad_sticker',
+      module: 'notepad',
+      float: true,
+      fixed: true
+    }
+
+    if(location.search.length > 0) {
+      widgetData.only_page = location.pathname + location.search;
+    } else {
+      widgetData.only_page_class = location.pathname;
+    }
+    /// нам нужно удостовериться в уникальности ID
+    var max_id = 0;
+    for(var i = 0; i < currentOptions.widgets.length; i++) {
+      if(currentOptions.widgets[i].type == widgetData.type) {
+        var ar = currentOptions.widgets[i].id.split('_');
+        var __id = parseInt(ar[ar.length - 1]);
+        if(__id > max_id) max_id = __id;
+      }
+    }
+
+    widgetData.id = 'notepad_notepad_sticker_' + (max_id + 1);
+    
+    currentOptions.widgets.push(widgetData);
+    panel.setOptions(currentOptions);
+
+    panel.redrawFloatWidgets();
+    panel.hideAllPanes();
   }
 });
 })(window.__panel, jQuery);

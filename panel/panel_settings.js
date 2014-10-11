@@ -397,7 +397,7 @@
       });
       $.each(panel_apply.buttons, function(button_name) {
         var button = this;
-        var img = button.img;
+        var img = button.img || button.icon;
         if(img && img.indexOf('http:') != 0) {
           img = __panel.path_to_theme() + 'icons/' + img;
         }
@@ -940,10 +940,22 @@
                   current_options.widgets.splice(widgetData.index, 1);
                   $('#float-' + widgetData.index + '-' + widgetData.type).remove();
                 } else {
-                  current_options.panes[widgetData.paneID][widgetKind + 's'].splice(widgetData.index, 1);
+                  var seek_index;
+                  var objects_array = current_options.panes[widgetData.paneID][widgetKind + 's'];
+                  for(var i = 0; i < objects_array.length; i++) {
+                    if(objects_array[i].id == widgetData.id) {
+                      seek_index = i;
+                      break;
+                    }
+                  }
+                  if(jQuery.type(seek_index) == 'undefined') {
+                    panel.showFlash(widgetKind == 'button'? 'Не удалось удалить кнопку': 'Не удалось удалить виджет');
+                    return;
+                  }
+                  current_options.panes[widgetData.paneID][widgetKind + 's'].splice(seek_index, 1);
                   $('#' + widgetData.id).remove();
                 }
-                panel.showFlash('Виджет удалён');
+                panel.showFlash(widgetKind == 'button'? 'Кнопка удалена': 'Виджет удалён');
                 panel.setOptions(current_options);
                 $('#settings-form-popup').popup('close');
                 $('#settings-form-popup').remove();
@@ -1160,6 +1172,8 @@
 
 
               var index = 0;
+              var max_id = 0;
+
               if(widgetKind == 'widget' || widgetKind == 'float') {
                 if(displace == 'float') {
                   __data.left = isNaN(__data.left)? 200: __data.left;
@@ -1167,7 +1181,9 @@
 
                   for(var i = 0; i < current_options.widgets.length; i++) {
                     if(current_options.widgets[i].type == widgetData.type) {
-                      index++;
+                      var ar = current_options.widgets[i].id.split('_');
+                      var __id = parseInt(ar[ar.length - 1]);
+                      if(__id > max_id) max_id = __id;
                     }
                   }
 
@@ -1185,7 +1201,7 @@
                   }
                 }
                 if(!isEdit) {
-                  __data.id = widgetData.type + '_' + index;
+                  __data.id = widgetData.type + '_' + (max_id + 1);
                 }
                 __data.height = widgetClass.height;
                 __data.width = widgetClass.width;

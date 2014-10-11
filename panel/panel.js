@@ -71,12 +71,6 @@ window.Panel2 = new function() {
   /******************************
   *******Приватные методы********
   *******************************/
-  function hideAllPanes(e) {
-    if(e && e.type == 'click' && $('.pane:visible').hasClass('configuring')) return true;
-    $('.pane:visible').hide();
-    $('.pane-bubble.active').removeClass('active');
-    $(document.body).off('click', hideAllPanes);
-  }
   /**
   * Обработчик перетаскивания кнопок и виджетов в другие окна
   */
@@ -111,12 +105,12 @@ window.Panel2 = new function() {
     
     if((pane = $('#pane-' + paneID)).length) {
       if(pane.css('display') == 'none') {
-        hideAllPanes();
+        instance.hideAllPanes();
         pane.show();
         instance.triggerEvent('pane_show', paneID);
         $('#pane-bubble-' + paneID).addClass('active');
       } else if(e && e.type == 'click') {
-        hideAllPanes();
+        instance.hideAllPanes();
         return false;
       }
     } else {
@@ -135,6 +129,7 @@ window.Panel2 = new function() {
         $(buttons).each(function(index) {
         //for(var i = 0; i < buttons.length; i++) {
           var type = panel_apply.buttons[this.type];
+          if(!type.callback) type.callback = this.type.substr(type.module.length + 1);
           if(!type) {
             instance.dispatchException('Unknown button type: ' + this.type, 'Pane ' + paneID + ' draw: ');
             return;
@@ -554,7 +549,7 @@ window.Panel2 = new function() {
       hold_positions = data.hold_positions;
     });
     /// При клике на body, скрываем всплывашку
-    $(document.body).on('click', hideAllPanes);
+    $(document.body).on('click', instance.hideAllPanes);
     /// Обязательно надо вернуть false, иначе он уйдёт в document.body 
     /// и все всплывашки закроются
     return false;
@@ -701,7 +696,7 @@ window.Panel2 = new function() {
         $(document.body).removeClass('ajax-loading');
         __initFunc();
         ajaxifyContent();
-        hideAllPanes();
+        instance.hideAllPanes();
         tearDownFloatWidgets();
         initFloatWidgets();
       },
@@ -2358,7 +2353,7 @@ window.Panel2 = new function() {
         elem = $('body > table[bgcolor="#d0eed0"]');
       }
       if(elem.length > 0 && history.pushState) {
-        elem.nextAll().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
+        var $all_elements = elem.nextAll().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
         originalData = $('#gw-content').html();
         originalTitle = document.title;
 
@@ -2442,6 +2437,16 @@ window.Panel2 = new function() {
       } while(start > -1);
 
       return data;
+    },
+
+    /**
+    * Функция закрывает все открытые окна
+    */
+    hideAllPanes: function(e) {
+      if(e && e.type == 'click' && $('.pane:visible').hasClass('configuring')) return true;
+      $('.pane:visible').hide();
+      $('.pane-bubble.active').removeClass('active');
+      $(document.body).off('click', instance.hideAllPanes);
     },
 
     /**

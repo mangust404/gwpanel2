@@ -28,19 +28,19 @@
           "type": "select",
           "title": "высота",
           "options": [1, 2, 3, 4, 5],
-          "default": 3
+          "default": 2
         },
         "width": {
           "type": "select",
           "title": "ширина",
           "options": [2, 3, 4, 5, 6, 7, 8, 9],
-          "default": 4
+          "default": 3
         }
       },
       "callback": "notepad_sticker",
       "file": "notepad_widgets.js", 
-      "width": 4,
-      "height": 3,
+      "width": 3,
+      "height": 2,
       "description": "стикер с короткой заметкой"
     }
   },
@@ -49,7 +49,13 @@
       "title": "Блокнот",
       "description": "блокнот для любых записей",
       "file": "notepad.js",
-      "icon": "notepad.png"
+      "img": "notepad.png"
+    },
+    "notepad_sticker_create": {
+      "title": "Добавить стикер",
+      "description": "кнопка для быстрого создание стикера на открытой странице",
+      "file": "notepad_widgets.js",
+      "img": "sticker.png"
     }
   }
 }
