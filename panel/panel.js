@@ -685,12 +685,15 @@ window.Panel2 = new function() {
     }, 300);
     $.ajax(href, {
       success: function(data) {
+        $(document.body).addClass('ajax-processed');
         if(href.indexOf('/sms.php') > -1) $('img[src$="sms.gif"]').closest('a').remove();
         data = data.substr(16).replace(/<script[^>]*>.*?<\/script>/ig, '');
         data = instance.fixForms(data);
         $('#gw-content').html(data);
         if(title) document.title = title + ' :: Ganjawars.ru :: Ганджубасовые войны';
+        $(document.body).removeClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
         history.pushState({data: data, title: document.title}, document.title, href);
+        $(document.body).addClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
         clearTimeout(loaderTO);
         loaderTO = 0;
         $(document.body).removeClass('ajax-loading');
@@ -710,7 +713,7 @@ window.Panel2 = new function() {
   function ajaxifyLinks($links) {
     $links.addClass('ajax').click(function(e) {
       if(e.ctrlKey || e.altKey) return true;
-      if($(this).attr('onclick')) return true;
+      if($(this).attr('onclick')) return false;
       var href = $(this).attr('href');
       if(document.location.toString().indexOf(href) > -1) return true;
       var link_title = $(this).text();
@@ -956,15 +959,23 @@ window.Panel2 = new function() {
         instance.ready(initFloatWidgets);
       });
     } else {
-      $(function() {
+      if(document.body.length > 0) {
         instance.ready(initFloatWidgets);
-      });
+      } else {
+        $(function() {
+          instance.ready(initFloatWidgets);
+        });
+      }
     }
     
     // Прорисовка, её нужно выполнять после того как получены все опции и подгружены стили
-    $(function() {
+    if(document.body.length > 0) {
       draw_pane_bubbles();
-    });
+    } else {
+      $(function() {
+        draw_pane_bubbles();
+      });
+    }
 
   }
   
@@ -1131,13 +1142,18 @@ window.Panel2 = new function() {
       /// Инициализация тестов если в запросе указан ?gwpanel_test и это не встроенный фрейм
       if(environment == 'testing' && location.search.indexOf('continue') == -1) {
         //alert('test');
-        $(function() {
+        var initTestFunc = function() {
           $('<div id="qunit-fixture"></div>').prependTo(document.body);
           $('<div id="qunit"></div>').prependTo(document.body);
           instance.loadCSS('../../lib/qunit-1.15.0.css');
           var tests = window.panel_tests || [];
           instance.loadScript(tests);
-        });
+        }
+        if(window.opera) {
+          $(initTestFunc);
+        } else {
+          initTestFunc();
+        }
       }
 
       version = parseInt(instance.getCookies()['gwp2_v']) || 1;
@@ -2027,7 +2043,7 @@ window.Panel2 = new function() {
       var element_height = widget.height || 1;
       var element_width = widget.width || 1;
 
-      var p_options = instance.getOptions().panes[paneID];
+      var p_options = instance.getOptions().panes[paneID] || {};
       if(!p_options.buttons) p_options.buttons = [];
       if(!p_options.widgets) p_options.widgets = [];
 
@@ -2354,6 +2370,26 @@ window.Panel2 = new function() {
       }
       if(elem.length > 0 && history.pushState) {
         var $all_elements = elem.nextAll().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
+        var $brokenForms = $('#gw-content').find('table td > form');
+        if($brokenForms.length > 0) {
+          /// если есть поломанные формы, чиним их
+          /// Поскольку jQuery уже исправил для нас разметку, то мы должны её снова поломать
+          /// чтобы затем починить с помощью функции fixForms
+          /// удаляем </form>
+          $brokenForms.each(function() {
+            var $elem = $(this).closest('table');
+            if(!$elem.length) $elem = $(this).closest('td');
+            var html = $elem.html();
+            var start = html.indexOf('<form');
+            var end = html.indexOf('>', start);
+            var form = html.substr(start, end - start + 1 );
+            html = html.substr(0, start) + html.substr(end + 1);
+            html = html.replace('</form>', '');
+            $elem.html(html);
+            $elem.wrap(form + '</form>');
+          });
+          //$('#gw-content').html(originalData);
+        }
         originalData = $('#gw-content').html();
         originalTitle = document.title;
 
@@ -2389,7 +2425,8 @@ window.Panel2 = new function() {
     */
     fixForms: function(data) {
       var prev_start = 0;
-      var start, end, tr_open, tr_close, table_open, open_tags, close_tags, new_data;
+      var start, end, tr_open, tr_close, table_open, new_data;
+      // проходим по коду до последней формы
       do {
         var start = data.indexOf('<form', prev_start);
         if(start == -1) break;
@@ -2397,10 +2434,9 @@ window.Panel2 = new function() {
         end = data.indexOf('</form>', start);
 
         var form_html = data.substr(start, end - start);
+        var form_length = data.indexOf('>', start) - start + 1;
         tr_open = form_html.indexOf('<tr>');
         tr_close = form_html.indexOf('</tr>');
-        var open_tags = form_html.match(/<([a-z]+)(\s?[^>]+)?>/g);
-        var close_tags = form_html.match(/<\/([a-z]+)>/g);
         // console.log(open_tags, close_tags);
 
         // console.log(tr_open, tr_close, tr_open > tr_close);
@@ -2408,7 +2444,6 @@ window.Panel2 = new function() {
           /// форма сломанная, вытаскиваем <form> за пределы таблицы
           table_open = data.indexOf('<table', prev_start);
           table_close = data.indexOf('</table>', table_open);
-          var form_length = data.indexOf('>', start) - start + 1;
           if(table_open > -1) { /// таблица есть, форма внутри таблицы
             new_data = '';
             if(table_open < start) {  /// Если форма внутри таблицы
@@ -2431,8 +2466,21 @@ window.Panel2 = new function() {
             
             data = new_data;
           }
+        } else {
+          /// фиксим если форма вставлена в <tr>, мы должны унести её в <td>
+          td_open = form_html.indexOf('<td');
+          td_length = form_html.indexOf('>', td_open) - td_open + 1;
+          td_close = form_html.indexOf('</td>');
+          if(td_open > -1 && td_close > -1 && form_html.split('<td').length == 2) {
+            /// вытаскиваем <td перед <form
+            var td_html = form_html.substr(td_open, td_length);
+            form_html = td_html + form_html.replace(td_html, '').replace('</td>', '') + '</form>' + '</td>';
+            data = data.substr(0, start) + 
+                   form_html + 
+                   data.substr(end + 7);
+          }
         }
-        
+        //console.log(start);
         prev_start = end + 1;
       } while(start > -1);
 

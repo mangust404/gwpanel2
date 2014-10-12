@@ -295,3 +295,17 @@ body.ajax-loading:before {
   -moz-transform: translateX(-50%);
   -webkit-transform: translateX(-50%);
 }
+
+td > form {
+  display: inline;
+  margin: 0;
+}
+
+body.map-php.ajax-processed td[width="100%"] + td {
+  width: 230px;
+  display: block;
+}
+
+body.map-php.ajax-processed td[width="100%"] + td select {
+  width: 175px !important;
+}

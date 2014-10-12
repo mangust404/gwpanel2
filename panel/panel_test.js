@@ -427,7 +427,7 @@ QUnit.asyncTest('Подгрузка стилей', function(assert) {
   })
 });
 
-if(!window.opera || window.opera.version() > 13) {
+/*if(!window.opera || window.opera.version() > 13) {
   QUnit.asyncTest('Подгрузка ошибочных стилей', function(assert) {
     expect(1);
     __panel.loadCSS('test_unexisted.css', function () {
@@ -438,7 +438,7 @@ if(!window.opera || window.opera.version() > 13) {
       QUnit.start();
     })
   });
-}
+}*/
 
 //QUnit.asyncTest('Проверка фокусировки', function(assert) {
 //  expect(1);
@@ -483,7 +483,7 @@ QUnit.asyncTest('Установка и считывание опций', functio
     __panel.set('options', {});
     assert.ok(false, 'Защищённая не должна быть установлена');
   } catch(e) {
-    __panel.dispatchException(e);
+    //__panel.dispatchException(e);
     assert.ok(true, e.toString());
   }
   var options = __panel.getOptions();
@@ -529,7 +529,7 @@ QUnit.asyncTest('Установка и считывание опций', functio
   }, 100);
 });
 
-QUnit.asyncTest('переход по ссылке', function(assert) {
+/*QUnit.asyncTest('переход по ссылке', function(assert) {
   expect(1);
   var gotoURL = 'http://www.ganjawars.ru/forum.php';
   var gotoHref = false;
@@ -551,7 +551,7 @@ QUnit.asyncTest('переход по ссылке', function(assert) {
   }).appendTo('#qunit-fixture');
 
 });
-
+*/
 /// Тестирование интерфейса
 //QUnit.test('Тестирование бабблов', function(assert) {
 //  var options = __panel.getOptions();
@@ -2925,4 +2925,27 @@ href=/ferma.php?x=1&y=0&section=items>Постройки</a></center><form style
   jQuery(result).appendTo('#qunit-fixture');
   assert.equal($('#qunit-fixture form').length, 1, 'форма есть');
   assert.equal($('#qunit-fixture form input[type=submit]').length, 1, 'кнопка есть');
+
+  var result = __panel.fixForms('<table cellspacing=0 cellpadding=5 align=center>\n\
+<tr><td class=greenbrightbg>\n\
+<table align=center width=90>\n\
+<tr>\n\
+<form action=/map.move.php method=post><input type=hidden name=moveup value=1><input type=hidden name=moveleft value=1><td align=center>\n\
+<input type=image src=\'http://images.ganjawars.ru/i/m-n.png\' width=26 height=26 border=0 alt=\'Перейти на клетку вверх\'></td></form>\n\
+\n\
+<form action=/map.move.php method=post><input type=hidden name=moveup value=1><td align=center>\n\
+<input type=image src=\'http://images.ganjawars.ru/i/m-n.png\' width=26 height=26 border=0 alt=\'Перейти на клетку вверх\'></td></form>\n\
+\n\
+<form action=/map.move.php method=post><input type=hidden name=moveup value=1><input type=hidden name=moveright value=1><td align=center>\n\
+<input type=image src=\'http://images.ganjawars.ru/i/m-n.png\' width=26 height=26 border=0 alt=\'Перейти на клетку вверх\'></td></form>\n\
+\n\
+</tr>\n\
+</table>\n\
+</td></tr></table>');
+
+  jQuery('#qunit-fixture').html(result);
+  assert.equal($('#qunit-fixture form').length, 3, '3 формы есть');
+  assert.equal($('#qunit-fixture form input[type=image]').length, 3, '3 кнопки есть');
+
+
 });
