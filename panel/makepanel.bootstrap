@@ -1,5 +1,9 @@
 <?php
 
+include_once(dirname(__FILE__) . '/../lib/JSMin.php');
+include_once(dirname(__FILE__) . '/../lib/class.JavaScriptPacker.php');
+
+
 ini_set('display_errors', 'off');
 
 $modules = array();
@@ -75,7 +79,8 @@ if(file_exists($gwpanel_path . '/version')) {
   $version = 0;
 }
 
-$restircted_libs = array('jquery.js', 'jquery.min.js');
+$restircted_libs = array('jquery.js', 'jquery.min.js', 'jquery.db.js', 
+  'jquery.db.min.js', 'jquery.indexeddb.js', 'jquery.indexeddb.min.js');
 
 $plugins = array();
 /// Подготовка генерации пакета с исходниками
@@ -237,7 +242,12 @@ if(get_env() == 'production') {
   $package = array();
   foreach($files as $file) {
     $name = substr($file, strlen($gwpanel_path) + 1);
-    $package[$name] = file_get_contents($file);
+    //if(strpos($file, '.min.') === FALSE) {
+    //  $packer = new JavaScriptPacker(file_get_contents($file));
+    //  $package[$name] = $packed = $packer->pack();
+    //} else {
+      $package[$name] = JSMin::minify(file_get_contents($file));
+    //}
   }
 
   foreach($css_files as $file) {
@@ -250,7 +260,27 @@ if(get_env() == 'production') {
         }
       }
     }
-    $package[$filepath . '/' . basename($file)] = $contents;
+    $data = $contents;
+    $regexp = '/@import[^;]+;/i';
+    preg_match_all($regexp, $data, $matches);
+    $data = preg_replace($regexp, '', $data);
+    $data = implode('', $matches[0]) . $data;
+
+    // Remove comments
+    $data = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $data);
+
+    // Remove space after colons
+    $data = str_replace(': ', ':', $data);
+
+    // Remove whitespace
+    $data = str_replace(array("\r\n", "\r", "\n", "\t" ), '', $data);
+    $data = preg_replace('/[ ]{2,}/m', ' ', $data);
+
+    while(strpos($data, '  ') !== FALSE) {
+      $data = str_replace('  ', ' ', $data);
+    }
+
+    $package[$filepath . '/' . basename($file)] = $data;
   }
 
   file_put_contents('/tmp/package.js', 'window.__package=' . json_encode($package));
@@ -321,6 +351,8 @@ $bootstrap = '
 
   var testing = location.search.indexOf(\'gwpanel_test\') != -1 && location.search.indexOf(\'continue\') == -1;
 
+  var $indexeddb, $websql;
+
   if(testing) libs.push(\'qunit-1.15.0.js\');
 
   for(var i = 0; i < libs.length; i++) {
@@ -330,7 +362,7 @@ $bootstrap = '
       window.jQuery) {
       libs.splice(i, 1);
       if(libs.length == 0) setTimeout(function() {
-        initialize();
+        initDB();
       }, 1);
       continue;
     }
@@ -338,10 +370,108 @@ $bootstrap = '
     s.addEventListener("load", function() {
       loadedLibs++;
       if(loadedLibs >= libs.length) {
-        initialize();
+        initDB();
       }
     })
     document.getElementsByTagName("head")[0].appendChild(s);
+  }
+
+  var initDB = function() {
+    var s = document.createElement("script");
+    s.type = "text/javascript";
+    if(window.indexedDB) {
+      s.src = panelURL + "/lib/jquery.indexeddb" + 
+        (environment == "production" && false? ".min": "") + ".js";
+    } else if(window.openDatabase) {
+      s.src = panelURL + "/lib/jquery.db" + 
+      (environment == "production"? ".min": "") + ".js";
+    } else {
+      alert("' . iconv('UTF-8', 'CP1251', 'Извините, ваш браузер не поддерживается, т.к. в нём отсутствует поддержка базы данных.\nРекомендуемые браузеры: Firefox, Chrome, Opera, Safari последних версий.') . '");
+    }
+    s.addEventListener("load", function() {
+      if(window.indexedDB) {
+        $indexeddb = jQuery.indexedDB("gwp2_test", {
+          "schema": {
+            "1": function(versionTransaction){
+              versionTransaction.createObjectStore("packages");
+            }
+          }
+        });
+      } else if(window.openDatabase) {
+        $websql = jQuery.db("gwp2_test", "1.0", "GWPanel 2 database", 1024 * 1024 * 15);
+        $websql.tables(function(tables) {
+          if(tables.indexOf("packages") == -1) {
+            $websql.createTable({
+                name: "packages",
+                columns: ["version INTEGER PRIMARY KEY", "value TEXT"],
+                done: function () {},
+                fail: function () {
+                  console.log("error while creating table");
+                }
+            });
+          }
+        });
+      }
+      initialize();
+    })
+    document.getElementsByTagName("head")[0].appendChild(s);
+  }
+
+  var getDB = function(version, callback, failover) {
+    if($indexeddb) {
+      $indexeddb.transaction(["packages"]).then(function(result){
+      }, function(){
+        failover();
+      }, function(t) {
+        t.objectStore("packages").get(version).then(function(result) {
+          if(jQuery.type(result) == "object" && 
+             jQuery.type(result["panel/panel.js"]) == "string") {
+            /// В хранилище есть этот пакет, ничего грузить не надо
+            callback(result);
+          } else {
+            failover();
+          }
+        });
+      });
+    } else if($websql) {
+      $websql.criteria("packages").add(jQuery.db.restriction.eq("version", version)).list(
+        function (transaction, results) {
+          if(results.rows.length == 1) {
+            var result = JSON.parse(results.rows.item(0).value);
+            if(jQuery.type(result) == "object" && 
+               jQuery.type(result["panel/panel.js"]) == "string") {
+              /// В хранилище есть этот пакет, ничего грузить не надо
+              return callback(result);
+            }
+          }
+          failover();
+        },
+        function (transaction, error) {
+          failover();
+        }
+      );
+    }
+  }
+
+  var setDB = function(version, __package, callback) {
+    if($indexeddb) {
+      $indexeddb.transaction(["packages"]).then(function(result){
+        callback();
+      }, function(){
+      }, function(t) {
+        t.objectStore("packages").add(package, version);
+      });
+    } else if($websql) {
+      $websql.insert("packages", {
+          data: {
+              version: version,
+              value: JSON.stringify(__package)
+          },
+          done: function () {
+              callback();
+          }
+      });
+    }
   }
 
   var initialize = function() {
@@ -368,39 +498,35 @@ $bootstrap = '
         callback(package);
         return;
       }
-      if(localStorage["gwp2_package_" + package_version] != undefined) {
-        /// В хранилище есть этот пакет, ничего грузить не надо
-        package = JSON.parse(localStorage["gwp2_package_" + package_version]);
-        if(String(typeof(package)).toLowerCase() == "object") {
-          callback(package);
-          return;
+      function download() {
+        /// В хранилище нет пакета или он повреждён, грузим с сервера
+        var path = panelURL + "/panel/" + environment;
+        str_version = String(package_version);
+        for(var i = 0; i < str_version.length; i++) {
+          path += "/" + str_version.charAt(i);
         }
-      }
-      /// В хранилище нет пакета или он повреждён, грузим с сервера
-      var path = panelURL + "/panel/" + environment;
-      str_version = String(package_version);
-      for(var i = 0; i < str_version.length; i++) {
-        path += "/" + str_version.charAt(i);
-      }
-      path += "/" + str_version + ".package.js";
-      var s = document.createElement("script");
-      s.type = "text/javascript";
-      s.src = path;
-      s.addEventListener("load", function() {
-        if(!window.__package) {
-          /// TODO отработать отправку ошибки и возврат на предыдущую версию
-          throw("Повреждён файл пакета " + path);
-        }
-        package = window.__package;
-        localStorage["gwp2_package_" + package_version] = JSON.stringify(window.__package);
-        for(var key in package) {
-          if(localStorage["gwp2_f_" + key]) {
-            localStorage.removeItem("gwp2_f_" + key);
+        path += "/" + str_version + ".package.js";
+        var s = document.createElement("script");
+        s.type = "text/javascript";
+        s.src = path;
+        s.addEventListener("load", function() {
+          if(!window.__package) {
+            /// TODO отработать отправку ошибки и возврат на предыдущую версию
+            throw("Повреждён файл пакета " + path);
           }
-        }
+          package = window.__package;
+
+          setDB(package_version, package, function() {
+            callback(package);
+          });
+        }, false);
+        document.getElementsByTagName("head")[0].appendChild(s);        
+      }
+
+      getDB(package_version, function(result) {
+        package = result;
         callback(package);
-      }, false);
-      document.getElementsByTagName("head")[0].appendChild(s);
+      }, download);
     }
 
     function __checkoutVersion(callback) {
@@ -561,6 +687,13 @@ $bootstrap = '
                               "apply.js"], function() {
           window.__panel = new window.Panel2(environment, panelURL);
           window.__panel.init();
+        }, function() {
+          if(confirm("' . iconv('UTF-8', 'CP1251', 'Упс. Кажется в версии GWPanel, которая у вас сейчас сохранена, произошла какая-то ошибка.\n Скорее всего она уже исправлена, надо просто обновиться. Вы хотите попробовать это сделать?') . '")) {
+            var myDate = new Date();
+            document.cookie = "gwp2_v=0;expires=" + myDate
+                       + ";domain=.ganjawars.ru;path=/";
+ 
+          }
         });
       });
     }
