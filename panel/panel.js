@@ -685,6 +685,7 @@ window.Panel2 = new function() {
     }, 300);
     $.ajax(href, {
       success: function(data) {
+        instance.clearTimeouts();
         $(document.body).addClass('ajax-processed');
         if(href.indexOf('/sms.php') > -1) $('img[src$="sms.gif"]').closest('a').remove();
         data = data.substr(16).replace(/<script[^>]*>.*?<\/script>/ig, '');
