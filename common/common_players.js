@@ -16,7 +16,7 @@
                   '<a href="#"><img border=0 src="' + iconPatch + 'send_item.png" title="Передать предмет"></a>&nbsp;'+
                   '<a href="#"><img border=0 src="' + iconPatch + 'black_list.png" title="Добавить в ЧС"></a>&nbsp;'+
                   '<a href="#"><img border=0 src="' + iconPatch + 'isks.png" title="Иски игрока"></a>&nbsp;'+
-               '</div>').addClass('pane').hide()
+               '</div>').addClass('pane left').hide()
       );
 
       $toolWindow = jQuery('#playerToolWindow');
@@ -56,18 +56,27 @@
 
 function showToolWindow($playerLink){
   var $toolWindow, $urlTool;
-  var dimensions, left, top, id, name, login;
+  var dimensions, left, top, id, name, login, bodyWidth;
 
   id   = $playerLink.prop("href").match(/(\d+)/)[0];
   name = $playerLink.text();
   login = name.replace(/ /g, '+');
   dimensions = $playerLink.position();
+  bodyWidth = jQuery('body').width() - 275;
 
-  left = dimensions.left - 95;
+  left = dimensions.left - 80;
+  if(left < 10 || left > bodyWidth){
+    if(left < 10){
+      left = 10;
+    }else{
+      left = bodyWidth;
+    }
+  }
   top = dimensions.top + 22;
 
   $toolWindow = jQuery('#playerToolWindow')
     .css({
+        position: 'absolute',
         left: left,
         top:  top
     })
