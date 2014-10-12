@@ -2,28 +2,30 @@
   jQuery.extend(panel, {
     common_players_tooltip: function(options){
       var $player, $toolWindow, $playerLink;
-      var showWaitId, hideWaitId;
+      var showWaitId, hideWaitId, iconPatch;
+
+      iconPatch = panel.path_to_theme() + 'icons/';
 
       jQuery('body').append(
-        jQuery('<div style="position: absolute; left: 0; top: 0; width: auto; height: 16px; border: solid 1px black; z-index: 1; background: #e0ffe0;" id="gwp2_playerToolWindow">&nbsp;&nbsp;' +
-                  '<a href="#"><img border=0 src="http://images.ganjawars.ru/i/home/mail.gif" title="Написать письмо"></a>&nbsp;&nbsp;' +
-                  '<a href="#"><img border=0 src="http://images.ganjawars.ru/i/home/bank.gif" title="Передать деньги"></a>&nbsp;&nbsp;' +
-                  '<a href="#"><img border=0 src="http://images.ganjawars.ru/i/home/friends.gif" title="Передать предмет"></a>&nbsp;&nbsp;' +
-                  '<a href="#"><img border=0 src="http://images.ganjawars.ru/i/home/ganjafoto.gif" title="Добавить в друзья"></a>&nbsp;&nbsp;'+
-                  '<a href="#"><img border=0 src="http://images.ganjawars.ru/i/home/syndicate.gif" title="Добавить в ЧС"></a>&nbsp;&nbsp;'+
-                  '<a href="#"><img border=0 src="http://images.ganjawars.ru/i/home/cashsend.gif" title="Иски игрока"></a>&nbsp;&nbsp;' +
-                  '<a href="#"><img border=0 src="http://images.ganjawars.ru/i/home/market.gif" title="Список аренды"></a>&nbsp;&nbsp;' +
-                  '<a href="#"><img border=0 src="http://images.ganjawars.ru/i/home/iski.gif" title="Письма от персонажа ..."></a>&nbsp;&nbsp;'+
-               '</div>').hide()
+        jQuery('<div id="playerToolWindow">&nbsp;' +
+                  '<a href="#"><img border=0 src="' + iconPatch + 'send_mail.png" title="Написать письмо"></a>&nbsp;' +
+                  '<a href="#"><img border=0 src="' + iconPatch + 'send_money.png" title="Передать деньги"></a>&nbsp;' +
+                  '<a href="#"><img border=0 src="' + iconPatch + 'friend_list.png" title="Добавить в друзья"></a>&nbsp;'+
+                  '<a href="#"><img border=0 src="' + iconPatch + 'list_arenda.png" title="Список аренды"></a>&nbsp;<br>' +
+                  '<a href="#"><img border=0 src="' + iconPatch + 'mail_ot.png" title="Письма от персонажа ..."></a>&nbsp;'+
+                  '<a href="#"><img border=0 src="' + iconPatch + 'send_item.png" title="Передать предмет"></a>&nbsp;'+
+                  '<a href="#"><img border=0 src="' + iconPatch + 'black_list.png" title="Добавить в ЧС"></a>&nbsp;'+
+                  '<a href="#"><img border=0 src="' + iconPatch + 'isks.png" title="Иски игрока"></a>&nbsp;'+
+               '</div>').addClass('pane left').hide()
       );
 
-      $toolWindow = jQuery('#gwp2_playerToolWindow');
+      $toolWindow = jQuery('#playerToolWindow');
       $player = jQuery('a[href*="info.php?id="]');
 
       $player.mouseenter(
         function(){
           $playerLink = jQuery(this);
-          showWaitId = setTimeout(function(){showToolWindow($playerLink)}, 1000);
+          showWaitId = setTimeout(function(){showToolWindow($playerLink)}, 750);
         }
       );
 
@@ -31,7 +33,7 @@
         function(){
           clearTimeout(showWaitId);
           hideWaitId = setTimeout(function(){
-            $toolWindow.hide();
+            $toolWindow.fadeOut();
           }, 500);
         }
       );
@@ -45,7 +47,7 @@
       $toolWindow.mouseleave(
         function(){
           hideWaitId = setTimeout(function(){
-            $toolWindow.hide();
+            $toolWindow.fadeOut();
           }, 500);
         }
       );
@@ -54,41 +56,50 @@
 
 function showToolWindow($playerLink){
   var $toolWindow, $urlTool;
-  var dimensions, left, top, id, name, login;
+  var dimensions, left, top, id, name, login, bodyWidth;
 
   id   = $playerLink.prop("href").match(/(\d+)/)[0];
   name = $playerLink.text();
   login = name.replace(/ /g, '+');
   dimensions = $playerLink.position();
+  bodyWidth = jQuery('body').width() - 275;
 
-  left = dimensions.left;
-  top = dimensions.top - 18;
+  left = dimensions.left - 80;
+  if(left < 10 || left > bodyWidth){
+    if(left < 10){
+      left = 10;
+    }else{
+      left = bodyWidth;
+    }
+  }
+  top = dimensions.top + 22;
 
-  $toolWindow = jQuery('#gwp2_playerToolWindow')
+  $toolWindow = jQuery('#playerToolWindow')
     .css({
+        position: 'absolute',
         left: left,
         top:  top
     })
-    .show();
+    .fadeIn();
 
   $urlTool = $toolWindow.find('a');
 
   $urlTool.eq(0).prop("href", "http://www.ganjawars.ru/sms-create.php?mailto=" + login);
   $urlTool.eq(1).prop("href", "#");
-  $urlTool.eq(2).prop("href", "#");
-  $urlTool.eq(3).unbind().click(
+  $urlTool.eq(2).unbind().click(
     function(){
       addToFriendOrEnemy(0, name);
     }
   );
-  $urlTool.eq(4).unbind().click(
+  $urlTool.eq(3).prop("href", "http://www.ganjawars.ru/info.rent.php?id=" + id);
+  $urlTool.eq(4).prop("href", "http://www.ganjawars.ru/sms.php?page=0&search=" + login);
+  $urlTool.eq(5).prop("href", "#");
+  $urlTool.eq(6).unbind().click(
     function(){
       addToFriendOrEnemy(1, name);
     }
   );
-  $urlTool.eq(5).prop("href", "http://www.ganjawars.ru/isks.php?sid=" + id + "&st=1&period=4");
-  $urlTool.eq(6).prop("href", "http://www.ganjawars.ru/info.rent.php?id=" + id);
-  $urlTool.eq(7).prop("href", "http://www.ganjawars.ru/sms.php?page=0&search=" + login);
+  $urlTool.eq(7).prop("href", "http://www.ganjawars.ru/isks.php?sid=" + id + "&st=1&period=4");
 }
 
 function addToFriendOrEnemy(type, name){
