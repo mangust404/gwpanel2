@@ -2406,6 +2406,8 @@ window.Panel2 = new function() {
           }
           __initFunc();
           ajaxifyContent();
+          tearDownFloatWidgets();
+          initFloatWidgets();
         }
       }
       instance.gotoHref = function(href, element) {
