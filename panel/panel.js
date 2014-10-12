@@ -2367,7 +2367,7 @@ window.Panel2 = new function() {
       if($('#gw-content').length > 0) return;
       var elem = $('body > table[bgcolor="#f5fff5"]');
       if(!elem.length) {
-        elem = $('body > table[bgcolor="#d0eed0"]');
+        elem = $('body > table[bgcolor="#d0eed0"]').next('center');
       }
       if(elem.length > 0 && history.pushState) {
         var $all_elements = elem.nextAll().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
