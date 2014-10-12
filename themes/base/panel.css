@@ -165,10 +165,16 @@
 }
 
 .pane .button h3 {
-  margin-top: 5px;
+  bottom: 25%;
   font-size: 12px;
-  line-height: 15px;
   font-weight: normal;
+  line-height: 15px;
+  margin: 0;
+  position: absolute;
+  transform: translateY(50%);
+  -moz-transform: translateY(50%);
+  -webkit-transform: translateY(50%);
+  width: 100%;
 }
 
 .pane .button .img {
