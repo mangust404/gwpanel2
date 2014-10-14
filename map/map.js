@@ -62,39 +62,30 @@ jQuery.extend(panel, {
   },
   
   map_links: function() {
-    for(var i = 0; i < document.links.length; i++) {
-      var link = document.links[i];
-      if(link.href.indexOf('http://www.ganjawars.ru/map.php?sx=') != -1) {
-        var matches = link.href.match(/sx=([0-9]+)&sy=([0-9]+)$/);
-        if(!matches) continue;
-        var a = jQuery('<a title="Перейти в этот сектор">[&raquo;]</a>')
-          .css({'margin-left': '5px'})
-          .attr('href', 'http://www.ganjawars.ru/map.move.php?gps=1&sxy=' + matches[1] + 'x' + matches[2])
-          .click(function() {
-            //Запоминаем текущую страницу, чтобы по окончании пути на неё вернуться
-            __panel.set('moveHref', location.href);
-            __panel.gotoHref(this.href);
-            return false;
-          });
-        if(location.pathname == '/statlist.php')
-          a.appendTo(link.parentNode);
-        else 
-          jQuery(link).after(a);
-//         var a = document.createElement('a');
-//         
-//         a.innerHTML = '[&raquo;]';
-//         a.title = 'Перейти в этот сектор';
-//         a.style.margin = '0 0 0 5px';
-//         a.href = 'http://www.ganjawars.ru/map.move.php?gps=1&sxy=' + matches[1] + 'x' + matches[2];
-//         Event.observe(a, 'click', function() {
-//           this.sendMessage('a', 'moveHref', document.location.href);
-//         }.bind(this));
-//         if(document.location.pathname == '/statlist.php')
-//           link.parentNode.appendChild(a);
-//         else
-//           link.parentNode.insertBefore(a, link.nextSibling);
-      };
-    };
+    $('a[href*="map.php?sx="]:not(.fast-move):visible').filter(function() {
+      if($(this).parents('.pane').length > 0) return false;
+      return true;
+    }).addClass('fast-move').addClass('ajax').each(function() {
+      var matches = $(this).attr('href').match(/sx=([0-9]+)&sy=([0-9]+)$/);
+      if(!matches) return;
+      var $a = $('<a>[&raquo;]</a>', {
+        title: 'Перейти в этот сектор'
+      }).attr('href', 'http://www.ganjawars.ru/map.move.php?gps=1&sxy=' + matches[1] + 'x' + matches[2])
+      .css({
+        'margin-left': '5px',
+
+      }).click(function() {
+        //Запоминаем текущую страницу, чтобы по окончании пути на неё вернуться
+        __panel.set('moveHref', location.href);
+        __panel.gotoHref(this.href);
+        return false;
+      });
+
+      if(location.pathname == '/statlist.php')
+        a.appendTo(this.parentNode);
+      else 
+        $(this).after($a);
+    });
   },
 
   map_current_sector_coords: function() {

@@ -1,0 +1,15 @@
+{
+  "requires": [], 
+  "excludes": "",
+  "title": "Модуль для Фермы",
+  "weight": 5, 
+  "apply": {
+    "/ferma.php": ["ferma_hotkeys"]
+  },
+  "settings": {
+    "ferma_hotkeys": {
+      "description": "горячие клавиши и удобные кнопки",
+      "file": "ferma.js"
+    }
+  }
+}
