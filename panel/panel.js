@@ -714,7 +714,6 @@ window.Panel2 = new function() {
   function ajaxifyLinks($links) {
     $links.addClass('ajax').click(function(e) {
       if(e.ctrlKey || e.altKey) return true;
-      if($(this).attr('onclick')) return false;
       var href = $(this).attr('href');
       if(document.location.toString().indexOf(href) > -1) return true;
       var link_title = $(this).text();
@@ -724,7 +723,7 @@ window.Panel2 = new function() {
   }
 
   function ajaxifyContent() {
-    var selector = 'a[href*="http://' + document.domain + '"]:visible:not(.ajax), a[href*="/"]:visible:not(.ajax)';
+    var selector = 'a[href*="http://' + document.domain + '"]:visible:not(.ajax):not([onclick]), a[href*="/"]:visible:not(.ajax):not([onclick])';
     ajaxifyLinks($(selector));
     $('*[onclick*="location="]').each(function() {
       var onclick = $(this).attr('onclick');
