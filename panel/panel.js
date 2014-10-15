@@ -2394,20 +2394,19 @@ window.Panel2 = new function() {
         originalData = $('#gw-content').html();
         originalTitle = document.title;
 
+        history.replaceState({data: originalData, title: document.title}, document.title, location.href);
+
         $(ajaxifyContent);
 
         window.onpopstate = function(event) {
           if(event.state && event.state.data && event.state.title) {
             $('#gw-content').html(event.state.data);
             document.title = event.state.title;
-          } else {
-            $('#gw-content').html(originalData);
-            document.title = originalTitle;
+            __initFunc();
+            ajaxifyContent();
+            tearDownFloatWidgets();
+            initFloatWidgets();
           }
-          __initFunc();
-          ajaxifyContent();
-          tearDownFloatWidgets();
-          initFloatWidgets();
         }
       }
       instance.gotoHref = function(href, element) {
