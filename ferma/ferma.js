@@ -2,6 +2,7 @@
   var mmoves = {};
   var mlinks = {};
   var keys = {};
+  var $input;
 
   function keydown(e) {
     switch(e.keyCode) {
@@ -13,6 +14,7 @@
     };
   }
   function keyup(e) {
+    if(!$(document.body).hasClass('ferma-php')) return;
     switch(e.keyCode) {
       case 37: case 100: keys['left'] = true; break;
       case 38: case 104: keys['up'] = true; break;
@@ -26,7 +28,6 @@
       case 32:           keys['space'] = true; break;
       default: break;
     };
-    console.log(e.keyCode);
     var __goto;
     if(keys['left'] && keys['up'] && mlinks['topleft']) {
       __goto = mlinks['topleft'];
@@ -46,20 +47,21 @@
       __goto = mlinks['bottom'];
     } else if(keys['center']) {
       if($('input[value="Посадить"]').length) {
+        $(window).off('keyup').off('keydown');
         $('input[value="Посадить"]').click();
+        mlinks = {};
         return false;
+      } else {
+        __goto = $('a:contains("Вскопать")');
       }
     } else if(keys['space']) {
-      var $a = $('td:contains("Ближайшее действие")').find('a');
-      if($a.length > 0) {
-        panel.gotoHref($a.attr('href'));
-        return false;
-      }
+      __goto = $('td:contains("Ближайшее действие")').find('a');
     }
 
     if(__goto) {
+      mlinks = {};
+      $(window).off('keyup').off('keydown');
       panel.gotoHref(__goto.attr('href'));
-      $(window).off('keyup', keyup);
       return false;
     }
 
@@ -100,18 +102,20 @@ jQuery.extend(__panel, {
     }
 
     $(window).focus();
-    $('<input type="text" autocomplete="off">')
-      .css({
-        'height': '1px',
-        'width': '1px',
-        position: 'absolute'
-      })
-      .prependTo(document.body)
-      .focus();
+    if(!$input) {
+      $input = $('<input type="text" autocomplete="off">')
+        .css({
+          'height': '1px',
+          'width': '1px',
+          position: 'absolute'
+        })
+        .prependTo(document.body)
+        .focus();
+    }
 
     keys = {};
-    $(window).off('keydown', keydown).on('keydown', keydown)
-    .off('keyup', keyup).on('keyup', keyup);
+    $(window).off('keydown').on('keydown', keydown)
+    .off('keyup').on('keyup', keyup);
   }
   
 })
