@@ -132,6 +132,84 @@
     });
   }
 
+  function settings_migrate(new_data, callback) {
+    var processed = 0;
+
+    var __import = function() {
+      $.each(new_data, function(variant, data) {
+        if($.type(data.options.panes) != 'array') throw('Строка настроек содержит неправильные данные');
+
+        if($.type(window.panel_release_migration) == 'array' && 
+           window.panel_release_migration.length > 0) {
+          // Мы должны прогнать все миграции для этих настроек
+          // ставим эти опции в текущие, чтобы миграция над ними поработала
+          panel.setOptions(data.options);
+          for(var m = 0; m < window.panel_release_migration.length; m++) {
+            try {
+              window.panel_release_migration[m]();
+            } catch(e) {
+              /// что же делать в случае корявой миграции?
+              if(window.console) console.log('Bad migration: ' + e);
+            }
+          }
+          // 
+          data.options = panel.getOptions();
+        }
+        panel.set(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + variant, data.options, function() {
+          processed++;
+          if(processed >= Object.keys(new_data).length) {
+            if(callback) callback();
+          }
+        });
+      });
+    }
+
+    if(new_data.default.version < panel.getVersion()) {
+      /// Получаем все миграции для предыдущих версий и только потом 
+      /// мы сможем сделать импорт настроек
+      $.mobile.loading('show', {
+        textVisible: true, 
+        html: '<p><span class="ui-icon-loading" style="opacity: 0.5"></span></p>\
+<p style="text-align: center;"><nobr>Получаем обновления:</nobr> <span id="loading-progress">0</span> из ' + (panel.getVersion() - new_data.default.version)
+      });
+      var versions = [];
+
+      for(var version_index = new_data.default.version + 1; version_index <= panel.getVersion(); version_index++) {
+        versions.push(version_index); 
+      }
+
+      var loaded = 0;
+      var prod_path = 'http://gwpanel.org/panel2/panel/production';
+
+      $.each(versions, function(i, version_index) {
+        str_version = String(version_index);
+        var path = prod_path; 
+        for(var i = 0; i < str_version.length; i++) {
+          path += "/" + str_version.charAt(i);
+        }
+        path += "/" + str_version + ".notes.js";
+        var s = document.createElement('script');
+        s.type = 'text/javascript';
+        s.src = path;
+        s.addEventListener('load', function() {
+          loaded++;
+          $('#loading-progress').html(loaded);
+
+          if(loaded >= versions.length) {
+            $.mobile.loading('hide');
+            /// все миграции загружены, выполняем импорт
+            __import();
+          }
+        }, false);
+        document.getElementsByTagName("head")[0].appendChild(s);
+      });
+    } else {
+      /// версии совпадают, импортируем сразу
+      __import();
+    }
+
+  }
+
   $.extend(panel, {
     /**
     * Инициализация настроек
@@ -579,6 +657,116 @@
 
       panel.get('variants_' + panel.currentPlayerID(), function(variants) {
 
+        var upload_listener;
+        var $upload_button = $('<a class="ui-btn ui-btn-inline ui-icon-arrow-u ui-btn-icon-right">Закачать</a>').click(function() {
+          var upload_data = {
+            variants: {}
+          };
+          for(var variant in variants) {
+            panel.get(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + variant, function(variant_data) {
+              if(variant_data) {
+                upload_data.variants[variant] = {
+                  name: variants[variant],
+                  options: JSON.stringify(variant_data),
+                  version: panel.getVersion()
+                }
+              }
+            });
+          }
+          $upload_button.addClass('ui-disabled').html('Пожалуйста, подождите...');
+          if(!upload_listener) {
+            upload_listener = panel.bind('auth', function() {
+              $.ajax('http://new.gwpanel.org/settings.php?auth_key=' + panel.authKey, {
+                type: 'POST',
+                data: upload_data,
+                success: function(data) {
+                  if(data.indexOf('OK') == 0) {
+                    $upload_button.removeClass('ui-icon-arrow-u ui-disabled')
+                      .addClass('ui-btn-active ui-focus ui-icon-check')
+                      .html('Загружено');
+                  } else {
+                    $upload_button.removeClass('ui-icon-arrow-u ui-disabled')
+                      .addClass('ui-icon-delete')
+                      .html('Ошибка!');
+                  }
+                  panel.unbind('auth', upload_listener);
+                  upload_listener = false;
+                }
+              });
+            });
+          }
+          $('<iframe src="http://new.gwpanel.org/csauth.php"></iframe>')
+            .load(function() {
+              $('<script src="http://new.gwpanel.org/settings.php"></script>')
+                .appendTo(document.body);
+            }).appendTo(document.body);
+        });
+        
+        var download_listener;
+
+        var $download_button = $('<a class="ui-btn ui-btn-inline ui-icon-arrow-d ui-btn-icon-right">Скачать</a>').click(function() {
+          $download_button.addClass('ui-disabled').html('Пожалуйста, подождите...');
+          if(!download_listener) {
+            download_listener = panel.bind('auth', function() {
+              $.ajax('http://new.gwpanel.org/settings.php?auth_key=' + panel.authKey + '&download=1', {
+                type: 'GET',
+                success: function(data) {
+                  try {
+                    eval('data=' + data);
+                    var variants_count = 0;
+                    var names = [];
+                    for(var variant_id in data) {
+                      if(!data[variant_id].name) throw('Не указано название варианта');
+                      names.push(data[variant_id].name);
+                      if(!data[variant_id].options) throw('Не указаны данные варианта ' + data[variant_id].name);
+                      data[variant_id].options = JSON.parse(data[variant_id].options);
+                      if(!data[variant_id].options.panes || 
+                         !data[variant_id].options.system || 
+                         !data[variant_id].options.widgets) {
+                        throw('Данные повреждены');
+                      }
+                    }
+                    settings_migrate(data, function() {
+                      $download_button.removeClass('ui-icon-arrow-u ui-disabled')
+                        .addClass('ui-btn-active ui-focus ui-icon-check')
+                        .html('Импортированы варианты: ' + names.join(', '));
+                    });
+                  } catch(e) {
+                    $download_button.removeClass('ui-icon-arrow-u ui-disabled')
+                      .addClass('ui-icon-delete')
+                      .html('Ошибка!');
+                    panel.showFlash('Произошла ошибка во время загрузки: ' + e.toString());
+                  }
+                  panel.unbind('auth', download_listener);
+                  download_listener = false;
+                }
+              });
+            });
+          }
+          $('<iframe src="http://new.gwpanel.org/csauth.php"></iframe>')
+            .load(function() {
+              $('<script src="http://new.gwpanel.org/settings.php"></script>')
+                .appendTo(document.body);
+            }).appendTo(document.body);
+        });
+
+        $('#edit-other-wrapper .options-variants').append($upload_button)
+          .append($download_button);
+
+        panel.haveServerSync(function(have) {
+          if(have) {
+            $('<div>Кнопка &laquo;Закачать&raquo; загрузит все текущие варианты настроек на сервер, кнопка &laquo;Скачать&raquo; скопирует настройки с сервера в браузер.</div>')
+              .css({'margin-bottom': 40})
+              .insertAfter($download_button);
+          } else {
+            $upload_button.addClass('ui-disabled');
+            $download_button.addClass('ui-disabled');
+            $('<div>Сохранение настроек на сервере gwpanel.org доступно только членам синиката <a href="http://www.ganjawars.ru/syndicate.php?id=4814">#4814</a></div>')
+              .css({'margin-bottom': 40})
+              .insertAfter($download_button);
+          }
+        });
+
         variants = variants || {default: 'По-умолчанию'};
         $('<label for="variant-name">Сейчас используется вариант настроек:</label>').appendTo('#edit-other-wrapper .options-variants');
         var variant_select = $('<select id="variant-name" name="variant"></select>').change(function() {
@@ -797,81 +985,8 @@
             var new_data = JSON.parse(import_t.val());
             if($.type(new_data) != 'object') throw('Неправильная строка настроек');
             if(!new_data.default) throw('Строка настроек не содержит базовые настройки. Возможно она была повреждена');
-            var processed = 0;
 
-            var __import = function() {
-              $.each(new_data, function(variant, data) {
-                if($.type(data.options.panes) != 'array') throw('Строка настроек содержит неправильные данные');
-
-                if($.type(window.panel_release_migration) == 'array' && 
-                   window.panel_release_migration.length > 0) {
-                  // Мы должны прогнать все миграции для этих настроек
-                  // ставим эти опции в текущие, чтобы миграция над ними поработала
-                  panel.setOptions(data.options);
-                  for(var m = 0; m < window.panel_release_migration.length; m++) {
-                    try {
-                      window.panel_release_migration[m]();
-                    } catch(e) {
-                      /// что же делать в случае корявой миграции?
-                      if(window.console) console.log('Bad migration: ' + e);
-                    }
-                  }
-                  // 
-                  data.options = panel.getOptions();
-                }
-                panel.set(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + variant, data.options, function() {
-                  processed++;
-                  if(processed >= Object.keys(new_data).length) {
-                    __success();
-                  }
-                });
-              });
-            }
-
-            if(new_data.default.version < panel.getVersion()) {
-              /// Получаем все миграции для предыдущих версий и только потом 
-              /// мы сможем сделать импорт настроек
-              $.mobile.loading('show', {
-                textVisible: true, 
-                html: '<p><span class="ui-icon-loading" style="opacity: 0.5"></span></p>\
-<p style="text-align: center;"><nobr>Получаем обновления:</nobr> <span id="loading-progress">0</span> из ' + (panel.getVersion() - new_data.default.version)
-              });
-              var versions = [];
-
-              for(var version_index = new_data.default.version + 1; version_index <= panel.getVersion(); version_index++) {
-                versions.push(version_index); 
-              }
-
-              var loaded = 0;
-              var prod_path = 'http://gwpanel.org/panel2/panel/production';
-
-              $.each(versions, function(i, version_index) {
-                str_version = String(version_index);
-                var path = prod_path; 
-                for(var i = 0; i < str_version.length; i++) {
-                  path += "/" + str_version.charAt(i);
-                }
-                path += "/" + str_version + ".notes.js";
-                var s = document.createElement('script');
-                s.type = 'text/javascript';
-                s.src = path;
-                s.addEventListener('load', function() {
-                  loaded++;
-                  $('#loading-progress').html(loaded);
-
-                  if(loaded >= versions.length) {
-                    $.mobile.loading('hide');
-                    /// все миграции загружены, выполняем импорт
-                    __import();
-                  }
-                }, false);
-                document.getElementsByTagName("head")[0].appendChild(s);
-              });
-            } else {
-              /// версии совпадают, импортируем сразу
-              __import();
-            }
-
+            settings_migrate(new_data, __success);
           } catch(e) {
             panel.setOptions(options_backup);
             panel.showFlash('Не удалось импортировать настройки. Ошибка: ' + e.toString());

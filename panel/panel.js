@@ -67,6 +67,9 @@ window.Panel2 = new function() {
   var __cookies;
 
   var timer, prev_timer;
+
+  /// доступ к функциям сервера, для членов синдиката #4814
+  var haveServerSync = false;
   
   /******************************
   *******Приватные методы********
@@ -685,7 +688,16 @@ window.Panel2 = new function() {
     }, 300);
     $.ajax(href, {
       success: function(data) {
-        instance.clearTimeouts();
+        if(window.hptimer_header > 0) {
+          clearTimeout(window.hptimer_header);
+          window.hptimer_header = 0;
+        }
+        if(window.hptimer > 0) {
+          clearTimeout(window.hptimer);
+          window.hptimer = 0;
+        }
+        $(window).scrollTop(0);
+        //instance.clearTimeouts();
         $(document.body).addClass('ajax-processed');
         if(href.indexOf('/sms.php') > -1) $('img[src$="sms.gif"]').closest('a').remove();
         data = data.substr(16).replace(/<script[^>]*>.*?<\/script>/ig, '');
@@ -1929,24 +1941,31 @@ window.Panel2 = new function() {
     * Обработчик для домашней странички
     */
     panel_homepage: function(){
-        var name, id;
-        if(location.search == "?logged"){
-            name = $('a[href*="info.php?id="]').get(0).textContent;
-            id = instance.currentPlayerID();
-            instance.set("panel_currentPlayerName", name);
-            instance.triggerEvent("login", {"currentPlayerName": name, "currentPlayerID": id});
-        }
+      var name, id;
+      if(location.search == "?logged"){
+        name = $('a[href*="info.php?id="]').get(0).textContent;
+        id = instance.currentPlayerID();
+        instance.set("panel_currentPlayerName", name);
+        instance.triggerEvent("login", {"currentPlayerName": name, "currentPlayerID": id});
+        $.ajax('http://' + document.domain + '/syndicates.php', {
+          success: function(data) {
+            if($(data).find('li a[href$="/syndicate.php?id=4814"]').length) {
+              instance.set('haveServerSync', true);
+            }
+          }
+        });
+      }
     },
 
     /**
     * Обработчик события входа игрока в игру
     */
     panel_login: function(){
-        var name, id;
-        name = "__notLogged";
-        id = -1;
-        instance.set("panel_currentPlayerName", name);
-        instance.triggerEvent("logout", {"currentPlayerName": name, "currentPlayerID": id});
+      var name, id;
+      name = "__notLogged";
+      id = -1;
+      instance.set("panel_currentPlayerName", name);
+      instance.triggerEvent("logout", {"currentPlayerName": name, "currentPlayerID": id});
     },
 
     /**
@@ -2498,6 +2517,14 @@ window.Panel2 = new function() {
       $(document.body).off('click', instance.hideAllPanes);
     },
 
+    haveServerSync: function(callback) {
+      instance.get('haveServerSync', callback);
+    },
+
+    setAuthKey: function(key) {
+      instance.authKey = key;
+      instance.triggerEvent('auth');
+    },
     /**
     * Публичные аттрибуты
     */
