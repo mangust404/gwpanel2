@@ -144,19 +144,15 @@ jQuery.extend(__panel, {
     if(mlinks['bottomright']) mlinks['bottomright'].innerHTML = '<div class="move_bottomright">' + mlinks['bottomright'].innerHTML + '</div>';
     if(mlinks['bottomleft']) mlinks['bottomleft'].innerHTML = '<div class="move_bottomleft">' + mlinks['bottomleft'].innerHTML + '</div>';
     $(window).focus();
-/*    $('<input type="text" autocomplete="off">')
-      .css({
-        'height': '1px',
-        'width': '1px',
-        position: 'absolute'
-      })
-      .prependTo(document.body)
-      .focus();*/
 
     keys = {};
     $(window).off('keydown').on('keydown', keydown)
     .off('keyup').on('keyup', keyup);
 
+    panel.onunload(function() {
+      $(window).off('keydown', keydown)
+        .off('keyup', keyup);
+    });
   },
 
   outland_submitFight: function() {

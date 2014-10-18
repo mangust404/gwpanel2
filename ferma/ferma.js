@@ -105,6 +105,11 @@ jQuery.extend(__panel, {
     keys = {};
     $(window).off('keydown').on('keydown', keydown)
     .off('keyup').on('keyup', keyup);
+
+    panel.onunload(function() {
+      $(window).off('keydown', keydown)
+        .off('keyup', keyup);
+    });
   }
   
 })

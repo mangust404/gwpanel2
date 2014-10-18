@@ -59,6 +59,8 @@ window.Panel2 = new function() {
   var is_ready, readyStack = [];
   /// Флаг инициализации, initializeStack - стек функций, которые надо запустить после инициализации
   var initialized, initializeStack = [];
+  /// Функции, которые надо вызвать после ухода со страницы в AJAX-версии
+  var tearDownStack = [];
   /// Локальные слушатели, необходимо для создания уникальных индксов для слушателей
   var listenersStack = {};
   /// адрес, откуда установлена панель
@@ -686,6 +688,12 @@ window.Panel2 = new function() {
     loaderTO = setTimeout(function() {
       $(document.body).addClass('ajax-loading');
     }, 300);
+
+    while(callback = tearDownStack.pop()) {
+      try {
+        callback();
+      } catch(e) {}
+    }
     $.ajax(href, {
       success: function(data) {
         if(window.hptimer_header > 0) {
@@ -736,7 +744,6 @@ window.Panel2 = new function() {
         clearTimeout(loaderTO);
         loaderTO = 0;
         $(document.body).removeClass('ajax-loading');
-        $(window).off('keydown').off('keyup');
         __initFunc();
         ajaxifyContent();
         instance.hideAllPanes();
@@ -1920,6 +1927,9 @@ window.Panel2 = new function() {
       }
     },
     
+    onunload: function(callback) {
+      tearDownStack.push(callback);
+    },
     /**
     * Функция возвращает абсолютный путь к текущей теме
     */
