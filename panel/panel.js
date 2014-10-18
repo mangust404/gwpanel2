@@ -724,7 +724,8 @@ window.Panel2 = new function() {
         data = instance.fixForms(data);
         var $content = $('#gw-content').html(data);
         if(jqs) {
-          document.title = $content.find('#doc-title').text();
+          document.title = ($content.find('#doc-title').text() || 'Онлайн игра')
+                            + ' GanjaWars.Ru';
         } else {
           document.title = __title;
         }
@@ -735,6 +736,7 @@ window.Panel2 = new function() {
         clearTimeout(loaderTO);
         loaderTO = 0;
         $(document.body).removeClass('ajax-loading');
+        $(window).off('keydown').off('keyup');
         __initFunc();
         ajaxifyContent();
         instance.hideAllPanes();
@@ -2554,6 +2556,17 @@ window.Panel2 = new function() {
     setAuthKey: function(key) {
       instance.authKey = key;
       instance.triggerEvent('auth');
+    },
+
+    auth: function(callback) {
+      function authenticate_complete() {
+
+      }
+      $('<iframe src="http://new.gwpanel.org/csauth.php"></iframe>')
+        .load(function() {
+          $('<script src="http://new.gwpanel.org/settings.php"></script>')
+            .appendTo(document.body);
+        }).appendTo(document.body);
     },
     /**
     * Публичные аттрибуты

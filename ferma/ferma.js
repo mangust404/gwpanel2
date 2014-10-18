@@ -2,7 +2,6 @@
   var mmoves = {};
   var mlinks = {};
   var keys = {};
-  var $input;
 
   function keydown(e) {
     switch(e.keyCode) {
@@ -102,16 +101,6 @@ jQuery.extend(__panel, {
     }
 
     $(window).focus();
-    if(!$input) {
-      $input = $('<input type="text" autocomplete="off">')
-        .css({
-          'height': '1px',
-          'width': '1px',
-          position: 'absolute'
-        })
-        .prependTo(document.body)
-        .focus();
-    }
 
     keys = {};
     $(window).off('keydown').on('keydown', keydown)
