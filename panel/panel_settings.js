@@ -179,7 +179,7 @@
       }
 
       var loaded = 0;
-      var prod_path = 'http://gwpanel.org/panel2/panel/production';
+      var prod_path = panel.base_url() + '/panel/production';
 
       $.each(versions, function(i, version_index) {
         str_version = String(version_index);

@@ -696,59 +696,7 @@ window.Panel2 = new function() {
     }
     $.ajax(href, {
       success: function(data) {
-        if(window.hptimer_header > 0) {
-          clearTimeout(window.hptimer_header);
-          window.hptimer_header = 0;
-        }
-        if(window.hptimer > 0) {
-          clearTimeout(window.hptimer);
-          window.hptimer = 0;
-        }
-        $(window).scrollTop(0);
-        //instance.clearTimeouts();
-        $(document.body).addClass('ajax-processed');
-        if(href.indexOf('/sms.php') > -1) $('img[src$="sms.gif"]').closest('a').remove();
-        var jqs = false;
-        var __title;
-        if(data.indexOf('JQS loaded.') == 0) {
-          data = data.substr(11);
-          jqs = true;
-          var first_hr = data.indexOf('<hr>');
-          if(first_hr < 100) {
-            data = data.substr(0, first_hr) + data.substr(first_hr + 4);
-          }
-        } else {
-          var start = data.indexOf('<body');
-          if(start > -1) {
-            var body_end = data.indexOf('>', start);
-            var body_close = data.indexOf('</body>', start);
-            var title_open = data.indexOf('<title>');
-            var title_close = data.indexOf('</title>', title_open);
-            __title = data.substr(title_open + 7, title_close - title_open - 7);
-            data = data.substr(body_end + 1, body_close - body_end - 1);
-          }
-        }
-        data = data.replace(/<script[^>]*>.*?<\/script>/ig, '');
-        data = instance.fixForms(data);
-        var $content = $('#gw-content').html(data);
-        if(jqs) {
-          document.title = ($content.find('#doc-title').text() || 'Онлайн игра')
-                            + ' GanjaWars.Ru';
-        } else {
-          document.title = __title;
-        }
-        //if(title) document.title = title + ' :: Ganjawars.ru :: Ганджубасовые войны';
-        $(document.body).removeClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
-        history.pushState({data: data, title: document.title}, document.title, href);
-        $(document.body).addClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
-        clearTimeout(loaderTO);
-        loaderTO = 0;
-        $(document.body).removeClass('ajax-loading');
-        __initFunc();
-        ajaxifyContent();
-        instance.hideAllPanes();
-        tearDownFloatWidgets();
-        initFloatWidgets();
+        instance.ajaxUpdateContent(data, href);
       },
       error: function() {
         window.location = href;
@@ -757,6 +705,7 @@ window.Panel2 = new function() {
   }
 
   var originalData, originalTitle;
+
   function ajaxifyLinks($links) {
     $links.addClass('ajax').click(function(e) {
       if(e.ctrlKey || e.altKey || e.button != 0) return true;
@@ -778,7 +727,7 @@ window.Panel2 = new function() {
       if(match) {
         $(this).attr('onclick', onclick.replace(match[0], '__panel.gotoHref("' + match[2] + '", this)'));
       }
-    });    
+    });
   }
 
   /**
@@ -1938,6 +1887,9 @@ window.Panel2 = new function() {
       return baseURL + '/themes/' + options.system.theme + '/';
     },
 
+    base_url: function() {
+      return baseURL;
+    },
     /*
     * Функция возвращает куки в виде хеша
     * @return хеш кук
@@ -2277,10 +2229,9 @@ window.Panel2 = new function() {
     * Функция проверки последней версии
     */
     checkVersion: function(callback) {
-      //var s = $('<script src="http://gwpanel.org/panel2/version_production.js"></script>');
       var s = document.createElement("script");
       s.type = "text/javascript";
-      s.src = 'http://gwpanel.org/panel2/version_production.js?' + (new Date).getTime();
+      s.src = baseURL + '/version_production.js?' + (new Date).getTime();
       s.addEventListener('load', function() {
         if(callback) callback(window.current_panel_version);
       }, false);
@@ -2298,7 +2249,7 @@ window.Panel2 = new function() {
       instance.clearCached(instance.checkVersion);
 
       /// Получаем release notes
-      var prod_path = 'http://gwpanel.org/panel2/panel/production';
+      var prod_path = baseURL + '/panel/production';
 
       var loaded = 0;
       instance.get('release_notes', function(notes) {
@@ -2585,6 +2536,63 @@ window.Panel2 = new function() {
             .appendTo(document.body);
         }).appendTo(document.body);
     },
+
+    ajaxUpdateContent: function(data, href) {
+      if(window.hptimer_header > 0) {
+        clearTimeout(window.hptimer_header);
+        window.hptimer_header = 0;
+      }
+      if(window.hptimer > 0) {
+        clearTimeout(window.hptimer);
+        window.hptimer = 0;
+      }
+      $(window).scrollTop(0);
+      //instance.clearTimeouts();
+      $(document.body).addClass('ajax-processed');
+      if(href.indexOf('/sms.php') > -1) $('img[src$="sms.gif"]').closest('a').remove();
+      var jqs = false;
+      var __title;
+      if(data.indexOf('JQS loaded.') == 0) {
+        data = data.substr(11);
+        jqs = true;
+        var first_hr = data.indexOf('<hr>');
+        if(first_hr < 100) {
+          data = data.substr(0, first_hr) + data.substr(first_hr + 4);
+        }
+      } else {
+        var start = data.indexOf('<body');
+        if(start > -1) {
+          var body_end = data.indexOf('>', start);
+          var body_close = data.indexOf('</body>', start);
+          var title_open = data.indexOf('<title>');
+          var title_close = data.indexOf('</title>', title_open);
+          __title = data.substr(title_open + 7, title_close - title_open - 7);
+          data = data.substr(body_end + 1, body_close - body_end - 1);
+        }
+      }
+      data = data.replace(/<script[^>]*>.*?<\/script>/ig, '');
+      data = instance.fixForms(data);
+      var $content = $('#gw-content').html(data);
+      if(jqs) {
+        document.title = ($content.find('#doc-title').text() || 'Онлайн игра')
+                          + ' GanjaWars.Ru';
+      } else {
+        document.title = __title;
+      }
+      //if(title) document.title = title + ' :: Ganjawars.ru :: Ганджубасовые войны';
+      $(document.body).removeClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
+      history.pushState({data: data, title: document.title}, document.title, href);
+      $(document.body).addClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
+      clearTimeout(loaderTO);
+      loaderTO = 0;
+      $(document.body).removeClass('ajax-loading');
+      __initFunc();
+      ajaxifyContent();
+      instance.hideAllPanes();
+      tearDownFloatWidgets();
+      initFloatWidgets();
+    },
+
     /**
     * Публичные аттрибуты
     */

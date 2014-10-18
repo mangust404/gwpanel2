@@ -47,11 +47,17 @@
     } else if(keys['center']) {
       if($('input[value="Посадить"]').length) {
         $(window).off('keyup').off('keydown');
-        $('input[value="Посадить"]').click();
+        $form = $('input[value="Посадить"]').closest('form');
+        $form.sendForm({
+          success: function(data) {
+            panel.ajaxUpdateContent(data, $form.attr('action'));
+          }
+        });
+
         mlinks = {};
         return false;
       } else {
-        __goto = $('a:contains("Вскопать")');
+        __goto = $('a:contains("Вскопать"), a:contains("Собрать урожай"), a:contains("Полить")').eq(0);
       }
     } else if(keys['space']) {
       __goto = $('td:contains("Ближайшее действие")').find('a');
