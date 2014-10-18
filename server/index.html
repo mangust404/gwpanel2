@@ -1,0 +1,284 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1" /> 
+  <title>GWPanel версия 2.0 | gwpanel.org</title>
+  <style type="text/css" media="all">@import url("/jquery.mobile-1.4.4/jquery.mobile-1.4.4.css");</style>
+  <style type="text/css" media="all">@import url("/css/gwpanel_theme.css");</style>
+  <script type="text/javascript" src="/js/jquery-1.7.1.min.js"></script>
+  <script type="text/javascript" src="/jquery.mobile-1.4.4/jquery.mobile-1.4.4.min.js"></script>
+  <script type="text/javascript" src="/js/presentation.js"></script>
+<script type="text/javascript">
+<!--//--><![CDATA[//><!--
+jQuery(document).bind("mobileinit", function() {
+
+	jQuery.mobile.ns = "";
+	jQuery.mobile.autoInitializePage = 1;
+	jQuery.mobile.subPageUrlKey = "ui-page";
+	jQuery.mobile.activePageClass = "ui-page-active";
+	jQuery.mobile.activeBtnClass = "ui-btn-active";
+	jQuery.mobile.ajaxEnabled = 1;
+	jQuery.mobile.hashListeningEnabled = 1;
+	jQuery.mobile.defaultPageTransition = "fade";
+	jQuery.mobile.defaultDialogTransition = "pop";
+	jQuery.mobile.minScrollBack = "Loading";
+	jQuery.mobile.loadingMessage = "Loading";
+	jQuery.mobile.pageLoadErrorMessage = "Error Loading Page";
+	jQuery.mobile.linkBindingEnabled = 1;
+	jQuery.mobile.pushStateEnabled = 1;
+	jQuery.mobile.touchOverflowEnabled = 0;
+});
+//--><!]]>
+</script>
+</head>
+<body class="html front not-logged-in no-sidebars page-node page-node- page-node-1 node-type-page" >
+    <div  data-theme="a" data-role="page" class="page type-home">
+
+    <div class="main-content"  data-theme="a" data-role="content">
+
+        <div class="content-primary">
+
+          <h1 class="title" class="page-title">GWPanel 2.0</h1>
+          <h2 class="title" class="page-title">вы находитесь на домашней странице реинкарнации проекта "GWPanel"!</h2>
+    <div class="region region-content">
+    <div id="block-system-main" class="block block-system">
+
+    
+  <div class="content">
+    <div id="node-1" class="node node-page clearfix">
+
+  
+      
+  
+  <div class="content">
+    <div class="field field-name-body field-type-text-with-summary field-label-hidden"><div class="field-items"><div class="field-item even" property="content:encoded"><p><a class="ui-btn ui-btn-inline" href="#step1" onclick="presentation_start(); return true;">Запустить демонстрацию</a></p>
+</div></div></div>  <div data-role="controlgroup" data-type="horizontal"></div>    </div>
+
+
+</div>
+  </div>
+</div>
+  </div>
+        </div> <!-- /.content-primary -->
+        
+        <div class="content-secondary">
+        
+                
+        
+                </div><!-- /.content-secondary -->
+              
+    </div>
+
+    <div class="footer"  data-theme="a" data-position="inline" data-role="footer">        
+          </div> <!-- /#footer -->
+
+</div> <!-- /#page -->
+<div id="step1" data-role="page" class="presentation-step ui-page ui-page-theme-a">
+  <a href="#presentation-panel" class="table-of-contents ui-btn ui-btn-inline ui-btn-icon-notext ui-icon-bars">Содержание</a>
+  <div role="main" class="ui-content">
+    <h2>Добро пожаловать!</h2>
+    <p>Вы попали на страницу демонстрации основных особенностей новой версии GWPanel</p>
+    <p>Что хорошего в новой версии?</p>
+    <ul>
+      <li>GWPanel <b>встроена</b> в игру. Теперь не нужно заморачивать голову с установками и ручными обновлениями. Достаточно включить галочку в настройках.</li>
+      <li>Нет никаких всплывающих фреймов и попапов</li>
+      <li>Код разбит на части и хранится в <a href='https://en.wikipedia.org/wiki/Web_storage#localStorage' target='_blank'>локальном хранилище</a>. Каждый кусок подгружается тогда, когда он нужен</li>
+      <li>Очень гибкая система настроек. Гвпанель можно настроить под любой размер экрана, и с пользой использовать всё доступное пространство.</li>
+      <li>В ближайшем будущем планируется поддержка мобильных устройств (планшеты, смартфоны)</li>
+    </ul>
+    <p></p>
+    <p>благодаря всему этому, гвпанель работает <b>очень быстро</b>. В большинстве случаев вы даже не заметите момента прорисовки.</p>
+
+    <a href="/" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-l">На главную</a>
+    &nbsp;&nbsp;&nbsp;
+    <a href="#step2" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-r">Далее</a>
+  </div>
+</div>
+<div id="step2" data-role="page" class="presentation-step ui-page ui-page-theme-a">
+  <a href="#presentation-panel" class="table-of-contents ui-btn ui-btn-inline ui-btn-icon-notext ui-icon-bars">Содержание</a>
+  <div role="main" class="ui-content">
+    <h2>Зоны активации</h2>
+    <p>Всего возможно включить 7 зон, однако вероятно использовать вы будете только 1-2 или 3.</p>
+    <p>Лучше всего активировать те зоны, где у вас находится "край" экрана, т.е. где нет панели задач или каких-то панелей в браузере, тогда вам будет удобней открывать эти зоны.</p>
+    <p>Мы постарались сделать их как можно менее заметными, чтобы они не закрывали какие-либо элементы на странице, и не отвлекали внимание. Возможно в будущем их внешний вид будет меняться.</p>
+    <a href="#step1" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-l">Назад</a>
+    &nbsp;&nbsp;&nbsp;
+    <a href="#step3" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-r">Далее</a>
+  </div>
+</div>
+<div id="step3" data-role="page" class="presentation-step ui-page ui-page-theme-a">
+  <a href="#presentation-panel" class="table-of-contents ui-btn ui-btn-inline ui-btn-icon-notext ui-icon-bars">Содержание</a>
+  <div role="main" class="ui-content">
+    <h2>Открытие окон</h2>
+    <div class="first-message">
+      <p>Возможно 2 варианта открытия окна:</p>
+      <ul>
+        <li>Жестом мыши</li>
+        <li>При клике</li>
+      </ul>
+      <p>"Жест мыши" заключается в том, чтобы быстро навести курсор на зону активации.</p>
+      <p>Попробуйте быстро навести курсор мыши из центра экрана на видимую зону в левой части</p>
+    </div>
+    <div id="gesture-well-done" style="display: none;">
+      <h2>Отлично! У вас получилось.</h2>
+      <p>Через некоторое время ваши руки привыкнут к этому жесту и вы будете открывать окно очень легко.</p>
+      <p>Кстати, когда какое-либо окно открыто, то вы можете навести мышку на любое другое окно, и оно откроется автоматически. Попробуйте!</p>
+    </div>
+    <a href="#step2" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-l">Назад</a>
+    &nbsp;&nbsp;&nbsp;
+    <a href="#step4" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-r ui-disabled">Далее</a><span class="description">нужно открыть окно чтобы продолжить</span>
+  </div>
+</div>
+<div id="step4" data-role="page" class="presentation-step ui-page ui-page-theme-a">
+  <a href="#presentation-panel" class="table-of-contents ui-btn ui-btn-inline ui-btn-icon-notext ui-icon-bars">Содержание</a>
+  <div role="main" class="ui-content">
+    <h2>Содержимое окон</h2>
+    <p>В любое окно вы можете добавлять какие угодно кнопки и виджеты.</p>
+    <p>Кнопки - это по сути картинка с текстом, при нажатии на которую что-то происходит: открывается страница, производится переход в сектор, надевается комплект и т.д.</p>
+    <p>Виджет - это чуть более сложный элемент, в котором выводится какая-либо полезная информация, например таймер выздоровления.</p>
+    <div class="pane" style="width: 300px; height: 80px; position: relative; display: block !important;">
+      <div class="button map_gohome" id="button_map_gohome_example" left="0" top="0" index="0" style="left: 0px; top: 0px; width: 70px; height: 85px;"><a><div class="img"><img src="http://gwpanel.org/panel2/themes/base/icons/home.png"></div><h3>Я кнопка</h3></a></div>
+      <div class="widget home_health_widget medium" id="float-example-home_health_widget" style="width: 140px; height: auto; top: 10px; left: 90px;"><img src="http://gwpanel.org/panel2/themes/base//icons/heart.png"><div class="progress-container"><div class="progress-bar" style="width: 50%"><div class="progress-bar-text">50%</div></div><div class="text">50%</div></div><div class="timers"><div class="this.timer100"></div><div class="this.timer80"></div></div><p style="white-space: nowrap; margin-top: 30px; margin-left: 45px;">я виджет</p></div>
+    </div>
+    <p>В окне может быть ровно столько элементов, сколько в него влазит. Чем больше вы сделаете окно, тем больше элементов в него можно поместить.</p>
+    <p>Возможно в настоящий момент доступно не так много видов виджетов и кнопок, однако со временем их количество будет увеличиваться.</p>
+    <a href="#step3" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-l">Назад</a>
+    &nbsp;&nbsp;&nbsp;
+    <a href="#step5" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-r">Далее</a>
+  </div>
+</div>
+<div id="step5" data-role="page" class="presentation-step ui-page ui-page-theme-a">
+  <a href="#presentation-panel" class="table-of-contents ui-btn ui-btn-inline ui-btn-icon-notext ui-icon-bars">Содержание</a>
+  <div role="main" class="ui-content">
+    <h2>Окно настроек</h2>
+    <p>Это окно можно открыть кнопкой "Настройки".</p>
+    <div class="pane" style="width: 200px; height: 80px; position: relative; display: block !important;">
+      <div class="button panel_settings" id="button_panel_settings_example" index="2" style="left: 0px; top: 0px; width: 70px; height: 85px;"><a><div class="img"><img src="http://gwpanel.org/panel2/themes/base/icons/settings.png"></div><h3>Настройки</h3></a></div>
+    </div>
+    <p>Вы также можете открыть настройки кнопкой выше</p>
+    <p>Даже если вы случайно удалите эту кнопку из всех окон, то она должна появиться в первом окне, где есть свободное место.</p>
+    <a href="#step4" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-l">Назад</a>
+    &nbsp;&nbsp;&nbsp;
+    <a href="#step6" class="ui-btn ui-disabled ui-btn-inline ui-btn-icon-left ui-icon-carat-r">Далее</a><span class="description">откройте окно настроек, чтобы продолжить</span>
+  </div>
+</div>
+<div id="step6" data-role="page" class="presentation-step ui-page ui-page-theme-a">
+  <a href="#presentation-panel" class="table-of-contents ui-btn ui-btn-inline ui-btn-icon-notext ui-icon-bars">Содержание</a>
+  <div role="main" class="ui-content">
+    <h2>Добавление кнопок</h2>
+    <div class="first-message">
+      <p>А теперь попробуем добавить в любое окно кнопку.</p>
+      <p>Чтобы продолжить, вам надо зайти в настройки. Все дальнейшие указания будут в самом окне настроек.</p>
+    </div>
+    <p class="description" style="display: none;"><strong>Поздравляем!</strong> Вы добавили кнопку. Вы можете её увидеть в окне, в которое вы её добавили.</p>
+    <a href="#step5" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-l">Назад</a>
+    &nbsp;&nbsp;&nbsp;
+    <a href="#step7" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-r ui-disabled">Далее</a><span class="description">вы должны добавить кнопку, чтобы продолжить</span>
+  </div>
+</div>
+<div id="step7" data-role="page" class="presentation-step ui-page ui-page-theme-a">
+  <a href="#presentation-panel" class="table-of-contents ui-btn ui-btn-inline ui-btn-icon-notext ui-icon-bars">Содержание</a>
+  <div role="main" class="ui-content">
+    <h2>Добавление виджетов</h2>
+    <div class="first-message">
+      <p>Вам нужно повторить почти все действия из предыдущего шага, но теперь для виджетов.</p>
+      <p>Зайдите в настройки и следуйте подсказкам.</p>
+    </div>
+    <p class="description" style="display: none;"><strong>Поздравляем!</strong> Вы добавили виджет. Откройте окно, куда вы его добавили и найдите его.</p>
+    <a href="#step6" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-l">Назад</a>
+    &nbsp;&nbsp;&nbsp;
+    <a href="#step8" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-r ui-disabled">Далее</a><span class="description">вы должны добавить виджет, чтобы продолжить</span>
+  </div>
+</div>
+<div id="step8" data-role="page" class="presentation-step ui-page ui-page-theme-a">
+  <a href="#presentation-panel" class="table-of-contents ui-btn ui-btn-inline ui-btn-icon-notext ui-icon-bars">Содержание</a>
+  <div role="main" class="ui-content">
+    <h2>Плавающие виджеты</h2>
+    <div class="first-message">
+      <p>В предыдущем примере вы добавили виджет в окошко, однако любой виджет может быть "плавающим", это значит что он будет выводиться на страницах игры.</p>
+      <p>Вы можете выводить виджет на всех страницах, либо только на нескольких, либо на одной конкретной странице.</p>
+      <p>Это даёт очень большие возможности по изменению внешнего вида игры, когда появится много полезных виджетов.</p>
+      <p>Откройте окошко настроек и следуйте инструкциям</p>
+    </div>
+    <div class="second-message" style="display: none;">
+      <p>Поздравляем! Вы добавили плавающий виджет.</p>
+      <p>Вы можете перетаскивать его по странице, просто зажмите его левой кнопкой мыши.</p>
+      <p>Если вы кликните по нему два раза, то откроется окно настроек</p>
+    </div>
+    <a href="#step7" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-l">Назад</a>
+    &nbsp;&nbsp;&nbsp;
+    <a href="#step9" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-r ui-disabled">Далее</a><span class="description">добавьте плавающий виджет, чтобы продолжить</span><span class="description" style="display: none;">измените настройки плавающего виджета, чтобы продолжить</span>
+  </div>
+</div>
+<div id="step9" data-role="page" class="presentation-step ui-page ui-page-theme-a">
+  <a href="#presentation-panel" class="table-of-contents ui-btn ui-btn-inline ui-btn-icon-notext ui-icon-bars">Содержание</a>
+  <div role="main" class="ui-content">
+    <h2>Управление модулями</h2>
+    <p>Включить или отключить какой-то определённый скрипт можно на специальной странице</p>
+    <p>Зайдите в настройки и следуйте инструкциям</p>
+    <a href="#step8" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-l">Назад</a>
+    &nbsp;&nbsp;&nbsp;
+    <a href="#step10" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-r ui-disabled">Далее</a><span class="description">включите или отключите любой модуль, чтобы продолжить</span>
+  </div>
+</div>
+<div id="step10" data-role="page" class="presentation-step ui-page ui-page-theme-a">
+  <a href="#presentation-panel" class="table-of-contents ui-btn ui-btn-inline ui-btn-icon-notext ui-icon-bars">Содержание</a>
+  <div role="main" class="ui-content">
+    <h2>Варианты настроек</h2>
+    <p>У каждого игрока может быть несколько вариантов настроек, вы можете переключаться между ними</p>
+    <p>Вы можете создать, к примеру вариант "Для торговли", "Для аута", "Для синдовых" и в каждом варианте будут свои виджеты, кнопки и включены нужные модули.</p>
+    <p>Этот шаг не обязательный, однако если вы хотите узнать как добавлять варианты, то зайдите в настройки и следуйте подсказкам</p>
+    <a href="#step9" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-l">Назад</a>
+    &nbsp;&nbsp;&nbsp;
+    <a href="#step11" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-r">Далее</a>
+  </div>
+</div>
+<div id="step11" data-role="page" class="presentation-step ui-page ui-page-theme-a">
+  <a href="#presentation-panel" class="table-of-contents ui-btn ui-btn-inline ui-btn-icon-notext ui-icon-bars">Содержание</a>
+  <div role="main" class="ui-content">
+    <h2>Конец</h2>
+    <p>Поздравляем! Вы прошли весь курс обучения по работе с GWPanel 2.</p>
+    <p>Учтите что проект развивается и будут добавляться новые возможности.</p>
+    <p>Этот курс показывает только базовые функции по настройке, чтобы сделать игру с GWPanel удобней.</p>
+    <a href="#step10" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-l">Назад</a>
+    &nbsp;&nbsp;&nbsp;
+    <a href="/" class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-r">Вернуться на главную</a>
+  </div>
+</div>
+<div data-role="panel" id="presentation-panel" class="ui-page-theme-a" data-position="left" data-display="reveal">
+  <div class="ui-panel-inner">
+    <ul data-role="listview">
+      <li data-role="list-divider"><h3>Содержание</h3></li>
+      <li><a data-rel="page" href="#step1">Шаг 1. Приветствие</a></li>
+      <li><a data-rel="page" href="#step2">Шаг 2. Зоны активации</a></li>
+      <li><a data-rel="page" href="#step3">Шаг 3. Открытие окон</a></li>
+      <li><a data-rel="page" href="#step4">Шаг 4. Содержимое окон</a></li>
+      <li><a data-rel="page" href="#step5">Шаг 5. Окно настроек</a></li>
+      <li><a data-rel="page" href="#step6">Шаг 6. Добавление кнопок</a></li>
+      <li><a data-rel="page" href="#step7">Шаг 7. Добавление виджетов</a></li>
+      <li><a data-rel="page" href="#step8">Шаг 8. Плавающие виджеты</a></li>
+      <li><a data-rel="page" href="#step9">Шаг 9. Управление модулями</a></li>
+      <li><a data-rel="page" href="#step10">Шаг 10. Варианты настроек</a></li>
+      <li><a data-rel="page" href="#step11">Шаг 11. Конец</a></li>
+    </ul>
+    <ul data-role="listview" id="gotofront">
+      <li><a href="/" class="ui-active">На главную</a></li>
+    </ul>
+  </div>
+</div>
+<script id="panel-init">
+  jQuery(function() {
+    jQuery( "body>[data-role='panel']" ).trigger("create").panel();
+
+    jQuery('.ui-content .panel_settings').click(function() {
+      __panel.loadScript("panel/panel_settings.js", function() {
+        __panel.panel_settings_editor(); 
+      }); 
+    });
+  });
+</script>
+  </body>
+</html>
