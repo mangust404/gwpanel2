@@ -60,7 +60,7 @@
             var s = $('<select id="' + __id + '" name="' + widget.id + '_' + param + '"></select>');
             var is_array = $.type(that.options) == 'array';
             s.append('<option value=""' + 
-                  '>Укажите</option>');
+                  '>выберите</option>');
             $.each(that.options || {}, function(key) {
               if(is_array) {
                 s.append('<option value="' + this + '"' + 
@@ -75,7 +75,7 @@
             s.appendTo(append_to).change(function() {
               change_callback(param, $(this).val());
             });
-            s.before('<label for="' + __id + '">' + that.title + '</label>');
+            s.before('<label for="' + __id + '">Укажите ' + that.title + ':</label>');
           break;
           case 'checkbox':
             $('<label for="param-' + widget.id + '-' + param + '">' + that.title + '</label>').appendTo(append_to);

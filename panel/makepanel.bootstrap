@@ -342,7 +342,7 @@ $bootstrap = '
 
 (function() {
   if(location.pathname == "/b0/btk.php") return;
-  
+
   var panelURL = "http://' . $domain . $path . '";
   var environment = document.cookie.match(/gwp2_e=([a-z]+)/)? RegExp.$1: null;
 
@@ -393,7 +393,7 @@ $bootstrap = '
     }
     s.addEventListener("load", function() {
       if(window.indexedDB) {
-        $indexeddb = jQuery.indexedDB("gwp2_test", {
+        $indexeddb = jQuery.indexedDB("gwp2", {
           "schema": {
             "1": function(versionTransaction){
               versionTransaction.createObjectStore("packages");
@@ -401,7 +401,7 @@ $bootstrap = '
           }
         });
       } else if(window.openDatabase) {
-        $websql = jQuery.db("gwp2_test", "1.0", "GWPanel 2 database", 1024 * 1024 * 15);
+        $websql = jQuery.db("gwp2", "1.0", "GWPanel 2 database", 1024 * 1024 * 15);
         $websql.tables(function(tables) {
           if(tables.indexOf("packages") == -1) {
             $websql.createTable({
