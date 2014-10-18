@@ -6,6 +6,7 @@ bootstrap_pda.js
 bootstrap_container.js
 version
 version_production.js
+version_deploy.js
 panel/production
 gwpanel2.user.js
 .idea

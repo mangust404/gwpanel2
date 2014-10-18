@@ -100,6 +100,7 @@ foreach(glob($gwpanel_path . '/*', GLOB_ONLYDIR) as $glob_path) {
       /// пропускаем жёстко подключаемые библиотеки
       continue;
     }
+    if($dirname == 'server') continue;
     $files[] = $file;
   }
   if($dirname == 'lib') {
@@ -748,4 +749,4 @@ file_put_contents($gwpanel_path . '/bootstrap_container.js', $bootstrap_containe
 print 'Bootstrap container written to ' . $gwpanel_path . '/bootstrap_container.js' . "\n";
 
 //создаём список файлов для синхронизации с ганей
-shell_exec('/usr/bin/find ./ ! \( -iwholename *\.git* \) ! \( -iwholename "\./doc/*" \) ! \( -iname version \) -regextype posix-egrep -regex ".*\.(js|css|png|gif)"  -type f | /usr/bin/sort | /bin/gzip > ' . $gwpanel_path . '/package.gz');
+shell_exec('/usr/bin/find ./ ! \( -iwholename *\.git* \) ! \( -iwholename "\./doc/*" \) ! \( -iwholename "\./server/*" \) ! \( -iname version \) -regextype posix-egrep -regex ".*\.(js|css|png|gif)"  -type f | /usr/bin/sort | /bin/gzip > ' . $gwpanel_path . '/package.gz');
