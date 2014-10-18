@@ -129,7 +129,7 @@ function showToolWindow($playerLink){
   // Вторя строка:
   // Письма от персонажа
   $urlTool.eq(4).prop("href", "http://www.ganjawars.ru/sms.php?page=0&search=" + login)
-    .prop("title", $urlTool.eq(4).prop("title") + name);
+    .prop("title", "Письма от персонажа " + name);
 
   //Передать предмет
   $urlTool.eq(5).unbind().click(
