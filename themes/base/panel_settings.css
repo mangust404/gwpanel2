@@ -182,6 +182,10 @@
   border: 0;
 }
 
+#edit-modules-wrapper .add-settings label {
+  text-align: center;
+}
+
 #settings-form-popup {
   background: #f0fff0;
   padding: 15px 20px;
