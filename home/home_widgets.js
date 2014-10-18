@@ -31,6 +31,9 @@
     this.progressBarText.html(text);
     
     this.hp_current += health.hp_speed;
+    if($('#hpheader').length > 0) {
+      $('#hpheader font').html(parseInt(this.hp_current));
+    }
     if(this.hp_current >= health.hp_max) {
       this.progressBar.css({width: '100%'});
       this.progressText.html('100%');

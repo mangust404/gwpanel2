@@ -1,4 +1,66 @@
-(function(__panel) {
+(function(panel, $) {
+
+  var mmoves = {};
+  var mlinks = {};
+  var keys = {};
+  var $input;
+
+  function keyup(e) {
+    switch(e.keyCode) {
+      case 37: case 100: keys['left'] = true; break;
+      case 38: case 104: keys['up'] = true; break;
+      case 39: case 102: keys['right'] = true; break;
+      case 40: case 98: keys['down'] = true; break;
+      case 103: case 36: keys['up'] = keys['left'] = true; break;
+      case 105: case 33: keys['up'] = keys['right'] = true; break;
+      case 99: case 34: keys['right'] = keys['down'] = true; break;
+      case 97: case 35: keys['down'] = keys['left'] = true; break;
+      case 101: case 13: keys['center'] = true; break;
+      default: break;
+    };
+    var __goto;
+    if(keys['left'] && keys['up']) {
+      __goto = mlinks['topleft'].href;
+    } else if(keys['right'] && keys['up']) {
+      __goto = mlinks['topright'].href;
+    } else if(keys['left'] && keys['down']) {
+      __goto = mlinks['bottomleft'].href;
+    } else if(keys['right'] && keys['down']) {
+      __goto = mlinks['bottomright'].href;
+    } else if(keys['left'] && mlinks['left']) {
+      __goto = mlinks['left'].href;
+    } else if(keys['right'] && mlinks['right']) {
+      __goto = mlinks['right'].href;
+    } else if(keys['up'] && mlinks['top']) {
+      __goto = mlinks['top'].href;
+    } else if(keys['down'] && mlinks['bottom']) {
+      __goto = mlinks['bottom'].href;
+    } else if(keys['center']) {
+      if(mlinks['center']) __goto = mlinks['center'].href;
+      else {
+        var d = new Date();
+        __goto = location.href.split('?')[0] + '?' + d.getTime();
+      };
+    };
+    if(__goto) {
+      panel.gotoHref(__goto);
+      mmoves = {};
+      mlinks = {};
+    }
+    keys = {};
+  }
+
+  function keydown(e) {
+    switch(e.keyCode) {
+      case 37: keys['left'] = true; return false;
+      case 38: keys['up'] = true; return false;
+      case 39: keys['right'] = true; return false;
+      case 40: keys['down'] = true; return false;
+      default: break;
+    };
+  }
+
+
 
 jQuery.extend(__panel, {
   outland_highlight: function() {
@@ -30,8 +92,8 @@ jQuery.extend(__panel, {
   },
 
   outland_addHotkeys: function() {
-    var mmoves = {};
-    var mlinks = {};
+    mmoves = {};
+    mlinks = {};
     for(var i = 0; i < document.links.length; i++) {
       var link = document.links[i];
       if(link.href.search(/walk(\.op|\.ep)\.php\?w=[0-9]+&wx=([0-9\-]+)&wy=([0-9\-]+)/) != -1 && (link.innerHTML.indexOf('t.gif') != -1 || link.innerHTML.indexOf('turist') != -1)) {
@@ -81,64 +143,20 @@ jQuery.extend(__panel, {
     if(mlinks['topright']) mlinks['topright'].innerHTML = '<div class="move_topright">' + mlinks['topright'].innerHTML + '</div>';
     if(mlinks['bottomright']) mlinks['bottomright'].innerHTML = '<div class="move_bottomright">' + mlinks['bottomright'].innerHTML + '</div>';
     if(mlinks['bottomleft']) mlinks['bottomleft'].innerHTML = '<div class="move_bottomleft">' + mlinks['bottomleft'].innerHTML + '</div>';
-    jQuery(window).focus();
-    jQuery('<input type="text" autocomplete="off">')
+    $(window).focus();
+/*    $('<input type="text" autocomplete="off">')
       .css({
         'height': '1px',
         'width': '1px',
         position: 'absolute'
       })
       .prependTo(document.body)
-      .focus();
+      .focus();*/
 
-    var keys = {};
-    jQuery(window).keydown(function(e) {
-      switch(e.keyCode) {
-        case 37: keys['left'] = true; return false;
-        case 38: keys['up'] = true; return false;
-        case 39: keys['right'] = true; return false;
-        case 40: keys['down'] = true; return false;
-        default: break;
-      };
-    })
-    .keyup(function(e) {
-      switch(e.keyCode) {
-        case 37: case 100: keys['left'] = true; break;
-        case 38: case 104: keys['up'] = true; break;
-        case 39: case 102: keys['right'] = true; break;
-        case 40: case 98: keys['down'] = true; break;
-        case 103: case 36: keys['up'] = keys['left'] = true; break;
-        case 105: case 33: keys['up'] = keys['right'] = true; break;
-        case 99: case 34: keys['right'] = keys['down'] = true; break;
-        case 97: case 35: keys['down'] = keys['left'] = true; break;
-        case 101: case 13: keys['center'] = true; break;
-        default: break;
-      };
-      if(keys['left'] && keys['up']) {
-        location.href = mlinks['topleft'].href;
-      } else if(keys['right'] && keys['up']) {
-        location.href = mlinks['topright'].href;
-      } else if(keys['left'] && keys['down']) {
-        location.href = mlinks['bottomleft'].href;
-      } else if(keys['right'] && keys['down']) {
-        location.href = mlinks['bottomright'].href;
-      } else if(keys['left']) {
-        location.href = mlinks['left'].href;
-      } else if(keys['right']) {
-        location.href = mlinks['right'].href;
-      } else if(keys['up']) {
-        location.href = mlinks['top'].href;
-      } else if(keys['down']) {
-        location.href = mlinks['bottom'].href;
-      } else if(keys['center']) {
-        if(mlinks['center']) location.href = mlinks['center'].href;
-        else {
-          var d = new Date();
-          location.href = location.href.split('?')[0] + '?' + d.getTime();
-        };
-      };
-      keys = {};
-    });
+    keys = {};
+    $(window).off('keydown').on('keydown', keydown)
+    .off('keyup').on('keyup', keyup);
+
   },
 
   outland_submitFight: function() {
@@ -166,4 +184,4 @@ jQuery.extend(__panel, {
     __panel.outland_addHotkeys(options);
   }
 
-})})(window.__panel);
+})})(window.__panel, jQuery);

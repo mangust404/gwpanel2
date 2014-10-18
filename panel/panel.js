@@ -68,7 +68,7 @@ window.Panel2 = new function() {
 
   var timer, prev_timer;
 
-  /// доступ к функциям сервера, для членов синдиката #4814
+  /// доступ к функциям сервера, для членов синдиката #5787
   var haveServerSync = false;
   
   /******************************
@@ -700,10 +700,35 @@ window.Panel2 = new function() {
         //instance.clearTimeouts();
         $(document.body).addClass('ajax-processed');
         if(href.indexOf('/sms.php') > -1) $('img[src$="sms.gif"]').closest('a').remove();
-        data = data.substr(16).replace(/<script[^>]*>.*?<\/script>/ig, '');
+        var jqs = false;
+        var __title;
+        if(data.indexOf('JQS loaded.') == 0) {
+          data = data.substr(11);
+          jqs = true;
+          var first_hr = data.indexOf('<hr>');
+          if(first_hr < 100) {
+            data = data.substr(0, first_hr) + data.substr(first_hr + 4);
+          }
+        } else {
+          var start = data.indexOf('<body');
+          if(start > -1) {
+            var body_end = data.indexOf('>', start);
+            var body_close = data.indexOf('</body>', start);
+            var title_open = data.indexOf('<title>');
+            var title_close = data.indexOf('</title>', title_open);
+            __title = data.substr(title_open + 7, title_close - title_open - 7);
+            data = data.substr(body_end + 1, body_close - body_end - 1);
+          }
+        }
+        data = data.replace(/<script[^>]*>.*?<\/script>/ig, '');
         data = instance.fixForms(data);
-        $('#gw-content').html(data);
-        if(title) document.title = title + ' :: Ganjawars.ru :: Ганджубасовые войны';
+        var $content = $('#gw-content').html(data);
+        if(jqs) {
+          document.title = $content.find('#doc-title').text();
+        } else {
+          document.title = __title;
+        }
+        //if(title) document.title = title + ' :: Ganjawars.ru :: Ганджубасовые войны';
         $(document.body).removeClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
         history.pushState({data: data, title: document.title}, document.title, href);
         $(document.body).addClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
@@ -1949,7 +1974,7 @@ window.Panel2 = new function() {
         instance.triggerEvent("login", {"currentPlayerName": name, "currentPlayerID": id});
         $.ajax('http://' + document.domain + '/syndicates.php', {
           success: function(data) {
-            if($(data).find('li a[href$="/syndicate.php?id=4814"]').length) {
+            if($(data).find('li a[href$="/syndicate.php?id=5787"]').length) {
               instance.set('haveServerSync', true);
             }
           }
@@ -2383,12 +2408,17 @@ window.Panel2 = new function() {
     */
     panel_ajaxify: function() {
       if($('#gw-content').length > 0) return;
+      if(!history.pushState) return;
       var elem = $('body > table[bgcolor="#f5fff5"]');
       if(!elem.length) {
         elem = $('body > table[bgcolor="#d0eed0"]').next('center');
       }
-      if(elem.length > 0 && history.pushState) {
+      if(elem.length > 0) {
         var $all_elements = elem.nextAll().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
+      } else if(document.domain == 'quest.ganjawars.ru') {
+        var $all_elements = $('body').children().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
+      }
+      if($all_elements.length > 0) {
         var $brokenForms = $('#gw-content').find('table td > form');
         if($brokenForms.length > 0) {
           /// если есть поломанные формы, чиним их

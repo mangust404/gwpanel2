@@ -761,7 +761,7 @@
           } else {
             $upload_button.addClass('ui-disabled');
             $download_button.addClass('ui-disabled');
-            $('<div>Сохранение настроек на сервере gwpanel.org доступно только членам синиката <a href="http://www.ganjawars.ru/syndicate.php?id=4814">#4814</a></div>')
+            $('<div>Сохранение настроек на сервере gwpanel.org доступно только членам синиката <a target="_blank" href="http://www.ganjawars.ru/syndicate.php?id=5787">#5787</a></div>')
               .css({'margin-bottom': 40})
               .insertAfter($download_button);
           }

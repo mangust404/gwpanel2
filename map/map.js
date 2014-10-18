@@ -32,7 +32,7 @@ jQuery.extend(panel, {
       }
     });
     __panel.loadScript('map/map_sectors.js', function() {
-      if($(document.body).html.match(/в <nobr><b>([^<]+)<\/b>/)) {
+      if($(document.body).html().match(/в <nobr><b>([^<]+)<\/b>/)) {
         var sector = RegExp.$1;
         for(var key in __panel.map_names) {
           if(__panel.map_names[key] == sector) {
