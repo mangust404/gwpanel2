@@ -1,4 +1,4 @@
-(function(panel) {
+(function(panel, $) {
 
   function home_formatTime(s) {
     var h = Math.floor(s / 3600);
@@ -76,7 +76,7 @@
     }
   }
   
-jQuery.extend(panel, {
+$.extend(panel, {
   home_health_widget: function(options) {
     var $widget = this;
     $widget.hide();
@@ -85,21 +85,22 @@ jQuery.extend(panel, {
     panel.loadCSS('home/home_widget.css', function() {
       if(!options.autohide) $widget.show();
     });
+    window.hpupdate_header = function() {}
 
     if(options.size == 3) $widget.addClass('big');
     if(options.size == 2) $widget.addClass('medium');
     if(options.size == 1) $widget.addClass('small');
 
-    $widget.progressImg = jQuery('<img src="' + __panel.path_to_theme() + '/icons/heart.png"/>');
+    $widget.progressImg = $('<img src="' + __panel.path_to_theme() + '/icons/heart.png"/>');
     $widget.css({
       height: 'auto'
     }).append($widget.progressImg);
-    $widget.progressBarText = jQuery('<div class="progress-bar-text"></div>');
-    $widget.progressBar = jQuery('<div class="progress-bar"></div>').append($widget.progressBarText);
-    $widget.progressText = jQuery('<div class="text"></div>');
+    $widget.progressBarText = $('<div class="progress-bar-text"></div>');
+    $widget.progressBar = $('<div class="progress-bar"></div>').append($widget.progressBarText);
+    $widget.progressText = $('<div class="text"></div>');
     $widget.timerType = options.type;
     
-    $widget.progressContainer = jQuery('<div class="progress-container">', 
+    $widget.progressContainer = $('<div class="progress-container">', 
       {title: 'Нажмите для переключения вида'})
       .append($widget.progressBar)
       .append($widget.progressText)
@@ -114,20 +115,20 @@ jQuery.extend(panel, {
         });
         switch($widget.timerType) {
           case 0:
-            jQuery(this).attr('title', 'Процент выздоровления, от 0% до 100%');
+            $(this).attr('title', 'Процент выздоровления, от 0% до 100%');
           break;
           case 1:
-            jQuery(this).attr('title', 'Таймер выздоровления до 80%, а затем оставшееся время выздоровления до 100%');
+            $(this).attr('title', 'Таймер выздоровления до 80%, а затем оставшееся время выздоровления до 100%');
           break;
           case 2:
-            jQuery(this).attr('title', 'Таймер выздоровления до 100%');
+            $(this).attr('title', 'Таймер выздоровления до 100%');
           break;
         }
         return false;
       });
-    $widget.timer100 = jQuery('<div class="this.timer100"></div>');
-    $widget.timer80 = jQuery('<div class="this.timer80"></div>');
-    jQuery('<div class="timers"></div>')
+    $widget.timer100 = $('<div class="this.timer100"></div>');
+    $widget.timer80 = $('<div class="this.timer80"></div>');
+    $('<div class="timers"></div>')
       .append($widget.timer100)
       .append($widget.timer80)
       .appendTo($widget);
@@ -141,4 +142,4 @@ jQuery.extend(panel, {
 
   }
 });
-})(window.__panel);
+})(window.__panel, jQuery);

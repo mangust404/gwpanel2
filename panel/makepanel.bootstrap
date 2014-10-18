@@ -340,6 +340,8 @@ window.panel_release_notes[' . $version . '] = ' . json_encode($message) . '; wi
 $bootstrap = '
 
 (function() {
+  if(location.pathname == "/b0/btk.php") return;
+  
   var panelURL = "http://' . $domain . $path . '";
   var environment = document.cookie.match(/gwp2_e=([a-z]+)/)? RegExp.$1: null;
 

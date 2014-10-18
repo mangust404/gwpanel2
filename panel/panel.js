@@ -761,6 +761,7 @@ window.Panel2 = new function() {
     $links.addClass('ajax').click(function(e) {
       if(e.ctrlKey || e.altKey || e.button != 0) return true;
       var href = $(this).attr('href');
+      if(href.indexOf('/battle.php') > -1) return true;
       if(document.location.toString().indexOf(href) > -1) return true;
       var link_title = $(this).text();
       ajaxGoto(href, link_title);
@@ -2421,13 +2422,14 @@ window.Panel2 = new function() {
     panel_ajaxify: function() {
       if($('#gw-content').length > 0) return;
       if(!history.pushState) return;
+      if(location.pathname.indexOf('/b0/') == 0) return;
       var elem = $('body > table[bgcolor="#f5fff5"]');
       if(!elem.length) {
         elem = $('body > table[bgcolor="#d0eed0"]').next('center');
       }
       if(elem.length > 0) {
         var $all_elements = elem.nextAll().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
-      } else if(document.domain == 'quest.ganjawars.ru') {
+      } else {
         var $all_elements = $('body').children().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
       }
       if($all_elements.length > 0) {

@@ -1,4 +1,4 @@
-(function(__panel) {
+(function(panel, $) {
   var bgenerated, rightattack, leftattack, defence, prevRightAttack, prevLeftAttack, prevDefence, bsrcframe, toAllies, battlechat, bgenerator, bgenchk, walk, bredo;
   var battleFixed;
   var allies = {}, enemies = {};
@@ -10,40 +10,40 @@
   var battleMovesRequest;
   var selectedEnemy, savedMove;
   
-jQuery.extend(__panel, {
+jQuery.extend(panel, {
   battle_fix: function(__options) {
-    jQuery.extend(options, __options);
+    $.extend(options, __options);
     
     if(battleFixed) return;
     window.bf3 = window.bf3.replace(/<a/, '<a id="updbutton"');
-    bsrcframe = jQuery('#bsrc');
+    bsrcframe = $('#bsrc');
     bsrcframe.load(function() {
-      __panel.triggerEvent('updatedata', {}, true);
+      panel.triggerEvent('updatedata', {}, true);
     });
     window.__updatebf = window.updatebf;
     window.updatebf = function() {
       window.__updatebf();
-      __panel.triggerEvent('updatebf', {}, true);
+      panel.triggerEvent('updatebf', {}, true);
     };
     window.__updatedata = window.updatedata;
     window.updatedata = function() {
-      __panel.triggerEvent('beforeupdatedata', {}, true);
+      panel.triggerEvent('beforeupdatedata', {}, true);
       window.__updatedata();
     };
-    __panel.bind('beforeupdatedata', function() {
-      if(jQuery('#updbutton').length) {
-        jQuery('#updbutton').html('Подождите...');
+    panel.bind('beforeupdatedata', function() {
+      if($('#updbutton').length) {
+        $('#updbutton').html('Подождите...');
       };
     });
-    __panel.bind('updatedata', function() {
-      if(jQuery('#updbutton').length) {
-        jQuery('#updbutton').html('Обновить');
+    panel.bind('updatedata', function() {
+      if($('#updbutton').length) {
+        $('#updbutton').html('Обновить');
       };
     });
     if(options.wartime_s > 0) {
       if(window.DataTimer > 0) clearTimeout(window.DataTimer);
       window.DataTimer = setTimeout('updatedata()', options.wartime_s * 1000);
-      __panel.bind('updatedata', function() {
+      panel.bind('updatedata', function() {
         if(window.DataTimer > 0) clearTimeout(window.DataTimer);
         window.DataTimer = setTimeout('updatedata()', options.wartime_s * 1000);
       });
@@ -51,53 +51,53 @@ jQuery.extend(__panel, {
     window.__makebf = window.makebf;
     window.makebf = function() {
       window.__makebf();
-      __panel.triggerEvent('makebf', {}, true);
+      panel.triggerEvent('makebf', {}, true);
     };
-    jQuery(window).keydown(function(e) {
+    $(window).keydown(function(e) {
       if(e.keyCode == 13 && e.ctrlKey) {
-        if(jQuery('#movego').length) fight();
+        if($('#movego').length) fight();
         else updatedata();
         return false;
       }
     });
     window.__fight = window.fight;
     window.fight = function() {
-      __panel.triggerEvent('beforeFight', {}, true);
+      panel.triggerEvent('beforeFight', {}, true);
       window.__fight();
-      __panel.triggerEvent('fight', {}, true);
+      panel.triggerEvent('fight', {}, true);
     };
     window.__updatechatlines = window.updatechatlines;
     
     window.updatechatlines = function() {
       window.__updatechatlines();
-      __panel.triggerEvent('updatechatlines', {}, true);
+      panel.triggerEvent('updatechatlines', {}, true);
     };
   
     window.__clrline = window.clrline;
     window.clrline = function() {
-      __panel.triggerEvent('before_clrline', {}, true);
+      panel.triggerEvent('before_clrline', {}, true);
       window.__clrline();
-      __panel.triggerEvent('clrline', {}, true);
+      panel.triggerEvent('clrline', {}, true);
     };
     battleFixed = true;
     
   },
   
   battle_init: function(__options) {
-    jQuery.extend(options, __options);
+    $.extend(options, __options);
     
     allies = false;
     if(location.pathname.indexOf('/b.php') != -1)
-      __panel.battle_stdInit();
+      panel.battle_stdInit();
     else if(location.pathname.indexOf('/btl.php') != -1) {
-      __panel.battle_fix();
-      __panel.battle_jsInit();
+      panel.battle_fix();
+      panel.battle_jsInit();
     } else if(location.pathname.indexOf('/warlog.php') != -1 && document.body.innerHTML.indexOf('[ Ваш бой ]') == -1) {
       var args = location.search.substr(1).toQueryParams();
       var bid = args['bid'];
       panel.get('BattleID', function(data) {
         if(data == bid) {
-          __panel.triggerEvent('battleend', {bid: bid});
+          panel.triggerEvent('battleend', {bid: bid});
         }
       });
     }
@@ -109,7 +109,7 @@ jQuery.extend(__panel, {
     if(enemies.indexesAdded) return;
     enemies.indexesAdded = true;
     var i = 0;
-    jQuery(enemySelectBox.childNodes).each(function(index) {
+    $(enemySelectBox.childNodes).each(function(index) {
       var matches = this.innerHTML.match(/([0-9]+)\. (.*)\[[0-9]+\]/);
       if(!matches) return;
       if(!enemies['index']) enemies['index'] = [];
@@ -137,8 +137,8 @@ jQuery.extend(__panel, {
     };
     for(var j = 0; j < enemies['name'].length; j++) {
       if(enemies['name'][j] == options.name) continue;
-      if(jQuery('#pm-' + enemies['id'][j]).length) continue;
-      var pm = jQuery('<span>[pm]</span>')
+      if($('#pm-' + enemies['id'][j]).length) continue;
+      var pm = $('<span>[pm]</span>')
         .attr('id', 'pm-' + enemies['id'][j])
         .attr('name', enemies['name'][j])
         .css({
@@ -148,7 +148,7 @@ jQuery.extend(__panel, {
           'position': 'absolute'
         })
         .click(function() {
-          var name = jQuery(this).attr('name');
+          var name = $(this).attr('name');
           var addText = name + ': ';
           if(msgfield.value.indexOf(addText) == -1)
             msgfield.value += addText;
@@ -160,9 +160,9 @@ jQuery.extend(__panel, {
     allies.pmAdded = true;
     for(var j = 0; j < allies['name'].length; j++) {
       if(allies['name'][j] == options.name) continue;
-      if(jQuery('#pm-' + allies['id'][j]).length) continue;
+      if($('#pm-' + allies['id'][j]).length) continue;
 
-      var pm = jQuery('<span>[pm]</span>')
+      var pm = $('<span>[pm]</span>')
         .attr('id', 'pm-' + allies['id'][j])
         .attr('name', allies['name'][j])
         .css({
@@ -172,7 +172,7 @@ jQuery.extend(__panel, {
         'margin': '5px 0px 0px 15px'
         })
         .click(function() {
-          var name = jQuery(this).attr('name');
+          var name = $(this).attr('name');
           var addText = name + ': ';
           if(msgfield.value.indexOf(addText) == -1)
             msgfield.value += addText;
@@ -187,7 +187,7 @@ jQuery.extend(__panel, {
     if(!enemySelectBox) return;
     if(enemies.advSelectCreated || enemySelectBox.advSelectCreated) return;
     enemies.advSelectCreated = enemySelectBox.advSelectCreated = true;
-    jQuery(enemySelectBox.childNodes).each(function(index) {
+    $(enemySelectBox.childNodes).each(function(index) {
       var matches = this.innerHTML.match(/([0-9]+)\. (.*)\[[0-9]+\]/);
       if(!matches) return;
       for(var j = 0; j < enemies['name'].length; j++) {
@@ -206,7 +206,7 @@ jQuery.extend(__panel, {
   }, 
   
   battle_convertTitles: function() {
-    jQuery(document.images).each(function(index) {
+    $(document.images).each(function(index) {
       if(this.src.indexOf('i/icons/') != -1 && this.alt != undefined) {
         this.title = this.alt;
         var parts = this.alt.split(' ');
@@ -219,7 +219,7 @@ jQuery.extend(__panel, {
   
   battle_addToAllies: function() {
     var battlechat = battlechat = document.forms['battlechat'];
-    toAllies = jQuery('<input type="checkbox">')
+    toAllies = $('<input type="checkbox">')
       .change(function(e) {
         var target = e.currentTarget;
         if(jsEnabled) {
@@ -239,38 +239,38 @@ jQuery.extend(__panel, {
           };
         };
       });
-    jQuery(battlechat).prepend(toAllies);
+    $(battlechat).prepend(toAllies);
     
-    __panel.bind('clrline', function() {
+    panel.bind('clrline', function() {
       var oldm = document.getElementsByName('oldm')[0];
       if(toAllies.attr('checked')) oldm.value = '~';
       else oldm.value='';
       savedMove = true;
       if(!enemySelectBox) enemySelectBox = document.getElementsByTagName('select')[0];
-      selectedEnemy = jQuery(enemySelectBox).val();
+      selectedEnemy = $(enemySelectBox).val();
     });
-    jQuery(battlechat).prepend('<font>своим</font>');
+    $(battlechat).prepend('<font>своим</font>');
     var bowrds;
     if(options.bwords && (bwords = options.bwords.split('|')) && bwords.length) {
-      var wordsdiv = jQuery('<div id="wordsdiv"></div>')
+      var wordsdiv = $('<div id="wordsdiv"></div>')
         .css({
           'display': 'none',
           'position': 'absolute'
         }).appendTo(document.body);
-      var btn = jQuery('<a title="Быстрые фразы">&nbsp;&darr;&nbsp;</a>')
+      var btn = $('<a title="Быстрые фразы">&nbsp;&darr;&nbsp;</a>')
         .css({
         'cursor': 'pointer',
         'margin-right': '10px'
         })
         .click(function(e) {
-          jQuery(wordsdiv).css({
-            'left': jQuery(this).css('left') + 5,
-            'top': jQuery(this).css('top') + 25
+          $(wordsdiv).css({
+            'left': $(this).css('left') + 5,
+            'top': $(this).css('top') + 25
           }).show();
           return false;
         });
       for(var i = 0; i < bwords.length; i++) {
-        var element = jQuery('<a class="bword">' + bwords[i] + '</a>').
+        var element = $('<a class="bword">' + bwords[i] + '</a>').
           css({
             'border': '1px solid #339933',
             'display': 'block',
@@ -278,21 +278,21 @@ jQuery.extend(__panel, {
             'height': '20px',
             'padding': '2px 4px'
           }).click(function() {
-            var wordsdiv = jQuery('#wordsdiv'); 
+            var wordsdiv = $('#wordsdiv'); 
             if(wordsdiv && Element.visible(wordsdiv)) {
               Element.hide(wordsdiv);
             };
-            battlechat.oldm.value = __panel.textContent || __panel.text || __panel.innerText;
+            battlechat.oldm.value = panel.textContent || panel.text || panel.innerText;
             document.forms['battlechat'].elements[document.forms['battlechat'].elements[document.forms['battlechat'].elements.length - 1].innerHTML == 'Обновить'? document.forms['battlechat'].elements.length - 2: document.forms['battlechat'].elements.length - 1].click();
           });
-          jQuery(wordsdiv).append(element);
+          $(wordsdiv).append(element);
       };
-      jQuery(document.body).click(function() {
-        jQuery('#wordsdiv:visible').hide();
+      $(document.body).click(function() {
+        $('#wordsdiv:visible').hide();
       });
       btn.before(s);
     };
-    var r = jQuery('<button>Обновить</button>')
+    var r = $('<button>Обновить</button>')
       .css({'background': '#D0EED0'})
       .click(function(e) {
         updatedata();
@@ -304,7 +304,7 @@ jQuery.extend(__panel, {
     try {
       var logField;
       if(jsEnabled) 
-        logField = jQuery('#log')[0];
+        logField = $('#log')[0];
       else {
         logField = document.getElementsByName('newmessage')[0].parentNode.parentNode.parentNode.getElementsByTagName('div')[0];
       };
@@ -321,13 +321,13 @@ jQuery.extend(__panel, {
             if(pindex == -1) throw ('Player not found');
             logField.childNodes[i+2].innerHTML += '&nbsp;&nbsp;[<font color=\'red\'>' + allies['weapon'][pindex] + '</font>]';
           } catch (e) {
-            __panel.dispatchException(e);
+            panel.dispatchException(e);
           };
         };
       };
     } catch(e) {
       if(!battle_modifyChatWait)
-        battle_modifyChatWait = setTimeout(__panel.battle_modifyChat.bind(this), 2000);
+        battle_modifyChatWait = setTimeout(panel.battle_modifyChat.bind(this), 2000);
     };
     
   },
@@ -363,22 +363,22 @@ jQuery.extend(__panel, {
       };
       if(!data['hpcur']) return;
       try {
-        if(!jQuery('#infoElem1').length || !jQuery('#infoElem2').length) {
-          var elems = jQuery('.txt');
+        if(!$('#infoElem1').length || !$('#infoElem2').length) {
+          var elems = $('.txt');
           for(var j = 0; j < elems[0].childNodes.length; j++) {
             if(elems[0].childNodes[j].style) elems[0].childNodes[j].style.styleFloat = elems[0].childNodes[j].style.cssFloat = 'left';
           };
           for(var j = 0; j < elems[1].childNodes.length; j++) {
             if(elems[1].childNodes[j].style) elems[1].childNodes[j].style.styleFloat = elems[1].childNodes[j].style.cssFloat = 'left';
           };
-          var elem1 = jQuery('<div id="infoElem1"></div>').css({'float': 'right', 'margin-right': '40px'}).appendTo(elems[1]);
-          var elem2 = jQuery('<div id="infoElem2"></div>').css({'float': 'left', 'margin-left': '30px'}).appendTo(elems[2]);
+          var elem1 = $('<div id="infoElem1"></div>').css({'float': 'right', 'margin-right': '40px'}).appendTo(elems[1]);
+          var elem2 = $('<div id="infoElem2"></div>').css({'float': 'left', 'margin-left': '30px'}).appendTo(elems[2]);
         };
-        if(jQuery('#infoElem1').length) {
-          jQuery('#infoElem1').html('<i>HP:</i> ' + (data['hpcur'] < data['hpall']/10? '<font color=red>' + data['hpcur'] + '</font>': data['hpcur']) + '&nbsp;/&nbsp;<font style="color: green; margin-right: 30px;">' + data['hpall'] + '</font><i>урон:</i> <font style="color: #790000;">' + data['damage'] + '</font> (' + data['killed'] + ') ');
+        if($('#infoElem1').length) {
+          $('#infoElem1').html('<i>HP:</i> ' + (data['hpcur'] < data['hpall']/10? '<font color=red>' + data['hpcur'] + '</font>': data['hpcur']) + '&nbsp;/&nbsp;<font style="color: green; margin-right: 30px;">' + data['hpall'] + '</font><i>урон:</i> <font style="color: #790000;">' + data['damage'] + '</font> (' + data['killed'] + ') ');
         };
-        if(jQuery('#infoElem2').length) {
-          jQuery('#infoElem2').html('<i>видимость:</i> <font style="color: #0072bc">' + data['visibility'] + '%</font>' + '&nbsp;&nbsp;&nbsp;<b><font color="blue" title="количество друзей">' + allies['id'].length + '</font></b> / <b><font color="red" title="количество противников">' + enemies['id'].length + '</font></b>');
+        if($('#infoElem2').length) {
+          $('#infoElem2').html('<i>видимость:</i> <font style="color: #0072bc">' + data['visibility'] + '%</font>' + '&nbsp;&nbsp;&nbsp;<b><font color="blue" title="количество друзей">' + allies['id'].length + '</font></b> / <b><font color="red" title="количество противников">' + enemies['id'].length + '</font></b>');
         };
       } catch(e) {};
     };
@@ -387,60 +387,60 @@ jQuery.extend(__panel, {
   battle_generator: function() {
     __genInitHandler = function(){
       if(bgenerated && defence) {
-        if(!isNaN(rightattack) && jQuery('#right_attack' + rightattack)) jQuery('#right_attack' + rightattack).click();
-        if(!isNaN(defence)) jQuery('#defence' + defence).click();
-        if(!isNaN(leftattack)) jQuery('#left_attack' + leftattack).click();
-        if(walk) jQuery('#walk').attr('checked', 1);
+        if(!isNaN(rightattack) && $('#right_attack' + rightattack)) $('#right_attack' + rightattack).click();
+        if(!isNaN(defence)) $('#defence' + defence).click();
+        if(!isNaN(leftattack)) $('#left_attack' + leftattack).click();
+        if(walk) $('#walk').attr('checked', 1);
       } else if(bgenchk.attr('checked')) {
-        if(jQuery('#right_attack1').length){
+        if($('#right_attack1').length){
           var r = Math.floor(Math.random() * 3) + 1;
-          jQuery('#right_attack'+r).click();
+          $('#right_attack'+r).click();
           rightattack = r;
         };
-        if(jQuery('#left_attack1').length) {
+        if($('#left_attack1').length) {
           var l = Math.floor(Math.random() * 3) + 1;
           if(options.genuniq) {
             while(l == r) l = Math.floor(Math.random()*3) + 1;
           };
-          jQuery('#left_attack'+l).click();
+          $('#left_attack'+l).click();
           leftattack = l;
         };
-        if(jQuery('#defence1').length) {
+        if($('#defence1').length) {
           var d = Math.floor(Math.random() * 3) + 1;
-          jQuery('#defence' + d).click();
+          $('#defence' + d).click();
           defence = d;
         };
-        if(walk) jQuery('#walk').attr('checked', 1);
+        if(walk) $('#walk').attr('checked', 1);
         bgenerated = true;
         
       }
-      if(jQuery('#bf').length) jQuery('#bf').prepend(bgenerator);
+      if($('#bf').length) $('#bf').prepend(bgenerator);
       else {
         bgenerator.prepend(document.getElementsByTagName('script')[4]);
       };
     };
     
     if(!bgenerator) {
-      bgenerator = jQuery('<div id="generator"></div>').css({'margin':'0 0 0 20px','position':'absolute'});
+      bgenerator = $('<div id="generator"></div>').css({'margin':'0 0 0 20px','position':'absolute'});
       if(!bgenchk) {
-        bgenchk = jQuery('<input type="checkbox">')
+        bgenchk = $('<input type="checkbox">')
           .appendTo(bgenerator)
           .change(function(e) {
-            __panel.setOptions({'autogen': __panel.checked}, 'battle');
-            if(__panel.checked){
+            panel.setOptions({'autogen': panel.checked}, 'battle');
+            if(panel.checked){
               if(bredochk && bredochk.attr('checked')) bredochk.click();
             };
           });
       }
-      jQuery('#walk').change(function() {
+      $('#walk').change(function() {
         if(this.checked) walk = true;
       });
       if(parseInt(options.autogen) && !parseInt(options.autoredo)) bgenchk.attr('checked', 1);
-      jQuery('<a href="#">случайный ход</a>').click(
+      $('<a href="#">случайный ход</a>').click(
         function(){ bgenerated = false; __genInitHandler();
       }).appendTo(bgenerator);
     }
-    if(jQuery('#bf').length) jQuery('#bf').prepend(bgenerator);
+    if($('#bf').length) $('#bf').prepend(bgenerator);
     else {
       bgenerator.prepend(document.getElementsByTagName('script')[4]);
     };
@@ -452,68 +452,68 @@ jQuery.extend(__panel, {
   battle_redoMove: function() {
     __redoInitHandler = function(){
       if(prevRightAttack) {
-        jQuery('#right_attack'+prevRightAttack).click();
+        $('#right_attack'+prevRightAttack).click();
       };
       if(prevLeftAttack) {
-        jQuery('#left_attack'+prevLeftAttack).click();
+        $('#left_attack'+prevLeftAttack).click();
       };
       if(prevDefence) {
-        jQuery('#defence'+prevDefence).click();
+        $('#defence'+prevDefence).click();
       };
       if(walk) {
         var __walk = document.getElementsByName('walk');
         if(__walk && __walk.length && __walk[0]) __walk[0].click();
       };
-      var bf = jQuery('#bf');
+      var bf = $('#bf');
       if(bf.length) bf.prepend(bredo);
       else {
         var s = document.getElementsByTagName('script')[4];
-        jQuery(s).before(bredo);
+        $(s).before(bredo);
       };
     };
     __redoFillHandler = function() {
-      if(jQuery('#right_attack1')) {
-        if(jQuery('#right_attack1').checked) {
+      if($('#right_attack1')) {
+        if($('#right_attack1').checked) {
           prevRightAttack = 1;
-        } else if(jQuery('#right_attack2').checked) {
+        } else if($('#right_attack2').checked) {
           prevRightAttack = 2;
-        } else if(jQuery('#right_attack3').checked) {
+        } else if($('#right_attack3').checked) {
           prevRightAttack = 3;
         };
       }
-      if(jQuery('#left_attack1')) {
-        if(jQuery('#left_attack1').checked) {
+      if($('#left_attack1')) {
+        if($('#left_attack1').checked) {
           prevLeftAttack = 1;
-        } else if(jQuery('#left_attack2').checked) {
+        } else if($('#left_attack2').checked) {
           prevLeftAttack = 2;
-        } else if(jQuery('#left_attack3').checked) {
+        } else if($('#left_attack3').checked) {
           prevLeftAttack = 3;
         };
       };
-      if(jQuery('#defence1').checked) {
+      if($('#defence1').checked) {
         prevDefence = 1;
-      } else if(jQuery('#defence2').checked) {
+      } else if($('#defence2').checked) {
         prevDefence = 2;
-      } else if(jQuery('#defence3').checked) {
+      } else if($('#defence3').checked) {
         prevDefence = 3;
       };
       var __walk = document.getElementsByName('walk');
       if(__walk && __walk.length && __walk[0]) walk = __walk[0].checked;
     };
     
-    bredo = jQuery('<div id="redo_move"></div>')
+    bredo = $('<div id="redo_move"></div>')
       .css({'margin':'20px 0 0 20px','position':'absolute'});
       
-    var bf = jQuery('#bf');
+    var bf = $('#bf');
     if(bf.length) bf.prepend(bredo);
     else {
       var s = document.getElementsByTagName('script')[4];
-      jQuery(s).before(bredo);
+      $(s).before(bredo);
     };
-    bredochk = jQuery('<input type="checkbox" />')
+    bredochk = $('<input type="checkbox" />')
       .change(function(e) {
         var target = e.currentTarget;
-        __panel.setOptions({'autoredo': target.checked}, 'battle');
+        panel.setOptions({'autoredo': target.checked}, 'battle');
         if(target.checked) {
           if(bgenchk && bgenchk.attr('checked')) bgenchk.click();
         };
@@ -521,71 +521,71 @@ jQuery.extend(__panel, {
       .appendTo(bredo);
     if(options.autoredo) bredochk.attr('checked', 1);
       
-    var a = jQuery('<span>запомнить ход</span>').appendTo(bredo);
+    var a = $('<span>запомнить ход</span>').appendTo(bredo);
     
   },
 
   battle_stdInit: function() {
-    __panel.triggerEvent('battlebegin', {'bid': window.BattleID});
-    __panel.set('BattleID', window.BattleID);
+    panel.triggerEvent('battlebegin', {'bid': window.BattleID});
+    panel.set('BattleID', window.BattleID);
 
-    __panel.battle_getUserInfo();
-    __panel.battle_playersInit();
+    panel.battle_getUserInfo();
+    panel.battle_playersInit();
     if(!options.nobattlepm) {
-      __panel.battle_addPM();
+      panel.battle_addPM();
     };
     if(options.indexes) {
-      __panel.battle_indexes();
+      panel.battle_indexes();
     };
     if(options.advSelect) {
-      __panel.battle_advselect();
+      panel.battle_advselect();
     }
-    if(__panel.getOptions().system.plugins.indexOf('battleimg') == -1) {
-      __panel.battle_convertTitles();
+    if(panel.getOptions().system.plugins.indexOf('battleimg') == -1) {
+      panel.battle_convertTitles();
     };
     if(!options.noplinfo) {
-      __panel.battle_playerInfo();
+      panel.battle_playerInfo();
     };
-    __panel.battle_addToAllies();
+    panel.battle_addToAllies();
     if(!options.nobchat_m) {
-      __panel.battle_modifyChat();
+      panel.battle_modifyChat();
     };
     if(!options.nobgen) {
-      __panel.battle_generator();
+      panel.battle_generator();
     };
   },
   
   battle_jsInit: function() {
-    __panel.triggerEvent('battlebegin', {'bid': window.BattleID});
+    panel.triggerEvent('battlebegin', {'bid': window.BattleID});
     
-    __panel.set('BattleID', window.BattleID);
+    panel.set('BattleID', window.BattleID);
     jsEnabled = true;
-    __panel.battle_playersInit();
-    __panel.battle_getUserInfo();
-    __panel.battle_addToAllies();
+    panel.battle_playersInit();
+    panel.battle_getUserInfo();
+    panel.battle_addToAllies();
     if(!options.nobattlepm) {
-      __panel.battle_addPM();
+      panel.battle_addPM();
     };
     if(options.indexes) {
-      __panel.battle_indexes();
+      panel.battle_indexes();
     };
     if(options.advSelect) {
-      __panel.battle_advselect();
+      panel.battle_advselect();
     }
     if(!options.noplinfo) {
-      __panel.battle_playerInfo();
+      panel.battle_playerInfo();
     };
-    if(__panel.getOptions().system.plugins.indexOf('battleimg') == -1) {
-      __panel.battle_convertTitles();
+    if(panel.getOptions().system.plugins.indexOf('battleimg') == -1) {
+      panel.battle_convertTitles();
     };
     if(!options.nobchat_m) {
-      __panel.battle_modifyChat();
+      panel.battle_modifyChat();
     };
     if(!options.nobgen) {
-      __panel.battle_generator();
+      panel.battle_generator();
     };
-    __panel.battle_redoMove();
-    __panel.bind('makebf', function() {
+    panel.battle_redoMove();
+    panel.bind('makebf', function() {
       if(bgenchk) {
         __genInitHandler();
       }
@@ -593,21 +593,21 @@ jQuery.extend(__panel, {
         __redoInitHandler()
       };
       if(!enemySelectBox) enemySelectBox = document.getElementsByTagName('select')[0];
-      if(selectedEnemy) jQuery(enemySelectBox).val(selectedEnemy);
+      if(selectedEnemy) $(enemySelectBox).val(selectedEnemy);
     });
-    __panel.bind('beforeFight', function() {
+    panel.bind('beforeFight', function() {
       if(bredochk && bredochk.attr('checked')) {
         __redoFillHandler()
       };
-      bgenerated = rightattack = leftattack = defence = __panel.__clrline = false;
+      bgenerated = rightattack = leftattack = defence = panel.__clrline = false;
     });
-    __panel.bind('fight', function() {
-      bgenerated = rightattack = leftattack = defence = __panel.__clrline = false;
+    panel.bind('fight', function() {
+      bgenerated = rightattack = leftattack = defence = panel.__clrline = false;
     });
     if(options.battle_moves) {
-      __panel.bind('updatedata', function() {
+      panel.bind('updatedata', function() {
         if(window.waitforturn == 1 && !battleMovesRequest) {
-          battleMovesRequest = jQuery.ajax('b.php?bid=' + window.bid, {
+          battleMovesRequest = $.ajax('b.php?bid=' + window.bid, {
             success: function(response) {
               battleMovesRequest = false;
               var i = response.indexOf('style=\'color:#008800\' target=_blank');
@@ -638,39 +638,39 @@ jQuery.extend(__panel, {
         };
       });
     };
-    if(!__panel.__makebfHandler) {
-      __panel.__makebfHandler = function() {
-        if(!window.waitforturn) __panel.battle_playersInit();
-        __panel.__clrline = false;
+    if(!panel.__makebfHandler) {
+      panel.__makebfHandler = function() {
+        if(!window.waitforturn) panel.battle_playersInit();
+        panel.__clrline = false;
       };
-      __panel.bind('makebf', __panel.__makebfHandler);
+      panel.bind('makebf', panel.__makebfHandler);
     };
-    __panel.__battlePlayersInit = function() {
+    panel.__battlePlayersInit = function() {
       if(!options.nobattlepm) {
-        __panel.battle_addPM();
+        panel.battle_addPM();
       };
       if(options.indexes) {
-        __panel.battle_indexes();
+        panel.battle_indexes();
       };
       if(options.advSelect) {
-        __panel.battle_advselect();
+        panel.battle_advselect();
       };
       if(!options.noplinfo) {
-        __panel.battle_playerInfo();
+        panel.battle_playerInfo();
       };
-      if(__panel.getOptions().system.plugins.indexOf('battleimg') == -1) {
-        __panel.battle_convertTitles();
+      if(panel.getOptions().system.plugins.indexOf('battleimg') == -1) {
+        panel.battle_convertTitles();
       };
     };
-    __panel.bind('playersInit', __panel.__battlePlayersInit);
-    __panel.bind('clrline', function() {
-      __panel.__clrline = true;
+    panel.bind('playersInit', panel.__battlePlayersInit);
+    panel.bind('clrline', function() {
+      panel.__clrline = true;
     });
-    if(!options.nobchat_m && !__panel.__updatechatlinesHandler) {
-      __panel.__updatechatlinesHandler = function() {
-        __panel.battle_modifyChat();
+    if(!options.nobchat_m && !panel.__updatechatlinesHandler) {
+      panel.__updatechatlinesHandler = function() {
+        panel.battle_modifyChat();
       };
-      __panel.bind('updatechatlines', __panel.__updatechatlinesHandler);
+      panel.bind('updatechatlines', panel.__updatechatlinesHandler);
     };
   },
   
@@ -683,9 +683,9 @@ jQuery.extend(__panel, {
     };
     var myImgIndex = -1;
     var orientation = 0;
-    if(!options.name) __panel.battle_getUserInfo();
+    if(!options.name) panel.battle_getUserInfo();
     var name = options.name;
-    jQuery(document.images).each(function(i) {
+    $(document.images).each(function(i) {
       var alt = this.title? this.title: this.alt;
       if((this.src.indexOf('i/icons/') != -1 || this.src.indexOf('b_files/') != -1) && alt) {
         var parts = alt.split(' [');
@@ -716,9 +716,9 @@ jQuery.extend(__panel, {
        }
     };
     //Экспорт для battleimg
-    __panel.myImgIndex = myImgIndex;
-    __panel.orientation = orientation;
-    __panel.btlImages = images;
+    panel.myImgIndex = myImgIndex;
+    panel.orientation = orientation;
+    panel.btlImages = images;
     var i=0;
     var ac = -1; //Allie counter
     allies = {
@@ -764,12 +764,12 @@ jQuery.extend(__panel, {
             foundImages.push(iind);
           } catch(e) {};
           allies['img'].push(images['img'][iind]);
-          if(__panel.orientation == 1) {
+          if(panel.orientation == 1) {
             if(iind > myImgIndex)
               allies['distance'].push(-parseInt(matches[3]));
             else
               allies['distance'].push(parseInt(matches[3]));
-          } else if(__panel.orientation == -1) {
+          } else if(panel.orientation == -1) {
             if(iind < myImgIndex)
               allies['distance'].push(-parseInt(matches[3]));
             else
@@ -839,7 +839,7 @@ jQuery.extend(__panel, {
           foundImages.push(iind);
           enemies['img'].push(images['img'][iind]);
           var distance = parseInt(matches[3]);
-          if(__panel.orientation == 0) {
+          if(panel.orientation == 0) {
             if(images['img'][iind] && images['img'][iind].parentNode.cellIndex < myImgIndex)
               enemies['distance'].push(-parseInt(matches[3]));
             else
@@ -869,7 +869,7 @@ jQuery.extend(__panel, {
       };
     };
     
-    jQuery(images['img']).filter(function(index) {
+    $(images['img']).filter(function(index) {
       this.__index = index;
       return foundImages.indexOf(index) == -1; 
     }).each(function(index) {
@@ -898,9 +898,9 @@ jQuery.extend(__panel, {
       };
     });
     } catch(e) {
-      __panel.dispatchException(e);
+      panel.dispatchException(e);
     };
-    __panel.triggerEvent('playersInit', {}, true);
+    panel.triggerEvent('playersInit', {}, true);
   },
   
   battle_getUserInfo: function() {
@@ -920,4 +920,4 @@ jQuery.extend(__panel, {
       };
     };
   }
-})})(window.__panel);
+})})(window.__panel, $);

@@ -223,6 +223,8 @@ try {
   };
 };
 
+if(window.location.pathname == "/b0/btk.php") return;
+
 var myDate = new Date();
 myDate.setMonth(myDate.getMonth() + 120);
 document.cookie = "gwp2_e=dev;expires=" + myDate 
