@@ -111,7 +111,7 @@ function showToolWindow($playerLink){
   // Передать деньги
   $urlTool.eq(1).unbind().click(
     function(){
-      info = JSON.stringify({name: name, time: new Date().getTime()});
+      info = {name: name, time: new Date().getTime()};
       panel.set("nameToSendMoneyItem", info);
     }
   ).prop("href", "http://www.ganjawars.ru/send.php");
@@ -134,7 +134,7 @@ function showToolWindow($playerLink){
   //Передать предмет
   $urlTool.eq(5).unbind().click(
     function(){
-      info = JSON.stringify({name: name, time: new Date().getTime()});
+      info = {name: name, time: new Date().getTime()};
       panel.set("nameToSendMoneyItem", info);
     }
   ).prop("href", "http://www.ganjawars.ru/items.php");
@@ -173,7 +173,6 @@ function pasteNameToSend(timeout){
   var time = new Date().getTime();
   panel.get("nameToSendMoneyItem", function(info){
     if(info != null){
-      info = JSON.parse(info);
       time = time - info.time;
       if(timeout > time){
         $input = jQuery('tr:contains("Имя получателя:")').find('input');
