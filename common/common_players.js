@@ -1,22 +1,32 @@
 (function(panel) {
   jQuery.extend(panel, {
     common_players_tooltip: function(options){
-      var $player, $toolWindow, $playerLink;
-      var showWaitId, hideWaitId, iconPatch;
+      // Интервал, через который имя для передачи (денег, предметов) будет удалено (ms).
+      var clearDataTimeout = 300000;
 
-      iconPatch = panel.path_to_theme() + 'icons/';
+      var $player, $toolWindow, $playerLink;
+      var showWaitId, hideWaitId, paramButtons, toolHTML, i, length;
+
+      paramButtons = [
+        "Написать письмо",          "send_mail",
+        "Передать деньги",          "send_money",
+        "Добавить в друзья",        "friend_list",
+        "Список аренды",            "list_rents",
+        /* вторая строка */
+        "Письма от персонажа ",     "mails_from",
+        "Передать предмет",         "send_item",
+        "Добавить в черный список", "black_list",
+        "Иски игрока",              "claims"
+      ];
+
+      toolHTML = "&nbsp;";
+      for(i = 0, length = paramButtons.length; i < length; i = i + 2){
+        if(i == 8) toolHTML += "<br>";
+        toolHTML += '<a href="#" title="'+ paramButtons[i] +'"><img src="'+ panel.path_to_theme() + 'icons/' + paramButtons[i+1] +'.png"></a>&nbsp;';
+      }
 
       jQuery('body').append(
-        jQuery('<div id="playerToolWindow">&nbsp;' +
-                  '<a href="#"><img border=0 src="' + iconPatch + 'send_mail.png" title="Написать письмо"></a>&nbsp;' +
-                  '<a href="#"><img border=0 src="' + iconPatch + 'send_money.png" title="Передать деньги"></a>&nbsp;' +
-                  '<a href="#"><img border=0 src="' + iconPatch + 'friend_list.png" title="Добавить в друзья"></a>&nbsp;'+
-                  '<a href="#"><img border=0 src="' + iconPatch + 'list_arenda.png" title="Список аренды"></a>&nbsp;<br>' +
-                  '<a href="#"><img border=0 src="' + iconPatch + 'mail_ot.png" title="Письма от персонажа ..."></a>&nbsp;'+
-                  '<a href="#"><img border=0 src="' + iconPatch + 'send_item.png" title="Передать предмет"></a>&nbsp;'+
-                  '<a href="#"><img border=0 src="' + iconPatch + 'black_list.png" title="Добавить в ЧС"></a>&nbsp;'+
-                  '<a href="#"><img border=0 src="' + iconPatch + 'isks.png" title="Иски игрока"></a>&nbsp;'+
-               '</div>').addClass('pane left').hide()
+        jQuery('<div id="playerToolWindow"></div>').html(toolHTML).addClass('pane left').hide()
       );
 
       $toolWindow = jQuery('#playerToolWindow');
@@ -51,12 +61,22 @@
           }, 500);
         }
       );
+
+      $player.click(
+        function(){
+          clearTimeout(showWaitId);
+        }
+      );
+
+      if(location.pathname == '/send.php' || location.pathname == "/home.senditem.php" || location.pathname == "/items.php"){
+        pasteNameToSend(clearDataTimeout);
+      }
     }
   });
 
 function showToolWindow($playerLink){
   var $toolWindow, $urlTool;
-  var dimensions, left, top, id, name, login, bodyWidth;
+  var dimensions, left, top, id, name, login, bodyWidth, info;
 
   id   = $playerLink.prop("href").match(/(\d+)/)[0];
   name = $playerLink.text();
@@ -84,21 +104,49 @@ function showToolWindow($playerLink){
 
   $urlTool = $toolWindow.find('a');
 
+  // Первая строка:
+  // Написать письмо
   $urlTool.eq(0).prop("href", "http://www.ganjawars.ru/sms-create.php?mailto=" + login);
-  $urlTool.eq(1).prop("href", "#");
+
+  // Передать деньги
+  $urlTool.eq(1).unbind().click(
+    function(){
+      info = JSON.stringify({name: name, time: new Date().getTime()});
+      panel.set("nameToSendMoneyItem", info);
+    }
+  ).prop("href", "http://www.ganjawars.ru/send.php");
+
+  // Добавить в друзья
   $urlTool.eq(2).unbind().click(
     function(){
       addToFriendOrEnemy(0, name);
     }
   );
+
+  // Список аренды
   $urlTool.eq(3).prop("href", "http://www.ganjawars.ru/info.rent.php?id=" + id);
-  $urlTool.eq(4).prop("href", "http://www.ganjawars.ru/sms.php?page=0&search=" + login);
-  $urlTool.eq(5).prop("href", "#");
+
+  // Вторя строка:
+  // Письма от персонажа
+  $urlTool.eq(4).prop("href", "http://www.ganjawars.ru/sms.php?page=0&search=" + login)
+    .prop("title", $urlTool.eq(4).prop("title") + name);
+
+  //Передать предмет
+  $urlTool.eq(5).unbind().click(
+    function(){
+      info = JSON.stringify({name: name, time: new Date().getTime()});
+      panel.set("nameToSendMoneyItem", info);
+    }
+  ).prop("href", "http://www.ganjawars.ru/items.php");
+
+  // Добавить в черный список
   $urlTool.eq(6).unbind().click(
     function(){
       addToFriendOrEnemy(1, name);
     }
   );
+
+  //Иски игрока
   $urlTool.eq(7).prop("href", "http://www.ganjawars.ru/isks.php?sid=" + id + "&st=1&period=4");
 }
 
@@ -112,8 +160,31 @@ function addToFriendOrEnemy(type, name){
     success: function(data){
       text = !type ? "Ваши друзья" : "Черный список";
       if(jQuery(data).find('b:contains("' + text + '")').closest('table').find('b:contains("' + name + '")').length){
-        //do some;
-        //alert("Добавлен в " + text);
+        text = "<b>" + name + "</b> добавлен в ";
+        text += !type ? "друзья." : "черный список.";
+        panel.showFlash(text, 'message', 2500);
+      }
+    }
+  });
+}
+
+function pasteNameToSend(timeout){
+  var $input;
+  var time = new Date().getTime();
+  panel.get("nameToSendMoneyItem", function(info){
+    if(info != null){
+      info = JSON.parse(info);
+      time = time - info.time;
+      if(timeout > time){
+        $input = jQuery('tr:contains("Имя получателя:")').find('input');
+        if($input.length){
+          $input.eq(0).prop("value", info.name);
+          panel.set("nameToSendMoneyItem", null);
+        } else {
+          panel.showFlash("Выберите предмет для передачи игроку <b>"+ info.name +"</b>, и нажмите «Передать».", 'message', 5000);
+        }
+      } else {
+        panel.set("nameToSendMoneyItem", null);
       }
     }
   });
