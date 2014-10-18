@@ -752,7 +752,7 @@ window.Panel2 = new function() {
   var originalData, originalTitle;
   function ajaxifyLinks($links) {
     $links.addClass('ajax').click(function(e) {
-      if(e.ctrlKey || e.altKey) return true;
+      if(e.ctrlKey || e.altKey || e.button != 0) return true;
       var href = $(this).attr('href');
       if(document.location.toString().indexOf(href) > -1) return true;
       var link_title = $(this).text();
@@ -2559,8 +2559,13 @@ window.Panel2 = new function() {
     },
 
     auth: function(callback) {
-      function authenticate_complete() {
-
+      var listenerID;
+      if(!listenerID) {
+        listenerID = instance.bind('auth', function() {
+          callback();
+          instance.unbind('auth', listenerID);
+          listenerID = false;
+        });
       }
       $('<iframe src="http://new.gwpanel.org/csauth.php"></iframe>')
         .load(function() {

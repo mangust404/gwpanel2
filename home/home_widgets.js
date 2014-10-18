@@ -60,7 +60,7 @@
           this.progressImg.css({opacity: 0.9});
         }
       }
-      this.show();
+      //this.show();
       var width = Math.round(100 * 100 * this.hp_current / health.hp_max) / 100;
       this.progressBar.css({width: width + '%'});
       

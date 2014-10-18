@@ -657,7 +657,6 @@
 
       panel.get('variants_' + panel.currentPlayerID(), function(variants) {
 
-        var upload_listener;
         var $upload_button = $('<a class="ui-btn ui-btn-inline ui-icon-arrow-u ui-btn-icon-right">Закачать</a>').click(function() {
           var upload_data = {
             variants: {}
@@ -674,80 +673,64 @@
             });
           }
           $upload_button.addClass('ui-disabled').html('Пожалуйста, подождите...');
-          if(!upload_listener) {
-            upload_listener = panel.bind('auth', function() {
-              $.ajax('http://new.gwpanel.org/settings.php?auth_key=' + panel.authKey, {
-                type: 'POST',
-                data: upload_data,
-                success: function(data) {
-                  if(data.indexOf('OK') == 0) {
-                    $upload_button.removeClass('ui-icon-arrow-u ui-disabled')
-                      .addClass('ui-btn-active ui-focus ui-icon-check')
-                      .html('Загружено');
-                  } else {
-                    $upload_button.removeClass('ui-icon-arrow-u ui-disabled')
-                      .addClass('ui-icon-delete')
-                      .html('Ошибка!');
-                  }
-                  panel.unbind('auth', upload_listener);
-                  upload_listener = false;
+          panel.auth(function() {
+            $.ajax('http://new.gwpanel.org/settings.php?auth_key=' + panel.authKey, {
+              type: 'POST',
+              data: upload_data,
+              success: function(data) {
+                if(data.indexOf('OK') == 0) {
+                  $upload_button.removeClass('ui-icon-arrow-u ui-disabled')
+                    .addClass('ui-btn-active ui-focus ui-icon-check')
+                    .html('Загружено');
+                } else {
+                  $upload_button.removeClass('ui-icon-arrow-u ui-disabled')
+                    .addClass('ui-icon-delete')
+                    .html('Ошибка!');
                 }
-              });
+                panel.unbind('auth', upload_listener);
+                upload_listener = false;
+              }
             });
-          }
-          $('<iframe src="http://new.gwpanel.org/csauth.php"></iframe>')
-            .load(function() {
-              $('<script src="http://new.gwpanel.org/settings.php"></script>')
-                .appendTo(document.body);
-            }).appendTo(document.body);
+          });
         });
         
-        var download_listener;
-
         var $download_button = $('<a class="ui-btn ui-btn-inline ui-icon-arrow-d ui-btn-icon-right">Скачать</a>').click(function() {
           $download_button.addClass('ui-disabled').html('Пожалуйста, подождите...');
-          if(!download_listener) {
-            download_listener = panel.bind('auth', function() {
-              $.ajax('http://new.gwpanel.org/settings.php?auth_key=' + panel.authKey + '&download=1', {
-                type: 'GET',
-                success: function(data) {
-                  try {
-                    eval('data=' + data);
-                    var variants_count = 0;
-                    var names = [];
-                    for(var variant_id in data) {
-                      if(!data[variant_id].name) throw('Не указано название варианта');
-                      names.push(data[variant_id].name);
-                      if(!data[variant_id].options) throw('Не указаны данные варианта ' + data[variant_id].name);
-                      data[variant_id].options = JSON.parse(data[variant_id].options);
-                      if(!data[variant_id].options.panes || 
-                         !data[variant_id].options.system || 
-                         !data[variant_id].options.widgets) {
-                        throw('Данные повреждены');
-                      }
+          panel.auth(function() {
+            $.ajax('http://new.gwpanel.org/settings.php?auth_key=' + panel.authKey + '&download=1', {
+              type: 'GET',
+              success: function(data) {
+                try {
+                  eval('data=' + data);
+                  var variants_count = 0;
+                  var names = [];
+                  for(var variant_id in data) {
+                    if(!data[variant_id].name) throw('Не указано название варианта');
+                    names.push(data[variant_id].name);
+                    if(!data[variant_id].options) throw('Не указаны данные варианта ' + data[variant_id].name);
+                    data[variant_id].options = JSON.parse(data[variant_id].options);
+                    if(!data[variant_id].options.panes || 
+                       !data[variant_id].options.system || 
+                       !data[variant_id].options.widgets) {
+                      throw('Данные повреждены');
                     }
-                    settings_migrate(data, function() {
-                      $download_button.removeClass('ui-icon-arrow-u ui-disabled')
-                        .addClass('ui-btn-active ui-focus ui-icon-check')
-                        .html('Импортированы варианты: ' + names.join(', '));
-                    });
-                  } catch(e) {
-                    $download_button.removeClass('ui-icon-arrow-u ui-disabled')
-                      .addClass('ui-icon-delete')
-                      .html('Ошибка!');
-                    panel.showFlash('Произошла ошибка во время загрузки: ' + e.toString());
                   }
-                  panel.unbind('auth', download_listener);
-                  download_listener = false;
+                  settings_migrate(data, function() {
+                    $download_button.removeClass('ui-icon-arrow-u ui-disabled')
+                      .addClass('ui-btn-active ui-focus ui-icon-check')
+                      .html('Импортированы варианты: ' + names.join(', '));
+                  });
+                } catch(e) {
+                  $download_button.removeClass('ui-icon-arrow-u ui-disabled')
+                    .addClass('ui-icon-delete')
+                    .html('Ошибка!');
+                  panel.showFlash('Произошла ошибка во время загрузки: ' + e.toString());
                 }
-              });
+                panel.unbind('auth', download_listener);
+                download_listener = false;
+              }
             });
-          }
-          $('<iframe src="http://new.gwpanel.org/csauth.php"></iframe>')
-            .load(function() {
-              $('<script src="http://new.gwpanel.org/settings.php"></script>')
-                .appendTo(document.body);
-            }).appendTo(document.body);
+          });
         });
 
         $('#edit-other-wrapper .options-variants').append($upload_button)
