@@ -3,8 +3,8 @@
 /// откуда будут загружаться файлы, менять не нужно
 $src = 'http://gwpanel.org/panel2';
 
-/// куда они будут загружаться, например http://images.ganjawars.ru/gwpanel/
-$dst = 'http://gwpanel.org/panel_test';
+/// куда они будут загружаться, например http://images.ganjawars.ru/gwpanel
+$dst = 'http://f.ganjafile.ru/gwpanel';
 
 $current_dir = dirname(__FILE__);
 
