@@ -4,7 +4,7 @@
 (function(panel, $) {
   $.extend(panel, {
     player_hide_sinds: function(options){
-      var $td, $contentTd, $newContent;
+      var $td, $contentTd;
       var index, i, length, html, url;
 
       $td = $('b:contains("Синдикаты")').closest('tr').next().children();
@@ -13,13 +13,12 @@
       if($contentTd.eq(0).is('br') && $contentTd.eq(1).is('br')) return false;
       if($td.text().search("остальных синдикатов скрыт") != -1) return false;
 
-      $newContent = $('<span>').append('<br>');
+      $td.empty().append('<br>');
       index = 1;
       html = "";
-      panel.loadCSS("player/player_hide_sinds.css");
 
       if($contentTd.eq(index).is('ul')){
-        $newContent.append($contentTd.eq(index)).append('<br>');
+        $td.append($contentTd.eq(index)).append('<br>');
         index = 2;
       }
 
@@ -34,33 +33,35 @@
         }
       }
 
-      $newContent.append(
-        $('<div>').addClass("phs_center phs_spoiler").append(
-          $('<div>').addClass("phs_title").html(
-            '&nbsp;&nbsp;<img src="'+ panel.iconURL('spoiler_open.png') +'" />&nbsp;Список остальных синдикатов'
-          ).click(
-            function(){
-              var $content, $img;
-              $content = $("#phs_listContent");
-              $img = $(this).find('img');
+      if(html != ""){
+        panel.loadCSS("player/player_hide_sinds.css");
 
-              if($content.is(':hidden')){
-                $content.show();
-                $img.prop('src', panel.iconURL('spoiler_close.png'));
-              } else {
-                $content.hide();
-                $img.prop('src', panel.iconURL('spoiler_open.png'));
+        $td.append(
+          $('<div>').addClass("phs_center phs_spoiler").append(
+            $('<div>').addClass("phs_title").html(
+              '&nbsp;&nbsp;<img src="'+ panel.iconURL('spoiler_open.png') +'" />&nbsp;Список остальных синдикатов'
+            ).click(
+              function(){
+                var $content, $img;
+                $content = $("#phs_listContent");
+                $img = $(this).find('img');
+
+                if($content.is(':hidden')){
+                  $content.show();
+                  $img.prop('src', panel.iconURL('spoiler_close.png'));
+                } else {
+                  $content.hide();
+                  $img.prop('src', panel.iconURL('spoiler_open.png'));
+                }
               }
-            }
+            )
+          ).append(
+            $('<div>').addClass("phs_content").html(html).hide().prop('id', 'phs_listContent')
+          ).append(
+            $('<div>').addClass("phs_space")
           )
-        ).append(
-          $('<div>').addClass("phs_content").html(html).hide().prop('id', 'phs_listContent')
-        ).append(
-          $('<div>').addClass("phs_space")
-        )
-      ).append($('<br>'));
-
-      $td.empty().append($newContent);
+        ).append('<br>');
+      }
     }
   });
 })(window.__panel, jQuery);
