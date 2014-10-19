@@ -20,7 +20,7 @@
 
       if($contentTd.eq(index).is('ul')){
         $newContent.append($contentTd.eq(index)).append('<br>');
-        index = 3;
+        index = 2;
       }
 
       for(i = index, length = $contentTd.length; i < length; i++){
