@@ -1,0 +1,33 @@
+.center{
+    margin-left: auto;
+    margin-right: auto;
+}
+.spoiler{
+    background: #d0eed0;
+    width: 97%;
+}
+.title{
+    cursor: pointer;
+    color: #990000;
+    font-weight: bold;
+    height: 26px;
+    line-height: 26px;
+}
+.content{
+    margin: 2px 2px 0 2px;
+    background: #ffffff;
+    border: dotted 1px #000000;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+.list{
+    line-height: 22px;
+    height: 22px;
+}
+.url{
+    text-decoration: none;
+    font-weight: bold;
+}
+.space{
+    height: 2px;
+}
