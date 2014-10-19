@@ -57,6 +57,43 @@ if(isset($_GET['auth_key'])) {
       print 'ERROR';
     }
     pg_close($dbconn);
+  } else if(isset($_GET['notepad_save'])) {
+    $dbconn = pg_connect("host=pgpool-alfa.neolabs.net port=5432 dbname=gwpanel-org");
+    $success = TRUE;
+    $success = $success && pg_query($dbconn, "BEGIN");
+    $r = pg_query($dbconn, sprintf("SELECT * FROM notepad WHERE gwuid = %d AND vid = 0", $gwuid));
+    if($r && ($ar = pg_fetch_assoc($r))) {
+      $success = $success && pg_query($dbconn, sprintf("UPDATE notepad SET content = '%s' WHERE gwuid = %d AND vid = %d",
+        pg_escape_string($dbconn, $_POST['content']),
+        $gwuid,
+        0
+      ));
+    } else {
+      $success = $success && pg_query($dbconn, sprintf("INSERT INTO notepad (gwuid, vid, name, content) VALUES (%d, %d, '%s', '%s')",
+        $gwuid,
+        0,
+        'default',
+        pg_escape_string($dbconn, $_POST['content'])
+      ));
+    }
+    $success = $success && pg_query('COMMIT');
+    if($success) {
+      print 'OK';
+    } else {
+      print 'ERROR';
+    }
+    pg_close($dbconn);
+
+  } else if(isset($_GET['notepad_load'])) {
+    $dbconn = pg_connect("host=pgpool-alfa.neolabs.net port=5432 dbname=gwpanel-org");
+    $r = pg_query($dbconn, sprintf("SELECT * FROM notepad WHERE gwuid = %d AND vid = 0", $gwuid));
+    if($r) {
+      $ar = pg_fetch_assoc($r);
+      if($ar['content']) {
+        print $ar['content'];
+      }
+    }
+    pg_close($dbconn);
   }
 } else if(isset($_SESSION['gwuid'])) {
   print '__panel.setAuthKey("' . auth_key($_SESSION['gwuid']) . '")';

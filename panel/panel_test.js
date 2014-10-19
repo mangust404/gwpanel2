@@ -2902,6 +2902,10 @@ QUnit.test('Тестирование функции __panel.fixForms', function(
   assert.equal(__panel.fixForms('<form><table><tr><td></td></form></tr></table><form><table><tr><td></td></form></tr></table>'),
     '<form><table><tr><td></td></tr></table></form><form><table><tr><td></td></tr></table></form>');
 
+  /// Более комплексный вариант
+  assert.equal(__panel.fixForms('<table><tr><td><table><tr><td></td></tr><form><tr><td></td></tr></table></form></td></tr></table><form><table><tr><td></td></tr></table></form>'),
+    '<table><tr><td><form><table><tr><td></td></tr><tr><td></td></tr></table></form></td></tr></table><form><table><tr><td></td></tr></table></form>');
+
   var result = __panel.fixForms('<table width=100% cellpadding=4 cellspacing=2 border=0>\
 \
 <tr><td bgcolor=#e0eee0>Ближайшее действие: <a href=/ferma.php?x=0&y=0>полить Тюльпаны</a> (через 15 мин.)</td></tr>\
@@ -2947,5 +2951,33 @@ href=/ferma.php?x=1&y=0&section=items>Постройки</a></center><form style
   assert.equal($('#qunit-fixture form').length, 3, '3 формы есть');
   assert.equal($('#qunit-fixture form input[type=image]').length, 3, '3 кнопки есть');
 
-
+  var result = __panel.fixForms('&nbsp;&nbsp;Вместимость: <b>30</b> предметов, <b>500</b> ед. ресурсов<br><br>\n\
+<form action=object-hdo.php method=POST style=\'display:inline;\'>\n\
+<input type=hidden name=object_id value=41498>\n\
+<input type=hidden name=t value=2>\n\
+\n\
+<table border=0 cellpadding=5 cellspacing=1 width=550 style=\'border-bottom:1px solid #003300; border-top:1px solid #003300;\'><tr>\n\
+<td class=greenbg><nobr><B>Ввод, Гб</b></nobr></td>\n\
+<td class=greenbg><nobr><b>Вывод, Гб</b></nobr></td>\n\
+<td width=50% align=center class=greenbg><nobr><b>Примечание</b></nobr></td>\n\
+</tr>\n\
+\n\
+<tr>\n\
+<td class=greenlightbg><input type=text name=money_in value=0 size=5 maxlength=7></td>\n\
+<td class=greenlightbg>\n\
+<input type=text name=money_out value=0 size=5 maxlength=7>\n\
+</td>\n\
+<td class=greenlightbg align=left><input type=text name=opdesc value=\'\' style=\'width:70%\'><input type=submit value="&raquo;" class=mainbutton></td>\n\
+</tr>\n\
+</form>\n\
+</table>\n\
+<form action=object-hdo.php method=POST style=\'display:inline;\'>\n\
+  <input type=hidden name=t value=1>\n\
+  <input type=hidden name=in value=1>\n\
+  <input type=hidden name=object_id value=111563>\n\
+<table border=0 cellspacing=1 cellpadding=5 width=550 style=\'border-bottom:1px solid #003300;\'>\n\
+<tr><td colspan=2 align=center class=greenbg><b>Вы можете положить предмет в дом:</b></td></tr><tr><td class=greengreenbg align=right><select name=putitem></select></td><td align=center class=greengreenbg><input type=submit value=\'Положить\' class=mainbutton>\n\
+</td></tr></table>\n\
+</form>');
+  assert.ok(result.indexOf('</form>') > result.indexOf('</table>'), '</form> перед </table>');
 });

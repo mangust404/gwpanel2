@@ -182,7 +182,7 @@
   border: 0;
 }
 
-#edit-modules-wrapper .add-settings label {
+#edit-modules-wrapper .add-settings .ui-body > label {
   text-align: center;
 }
 
