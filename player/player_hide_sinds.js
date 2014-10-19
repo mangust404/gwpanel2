@@ -27,21 +27,21 @@
         if($contentTd.eq(i).is('a')){
           url = $contentTd.eq(i).prop('href');
           html +=
-            '<span class="list">&nbsp;&nbsp;#' + url.match(/(\d+)/)[0] +
-              ' <a class="url" href="'+ url +'">' + $contentTd.eq(i).text() + '</a>' +
+            '<span class="phs_list">&nbsp;&nbsp;#' + url.match(/(\d+)/)[0] +
+              ' <a class="phs_url" href="'+ url +'">' + $contentTd.eq(i).text() + '</a>' +
             '</span>' +
             '<br>';
         }
       }
 
       $newContent.append(
-        $('<div>').addClass("center spoiler").append(
-          $('<div>').addClass("title").html(
+        $('<div>').addClass("phs_center phs_spoiler").append(
+          $('<div>').addClass("phs_title").html(
             '&nbsp;&nbsp;<img src="'+ panel.iconURL('spoiler_open.png') +'" />&nbsp;Список остальных синдикатов'
           ).click(
             function(){
               var $content, $img;
-              $content = $("#listContent");
+              $content = $("#phs_listContent");
               $img = $(this).find('img');
 
               if($content.is(':hidden')){
@@ -54,9 +54,9 @@
             }
           )
         ).append(
-          $('<div>').addClass("content").html(html).hide().prop('id', 'listContent')
+          $('<div>').addClass("phs_content").html(html).hide().prop('id', 'phs_listContent')
         ).append(
-          $('<div>').addClass("space")
+          $('<div>').addClass("phs_space")
         )
       ).append($('<br>'));
 
