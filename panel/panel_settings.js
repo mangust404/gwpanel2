@@ -439,10 +439,7 @@
       /// готовим галерею иконок
       var added = [];
       $.each(panel_apply.themes[current_options.system.theme].icons, function(index, item) {
-        var img = item;
-        if(img.indexOf('http:') != 0) {
-          img = __panel.path_to_theme() + 'icons/' + img;
-        }
+        var img = panel.iconURL(item);
         added.push(img);
         $('<div class="icon-select"></div>').append(
           $('<img src="' + img + '"></img>').click(function() {
@@ -475,10 +472,7 @@
       });
       $.each(panel_apply.buttons, function(button_name) {
         var button = this;
-        var img = button.img || button.icon;
-        if(img && img.indexOf('http:') != 0) {
-          img = __panel.path_to_theme() + 'icons/' + img;
-        }
+        var img = panel.iconURL(button.img || button.icon);
         var id = 'button_' + button_name;
         button.id = id;
         $('<div class="button-wrapper"></div>').append(
@@ -1011,7 +1005,6 @@
       var self_init = false;
       widgetData.arguments = widgetData.arguments || {};
       var $widget = this;
-
       var __data = widgetData || {};
       if(!$('#settings-form-popup').length) {
         $('<div id="settings-form-popup" data-role="popup" data-position-to="window"></div>')
@@ -1077,10 +1070,7 @@
         if(widgetKind == 'button') {
           $('<input type="hidden" id="param-img" name="img" />')
             .appendTo(setting_content);
-          var img = (__data.img || widgetClass.img || 'no-icon');
-          if(img.indexOf('http:') != 0) {
-            img = __panel.path_to_theme() + 'icons/' + img;
-          }
+          var img = panel.iconURL(__data.img || widgetClass.img);
           $('<div class="img"><img src="' + img + '"/></div>').click(function() {
             $('#icons-gallery').show();
           }).insertBefore('#settings-form-popup h2');
@@ -1095,7 +1085,9 @@
           widget_data[param] = widgetData.arguments[param] == undefined? this.default:
                                widgetData.arguments[param];
         });
-        widgetData.id = widgetData.type;
+        if(!widgetData.id) {
+          widgetData.id = widgetData.type;
+        }
         panel_configure_form(widgetClass.configure, widgetData, setting_content, function(name, value) {
           widget_data[name] = value;
         });
@@ -1250,6 +1242,7 @@
             $('<a href="#" class="widget-save ui-shadow ui-btn ui-corner-all">' + 
               (isEdit? 'Сохранить': 'Добавить') + '</a>').click(function() {
               var displace;
+
               if(widgetKind == 'float') {
                 displace = 'float';
               } else if(isEdit) {

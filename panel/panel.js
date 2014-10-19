@@ -130,6 +130,8 @@ window.Panel2 = new function() {
         });
       var paneContainer = $('<div class="container"></div>').appendTo(pane);
       var buttons = pane_options.buttons;
+      var added_id = [];
+
       if(pane_options.buttons && pane_options.buttons.length > 0) {
         $(buttons).each(function(index) {
         //for(var i = 0; i < buttons.length; i++) {
@@ -140,16 +142,15 @@ window.Panel2 = new function() {
             return;
           }
           var that = this;
-          var img = (that.img || type.img || 'no-icon');
-          if(img.indexOf('http:') != 0) {
-            img = __panel.path_to_theme() + 'icons/' + img;
-          }
-          if(that.id) {
+          img = instance.iconURL(that.img || type.img);
+
+          if(that.id && added_id.indexOf(that.id) == -1) {
             id = that.id;
           } else {
             id = 'button_' + that.type + '_' + index;
             options.panes[paneID].buttons[index].id = id;
           }
+          added_id.push(id);
           var __button = $('<div class="button ' + that.type + '" id="' + id + '"></div>').append(
             $('<a><div class="img"><img src="' + img + '" /></div><h3>' + 
               (that.title? that.title: type.title) + 
@@ -2628,6 +2629,16 @@ window.Panel2 = new function() {
       initFloatWidgets();
     },
 
+    iconURL: function(_img) {
+      var img;
+      if(!_img) _img = 'no-icon.png';
+      if(_img.indexOf('http:') != 0) {
+        img = __panel.path_to_theme() + 'icons/' + _img;
+      } else {
+        img = String(_img);
+      }
+      return img;
+    },
     /**
     * Публичные аттрибуты
     */
