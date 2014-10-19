@@ -4,7 +4,7 @@
       // Интервал, через который имя для передачи (денег, предметов) будет удалено (ms).
       var clearDataTimeout = 300000;
 
-      var $player, $toolWindow, $playerLink;
+      var $player, $toolWindow, $playerLink, $playerLinkOnInfo;
       var showWaitId, hideWaitId, paramButtons, toolHTML, i, length;
 
       paramButtons = [
@@ -29,6 +29,16 @@
         jQuery('<div id="playerToolWindow"></div>').html(toolHTML).addClass('pane left').hide()
       );
 
+      if(location.pathname == "/info.php"){
+        $playerLinkOnInfo = jQuery('img[src*="male.gif"]').closest('td').find('b');
+        $playerLinkOnInfo.replaceWith(
+          jQuery('<a>')
+            .prop('href', location.href)
+            .html($playerLinkOnInfo.text())
+            .css({"text-decoration": "none", "font-weight": "bold"})
+        );
+      }
+
       $toolWindow = jQuery('#playerToolWindow');
       $player = jQuery('a[href*="info.php?id="]');
 
@@ -36,6 +46,7 @@
         function(){
           $playerLink = jQuery(this);
           showWaitId = setTimeout(function(){showToolWindow($playerLink)}, 750);
+          if($playerLink.text().search('info.php?') != -1) clearTimeout(showWaitId);
         }
       );
 
