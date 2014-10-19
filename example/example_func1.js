@@ -1,5 +1,5 @@
-(function(panel) {
-jQuery.extend(panel, {
+(function(panel, $) {
+$.extend(panel, {
   example_func1: function(options) {
     //console.log('Функция example_func1 вызывается только на странице "/me/"' + 
     //' и может быть отключена на странице настроек модулей. Она имеет конфигурируемые' + 
@@ -10,4 +10,4 @@ jQuery.extend(panel, {
     // Используйте panel.set() и panel.get() для больших объёмов.
   }
 });
-})(window.__panel);
+})(window.__panel, jQuery);

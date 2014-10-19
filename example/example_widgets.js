@@ -1,4 +1,4 @@
-(function(panel) {
+(function(panel, $) {
 
   /**
   * Приватная функция
@@ -8,7 +8,7 @@
     ///
   }
   
-  jQuery.extend(panel, {
+  $.extend(panel, {
     example_widget: function(options) {
       /// в этой функции this указывает на jQuery-объект созданного виджета
       /// здесь вы должны осуществить прорисовку виджета
@@ -16,9 +16,9 @@
       panel.loadCSS('example/widget.css');
       /// чтобы передать this в низлежащие области видимости, можно сделать вот так:
       var that = this;
-      jQuery.each(options, function(key, value) {
+      $.each(options, function(key, value) {
         that.append('<p>' + key + '=' + value + '</p>');
       });
     }
   });
-})(window.__panel);
+})(window.__panel, jQuery);

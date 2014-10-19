@@ -1,5 +1,5 @@
-(function(panel) {
-jQuery.extend(panel, {
+(function(panel, $) {
+$.extend(panel, {
   example_func2: function(options) {
     //Функция example_func2 вызывается на каждой странице и
     // поскольку у неё нет description в файле example.module.json,
@@ -15,27 +15,27 @@ jQuery.extend(panel, {
     panel.loadCSS('example/highlight.css');
     // сперва мы находим все A-элементы, href которых начинается на /info.php
     // список всех селекторов вы можете найти тут: http://api.jquery.com/category/selectors/
-    jQuery('a[href^="/info.php?id="]')   // - это выражение возвращает jQuery-объект со всеми ссылками
+    $('a[href^="/info.php?id="]')   // - это выражение возвращает jQuery-объект со всеми ссылками
     // затем мы добавляем им класс
     .addClass('player-info')   // благодаря цепочному выполнению после вызова этой функции мы всё ещё имеем исходный объект
     // добавляем всем ссылкам обработчик события "при наведении"
     .hover(function() {
       /// скрываем все видимые всплываки
-      jQuery('.player-info-div:visible').hide();
+      $('.player-info-div:visible').hide();
 
       if(this.$playerInfo) { /// в контексте этого обработчика this - это DOM-объект, объект ссылки, на которую был наведён курсор
         // если мы уже получали данные, то просто выводим их
         this.$playerInfo.show();
       } else {
         // данных нет, мы создаём див и затем аяксом загрузим в него данные
-        this.$playerInfo = jQuery('<div class="player-info-div"></div>');
+        this.$playerInfo = $('<div class="player-info-div"></div>');
         var that = this; // поскольку ajax-запрос является асинхронным, то функции succes и error
                          // при успешном завершении будут вызываться из хрен знает какого 
                          // контекста, а в контексте нашей уютной ссылки, с которой мы сейчас 
                          // работаем. Чтобы обратиться там к нашей ссылке, мы запоминаем 
                          // this в новую переменую, которая начиная с этого момента будет
                          // доступна и там
-        jQuery.ajax({
+        $.ajax({
           url: this.href,
           type: 'GET',
           success: function(data) {
@@ -53,7 +53,7 @@ jQuery.extend(panel, {
               ecoLevel = RegExp.$3;
               workLevel = RegExp.$5;
               that.$playerInfo.append( // append - функция добавления HTML или jQuery объектов в другой jQuery-объект
-                jQuery('<dl></dl>')  // мы создаём data list элемент и сразу добавляем в него данные
+                $('<dl></dl>')  // мы создаём data list элемент и сразу добавляем в него данные
                   .append('<dt class="war-level">Боевой:</dt>')
                   .append('<dd>' + warLevel + '</dd>')
                   .append('<dt class="war-level">Экономический:</dt>')
@@ -62,7 +62,7 @@ jQuery.extend(panel, {
                   .append('<dd>' + workLevel + '</dd>')
               ).mouseout(function() {
                 // когда пользователь уведёт мышку от этого дива, мы должны его спрятать
-                jQuery(this).hide();
+                $(this).hide();
               }).insertAfter(that); // и наконец, добавляем элемент в DOM сразу за ссылкой
             }
           },
@@ -81,4 +81,4 @@ jQuery.extend(panel, {
     }); // конец .hover()
   }
 });
-})(window.__panel);
+})(window.__panel, jQuery);

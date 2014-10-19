@@ -1,5 +1,5 @@
-(function(panel) {
-jQuery.extend(panel, {
+(function(panel, $) {
+$.extend(panel, {
   /**
   * Функция, возвращающая массив значений для вывода опций
   */
@@ -17,4 +17,4 @@ jQuery.extend(panel, {
     'example4': 'Пример 4'
   }
 });
-})(window.__panel);
+})(window.__panel, jQuery);
