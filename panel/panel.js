@@ -728,6 +728,35 @@ window.Panel2 = new function() {
         $(this).attr('onclick', onclick.replace(match[0], '__panel.gotoHref("' + match[2] + '", this)'));
       }
     });
+    $('.broken-form:not(.processed)').each(function() {
+      var form_id = $(this).attr('form-id');
+      var $form = $(this);
+      $('input.form-' + form_id + '[type=submit], ' + 
+        'input.form-' + form_id + '[type=image]').click(function() {
+        var s_data = $('input.form-' + form_id + ', textarea.form-' + form_id).serializeArray();
+        var params = [];
+        $.each(s_data, function() {
+            params.push(this.name + '=' + __panel.encodeURIComponent(this.value || options.data[this.name]));
+        });
+
+        var href = $form.attr('action') || location.href;
+        var options = {
+          type: String($form.attr('method') || 'post').toLowerCase(),
+          success: function(data) {
+            if(href == 'object-hdo.php') {
+              href = location.href;
+            }
+            instance.ajaxUpdateContent(data, href);
+          }
+        };
+
+        options.data = params.join('&');
+        $.ajax(href, options);
+
+        return false;
+      });
+
+    }).addClass('processed');
   }
 
   /**
@@ -2378,32 +2407,30 @@ window.Panel2 = new function() {
       if(!elem.length) {
         elem = $('body > table[bgcolor="#d0eed0"]').next('center');
       }
+      // У нас есть структура форм в document.forms, которую браузер почему-то
+      // создаёт нормально, и есть .innerHTML в корявом виде.
+      // Задача: привести формы из корявого innerHTML в нужный вид, используя
+      // document.forms в качестве структуры
+      var forms_copy = [];
+      $(document.forms).each(function(i) {
+        forms_copy[i] = [];
+        $(this).addClass('form-' + i + ' broken-form').attr('form-id', i);
+        $(this.elements).each(function(j) {
+          //forms_copy[i][j] = this;
+          $(this).addClass('form-' + i);
+          if($(this).attr('type') == 'submit') {
+            $(this).click(function() {
+
+            });
+          }
+        });
+      });
       if(elem.length > 0) {
         var $all_elements = elem.nextAll().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
       } else {
         var $all_elements = $('body').children().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
       }
       if($all_elements.length > 0) {
-        var $brokenForms = $('#gw-content').find('table td > form');
-        if($brokenForms.length > 0) {
-          /// если есть поломанные формы, чиним их
-          /// Поскольку jQuery уже исправил для нас разметку, то мы должны её снова поломать
-          /// чтобы затем починить с помощью функции fixForms
-          /// удаляем </form>
-          $brokenForms.each(function() {
-            var $elem = $(this).closest('table');
-            if(!$elem.length) $elem = $(this).closest('td');
-            var html = $elem.html();
-            var start = html.indexOf('<form');
-            var end = html.indexOf('>', start);
-            var form = html.substr(start, end - start + 1 );
-            html = html.substr(0, start) + html.substr(end + 1);
-            html = html.replace('</form>', '');
-            $elem.html(html);
-            $elem.wrap(form + '</form>');
-          });
-          //$('#gw-content').html(originalData);
-        }
         originalData = $('#gw-content').html();
         originalTitle = document.title;
 
@@ -2452,12 +2479,17 @@ window.Panel2 = new function() {
         var form_length = data.indexOf('>', start) - start + 1;
         tr_open = form_html.indexOf('<tr>');
         tr_close = form_html.indexOf('</tr>');
-        // console.log(open_tags, close_tags);
 
-        // console.log(tr_open, tr_close, tr_open > tr_close);
         if(tr_open > -1 || tr_close > -1) {
           /// форма сломанная, вытаскиваем <form> за пределы таблицы
-          table_open = data.indexOf('<table', prev_start);
+
+          /// первый вариант - <table> перед <form>
+          table_open = data.substr(prev_start, start).lastIndexOf('<table') + prev_start;
+          /// второй вариант - <table> после <form>
+          if(table_open == -1) {
+            table_open = data.indexOf('<table', prev_start);
+          }
+
           table_close = data.indexOf('</table>', table_open);
           if(table_open > -1) { /// таблица есть, форма внутри таблицы
             new_data = '';
@@ -2495,7 +2527,6 @@ window.Panel2 = new function() {
                    data.substr(end + 7);
           }
         }
-        //console.log(start);
         prev_start = end + 1;
       } while(start > -1);
 
@@ -2622,7 +2653,7 @@ jQuery.fn.sendForm = function(options) {
     var params = [];
     jQuery.each(s_data, function() {
       params.push(this.name + '=' + __panel.encodeURIComponent(this.value || options.data[this.name]));
-    })
+    });
     /// отдаём в data строку
     options.data = params.join('&');
     $.ajax($form.attr('action') || location.href, options);
