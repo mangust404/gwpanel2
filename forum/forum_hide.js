@@ -1,7 +1,7 @@
 // author   гном убийца
 // url      http://www.ganjawars.ru/info.php?id=433067
 
-(function(panel) {
+(function(panel, $) {
 
 var forumsDefine = {
   "main_forums" : {"count": 16, "header": "Основные форумы"},
@@ -11,7 +11,7 @@ var forumsDefine = {
   "rh_forums"   : {"count": 1, "header": "Автономные районы"}
 };
 
-jQuery.extend(panel, {
+$.extend(panel, {
   forum_hide: function(options){
     var $forumsTable, $tempForums;
     var i, counter;
@@ -19,12 +19,12 @@ jQuery.extend(panel, {
     panel.loadCSS('forum/forum_hide.css');
 
     if(location.search != "?gid=2"){
-      $forumsTable = jQuery('b:contains("Основные форумы")').closest('table');
-      $tempForums = jQuery('<table>').html($forumsTable.html());
+      $forumsTable = $('b:contains("Основные форумы")').closest('table');
+      $tempForums = $('<table>').html($forumsTable.html());
       counter = {"all": 0, "success": 0};
 
       for(i in options){
-        if(jQuery.type(options[i]) == 'array'){
+        if($.type(options[i]) == 'array'){
           counter.all++;
           counter.success += hideForum($tempForums, i, options[i]);
         }
@@ -33,8 +33,8 @@ jQuery.extend(panel, {
         $forumsTable.html($tempForums.html());
       }
     } else {
-      $forumsTable = jQuery('b:contains("Торговля")').closest('table');
-      $tempForums = jQuery('<table>').html($forumsTable.html());
+      $forumsTable = $('b:contains("Торговля")').closest('table');
+      $tempForums = $('<table>').html($forumsTable.html());
 
       if(hideForum($tempForums, "trade_forums", options.trade_forums)){
         $forumsTable.html($tempForums.html());
@@ -58,7 +58,7 @@ function hideForum($tempList, section, dataSection){
     $forumHeader.closest('tr').remove();
   } else {
     $forumHeader.addClass('def_forumHeader');
-    jQuery("<div>")
+    $("<div>")
       .html("Скрыто разделов: " + i)
       .addClass('tip_forumHeader')
       .attr("title", "Их номера: " + dataSection.join(", "))
@@ -67,4 +67,4 @@ function hideForum($tempList, section, dataSection){
 
   return 1;
 }
-})(window.__panel);
+})(window.__panel, jQuery);

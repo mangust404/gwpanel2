@@ -1,15 +1,15 @@
 // author   гном убийца
 // id       433067
 
-(function(panel) {
-jQuery.extend(panel, {
+(function(panel, $) {
+$.extend(panel, {
   player_family: function(options){
     var $family;
     var family, i, length;
 
-    $family = jQuery('b:contains("Семья")');
+    $family = $('b:contains("Семья")');
     if($family.length){
-      family = jQuery($family.get(0).nextSibling).text();
+      family = $($family.get(0).nextSibling).text();
       if(family.search(', ') != -1){
         family = family.split(',');
       } else {
@@ -25,8 +25,8 @@ jQuery.extend(panel, {
       }
       family = family.join(',');
 
-      jQuery($family.get(0).nextSibling).replaceWith(family);
+      $($family.get(0).nextSibling).replaceWith(family);
     }
   }
 });
-})(window.__panel);
+})(window.__panel, jQuery);
