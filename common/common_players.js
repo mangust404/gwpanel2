@@ -1,8 +1,8 @@
 // author   гном убийца
 // id       433067
 
-(function(panel) {
-  jQuery.extend(panel, {
+(function(panel, $) {
+  $.extend(panel, {
     common_players_tooltip: function(options){
       // Интервал, через который имя для передачи (денег, предметов) будет удалено (ms).
       var clearDataTimeout = 300000;
@@ -28,26 +28,26 @@
         toolHTML += '<a href="#" title="'+ paramButtons[i] +'"><img src="'+ panel.path_to_theme() + 'icons/' + paramButtons[i+1] +'.png"></a>&nbsp;';
       }
 
-      jQuery('body').append(
-        jQuery('<div id="playerToolWindow"></div>').html(toolHTML).addClass('pane left').hide()
+      $('body').append(
+        $('<div id="playerToolWindow"></div>').html(toolHTML).addClass('pane left').hide()
       );
 
       if(location.pathname == "/info.php"){
-        $playerLinkOnInfo = jQuery('img[src*="male.gif"]').closest('td').find('b');
+        $playerLinkOnInfo = $('img[src*="male.gif"]').closest('td').find('b');
         $playerLinkOnInfo.replaceWith(
-          jQuery('<a>')
+          $('<a>')
             .prop('href', location.href)
             .html($playerLinkOnInfo.text())
             .css({"text-decoration": "none", "font-weight": "bold"})
         );
       }
 
-      $toolWindow = jQuery('#playerToolWindow');
-      $player = jQuery('a[href*="info.php?id="]');
+      $toolWindow = $('#playerToolWindow');
+      $player = $('a[href*="info.php?id="]');
 
       $player.mouseenter(
         function(){
-          $playerLink = jQuery(this);
+          $playerLink = $(this);
           showWaitId = setTimeout(function(){showToolWindow($playerLink)}, 750);
           if($playerLink.text().search('info.php?') != -1) clearTimeout(showWaitId);
         }
@@ -96,7 +96,7 @@ function showToolWindow($playerLink){
   name = $playerLink.text();
   login = name.replace(/ /g, '+');
   dimensions = $playerLink.position();
-  bodyWidth = jQuery('body').width() - 275;
+  bodyWidth = $('body').width() - 275;
 
   left = dimensions.left - 80;
   if(left < 10 || left > bodyWidth){
@@ -108,7 +108,7 @@ function showToolWindow($playerLink){
   }
   top = dimensions.top + 22;
 
-  $toolWindow = jQuery('#playerToolWindow')
+  $toolWindow = $('#playerToolWindow')
     .css({
         position: 'absolute',
         left: left,
@@ -167,13 +167,13 @@ function showToolWindow($playerLink){
 function addToFriendOrEnemy(type, name){
   var text;
 
-  jQuery.ajax({
+  $.ajax({
     type: "POST",
     url: "http://www.ganjawars.ru/home.friends.php",
     data: "blop=" + type + "&addfriend=" + panel.encodeURIComponent(name),
     success: function(data){
       text = !type ? "Ваши друзья" : "Черный список";
-      if(jQuery(data).find('b:contains("' + text + '")').closest('table').find('b:contains("' + name + '")').length){
+      if($(data).find('b:contains("' + text + '")').closest('table').find('b:contains("' + name + '")').length){
         text = "<b>" + name + "</b> добавлен в ";
         text += !type ? "друзья." : "черный список.";
         panel.showFlash(text, 'message', 2500);
@@ -189,7 +189,7 @@ function pasteNameToSend(timeout){
     if(info != null){
       time = time - info.time;
       if(timeout > time){
-        $input = jQuery('tr:contains("Имя получателя:")').find('input');
+        $input = $('tr:contains("Имя получателя:")').find('input');
         if($input.length){
           $input.eq(0).prop("value", info.name);
           panel.set("nameToSendMoneyItem", null);
@@ -203,4 +203,4 @@ function pasteNameToSend(timeout){
   });
 }
 
-})(window.__panel);
+})(window.__panel, jQuery);
