@@ -1,3 +1,6 @@
+// author   гном убийца
+// url      http://www.ganjawars.ru/info.php?id=433067
+
 (function(panel) {
 
 var forumsDefine = {

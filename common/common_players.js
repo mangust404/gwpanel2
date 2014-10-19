@@ -1,3 +1,6 @@
+// author   гном убийца
+// id       433067
+
 (function(panel) {
   jQuery.extend(panel, {
     common_players_tooltip: function(options){
