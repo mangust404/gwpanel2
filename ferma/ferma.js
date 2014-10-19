@@ -48,12 +48,20 @@
       if($('input[value="Посадить"]').length) {
         $(window).off('keyup').off('keydown');
         $form = $('input[value="Посадить"]').closest('form');
+        if(!$form.length) {
+          var _class = $('input[value="Посадить"]').prop('class');
+          if(_class) {
+            $form = $('form.' + _class);
+          }
+        }
+        if(!$form.length) {
+          $form = $('form[action$="ferma.php"]');
+        }
         $form.sendForm({
           success: function(data) {
             panel.ajaxUpdateContent(data, $form.attr('action'));
           }
         });
-
         mlinks = {};
         return false;
       } else {

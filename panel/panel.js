@@ -710,7 +710,9 @@ window.Panel2 = new function() {
     $links.addClass('ajax').click(function(e) {
       if(e.ctrlKey || e.altKey || e.button != 0) return true;
       var href = $(this).attr('href');
-      if(href.indexOf('/battle.php') > -1) return true;
+      if(href.indexOf('/battle.php') > -1 || 
+         href.indexOf('edit.php') > -1 ||
+         href.indexOf('market.php') > -1) return true;
       if(document.location.toString().indexOf(href) > -1) return true;
       var link_title = $(this).text();
       ajaxGoto(href, link_title);
@@ -2402,7 +2404,9 @@ window.Panel2 = new function() {
     panel_ajaxify: function() {
       if($('#gw-content').length > 0) return;
       if(!history.pushState) return;
-      if(location.pathname.indexOf('/b0/') == 0) return;
+      if(location.pathname.indexOf('/b0/') == 0 || 
+         location.pathname.indexOf('edit.php') > -1 ||
+         location.pathname.indexOf('market.php') > -1) return;
       var elem = $('body > table[bgcolor="#f5fff5"]');
       if(!elem.length) {
         elem = $('body > table[bgcolor="#d0eed0"]').next('center');
