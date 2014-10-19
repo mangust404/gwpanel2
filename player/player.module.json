@@ -10,7 +10,8 @@
     "/info.php": [
       "player_casino",
       "player_family",
-      "player_carma"
+      "player_carma",
+      "player_hide_sinds"
     ]
   }, 
   "settings": {
@@ -42,6 +43,11 @@
     "player_carma": {
       "file": "player_carma.js",
       "description": "Скрывать карму игроков",
+      "default": false
+    },
+    "player_hide_sinds": {
+      "file": "player_hide_sinds.js",
+      "description": "Скрывать список не основных синдикатов",
       "default": false
     }
   }
