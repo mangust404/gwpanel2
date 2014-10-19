@@ -767,12 +767,17 @@
         $('<label for="add-title">Название</label><input id="add-title" name="title" type="text" />').appendTo(fieldset);
 
         $('<label for="add-title">Копировать из коллекции</label>').appendTo(fieldset);
-        var collection = $('<select id="add-collection" name="collection"></select').appendTo(fieldset);
+        var $collection = $('<select id="add-collection" name="collection"></select').appendTo(fieldset);
 
-        collection.append('<option value="">Пустые настройки, с нуля</option>');
+        $collection.append('<option value="">Пустые настройки, с нуля</option>');
 
         $.each(window.panelSettingsCollection, function(id, val) {
-          collection.append('<option value="' + id + '">' + val.title + '</option>');
+          $collection.append('<option value="' + id + '">' + val.title + '</option>');
+        });
+
+        $clone_collection = $('<optgroup label="Копировать из существующих"></optgroup').appendTo($collection);
+        $.each(variants, function(key) {
+          $clone_collection.append('<option value="clone_' + key + '">' + variants[key] + '</option>');
         });
 
         $('<div style="margin: 30px 0;" />').appendTo(fieldset);
@@ -803,8 +808,18 @@
           variant_select.append('<option value="' + id + '">' + name + '</option>');
           panel.set('variants_' + panel.currentPlayerID(), variants);
 
+          function saveVariant(new_options) {
+            panel.set(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + id, new_options, function() {
+              panel.showFlash('Новый набор настроек добавлен.', 'message', 5000);
+            });
+
+            $('#add-title').val('');
+            $('.add-options-variant').collapsible('collapse');
+          }
+
           var new_options = {};
-          if($('#add-collection').val() == '') {
+          var collection = $('#add-collection').val();
+          if(collection == '') {
             /// минимальный набор настроек, чтобы панель работала
             $.extend(new_options, {
               system: {theme: 'base', btnwidth:70, btnheight: 85},
@@ -815,15 +830,18 @@
                      ],
               widgets: []
             });
+            saveVariant(new_options);
           } else {
-            $.extend(new_options, window.panelSettingsCollection[$('#add-collection').val()]);
+            if(jQuery.type(window.panelSettingsCollection[collection]) == 'object') {
+              /// выбрана коллекция настроек
+              $.extend(new_options, window.panelSettingsCollection[collection]);
+              saveVariant(new_options);
+            } else if(collection.indexOf('clone_') == 0) {
+              collection = collection.substr(6);
+              /// выбран существующий вариант, копируем из него
+              panel.get(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + collection, saveVariant);
+            }
           }
-          panel.set(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + id, new_options, function() {
-            panel.showFlash('Новый набор настроек добавлен.', 'message', 5000);
-          });
-
-          $('#add-title').val('');
-          $('.add-options-variant').collapsible('collapse');
           return false;
         }).appendTo(fieldset);
       
