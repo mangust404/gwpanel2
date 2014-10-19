@@ -2566,7 +2566,7 @@ window.Panel2 = new function() {
         });
       }
       $('<iframe src="http://new.gwpanel.org/csauth.php"></iframe>')
-        .load(function() {
+        .hide().load(function() {
           $('<script src="http://new.gwpanel.org/settings.php"></script>')
             .appendTo(document.body);
         }).appendTo(document.body);

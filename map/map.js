@@ -12,17 +12,22 @@ jQuery.extend(panel, {
       var d = new Date;
       window.timeleft = window.arriveTime - parseInt(d.getTime() / 1000);
       if (window.timeleft<0) window.timeleft=0;
-      jQuery('#mmdiv').html(__panel.map_formatTime(timeleft));
+      $('#mmdiv').html(__panel.map_formatTime(timeleft));
     };
     
     __panel.get('moveHref', function(moveHref) {
       if(moveHref && moveHref.length) {
+        if($('#gw-content').length) {
+          var $target = $('#gw-content');
+        } else {
+          var $target = $(document.body);
+        }
         __panel.get('moveDest', function(moveDest) {
-          jQuery(document.body).append('<center>Пункт назначения: ' + moveDest + '</center>');
+          $target.append('<center>Пункт назначения: ' + moveDest + '</center>');
         });
-        jQuery(document.body).append('<center>Ссылка возврата: ' + moveHref + '</center>');
+        $target.append('<center>Ссылка возврата: ' + moveHref + '</center>');
         window.BattleRefreshChat = function() {
-          jQuery.ajax(location.pathname.substr(1), {
+          $.ajax(location.pathname.substr(1), {
             success: function() {
               __panel.set('moveHref', 0);
               location.href = moveHref;
