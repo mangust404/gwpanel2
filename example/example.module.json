@@ -41,6 +41,20 @@
           "title": "Пример поля ввода",
           "default": "текст",
           "description": "Поле для свободного ввода любого текста"
+        },
+        "radios_example_array": {
+          "type": "radios",
+          "title": "Пример радиобаттонов 1",
+          "options": ["а", "b", "c"],
+          "default": "а",
+          "description": "Можно выбрать только одно значение"
+        },
+        "radios_example_hash": {
+          "type": "radios",
+          "title": "Пример радиобаттонов 2",
+          "options": {"test1": "Тест 1", "test2": "Test 2", "test3": "Тест 3"},
+          "default": "test2",
+          "description": "Можно выбрать только одно значение"
         }
       }
     },

@@ -57,25 +57,52 @@
           break;
           case 'select':
             var __id = 'param-' + widget.id + '-' + param;
-            var s = $('<select id="' + __id + '" name="' + widget.id + '_' + param + '"></select>');
+            var $s = $('<select id="' + __id + '" name="' + widget.id + '_' + param + '"></select>');
             var is_array = $.type(that.options) == 'array';
-            s.append('<option value=""' + 
+            $s.append('<option value=""' + 
                   '>выберите</option>');
             $.each(that.options || {}, function(key) {
               if(is_array) {
-                s.append('<option value="' + this + '"' + 
+                $s.append('<option value="' + this + '"' + 
                   (this == current_value? ' selected="selected"': '') + 
                   '>' + this + '</option>');
               } else {
-                s.append('<option value="' + key + '"' + 
+                $s.append('<option value="' + key + '"' + 
                   (key == current_value? ' selected="selected"': '') + 
                   '>' + this + '</option>');
               }
             });
-            s.appendTo(append_to).change(function() {
+            $s.appendTo(append_to).change(function() {
               change_callback(param, $(this).val());
             });
-            s.before('<label for="' + __id + '">Укажите ' + that.title + ':</label>');
+            $s.before('<label for="' + __id + '">Укажите ' + that.title + ':</label>');
+          break;
+          case 'radios':
+            var __id = 'param-' + widget.id + '-' + param;
+            var name = widget.id + '_' + param;
+            var is_array = $.type(that.options) == 'array';
+            $('<label for="' + __id + '">' + that.title + '</label>').appendTo(append_to);
+            var $radio = $('<div class="ui-radio" id="' + __id + '">').appendTo(append_to);
+            $.each(that.options || {}, function(key) {
+              if(is_array) {
+                $radio.append('<label for="' + __id + '-' + this + '">' + 
+                  this + '</label>' + 
+                  '<input id="' + __id + '-' + this + '" type="radio" name="' + name + '"' + 
+                  (this == current_value? ' checked="checked"': '') +
+                  ' value="' + this + '"' + '/>');
+              } else {
+                $radio.append('<label for="' + __id + '-' + key + '">' + 
+                  that.options[key] + '</label>' + 
+                  '<input id="' + __id + '-' + key + '" type="radio" name="' + name + '"' + 
+                  (key == current_value? ' checked="checked"': '') + 
+                  ' value="' + key + '"' + '/>');
+              }
+            });
+            $radio.find('input').change(function() {
+              if(this.checked) {
+                change_callback(param, $(this).val());
+              }
+            });
           break;
           case 'checkbox':
             $('<label for="param-' + widget.id + '-' + param + '">' + that.title + '</label>').appendTo(append_to);
@@ -134,6 +161,16 @@
 
   function settings_migrate(new_data, callback) {
     var processed = 0;
+
+    panel.get('variants_' + panel.currentPlayerID(), function(variants) {
+      variants = variants || {};
+      $.each(new_data, function(variant, data) {
+        variants[variant] = data.name;
+      });
+      if($.type(variants) == 'object') {
+        panel.set('variants_' + panel.currentPlayerID(), variants);
+      }
+    });
 
     var __import = function() {
       $.each(new_data, function(variant, data) {
@@ -681,8 +718,6 @@
                     .addClass('ui-icon-delete')
                     .html('Ошибка!');
                 }
-                panel.unbind('auth', upload_listener);
-                upload_listener = false;
               }
             });
           });
@@ -720,8 +755,6 @@
                     .html('Ошибка!');
                   panel.showFlash('Произошла ошибка во время загрузки: ' + e.toString());
                 }
-                panel.unbind('auth', download_listener);
-                download_listener = false;
               }
             });
           });

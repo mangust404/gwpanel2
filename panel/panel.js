@@ -736,6 +736,7 @@ window.Panel2 = new function() {
       var $form = $(this);
       $('input.form-' + form_id + '[type=submit], ' + 
         'input.form-' + form_id + '[type=image]').click(function() {
+        if($(this).attr('onclick')) return true;
         var s_data = $('input.form-' + form_id + ', textarea.form-' + form_id).serializeArray();
         var params = [];
         $.each(s_data, function() {
@@ -2418,17 +2419,11 @@ window.Panel2 = new function() {
       // document.forms в качестве структуры
       var forms_copy = [];
       $(document.forms).each(function(i) {
+        /// Если количество элементов на форме сопадает с целевым, то форма рабочая, менять ничего не нужно
+        if(this.elements.length == $('form').eq(i).find('input, select, textarea').length) return;
         forms_copy[i] = [];
         $(this).addClass('form-' + i + ' broken-form').attr('form-id', i);
-        $(this.elements).each(function(j) {
-          //forms_copy[i][j] = this;
-          $(this).addClass('form-' + i);
-          if($(this).attr('type') == 'submit') {
-            $(this).click(function() {
-
-            });
-          }
-        });
+        $(this.elements).addClass('form-' + i);
       });
       if(elem.length > 0) {
         var $all_elements = elem.nextAll().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
