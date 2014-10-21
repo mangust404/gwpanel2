@@ -71,7 +71,7 @@
       __goto = $('td:contains("Ближайшее действие")').find('a');
     }
 
-    if(__goto) {
+    if(__goto && __goto.length) {
       mlinks = {};
       $(window).off('keyup').off('keydown');
       panel.gotoHref(__goto.attr('href'));
