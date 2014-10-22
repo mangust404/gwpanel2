@@ -1,0 +1,26 @@
+<?php
+
+$gwpanel_path = realpath(dirname(__FILE__) . '/../');
+
+//создаём список файлов для синхронизации с ганей
+shell_exec('/usr/bin/find ./ ! \( -iwholename *\.git* \) ! \( -iwholename "\./doc/*" \) ! \( -iwholename "\./server/*" \) ! \( -iwholename "\./panel/production/*" \) ! \( -iname version \) -regextype posix-egrep -regex ".*\.(js|css|png|gif)"  -type f | /usr/bin/sort | /bin/gzip > ' . $gwpanel_path . '/package.gz');
+
+/// Создаём gwpanel.tar.gz для загрузки на ganjafile.ru
+
+if(is_dir($gwpanel_path . '/gwpanel')) {
+  print shell_exec('rm -rf ' . $gwpanel_path . '/gwpanel');
+}
+
+mkdir($gwpanel_path . '/gwpanel');
+system('cp ' . $gwpanel_path . '/sync.php ' . $gwpanel_path . '/gwpanel/');
+$out = shell_exec('php ' . $gwpanel_path . '/gwpanel/sync.php');
+$ar = explode("\n", $out);
+print "Синхронизировано файлов: " . count($ar) . "\n";
+
+unlink($gwpanel_path . '/gwpanel/sync.php');
+
+system('cd ' . $gwpanel_path . ' && tar -cz ./gwpanel > '. $gwpanel_path . '/gwpanel.tar.gz');
+system('rm -rf ' . $gwpanel_path . '/gwpanel');
+if(file_exists($gwpanel_path . '/gwpanel.tar.gz') && filesize($gwpanel_path . '/gwpanel.tar.gz') > 1000) {
+  print "Файл пакета " . $gwpanel_path . "/gwpanel.tar.gz записан\n";
+}

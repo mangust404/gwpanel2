@@ -1322,7 +1322,8 @@
                   __data.top = isNaN(__data.top)? 100: __data.top;
 
                   for(var i = 0; i < current_options.widgets.length; i++) {
-                    if(current_options.widgets[i].type == widgetData.type) {
+                    if(current_options.widgets[i].type == widgetData.type && 
+                       current_options.widgets[i].id) {
                       var ar = current_options.widgets[i].id.split('_');
                       var __id = parseInt(ar[ar.length - 1]);
                       if(__id > max_id) max_id = __id;

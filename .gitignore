@@ -11,5 +11,5 @@ panel/production
 gwpanel2.user.js
 .idea
 migrate
-package.gz
+gwpanel.tar.gz
 server/csauth.php

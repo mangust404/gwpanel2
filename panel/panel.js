@@ -53,6 +53,10 @@ window.Panel2 = new function() {
   };
   /// список подгружаемых таблиц стилей
   var stylesheets = {};
+  /// Флаг, показывающий доступна ли быстрая инициализация
+  var fastInitReady = false;
+  /// Документ доступен для записи
+  var documentIsWriteable;
   /// системные параметры - ссылка на фрейм для кросс доменной передачи сообщений, текущий домен
   var contentFrame, domain;
   /// Флаг готовности, стек функций которые надо запустить по готовности
@@ -603,6 +607,7 @@ window.Panel2 = new function() {
   * Вывод плашек активации
   */
   function draw_pane_bubbles() {
+    checkTime('draw_pane_bubbles begin');
     var buttons = 0;
     var have_settings_button;
     for(var i = 0; i < 4; i++) {
@@ -679,6 +684,7 @@ window.Panel2 = new function() {
           .appendTo(document.body);
       }
     }
+    checkTime('draw_pane_bubbles finish');
   }
   
   var loaderTO;
@@ -937,6 +943,7 @@ window.Panel2 = new function() {
   * Инициализация всего интерфейса
   */
   function initInterface() {
+    checkTime('initInterface begin');
     if(document.getElementsByClassName.toString().indexOf('native') == -1) {
       // Prototype переопределяет эту функцию, поэтому возвращаем ей дефолтное состояние
       delete document.getElementsByClassName;
@@ -987,32 +994,49 @@ window.Panel2 = new function() {
       instance.onload(function() {
         instance.ready(initFloatWidgets);
       });
-    } else {
-      if(document.body.length > 0) {
-        instance.ready(initFloatWidgets);
-      } else {
-        $(function() {
-          instance.ready(initFloatWidgets);
-        });
-      }
-    }
-    
-    // Прорисовка, её нужно выполнять после того как получены все опции и подгружены стили
-    if(document.body.length > 0) {
-      draw_pane_bubbles();
-    } else {
       $(function() {
         draw_pane_bubbles();
       });
-    }
 
+    } else if(fastInitReady) {
+      /// если доступна быстрая инициализиация, то начинаем прорисовывать элементы сразу 
+      /// после того как документ становится доступным на запись
+      var i = setInterval(function() {
+        if(documentIsWriteable()) {
+          initFloatWidgets();
+          draw_pane_bubbles();
+          clearInterval(i);
+          checkTime('initInterface finish (fast)');
+        }
+      }, 5);
+    } else {
+      // Прорисовка, её нужно выполнять после того как получены все опции и подгружены стили
+      instance.ready(function() {
+        initFloatWidgets();
+        draw_pane_bubbles();
+        checkTime('initInterface finish (slow)');
+      });
+    }
   }
   
   function checkTime(name) {
     var new_timer = (new Date()).getTime();
-    // console.log(name + ': ' + '+' + (prev_timer? (new_timer - prev_timer) + ' ms, ': '') + 
+    //console.log(name + ': ' + '+' + (prev_timer? (new_timer - prev_timer) + ' ms, ': '') + 
     //             (new_timer - timer) + ' ms from start');
     prev_timer = new_timer;
+  }
+
+  function documentIsWriteable() {
+    if(documentIsWriteable) return documentIsWriteable;
+    try {
+      var n = document.createTextNode('//gwpanel');
+      document.body.appendChild(n);
+      document.body.removeChild(n);
+      documentIsWriteable = true;
+      return true;
+    } catch(e) {
+      return false;
+    }
   }
   /**
   * Конструктор
@@ -1191,11 +1215,10 @@ window.Panel2 = new function() {
       var __local_variant = localStorage['gwp2_' + variantID];
       /// Опции сперва привязываются к окружению (environment), затем к ID игрока
       /// затем к выбранному варианту, если вариант не найден, то выбираем default
-      var fastInitReady = false;
       if(__local_variant != null && 
         __local_variant.length > 0) {
         optionsID = environment + '_' + instance.currentPlayerID() + '_' + 
-                        __local_variant;
+                        JSON.parse(__local_variant);
         var __local_options = localStorage['gwp2_' + optionsID];
         if(__local_options != null && 
            __local_options.length > 0) {
@@ -1224,6 +1247,11 @@ window.Panel2 = new function() {
       checkTime('fastInitReady');
       if(fastInitReady) {
         __initFunc();
+        initInterface();
+        /// функция загрузки css довольно долгая, так что выполняем её параллельно
+        setTimeout(function() {
+          instance.loadCSS('panel.css');
+        }, 1);
         checkTime('fastInit');
       }
 
@@ -1320,10 +1348,10 @@ window.Panel2 = new function() {
         window.parent.postMessage(JSON.stringify({'type': 'frame', 'title': document.title, 'href': href}), '*');
       }
 
-      instance.ready(function() {
+      if(!fastInitReady) {
         instance.loadCSS('panel.css');
         initInterface();
-      });
+      }
 
       instance.onload(function() {
         instance.get('cacheListeners', function(data) {
@@ -1744,7 +1772,13 @@ window.Panel2 = new function() {
     *                то событие отработает только в текущем окне
     */
     triggerEvent: function(type, data, local) {
-      return instance.crossWindow.triggerEvent(type, data || {}, local);
+      if(instance.crossWindow) {
+        return instance.crossWindow.triggerEvent(type, data || {}, local);
+      } else {
+        instance.ready(function() {
+          instance.crossWindow.triggerEvent(type, data || {}, local);
+        });
+      }
     },
     
     /**

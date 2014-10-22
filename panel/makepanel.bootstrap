@@ -347,6 +347,35 @@ $bootstrap = '
   var environment = document.cookie.match(/gwp2_e=([a-z]+)/)? RegExp.$1: null;
 
   if(environment == "dev") return;
+
+  if(location.pathname == "/tmp/panel2container.html") {
+    /// initialize container
+    var libs = ["jquery.min.js"];
+    var loadedLibs = 0;
+
+    for(var i = 0; i < libs.length; i++) {
+      var s = document.createElement("script");
+      s.type = "text/javascript";
+      s.src = panelURL + "/lib/" + libs[i];
+      s.addEventListener("load", function() {
+        loadedLibs++;
+        if(loadedLibs >= libs.length) {
+          initialize();
+        }
+      })
+      document.getElementsByTagName("head")[0].appendChild(s);
+    }
+
+    var initialize = function() {
+      var s = document.createElement("script");
+      s.type = "text/javascript";
+      s.src = panelURL + "/lib/crossclient.js";
+      document.getElementsByTagName("head")[0].appendChild(s);
+    }
+    return;
+  }
+
+  /// initialize main
   var package;
 
   var libs = ' . json_encode($libs) . ';
@@ -713,7 +742,8 @@ $bootstrap = '
 file_put_contents($gwpanel_path . '/bootstrap.js', $bootstrap);
 print 'Bootstrap written to ' . $gwpanel_path . '/bootstrap.js' . "\n";
 
-$bootstrap_container = '
+
+/*$bootstrap_container = '
 
 (function() {
   var panelURL = "http://' . $domain . $path . '";
@@ -746,7 +776,26 @@ $bootstrap_container = '
 ';
 
 file_put_contents($gwpanel_path . '/bootstrap_container.js', $bootstrap_container);
-print 'Bootstrap container written to ' . $gwpanel_path . '/bootstrap_container.js' . "\n";
+print 'Bootstrap container written to ' . $gwpanel_path . '/bootstrap_container.js' . "\n";*/
 
 //создаём список файлов для синхронизации с ганей
 shell_exec('/usr/bin/find ./ ! \( -iwholename *\.git* \) ! \( -iwholename "\./doc/*" \) ! \( -iwholename "\./server/*" \) ! \( -iname version \) -regextype posix-egrep -regex ".*\.(js|css|png|gif)"  -type f | /usr/bin/sort | /bin/gzip > ' . $gwpanel_path . '/package.gz');
+
+/// Создаём gwpanel.tar.gz для загрузки на ganjafile.ru
+
+if(is_dir($gwpanel_path . '/gwpanel')) {
+  print shell_exec('rm -rf ' . $gwpanel_path . '/gwpanel');
+}
+mkdir($gwpanel_path . '/gwpanel');
+system('cp ' . $gwpanel_path . '/sync.php ' . $gwpanel_path . '/gwpanel/');
+$out = shell_exec('php ' . $gwpanel_path . '/gwpanel/sync.php');
+$ar = explode("\n", $out);
+print "Синхронизировано файлов: " . count($ar) . "\n";
+
+unlink($gwpanel_path . '/gwpanel/sync.php');
+
+system('cd ' . $gwpanel_path . ' && tar -cz ./gwpanel > '. $gwpanel_path . '/gwpanel.tar.gz');
+system('rm -rf ' . $gwpanel_path . '/gwpanel');
+if(file_exists($gwpanel_path . '/gwpanel.tar.gz') && filesize($gwpanel_path . '/gwpanel.tar.gz') > 1000) {
+  print "Файл пакета " . $gwpanel_path . "/gwpanel.tar.gz записан\n";
+}
