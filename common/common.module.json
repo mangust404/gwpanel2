@@ -13,7 +13,7 @@
   }, 
   "settings": {
     "common_players_tooltip": {
-      "file": "common_players.js",
+      "file": "common_players_tooltip.js",
       "description": "Окно с дополнительным набором быстрых действий, на ссылках у персонажей в игре",
       "default": true
     }
