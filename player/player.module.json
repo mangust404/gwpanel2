@@ -48,7 +48,16 @@
     "player_hide_sinds": {
       "file": "player_hide_sinds.js",
       "description": "Скрывать список не основных синдикатов",
-      "default": false
+      "default": false,
+      "configure": {
+        "typeHide": {
+          "type": "radios",
+          "title": "",
+          "options": {"spoiler": "Под спойлер", "hide": "Полностью"},
+          "default": "spoiler",
+          "description": "Можно выбрать только одно значение"
+        }
+      }
     }
   }
 }
