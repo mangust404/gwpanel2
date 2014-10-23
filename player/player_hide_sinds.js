@@ -22,6 +22,8 @@
         index = 2;
       }
 
+      if(options.typeHide == "hide") return false;
+
       for(i = index, length = $contentTd.length; i < length; i++){
         if($contentTd.eq(i).is('a')){
           url = $contentTd.eq(i).prop('href');
