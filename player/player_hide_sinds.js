@@ -22,7 +22,7 @@
         index = 2;
       }
 
-      if(options.typeHide == "hide") return false;
+      if(options.type_hide == "delete") return false;
 
       for(i = index, length = $contentTd.length; i < length; i++){
         if($contentTd.eq(i).is('a')){

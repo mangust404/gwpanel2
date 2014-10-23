@@ -50,10 +50,10 @@
       "description": "Скрывать список не основных синдикатов",
       "default": false,
       "configure": {
-        "typeHide": {
+        "type_hide": {
           "type": "radios",
           "title": "",
-          "options": {"spoiler": "Под спойлер", "hide": "Полностью"},
+          "options": {"spoiler": "Под спойлер", "delete": "Полностью"},
           "default": "spoiler",
           "description": "Можно выбрать только одно значение"
         }
