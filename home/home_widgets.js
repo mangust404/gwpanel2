@@ -43,10 +43,8 @@
       clearInterval(this.healthUpdInterval);
       this.healthUpdInterval = false;
       this.hp_current = false;
-      __panel.set('health', health);
     } else {
       health.hp_start = this.hp_current;
-      __panel.set('health', health);
     }
   }
   
@@ -64,7 +62,7 @@
       var width = Math.round(100 * 100 * this.hp_current / health.hp_max) / 100;
       this.progressBar.css({width: width + '%'});
       
-      this.hp_current = health.hp_start;
+      this.hp_current = health.hp_start + health.hp_speed * parseInt(((new Date).getTime() - health.date) / 1000);
       var that = this;
       this.healthUpdInterval = setInterval(function() {
         home_health_timer.apply(that, [health]);
