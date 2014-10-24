@@ -507,8 +507,23 @@
           })
         ).appendTo('#icons-gallery .container');
       });
-      $.each(panel_apply.buttons, function(button_name) {
-        var button = this;
+
+      var sorted_buttons = [];
+      $.each(panel_apply.buttons, function(name) {
+        sorted_buttons.push(name);
+      });
+      sorted_buttons = sorted_buttons.sort(function(a, b) {
+        if(panel_apply.buttons[a].weight > panel_apply.buttons[b].weight) return 1;
+        else if (panel_apply.buttons[a].weight < panel_apply.buttons[b].weight) return -1;
+        else {
+          if(a > b) return 1
+          else if(a < b) return -1;
+        }
+        return 0;
+      });
+
+      $.map(sorted_buttons, function(button_name) {
+        var button = panel_apply.buttons[button_name];
         var img = panel.iconURL(button.img || button.icon);
         var id = 'button_' + button_name;
         button.id = id;
@@ -529,8 +544,22 @@
         ).appendTo('#edit-buttons-wrapper').trigger('create');
       });
 
-      $.each(panel_apply.widgets, function(widget_name) {
-        var widget = this;
+      var sorted_widgets = [];
+      $.each(panel_apply.widgets, function(name) {
+        sorted_widgets.push(name);
+      });
+      sorted_widgets = sorted_widgets.sort(function(a, b) {
+        if(panel_apply.widgets[a].weight > panel_apply.widgets[b].weight) return 1;
+        else if (panel_apply.widgets[a].weight < panel_apply.widgets[b].weight) return -1;
+        else {
+          if(a > b) return 1
+          else if(a < b) return -1;
+        }
+        return 0;
+      });
+
+      $.map(sorted_widgets, function(widget_name) {
+        var widget = panel_apply.widgets[widget_name];
         var id = 'widget_' + widget_name;
         var __widget;
 
@@ -572,9 +601,23 @@
 
       /// Модули
       var modules_ul = $('<ul data-role="collapsibleset" data-filter="true" data-filter-placeholder="Поиск настроек"></ul>');
-      $.each(panel_apply.modules, function(module_name) {
+      var sorted_modules = [];
+      $.each(panel_apply.modules, function(name) {
+        sorted_modules.push(name);
+      });
+      sorted_modules = sorted_modules.sort(function(a, b) {
+        if(panel_apply.modules[a].weight > panel_apply.modules[b].weight) return 1;
+        else if (panel_apply.modules[a].weight < panel_apply.modules[b].weight) return -1;
+        else {
+          if(a > b) return 1
+          else if(a < b) return -1;
+        }
+        return 0;
+      });
+
+      $.map(sorted_modules, function(module_name, i) {
         //if(module_name == 'panel') return;
-        var module = this;
+        var module = panel_apply.modules[module_name];
         
         var configurable_funcs = [];
         var configurable_desc = [];

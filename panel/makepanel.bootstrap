@@ -179,6 +179,7 @@ foreach($plugins as $plugin_name => $plugin) {
   if(isset($plugin['buttons']) && is_array($plugin['buttons'])) {
     foreach($plugin['buttons'] as $type => $button) {
       $button['module'] = $plugin_name;
+      $button['weight'] = isset($plugin['weight'])? $plugin['weight']: 0;
       $button_classes[$plugin_name . '_' . $type] = $button;
     }
   }
@@ -186,6 +187,7 @@ foreach($plugins as $plugin_name => $plugin) {
   if(isset($plugin['widgets']) && is_array($plugin['widgets'])) {
     foreach($plugin['widgets'] as $type => $widget) {
       $widget['module'] = $plugin_name;
+      $widget['weight'] = isset($plugin['weight'])? $plugin['weight']: 0;
       $widget_classes[$plugin_name . '_' . $type] = $widget;
     }
   }
@@ -197,6 +199,7 @@ foreach($plugins as $plugin_name => $plugin) {
   $module_info[$plugin_name] = array(
     'title' => isset($plugin['title'])? $plugin['title']: $plugin_name,
     'description' => isset($plugin['description'])? $plugin['description']: '',
+    'weight' => isset($plugin['weight'])? $plugin['weight']: 0,
   );
 }
 
