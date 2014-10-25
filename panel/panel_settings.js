@@ -656,8 +656,9 @@
               var is_blacklisted = current_options.blacklist && current_options.blacklist.indexOf(func_name) > -1;
             var pages = [];
             $.each(panel_apply.pages, function(page) {
-              if(this.indexOf(func_name) > -1) {
-                pages.push('<span>page:' + page + '</span>');
+              if(page != '*' && this.indexOf(func_name) > -1 && 
+                 panel_apply.pages['*'].indexOf(func_name) == -1) {
+                pages.push('page:' + page);
               }
             });
             var checkbox_li = $('<li><label><input name="' + func_name + '" type="checkbox"' + 
