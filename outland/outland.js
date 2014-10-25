@@ -64,7 +64,8 @@
 
 jQuery.extend(__panel, {
   outland_highlight: function() {
-    document.body.className += ' walk-php';
+    __panel.loadCSS('outland/outland.css');
+    $(document.body).addClass('walk-php');
     for(var i = 0; i < document.links.length; i++) {
       var link = document.links[i];
       if(link.href.indexOf('.php?w=') != -1 && link.href.indexOf('walk') != -1) {
@@ -79,19 +80,17 @@ jQuery.extend(__panel, {
     };
   },
   
-  outland_checkPort: function(options) {
-    if(!isNaN(options.sectorin) && document.forms[1]) {
-      var e = document.getElementsByName('sectorin');
-      if(e.length) {
-        e[0].value = options.sectorin;
-        if(options.autos) {
-          document.forms[1].submit();
-        };
-      };
-    };
+  outland_auto_sail: function(options) {
+    var port = parseInt(options.port); 
+    if(!isNaN(port)) {
+      var $e = $('select[name=sectorin]');
+      if($e.length) {
+        $e.val(port).closest('form').submit();
+      }
+    }
   },
 
-  outland_addHotkeys: function() {
+  outland_hotkeys: function() {
     mmoves = {};
     mlinks = {};
     for(var i = 0; i < document.links.length; i++) {
@@ -155,29 +154,18 @@ jQuery.extend(__panel, {
     });
   },
 
-  outland_submitFight: function() {
+  outland_auto_close: function() {
     var e = document.getElementsByName('startbattle');
     if(e.length) document.forms[1].submit();
   },
 
-  outland_submitTake: function() {
+  outland_auto_pick: function() {
     var e = document.getElementsByName('take');
     if(e.length) document.forms[1].submit();
   },
 
-  outland_init: function(options) {
-    if(options.fightas) {
-      __panel.outland_submitFight(options);
-    };
-    if(options.takeas) {
-      __panel.outland_submitTake(options);
-    };
-    __panel.outland_checkPort(options);
-    if(options.highlight) {
-      __panel.loadCSS('outland/outland.css');
-      __panel.outland_highlight(options);
-    };
-    __panel.outland_addHotkeys(options);
+  outland_check_set: function(options) {
+
   }
 
 })})(window.__panel, jQuery);

@@ -4,47 +4,58 @@
   "title": "Модуль для Outland",
   "weight": 5, 
   "apply": {
-    "/walk.php": ["outland_init"],
-    "/walk.op.php": ["outland_init"],
-    "/walk.ep.php": ["outland_init"]
+    "/walk.php": ["outland_check_set", "outland_auto_sail", "outland_auto_close", "outland_auto_pick", "outland_highlight", "outland_hotkeys"],
+    "/walk.op.php": ["outland_check_set", "outland_auto_sail", "outland_auto_close", "outland_auto_pick", "outland_highlight", "outland_hotkeys"],
+    "/walk.ep.php": ["outland_check_set", "outland_auto_sail", "outland_auto_close", "outland_auto_pick", "outland_highlight", "outland_hotkeys"]
   },
   "settings": {
-    "outland_init": {
-      "description": "основные функции на ауте",
-      "file": "outland.js",
+    "outland_check_set": {
+      "description": "Проверять комплект",
       "configure": {
-        "check_set": {
+        "set": {
           "type": "select",
           "title": "комплект",
           "options": ["test1", "test2"],
-          "options_file": "items/items.js",
+          "options": "__panel.items_get_sets_async()",
+          "file": "items/items_data.js",
           "default": 0
-        },
-        "autos": {
-          "type": "checkbox",
-          "title": "Автоматически отплывать, ага",
-          "default": 0, 
-          "description": "В сочетании с предыдущей настройкой при нажатии на якорь само отплывает ;-}"
-        },
-        "fightas": {
-          "type": "checkbox",
-          "title": "Автоматически закрывать заявку",
-          "default": 0, 
-          "description": "Автоматом закрывает заявку как только вошли"
-        },
-        "takeas": {
-          "type": "checkbox",
-          "title": "Автоматически подбирать вещи",
-          "default": 0, 
-          "description": "Автоматом подбирает предмет, как только оказываемся рядом"
-        },
-        "highlight": {
-          "type": "checkbox",
-          "title": "Подкрашивать клетки, на которые можно перейти",
-          "default": 1, 
-          "description": "Слегка затемняет фон кликабельных клеток"
         }
-      }
-    }
+      },
+      "file": "outland.js"
+    },
+
+    "outland_auto_sail": {
+      "description": "Автоматически отплывать, ага",
+      "configure": {
+        "port": {
+          "type": "select",
+          "title": "порт назначения",
+          "options": "__panel.map_get_ports_ids()",
+          "default": "",
+          "file": "map/map_sectors.js"
+        }
+      },
+      "file": "outland.js"
+    },
+
+    "outland_auto_close": {
+      "description": "Автоматически закрывать заявку",
+      "file": "outland.js"
+    },
+
+    "outland_auto_pick": {
+      "description": "Автоматически подбирать вещи",
+      "file": "outland.js"
+    },
+
+    "outland_highlight": {
+      "description": "Подкрашивать клетки, на которые можно перейти",
+      "file": "outland.js"
+    },
+
+    "outland_hotkeys": {
+      "description": "Быстрое передвижение стрелками на клавиатуре",
+      "file": "outland.js"
+    }    
   }
 }
