@@ -282,15 +282,25 @@
       }
       
       for(var key in panel_apply.settings) {
-        var file = panel_apply.settings[key].module + '/' + panel_apply.settings[key].file;
+        if(panel_apply.settings[key].file) {
+          if(panel_apply.settings[key].file.indexOf('/') == -1) {
+            var file = panel_apply.settings[key].module + '/' + panel_apply.settings[key].file;
+          } else {
+            var file = panel_apply.settings[key].file;
+          }
+        }
         if(scripts.indexOf(file) == -1) {
           scripts.push(file);
         }
         if(panel_apply.settings[key].configure) {
           for(var config_key in panel_apply.settings[key].configure) {
             if(panel_apply.settings[key].configure[config_key].file) {
-              var file = panel_apply.settings[key].module + '/' + 
-                panel_apply.settings[key].configure[config_key].file;
+              if(panel_apply.settings[key].configure[config_key].file.indexOf('/') == -1) {
+                var file = panel_apply.settings[key].module + '/' + 
+                  panel_apply.settings[key].configure[config_key].file;
+              } else {
+                var file = panel_apply.settings[key].configure[config_key].file;
+              }
               if(scripts.indexOf(file) == -1) {
                 scripts.push(file);
               }
