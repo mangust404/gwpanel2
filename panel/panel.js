@@ -1227,6 +1227,18 @@ window.Panel2 = new function() {
         }
       }
 
+      if(!instance.getCookies()['gwp2_c'] ||
+         instance.getCookies()['gwp2_c'].split('-').indexOf(document.domain.split('.')[0]) == -1) {
+        fastInitReady = false;
+        /// мы попали сюда потому что где-то были изменены настройки
+        /// очищаем все переменные в localStorage начинающиеся с текущего окружения
+        for(var key in localStorage) {
+          if(key.indexOf('gwp2_' + environment) == 0) {
+            delete localStorage[key];
+          }
+        }
+      }
+
       if(environment == 'testing') {
         fastInitReady = location.search.indexOf('gwpanel_pause') == -1;
       }
@@ -1306,6 +1318,15 @@ window.Panel2 = new function() {
             options = $.extend(options, window.panelSettingsCollection.default);
             instance.set(optionsID, options);
           }
+          var domainPrefix = document.domain.split('.')[0];
+          var cachedDomains = instance.getCookies()['gwp2_c'] || '';
+          cachedDomains = cachedDomains.split('-');
+          console.log(cachedDomains);
+          if(cachedDomains.indexOf(domainPrefix) == -1) {
+            cachedDomains.push(domainPrefix);
+            instance.setCacheDomains(cachedDomains);
+          }
+
           localStorage['gwp2_' + optionsID] = JSON.stringify(options);
           if(!fastInitReady) {
             if(environment == 'testing' && location.search.indexOf('gwpanel_pause') != -1) {
@@ -1869,6 +1890,8 @@ window.Panel2 = new function() {
           }
         });
       });
+      /// Очищаем кеш быстрой загрузки, чтобы быстрые настройки везде сохранились
+      instance.setCacheDomains([]);
     },
     
     /**
@@ -2667,6 +2690,13 @@ window.Panel2 = new function() {
         img = String(_img);
       }
       return img;
+    },
+
+    setCacheDomains: function(domains) {
+      var myDate = new Date();
+      myDate.setMonth(myDate.getMonth() + 120);
+      document.cookie = "gwp2_c=" + domains.join('-') + ";expires=" + myDate 
+               + ";domain=." + domain + ";path=/";
     },
     /**
     * Публичные аттрибуты
