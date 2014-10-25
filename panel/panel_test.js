@@ -2905,6 +2905,9 @@ QUnit.test('Тестирование функции __panel.fixForms', function(
   /// Более комплексный вариант
   assert.equal(__panel.fixForms('<table><tr><td><table><tr><td></td></tr><form><tr><td></td></tr></table></form></td></tr></table><form><table><tr><td></td></tr></table></form>'),
     '<table><tr><td><form><table><tr><td></td></tr><tr><td></td></tr></table></form></td></tr></table><form><table><tr><td></td></tr></table></form>');
+  assert.equal(__panel.fixForms('<table><tr><td></td></tr><tr><td></td></tr><tr><td><form></td></tr><tr><td><input type="submit"></form></td></tr></table>'),
+    '<form><table><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td><input type="submit"></td></tr></table></form>', 
+    'Такая структура формы на ферме');
 
   var result = __panel.fixForms('<table width=100% cellpadding=4 cellspacing=2 border=0>\
 \

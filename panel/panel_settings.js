@@ -354,7 +354,7 @@
     /**
     * Функция, открывающая окно настроек
     */
-    panel_settings_editor: function(active_section) {
+    panel_settings_editor: function(active_section, filter) {
     var current_options = panel.getOptions();
     panel.panel_settings_init(function() {
       if(document.domain.indexOf('gwpanel.org') == -1) {
@@ -643,7 +643,7 @@
         if(configurable_funcs.length) {
           var li = $('<li><h2>' + 
           module.title + '</h2>' + 
-            (module.description? '<div class="description">' + module.description: '')
+            (module.description? '<div class="description">' + module.description + '</div>': '')
           + '</li>');
 
           var settings_ul = $('<ul data-role="listview"></ul>').appendTo(li);
@@ -654,10 +654,15 @@
               var is_blacklisted = !(current_options.whitelist && current_options.whitelist.indexOf(func_name) > -1);
             else
               var is_blacklisted = current_options.blacklist && current_options.blacklist.indexOf(func_name) > -1;
-
+            var pages = [];
+            $.each(panel_apply.pages, function(page) {
+              if(this.indexOf(func_name) > -1) {
+                pages.push('<span>page:' + page + '</span>');
+              }
+            });
             var checkbox_li = $('<li><label><input name="' + func_name + '" type="checkbox"' + 
               (is_blacklisted? '': 
-                ' checked="checked"') + '>' + configurable_desc[i] + '</label>' + '</li>')
+                ' checked="checked"') + '>' + configurable_desc[i] + '</label>' + '<div style="display: none;">' + pages.join(' ') + '</div>' + '</li>')
               .appendTo(settings_ul).find('input').change(function() {
               if(this.checked) {
                 if(panel_apply.settings[func_name].default === false) {
@@ -1090,9 +1095,21 @@
       if(active_section == 'release_notes') {
         $('#edit-other-wrapper').show();
         $('#panel-settings-editor .ui-navbar.first-view').removeClass('first-view');
+      } else if(active_section == 'modules') {
+        $('#edit-modules-wrapper').show()
+          .find('input[data-type="search"]').val(filter).change();
+        $('#panel-settings-editor .ui-navbar.first-view').removeClass('first-view');
       }
       $.mobile.loading("hide");
     });
+    },
+
+    /**
+    * Функция, открывающая окно настроек во вкладке "модули" с фильтром
+    * для указанной страницы
+    */
+    panel_settings_page: function() {
+      panel.panel_settings_editor('modules', 'page:' + location.pathname);
     },
 
     /**

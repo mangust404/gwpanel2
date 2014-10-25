@@ -52,6 +52,13 @@
       "img": "settings.png",
       "description": "Кнопка настроек"
     },
+    "settings_page": {
+      "title": "Настройки страницы",
+      "callback": "panel_settings_page",
+      "file": "panel_settings.js",
+      "img": "settings.png",
+      "description": "Кнопка настроек для текущей страницы"
+    },
     "exit": {
       "title": "Выход",
       "callback": "panel_exit",
