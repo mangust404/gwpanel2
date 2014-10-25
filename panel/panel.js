@@ -1321,7 +1321,6 @@ window.Panel2 = new function() {
           var domainPrefix = document.domain.split('.')[0];
           var cachedDomains = instance.getCookies()['gwp2_c'] || '';
           cachedDomains = cachedDomains.split('-');
-          console.log(cachedDomains);
           if(cachedDomains.indexOf(domainPrefix) == -1) {
             cachedDomains.push(domainPrefix);
             instance.setCacheDomains(cachedDomains);
@@ -2514,6 +2513,30 @@ window.Panel2 = new function() {
         var text = $(element).text();
         if(text.length > 15) text = text.substr(0, 15) + '...';
         ajaxGoto(href, text);
+      }
+
+      if(!instance.getCookies().gwp2_n) {
+        /// Определяем, установлен ли гризманки
+        var s = document.createElement('script');
+        s.src = 'resource://greasemonkey/constants.js';
+        setTimeout(function() {
+          if (jQuery.type(window.GM_constants) !== 'undefined') {
+            if(confirm('ВНИМАНИЕ! Мы обнаружили что у вас установлен Greasemonkey.\n\n\
+AJAX - технология, при которой страница не перегружается полностью, а обновляется только её часть.\n\n\
+Благодаря этому переходы между страницами осуществляются заметно быстрее, но скрипты, установленные через Greasemonkey не смогут работать при таких переходах.\n\
+Чтобы увидеть результат работы скрипта вы можете нажать F5 на нужной странице, либо вы можете полностью отключить AJAX и всё будет работать как прежде.\n\n\
+Продолжить использование AJAX? Если вы нажмёте "нет", то AJAX будет отключен.')) {
+            } else {
+              options.blacklist.push('panel_ajaxify');
+              instance.setOptions(options);
+            }
+            var myDate = new Date();
+            myDate.setMonth(myDate.getMonth() + 120);
+            document.cookie = "gwp2_n=1;expires=" + myDate + ";domain=." + domain + ";path=/";
+
+          }
+        }, 10);
+        document.body.appendChild(s);
       }
     },
 
