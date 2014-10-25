@@ -46,22 +46,7 @@
       __goto = mlinks['bottom'];
     } else if(keys['center']) {
       if($('input[value="Посадить"]').length) {
-        $(window).off('keyup').off('keydown');
-        $form = $('input[value="Посадить"]').closest('form');
-        if(!$form.length) {
-          var _class = $('input[value="Посадить"]').prop('class');
-          if(_class) {
-            $form = $('form.' + _class);
-          }
-        }
-        if(!$form.length) {
-          $form = $('form[action$="ferma.php"]');
-        }
-        $form.sendForm({
-          success: function(data) {
-            panel.ajaxUpdateContent(data, $form.attr('action'));
-          }
-        });
+        $('input[value="Посадить"]').click();
         mlinks = {};
         return false;
       } else {
@@ -123,6 +108,25 @@ jQuery.extend(__panel, {
     panel.onunload(function() {
       $(window).off('keydown', keydown)
         .off('keyup', keyup);
+    });
+
+    $('input[value="Посадить"]').click(function() {
+      $form = $(this).closest('form');
+      if(!$form.length) {
+        var _class = $('input[value="Посадить"]').prop('class');
+        if(_class) {
+          $form = $('form.' + _class);
+        }
+      }
+      if(!$form.length) {
+        $form = $('form[action$="ferma.php"]');
+      }
+      $form.sendForm({
+        success: function(data) {
+          panel.ajaxUpdateContent(data, $form.attr('action'));
+        }
+      });
+      return false;
     });
   }
   
