@@ -1442,37 +1442,14 @@
               } else if(widgetKind == 'button') {
                 __data.title = $('#param-title').val();
                 __data.img = $('#param-img').val() || widgetClass.img;
-                displace = parseInt(displace);
+
                 if(isEdit) {
-                  /// Меняем заголовок кнопки сразу
-                  $('#pane-' + displace + ' #' + __data.id + ' a h3').html(
-                    __data.title || widgetClass.title
-                  );
-                  $('#pane-' + displace + ' #' + __data.id + ' .img img').attr('src',
-                     $('#settings-form-popup div.img img').attr('src')
-                  );
+                  panel.updateButton(displace, __data.id, __data);
+                  panel.showFlash('Кнопка изменена.', 'message', 5000);
                 } else {
-                  /// Создаём идентификатор
-                  for(var i = 0; i < current_options.panes[displace].buttons.length; i++) {
-                    if(current_options.panes[displace].buttons[i].type == widgetData.type) {
-                      index++;
-                    }
-                  }
-                  __data.id = widgetData.type + '_' + index;
+                  panel.addButton(displace, widgetData.type, __data);
+                  panel.showFlash('Кнопка добавлена.', 'message', 5000);
                 }
-                if(isNaN(__data.top) || isNaN(__data.left)) {
-                  var places = panel.checkPanePlaces(displace, widgetData);
-                  __data.top = places[0];
-                  __data.left = places[1];
-                }
-                var index = 0;
-                if(isEdit) {
-                  current_options.panes[displace].buttons[__data.index] = __data;
-                } else {
-                  current_options.panes[displace].buttons.push(__data);
-                }
-                panel.showFlash('Кнопка ' + (isEdit? 'изменена': 'добавлена') + 
-                  '.', 'message', 5000);
               }
 
               if(!isNaN(displace) && widgetKind != 'float' && !isEdit) {
@@ -1513,6 +1490,37 @@
       if(self_init) {
         $('#settings-form-popup').popup('open');
       }
+    },
+
+    addButton: function(paneID, buttonClass, data) {
+      data = $.extend({type: buttonClass}, data);
+      var current_options = panel.getOptions();
+
+      paneID = parseInt(paneID);
+      var index = 0;
+      /// Создаём идентификатор
+      for(var i = 0; i < current_options.panes[paneID].buttons.length; i++) {
+        if(current_options.panes[paneID].buttons[i].type == buttonClass) {
+          index++;
+        }
+      }
+
+      data.id = buttonClass + '_' + index;
+      var places = panel.checkPanePlaces(paneID, data);
+      data.top = places[0];
+      data.left = places[1];
+
+      current_options.panes[paneID].buttons.push(data);
+    },
+
+    updateButton: function(paneID, id, data) {
+      var current_options = panel.getOptions();
+      /// Меняем заголовок кнопки сразу
+      $('#pane-' + paneID + ' #' + data.id + ' a h3').html(data.title || panel_apply.buttons[data.type].title);
+      $('#pane-' + paneID + ' #' + data.id + ' .img img').attr('src',
+         panel.iconURL(data.img)
+      );
+      $.extend(current_options.panes[paneID].buttons[data.index], data);
     }
 
   });
