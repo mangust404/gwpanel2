@@ -26,13 +26,17 @@ if(isset($_GET['auth_key'])) {
       }
     }
     foreach($_POST['variants'] as $variant_alias => $data) {
-      $success = $success && pg_query($dbconn, sprintf("INSERT INTO players_variants (gwuid, variant_alias, variant_name, variant_data, version) VALUES (%d, '%s', '%s', '%s', %d)",
-        $gwuid,
-        pg_escape_string($dbconn, $variant_alias),
-        pg_escape_string($dbconn, $data['name']),
-        pg_escape_string($dbconn, $data['options']),
-        $data['version']
-      ));
+      if(isset($data['name']) && isset($data['options'])) {
+        $success = $success && pg_query($dbconn, sprintf("INSERT INTO players_variants (gwuid, variant_alias, variant_name, variant_data, version) VALUES (%d, '%s', '%s', '%s', %d)",
+          $gwuid,
+          pg_escape_string($dbconn, $variant_alias),
+          pg_escape_string($dbconn, $data['name']),
+          pg_escape_string($dbconn, $data['options']),
+          $data['version']
+        ));
+      } else {
+        $success = FALSE;
+      }
     }
     $success = $success && pg_query('COMMIT');
     if($success) {
@@ -94,6 +98,22 @@ if(isset($_GET['auth_key'])) {
       }
     }
     pg_close($dbconn);
+  } else if(isset($_GET['delete_variants'])) {
+    if(isset($_POST['delete_variants']) && count($_POST['delete_variants']) > 0) {
+      $dbconn = pg_connect("host=pgpool-alfa.neolabs.net port=5432 dbname=gwpanel-org");
+      $success = TRUE;
+      foreach($_POST['delete_variants'] as $alias) {
+        $success = $success && pg_query($dbconn, sprintf("DELETE FROM players_variants WHERE gwuid = %d AND variant_alias='%s'", 
+          $gwuid, 
+          pg_escape_string($dbconn, $alias)
+        ));
+      }
+      if($success) {
+        print 'OK';
+      } else {
+        print 'ERROR';
+      }
+    }
   }
 } else if(isset($_SESSION['gwuid'])) {
   print '__panel.setAuthKey("' . auth_key($_SESSION['gwuid']) . '")';
