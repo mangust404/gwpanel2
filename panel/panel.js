@@ -2468,6 +2468,7 @@ window.Panel2 = new function() {
       if($('table.topill').length > 0) {
         ///новое оформление
         elem = $('table.topill').next();
+        $('.gw-footer').remove();
       } else {
         ///старое оформление
         var elem = $('body > table[bgcolor="#f5fff5"]');

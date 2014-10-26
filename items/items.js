@@ -60,7 +60,8 @@ jQuery.extend(panel, {
       var images = $('#itemsbody').find('table:first').find('img[src*="/items/"]').toArray().map(function(item) {
         return $(item).attr('src');
       });
-      var right_hand_img = $('#itemsbody').find('table:first').find('tr:contains(Правая рука) img[src*="/items/"]').attr('src');
+      var right_hand_img = $('#itemsbody').find('table:first').find('tr:contains(Правая рука) img[src*="/items/"]').attr('src') ||
+                           $('#itemsbody').find('table:first').find('tr:contains(В руках) img[src*="/items/"]').attr('src');
       if(is_edit && images.indexOf(panel.iconURL(current_options.panes[pane_id].buttons[button_id].img)) == -1) {
         images.push(current_options.panes[pane_id].buttons[button_id].img);
       }
@@ -87,7 +88,7 @@ jQuery.extend(panel, {
     }).change().closest('form');
 
     $form.find('input[type=submit]').click(function() {
-      if($set_name.val() == '') {
+      if($set_name.val() == '' && $set_name.attr('placeholder') != '(нет комплекта)') {
         $set_name.val($set_name.attr('placeholder'));
       }
       var current_options = panel.getOptions();
