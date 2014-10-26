@@ -610,7 +610,7 @@ window.Panel2 = new function() {
     checkTime('draw_pane_bubbles begin');
     var buttons = 0;
     var have_settings_button;
-    for(var i = 0; i < 4; i++) {
+    for(var i = 0; i < 7; i++) {
       if($.type(options.panes[i].buttons) == 'array') {
         buttons += options.panes[i].buttons.length;
         if(!have_settings_button) {
@@ -626,7 +626,7 @@ window.Panel2 = new function() {
     if(buttons == 0) {
       /// все кнопки были удалены, добавляем дефолтную 
       /// кнопку настроек в первое пустое окошко
-      for(var i = 0; i < 4; i++) {
+      for(var i = 0; i < 7; i++) {
         if((!options.panes[i].buttons || !options.panes[i].buttons.length) &&
             (!options.panes[i].widgets || !options.panes[i].widgets.length)) {
           options.panes[i].buttons = [{ 'type': 'panel_settings', 'left': 0,'top': 0 }];
@@ -637,7 +637,7 @@ window.Panel2 = new function() {
     }
     if(!have_settings_button) {
       /// Если пользователь каким-то образом удалил кнопку настроек, то добавляем её
-      for(var i = 3; i >= 0; i--) {
+      for(var i = 6; i >= 0; i--) {
         if((options.panes[i].buttons && options.panes[i].buttons.length) ||
             (options.panes[i].widgets && options.panes[i].widgets.length)) {
 
@@ -2465,9 +2465,15 @@ window.Panel2 = new function() {
       if(location.pathname.indexOf('/b0/') == 0 || 
          location.pathname.indexOf('edit.php') > -1 ||
          location.pathname.indexOf('market.php') > -1) return;
-      var elem = $('body > table[bgcolor="#f5fff5"]');
-      if(!elem.length) {
-        elem = $('body > table[bgcolor="#d0eed0"]').next('center');
+      if($('table.topill').length > 0) {
+        ///новое оформление
+        elem = $('table.topill').next();
+      } else {
+        ///старое оформление
+        var elem = $('body > table[bgcolor="#f5fff5"]');
+        if(!elem.length) {
+          elem = $('body > table[bgcolor="#d0eed0"]').next('center');
+        }
       }
       // У нас есть структура форм в document.forms, которую браузер почему-то
       // создаёт нормально, и есть .innerHTML в корявом виде.
