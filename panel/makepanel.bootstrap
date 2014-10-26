@@ -90,7 +90,7 @@ $modules = array();
 
 foreach(glob($gwpanel_path . '/*', GLOB_ONLYDIR) as $glob_path) {
   $dirname = basename($glob_path);
-  if($dirname == 'themes' || $dirname == 'img' || $dirname == 'example') {
+  if($dirname == 'themes' || $dirname == 'img' || $dirname == 'example' || $dirname == 'dev') {
     continue;
   }
   foreach(glob($gwpanel_path . '/' . $dirname . '/*.js') as $file) {
