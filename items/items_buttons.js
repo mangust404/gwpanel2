@@ -1,4 +1,4 @@
-(function(panel) {
+(function(panel, $) {
 
   $.extend(panel, {
     items_putset: function(options) {
