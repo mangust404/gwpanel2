@@ -10,7 +10,6 @@
   },
   "settings": {
     "outland_check_set": {
-      "description": "Проверять комплект",
       "configure": {
         "set": {
           "type": "select",
