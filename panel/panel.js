@@ -1314,9 +1314,17 @@ window.Panel2 = new function() {
           if(__options != null && $.type(__options) == 'object') {
             options = $.extend(options, __options);
           } else {
-            /// дефолтные опции
-            options = $.extend(options, window.panelSettingsCollection.default);
-            instance.set(optionsID, options);
+            /// Вызываем мастер настроек
+            if(document.domain.indexOf('ganjawars.ru') > -1) {
+              instance.loadScript('panel/panel_master.js', function() {
+                instance.panel_master();
+              });
+              return;
+            } else {
+              /// дефолтные настройки
+              options = $.extend(options, window.panelSettingsCollection.default);
+              instance.set(optionsID, options);
+            }
           }
           var domainPrefix = document.domain.split('.')[0];
           var cachedDomains = instance.getCookies()['gwp2_c'] || '';
