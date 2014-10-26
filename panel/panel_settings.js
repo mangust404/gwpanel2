@@ -954,6 +954,7 @@
               .prev('label').map(function() { return $(this).text()})
               .get().join(', ');
             if(location.search.indexOf('gwpanel_test') > -1 || confirm('Вы действительно хотите удалить выбранные настройки? (' + names + ')')) {
+              var delete_variants = [];
               $('.remove-options-variant input[type=checkbox]:checked').each(function() {
                 var id = $(this).val();
                 if($('#variant-name').val() == id) {
@@ -961,10 +962,30 @@
                 }
                 variant_select.find('option[value=' + id + ']').remove();
                 $(this).closest('.ui-checkbox').remove();
+                delete_variants.push(id);
                 delete variants[id];
                 panel.del(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + id);
               });
               panel.set('variants_' + panel.currentPlayerID(), variants);
+              panel.haveServerSync(function(have) {
+                if(have) {
+                  if(confirm('Удалить выбранные настройки с сервера?')) {
+                    panel.auth(function() {
+                      $.ajax('http://new.gwpanel.org/settings.php?auth_key=' + panel.authKey + '&delete_variants=1', {
+                        type: 'POST',
+                        data: {delete_variants: delete_variants},
+                        success: function(data) {
+                          if(data.indexOf('OK') == 0) {
+                            panel.showFlash('Удалено');
+                          } else {
+                            panel.showFlash('Не удалось удалить');
+                          }
+                        }
+                      });
+                    });
+                  }
+                }
+              });
             }
             return false;
           }).appendTo(d.find('.ui-body'));
