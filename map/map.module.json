@@ -35,8 +35,8 @@
           "type": "select",
           "title": "Домашний сектор",
           "options": "__panel.map_names",
-          "default": "__panel.map_current_sector_coords()",
-          "file": "map_sectors.js"
+          "default": "__panel.map_current_sector_parser()",
+          "file": ["map_sectors.js", "map.js"]
         }
       },
       "img": "home.png", 

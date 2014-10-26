@@ -708,7 +708,9 @@
         $collection.append('<option value="">Пустые настройки, с нуля</option>');
 
         $.each(window.panelSettingsCollection, function(id, val) {
-          $collection.append('<option value="' + id + '">' + val.title + '</option>');
+          if(val.title) {
+            $collection.append('<option value="' + id + '">' + val.title + '</option>');
+          }
         });
 
         $clone_collection = $('<optgroup label="Копировать из существующих"></optgroup').appendTo($collection);
@@ -757,15 +759,7 @@
           var collection = $('#add-collection').val();
           if(collection == '') {
             /// минимальный набор настроек, чтобы панель работала
-            $.extend(new_options, {
-              system: {theme: 'base', btnwidth:70, btnheight: 85},
-              panes: [ {width: 6, height: 4, buttons: [{type: 'panel_settings', left: 0, top: 0}], widgets: []}, 
-                       {width: 6, height: 4, buttons: [], widgets: []},
-                       {width: 6, height: 4, buttons: [], widgets: []},
-                       {width: 6, height: 4, buttons: [], widgets: []}
-                     ],
-              widgets: []
-            });
+            $.extend(new_options, panelSettingsCollection.empty);
             saveVariant(new_options);
           } else {
             if(jQuery.type(window.panelSettingsCollection[collection]) == 'object') {
@@ -893,6 +887,7 @@
       $('#edit-other-wrapper .versions').trigger('create');
 
       panel.get('variants_' + panel.currentPlayerID(), function(variants) {
+        if(!variants) variants = {default: 'По-умолчанию'};
         var data = {};
 
         $.each(variants, function(variant, name) {
@@ -1529,7 +1524,8 @@
           }
         }
         /// Если в значении было выражение, то преобразуем его
-        if($.type(that.options) == 'string' && that.options.indexOf('__panel.') == 0) {
+        if($.type(that.options) == 'string' && 
+           (that.options.indexOf('__panel.') == 0 || that.options.indexOf('__panel[') == 0)) {
           if(that.options.indexOf('_async') == -1) {
             this.options = eval(that.options);
             drawFunc();

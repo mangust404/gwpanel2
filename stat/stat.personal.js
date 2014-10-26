@@ -20,7 +20,7 @@ jQuery.extend(panel, {
     }
     var dayStart = new Date; dayStart.setHours(0); dayStart.setMinutes(0); dayStart.setSeconds(0); dayStart.setMilliseconds(0);
     var monthStart = new Date; monthStart.setDate(1); monthStart.setHours(0); monthStart.setMinutes(0); monthStart.setSeconds(0);  monthStart.setMilliseconds(0);
-    __panel.get('stat_skills', function(stat) {
+    __panel.get(panel.currentPlayerID() + '_stat_skills', function(stat) {
       var changes = {};
       var changed;
       
@@ -66,7 +66,7 @@ jQuery.extend(panel, {
         }
       }
       if(changed) {
-        __panel.set('stat_skills', stat, function() {
+        __panel.set(panel.currentPlayerID() + '_stat_skills', stat, function() {
           __panel.triggerEvent('stat_skills', {stat_skills: stat, changes: changes});
         });
       }
@@ -80,7 +80,7 @@ jQuery.extend(panel, {
     
     if(syndnode) {
       
-      __panel.get('stat_syndexp', function(stat) {
+      __panel.get(panel.currentPlayerID() + '_stat_syndexp', function(stat) {
         var changes = {};
         var changed;
         
@@ -100,7 +100,7 @@ jQuery.extend(panel, {
           stat.daily[dayStart.getTime()] = 0;
           stat.monthly[monthStart.getTime()] = 0;
           changed = true;
-          __panel.set('stat_syndexp', stat);
+          __panel.set(panel.currentPlayerID() + '_stat_syndexp', stat);
         } else {
           __panel.loadScript('data/exp_table.js', function() {
             for(var i = 0; i < __panel.expTable.length; i++) {
@@ -133,7 +133,7 @@ jQuery.extend(panel, {
               }
             }
             if(changed) {
-              __panel.set('stat_syndexp', stat, function() {
+              __panel.set(panel.currentPlayerID() + '_stat_syndexp', stat, function() {
                 __panel.triggerEvent('stat_syndexp', {stat_syndexp: stat, exp: expCount});
               });
             }
@@ -151,14 +151,14 @@ jQuery.extend(panel, {
       actualExp.product = parseFloat(text.match(/Производственный:[0-9]+[ ]\(([0-9\.]+)\)/)[1]);
     } catch(e) {};
     
-    __panel.get('stat_exp', function(stat) {
+    __panel.get(panel.currentPlayerID() + '_stat_exp', function(stat) {
       if(!stat) {
         stat = {
           battle: {curr: actualExp.battle, prev: actualExp.battle, start: actualExp.battle, daily: {}, monthly: {}},
           economic: {curr: actualExp.economic, prev: actualExp.economic, start: actualExp.economic, daily: {}, monthly: {}},
           product: {curr: actualExp.product, prev: actualExp.product, start: actualExp.product, daily: {}, monthly: {}}
         }
-        __panel.set('stat_exp', stat);
+        __panel.set(panel.currentPlayerID() + '_stat_exp', stat);
       } else {
         var changed = false;
         var i = 0;
@@ -184,7 +184,7 @@ jQuery.extend(panel, {
           i++;
         }
         if(changed) {
-          __panel.set('stat_exp', stat, function() {
+          __panel.set(panel.currentPlayerID() + '_stat_exp', stat, function() {
             __panel.triggerEvent('stat_exp', {stat_exp: stat, exp: overall});
           });
         };   

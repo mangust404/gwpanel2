@@ -93,7 +93,7 @@ jQuery.extend(panel, {
     });
   },
 
-  map_current_sector_coords: function() {
+  map_current_sector_parser: function() {
 
   },
 

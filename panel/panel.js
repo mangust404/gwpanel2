@@ -607,6 +607,8 @@ window.Panel2 = new function() {
   * Вывод плашек активации
   */
   function draw_pane_bubbles() {
+    if(!options || !options.panes || !options.panes.length) return;
+
     checkTime('draw_pane_bubbles begin');
     var buttons = 0;
     var have_settings_button;
@@ -773,6 +775,7 @@ window.Panel2 = new function() {
   * Инициализация и отрисовка плавающих виджетов
   */
   function initFloatWidgets(redraw) {
+    if(!options || !options.widgets) return;
     var modules = {};
     
     var index = 0;
@@ -1310,31 +1313,35 @@ window.Panel2 = new function() {
         }
         optionsID = environment + '_' + instance.currentPlayerID() + '_' + __variant;
         instance.get(optionsID, function(__options) {
+          var callMaster = false;
           checkTime('get optionsID ' + optionsID);
           if(__options != null && $.type(__options) == 'object') {
             options = $.extend(options, __options);
           } else {
             /// Вызываем мастер настроек
             if(document.domain.indexOf('ganjawars.ru') > -1) {
+              callMaster = true;
               instance.loadScript('panel/panel_master.js', function() {
                 instance.panel_master();
               });
-              return;
             } else {
               /// дефолтные настройки
               options = $.extend(options, window.panelSettingsCollection.default);
               instance.set(optionsID, options);
             }
           }
-          var domainPrefix = document.domain.split('.')[0];
-          var cachedDomains = instance.getCookies()['gwp2_c'] || '';
-          cachedDomains = cachedDomains.split('-');
-          if(cachedDomains.indexOf(domainPrefix) == -1) {
-            cachedDomains.push(domainPrefix);
-            instance.setCacheDomains(cachedDomains);
-          }
+          if(!callMaster) {
+            var domainPrefix = document.domain.split('.')[0];
+            var cachedDomains = instance.getCookies()['gwp2_c'] || '';
+            cachedDomains = cachedDomains.split('-');
+            if(cachedDomains.indexOf(domainPrefix) == -1) {
+              cachedDomains.push(domainPrefix);
+              instance.setCacheDomains(cachedDomains);
+            }
 
-          localStorage['gwp2_' + optionsID] = JSON.stringify(options);
+            localStorage['gwp2_' + optionsID] = JSON.stringify(options);
+          }
+          
           if(!fastInitReady) {
             if(environment == 'testing' && location.search.indexOf('gwpanel_pause') != -1) {
               /// задержка инициализации, чтобы тесты могли встроить дополнительные функции

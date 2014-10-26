@@ -153,6 +153,7 @@
   vertical-align: top;
   border: 1px dashed #999;
   padding: 10px;
+  position: relative;
 }
 
 #edit-widgets-wrapper .widget-wrapper {

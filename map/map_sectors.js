@@ -1,4 +1,6 @@
-jQuery.extend(__panel, {
+(function(panel, $) {
+
+$.extend(panel, {
   map_names: {
     '150x149': '[Z] Crystal Sector', 
     '150x150': '[Z] Cyborg Capital', 
@@ -102,19 +104,45 @@ jQuery.extend(__panel, {
     '125x75': {name: '[P] Palm Airport', sector: 13, id: 69403}
   },
 
-  map_get_ports_names: function() {
+  map_get_sectors: function(island) {
     var result = {};
-    jQuery.each(__panel.map_ports, function(coords) {
-      result[coords] = this.name;
-    });
+    if(island) {
+      island = island.toUpperCase();
+      $.each(panel.map_names, function(sector, name) {
+        if(name.indexOf('[' + island + ']') > -1) {
+          result[sector] = name;
+        }
+      });
+      return result;
+    } else {
+      return panel.map_names;
+    }
+  },
+
+  map_get_ports_names: function(island) {
+    var result = {};
+    if(island) {
+      island = island.toUpperCase();
+      $.each(panel.map_ports, function(coords) {
+        if(this.name.indexOf('[' + island + ']') > -1) {
+          result[coords] = this.name;
+        }
+      });
+    } else {
+      $.each(panel.map_ports, function(coords) {
+        result[coords] = this.name;
+      });
+    }
     return result;
   },
 
   map_get_ports_ids: function() {
     var result = {};
-    jQuery.each(__panel.map_ports, function(coords) {
+    $.each(panel.map_ports, function(coords) {
       result[this.sector] = this.name;
     });
     return result;
   }
 });
+
+})(__panel, jQuery);
