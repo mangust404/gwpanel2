@@ -46,17 +46,29 @@
     } else {
       health.hp_start = this.hp_current;
     }
+    if(health.hp_start / health.hp_max > 0.8 && !this.over80) {
+      this.over80 = true;
+      this.addClass('over80');
+      var that = this;
+      panel.loadCSS('shake.css', function() {
+        that.addClass('shake shake-constant');
+        setTimeout(function() {
+          that.removeClass('shake shake-constant');
+        }, 1000);
+      });
+    }
   }
   
   function home_health_progress(init, health) {
     if(!health) return;
     if(((!this.hp_current && health.hp_start != health.hp_max) || this.hp_current < health.hp_start || init)) {
+      if(this.options.autohide) this.fadeIn();
       if(this.healthUpdInterval) {
         clearInterval(this.healthUpdInterval);
-      } else {
-        if(health.hp_start / health.hp_max > 0.8) {
-          this.progressImg.css({opacity: 0.9});
-        }
+      }
+      if(health.hp_start / health.hp_max > 0.8) {
+        this.over80 = true;
+        this.addClass('over80');
       }
       //this.show();
       var width = Math.round(100 * 100 * this.hp_current / health.hp_max) / 100;
@@ -64,13 +76,15 @@
       
       this.hp_current = health.hp_start + health.hp_speed * parseInt(((new Date).getTime() - health.date) / 1000);
       var that = this;
+      home_health_timer.apply(that, [health]);
+
       this.healthUpdInterval = setInterval(function() {
         home_health_timer.apply(that, [health]);
       }, 1000);
     }
     if(health.hp_start == health.hp_max) {
       this.progressBar.css({width: '100%'});
-      if(this.options.autohide) this.css({display: 'none'});
+      if(this.options.autohide) this.fadeOut();
     }
   }
   
@@ -78,10 +92,13 @@ $.extend(panel, {
   home_health_widget: function(options) {
     var $widget = this;
     $widget.hide();
+    if(location.pathname == '/b0/btl.php' || location.pathname == '/b0/b.php') {
+      return;
+    }
     this.options = options;
     options.size = options.size || 2;
     panel.loadCSS('home/home_widget.css', function() {
-      if(!options.autohide) $widget.show();
+      if(!options.autohide) $widget.fadeIn();
     });
     window.hpupdate_header = function() {}
 
@@ -89,10 +106,9 @@ $.extend(panel, {
     if(options.size == 2) $widget.addClass('medium');
     if(options.size == 1) $widget.addClass('small');
 
-    $widget.progressImg = $('<img src="' + __panel.path_to_theme() + '/icons/heart.png"/>');
     $widget.css({
       height: 'auto'
-    }).append($widget.progressImg);
+    });
     $widget.progressBarText = $('<div class="progress-bar-text"></div>');
     $widget.progressBar = $('<div class="progress-bar"></div>').append($widget.progressBarText);
     $widget.progressText = $('<div class="text"></div>');
@@ -132,10 +148,10 @@ $.extend(panel, {
       .appendTo($widget);
     panel.get('health', function(health) {
       home_health_progress.apply($widget, [false, health]);
-    });
-    panel.bind('hp_update', function(health) {
-      panel.set('health', health);
-      home_health_progress.apply($widget, [true, health]);
+      panel.bind('hp_update', function(health) {
+        panel.set('health', health);
+        home_health_progress.apply($widget, [true, health]);
+      });
     });
 
   }

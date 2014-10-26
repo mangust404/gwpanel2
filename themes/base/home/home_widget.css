@@ -3,21 +3,31 @@
   width: 130px;
 }
 
-.home_health_widget img {
+.home_health_widget:before {
   opacity: .2;
+  content: "";
   position: absolute;
-}
-
-.home_health_widget.small img {
-  width: 16px;
-}
-
-.home_health_widget.medium img {
+  left: 10px;
+  top: 10px;
+  background: url(../icons/heart.png) no-repeat 100%/100%;
   width: 27px;
+  height: 27px;
 }
 
-.home_health_widget.big img {
+.home_health_widget.over80:before {
+  opacity: 1;
+}
+
+.home_health_widget.small:before {
+  width: 16px;
+  height: 16px;
+  left: 10px;
+}
+
+.home_health_widget.big:before {
   width: 37px;
+  height: 37px;
+  left: 7px;
 }
 
 .home_health_widget .progress-container {
@@ -31,10 +41,12 @@
 
 .home_health_widget.small .progress-container {
   height: 10px;
+  width: 115px;
 }
 
 .home_health_widget.medium .progress-container {
   height: 20px;
+  width: 105px;
 }
 
 .home_health_widget.big .progress-container {
@@ -98,10 +110,12 @@
 
 .home_health_widget.small .progress-bar .progress-bar-text {
   font-size: 10px;
+  width: 115px;
 }
 
 .home_health_widget.medium .progress-bar .progress-bar-text {
   font-size: 12px;
+  width: 105px;
 }
 
 .home_health_widget.big .progress-bar .progress-bar-text {
