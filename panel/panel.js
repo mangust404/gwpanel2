@@ -188,8 +188,8 @@ window.Panel2 = new function() {
                     }
                     instance.setOptions(options, undefined, function() {
                       if(callback) callback();
-                      instance.triggerEvent('options_change_' + that.type, 
-                        __options);
+                      /*instance.triggerEvent('options_change_' + that.type, 
+                        {options: __options, playerID: instance,currentPlayerID()});*/
                     });
                   }
                 });
@@ -527,8 +527,8 @@ window.Panel2 = new function() {
                 }
                 instance.setOptions(options, undefined, function() {
                   if(callback) callback();
-                  instance.triggerEvent('options_change_' + that.type, 
-                    __options);
+                  /*instance.triggerEvent('options_change_' + that.type, 
+                    {options: __options, playerID: instance.currentPlayerID()});*/
                 });
               }
             });
@@ -844,8 +844,8 @@ window.Panel2 = new function() {
               }
               instance.setOptions(options, undefined, function() {
                 if(callback) callback();
-                instance.triggerEvent('options_change_' + widget.type, 
-                  __options);
+                /*instance.triggerEvent('options_change_' + widget.type, 
+                  {options: __options, playerID: instance.currentPlayerID()});*/
               });
             }
           });
@@ -1156,8 +1156,8 @@ window.Panel2 = new function() {
                 }
                 instance.setOptions(options, undefined, function() {
                   if(callback) callback();
-                  instance.triggerEvent('options_change_' + func, 
-                    func_options);
+                  /*instance.triggerEvent('options_change_' + func, 
+                    {options: func_options, playerID: instance.currentPlayerID()});*/
                 });
               }
             });
@@ -1230,8 +1230,10 @@ window.Panel2 = new function() {
         }
       }
 
-      if(!instance.getCookies()['gwp2_c'] ||
-         instance.getCookies()['gwp2_c'].split('-').indexOf(document.domain.split('.')[0]) == -1) {
+      if(document.domain != domain && (
+         !instance.getCookies()['gwp2_c'] ||
+         instance.getCookies()['gwp2_c'].split('-').indexOf(document.domain.split('.')[0]) == -1
+        )) {
         fastInitReady = false;
         /// мы попали сюда потому что где-то были изменены настройки
         /// очищаем все переменные в localStorage начинающиеся с текущего окружения
@@ -1308,19 +1310,30 @@ window.Panel2 = new function() {
         if(!__variant) {
           checkTime('set default variant for ' + __variant);
           instance.set(variantID, 'default');
-          localStorage['gwp2_' + variantID] = 'default';
+          if(domain != document.domain) {
+            localStorage['gwp2_' + variantID] = JSON.stringify('default');
+          }
           __variant = 'default';
         }
         optionsID = environment + '_' + instance.currentPlayerID() + '_' + __variant;
         instance.get(optionsID, function(__options) {
-          var callMaster = false;
           checkTime('get optionsID ' + optionsID);
           if(__options != null && $.type(__options) == 'object') {
             options = $.extend(options, __options);
+            var domainPrefix = document.domain.split('.')[0];
+            var cachedDomains = instance.getCookies()['gwp2_c'] || '';
+            cachedDomains = cachedDomains.split('-');
+            if(cachedDomains.indexOf(domainPrefix) == -1) {
+              cachedDomains.push(domainPrefix);
+              instance.setCacheDomains(cachedDomains);
+            }
+
+            if(domain != document.domain) {
+              localStorage['gwp2_' + optionsID] = JSON.stringify(options);
+            }
           } else {
             /// Вызываем мастер настроек
             if(document.domain.indexOf('ganjawars.ru') > -1) {
-              callMaster = true;
               instance.loadScript('panel/panel_master.js', function() {
                 instance.panel_master();
               });
@@ -1330,18 +1343,7 @@ window.Panel2 = new function() {
               instance.set(optionsID, options);
             }
           }
-          if(!callMaster) {
-            var domainPrefix = document.domain.split('.')[0];
-            var cachedDomains = instance.getCookies()['gwp2_c'] || '';
-            cachedDomains = cachedDomains.split('-');
-            if(cachedDomains.indexOf(domainPrefix) == -1) {
-              cachedDomains.push(domainPrefix);
-              instance.setCacheDomains(cachedDomains);
-            }
 
-            localStorage['gwp2_' + optionsID] = JSON.stringify(options);
-          }
-          
           if(!fastInitReady) {
             if(environment == 'testing' && location.search.indexOf('gwpanel_pause') != -1) {
               /// задержка инициализации, чтобы тесты могли встроить дополнительные функции
@@ -1370,7 +1372,8 @@ window.Panel2 = new function() {
 
       // следим за сменой опций из других окон
       instance.bind('options_change', function(data) {
-        if(data.optionsID == optionsID && data.windowID != windowID) {
+        if(data.optionsID == optionsID && data.windowID != windowID && 
+           data.playerID == instance.currentPlayerID()) {
           $.extend(options, data.options);
         }
       });
@@ -1730,15 +1733,17 @@ window.Panel2 = new function() {
         throw('Error: you can\'t set protected property directly');
       }
       /// Если значение есть на текущем домене, то выставляем и его
-      if($.type(localStorage['gwp2_' + key]) != 'undefined') {
+      if(document.domain == domain) {
+        localStorage['gwp2_' + key] = JSON.stringify(value);
+        if(callback) callback();
+        return;
+      } else if($.type(localStorage['gwp2_' + key]) != 'undefined') {
         localStorage['gwp2_' + key] = JSON.stringify(value);
       }
 
       var __callback = function() {
         /// выставляем на текущий домен чтобы затем сразу возвращать
-        if(document.domain != domain) {
-          localStorage['gwp2_' + key] = JSON.stringify(value);
-        }
+        localStorage['gwp2_' + key] = JSON.stringify(value);
         if(callback) callback();
       }
       if(initialized) {
@@ -1759,8 +1764,17 @@ window.Panel2 = new function() {
     get: function(key, callback) {
       checkTime('get ' + key);
       /// Пытаемся найти значение на текущем домене
-      if($.type(localStorage['gwp2_' + key]) != 'undefined' && 
-         document.domain != domain) {
+      if(document.domain == domain) {
+        try {
+          var val = JSON.parse(localStorage['gwp2_' + key]);
+          return callback(val);
+        } catch(e) {
+          console.log('wrong value for ' + key + ': ' + localStorage['gwp2_' + key]);
+          console.log(e);
+        }
+        callback(null);
+        return;
+      } else if($.type(localStorage['gwp2_' + key]) != 'undefined') {
         try {
           var val = JSON.parse(localStorage['gwp2_' + key]);
           checkTime('get ' + key + ' from local storage');
@@ -1772,7 +1786,9 @@ window.Panel2 = new function() {
         }
       }
       var __callback = function(value) {
-        localStorage['gwp2_' + key] = JSON.stringify(value)
+        if(document.domain != domain) {
+          localStorage['gwp2_' + key] = JSON.stringify(value);
+        }
         if(callback) callback(value);
       }
       /// Если на текущем домене нет, то запрашиваем из основного
@@ -1898,7 +1914,8 @@ window.Panel2 = new function() {
 
         instance.set(optionsID, options, function() {
           instance.triggerEvent('options_change', {options: options, 
-                                optionsID: optionsID, windowID: windowID});
+                                optionsID: optionsID, windowID: windowID,
+                                playerID: instance.currentPlayerID()});
           if(callback) {
             callback();
           }

@@ -17,7 +17,9 @@
       }
     };
     $.each(window.panelSettingsCollection, function(id) {
-      form1.collection.options[id] = this.title;
+      if(this.title) {
+        form1.collection.options[id] = this.title;
+      }
     });
 
     selected_options = window.panelSettingsCollection.default;
@@ -30,6 +32,7 @@
       if(name == 'collection') {
         selected_variant = value;
         selected_options = window.panelSettingsCollection[value];
+        panel.set(panel.getEnv() + '_opts_var_' + panel.currentPlayerID(), selected_variant);
       }
     });
   }
