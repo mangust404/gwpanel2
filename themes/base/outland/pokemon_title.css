@@ -1,0 +1,10 @@
+.pt_tooltip {
+    background-color: #f0fff0;
+    border-radius: 8px;
+    opacity: 0.85;
+    padding: 5px 10px 5px 10px;
+    position: absolute;
+    z-index: 1;
+    font-weight: bold;
+    box-shadow: 1px 1px 3px rgba(208, 238, 208, 1);
+}
