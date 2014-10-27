@@ -4,9 +4,33 @@
   "title": "Модуль для Outland",
   "weight": 5, 
   "apply": {
-    "/walk.php": ["outland_check_set", "outland_auto_sail", "outland_auto_close", "outland_auto_pick", "outland_highlight", "outland_hotkeys"],
-    "/walk.op.php": ["outland_check_set", "outland_auto_sail", "outland_auto_close", "outland_auto_pick", "outland_highlight", "outland_hotkeys"],
-    "/walk.ep.php": ["outland_check_set", "outland_auto_sail", "outland_auto_close", "outland_auto_pick", "outland_highlight", "outland_hotkeys"]
+    "/walk.php": [
+      "outland_check_set",
+      "outland_auto_sail",
+      "outland_auto_close",
+      "outland_auto_pick",
+      "outland_highlight",
+      "outland_hotkeys",
+      "outland_pokemon_title"
+    ],
+    "/walk.op.php": [
+      "outland_check_set",
+      "outland_auto_sail",
+      "outland_auto_close",
+      "outland_auto_pick",
+      "outland_highlight",
+      "outland_hotkeys",
+      "outland_pokemon_title"
+    ],
+    "/walk.ep.php": [
+      "outland_check_set",
+      "outland_auto_sail",
+      "outland_auto_close",
+      "outland_auto_pick",
+      "outland_highlight",
+      "outland_hotkeys",
+      "outland_pokemon_title"
+    ]
   },
   "settings": {
     "outland_check_set": {
@@ -55,6 +79,28 @@
     "outland_hotkeys": {
       "description": "Быстрое передвижение стрелками на клавиатуре",
       "file": "outland.js"
-    }    
+    },
+
+    "outland_pokemon_title": {
+      "description": "Окно-подсказка с параметрами покемонов",
+      "file": "outland_pokemon_title.js",
+      "configure": {
+        "quantity": {
+          "type": "checkbox",
+          "title": "Количество",
+          "default": true
+        },
+        "power": {
+          "type": "checkbox",
+          "title": "Мощность",
+          "default": true
+        },
+        "prize": {
+          "type": "checkbox",
+          "title": "Премия",
+          "default": true
+        }
+      }
+    }
   }
 }
