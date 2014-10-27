@@ -11,21 +11,21 @@
       var showWaitId, hideWaitId, paramButtons, toolHTML, i, length;
 
       paramButtons = [
-        "Написать письмо",          "send_mail",
-        "Передать деньги",          "send_money",
-        "Добавить в друзья",        "friend_list",
-        "Список аренды",            "list_rents",
+        "Написать письмо",          "send_mail.png",
+        "Передать деньги",          "send_money.png",
+        "Добавить в друзья",        "friend_list.png",
+        "Список аренды",            "list_rents.png",
         /* вторая строка */
-        "Письма от персонажа ",     "mails_from",
-        "Передать предмет",         "send_item",
-        "Добавить в черный список", "black_list",
-        "Иски игрока",              "claims"
+        "Письма от персонажа ",     "mails_from.png",
+        "Передать предмет",         "send_item.png",
+        "Добавить в черный список", "black_list.png",
+        "Иски игрока",              "claims.png"
       ];
 
       toolHTML = "&nbsp;";
       for(i = 0, length = paramButtons.length; i < length; i = i + 2){
         if(i == 8) toolHTML += "<br>";
-        toolHTML += '<a href="#" title="'+ paramButtons[i] +'"><img src="'+ panel.path_to_theme() + 'icons/' + paramButtons[i+1] +'.png"></a>&nbsp;';
+        toolHTML += '<a title="'+ paramButtons[i] +'"><img src="'+ panel.iconURL(paramButtons[i+1]) +'"></a>&nbsp;';
       }
 
       $('body').append(
@@ -135,7 +135,7 @@ function showToolWindow($playerLink){
     function(){
       addToFriendOrEnemy(0, name);
     }
-  );
+  ).css({"cursor": "pointer"});
 
   // Список аренды
   $urlTool.eq(3).prop("href", "http://www.ganjawars.ru/info.rent.php?id=" + id);
@@ -158,7 +158,7 @@ function showToolWindow($playerLink){
     function(){
       addToFriendOrEnemy(1, name);
     }
-  );
+  ).css({"cursor": "pointer"});
 
   //Иски игрока
   $urlTool.eq(7).prop("href", "http://www.ganjawars.ru/isks.php?sid=" + id + "&st=1&period=4");
