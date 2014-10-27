@@ -165,7 +165,7 @@ window.Panel2 = new function() {
               }
               var __that = this;
 
-              instance.loadScript(type.module + '/' + type.file, function() {
+              instance.loadScript(getFiles(type.file, type.module), function() {
                 if(!instance[type['callback']]) {
                   try{
                     throw('"' + type['callback'] + '" for button ' + that.type + ', Pane ' + paneID + ' draw: ');
@@ -540,7 +540,7 @@ window.Panel2 = new function() {
           if(instance[type.callback]) {
             instance.ready(__widget_init);
           } else {
-            instance.loadScript(type.module + '/' + type.file, __widget_init);
+            instance.loadScript(getFiles(type.file, type.module), __widget_init);
           }
         });
       }
@@ -798,7 +798,7 @@ window.Panel2 = new function() {
       /// Если виджет уже прорисован, выходим
       if($('#float-' + widget.index + '-' + widget.type).length > 0) return;
 
-      instance.loadScript(this.module + '/' + panel_apply.widgets[this.type].file, function() {
+      instance.loadScript(getFiles(panel_apply.widgets[this.type].file, this.module), function() {
         var type = panel_apply.widgets[widget.type];
         if($.type(instance[type.callback]) == 'undefined') {
           throw('Function ' + type.callback + ' for widget ' + widget.type + ' not found');
@@ -1041,6 +1041,23 @@ window.Panel2 = new function() {
       return false;
     }
   }
+
+  function getFiles(f, module) {
+    if(!f) return;
+    if($.type(f) != 'array') {
+      f = [f];
+    }
+    var result = [];
+    $.each(f, function(i, file) {
+      if(file.indexOf('/') == -1) {
+        file = module + '/' + file;
+      }
+      if(result.indexOf(file) == -1) {
+        result.push(file);
+      }
+    });
+    return result;
+  }
   /**
   * Конструктор
   * @param __options - дефолтные настройки панели, хеш
@@ -1124,7 +1141,7 @@ window.Panel2 = new function() {
             && (!options.whitelist || options.whitelist.indexOf(func) == -1))
         ) return;
       var module = panel_apply.settings[func].module;
-      instance.loadScript(module + '/' + panel_apply.settings[func].file, function() {
+      instance.loadScript(getFiles(panel_apply.settings[func].file, module), function() {
         if($.type(instance[func]) == 'undefined') {
           throw('Function ' + func + ' in module ' + panel_apply.settings[func].module + ' not found');
         } else {

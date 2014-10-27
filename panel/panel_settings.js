@@ -125,71 +125,45 @@
         scripts.push('lib/jquery-ui-1.9.2.custom.min.js');
       }
       
-      for(var key in panel_apply.settings) {
-        if(panel_apply.settings[key].file) {
-          if(panel_apply.settings[key].file.indexOf('/') == -1) {
-            var file = panel_apply.settings[key].module + '/' + panel_apply.settings[key].file;
-          } else {
-            var file = panel_apply.settings[key].file;
+      function add_files(f, module) {
+        if(!f) return;
+        if($.type(f) != 'array') {
+          f = [f];
+        }
+        $.each(f, function(i, file) {
+          if(file.indexOf('/') == -1) {
+            file = module + '/' + file;
           }
-        }
-        if(scripts.indexOf(file) == -1) {
-          scripts.push(file);
-        }
+          if(scripts.indexOf(file) == -1) {
+            scripts.push(file);
+          }
+        });
+      }
+
+      for(var key in panel_apply.settings) {
+        add_files(panel_apply.settings[key].file, 
+                  panel_apply.settings[key].module);
+
         if(panel_apply.settings[key].configure) {
           for(var config_key in panel_apply.settings[key].configure) {
-            if(panel_apply.settings[key].configure[config_key].file) {
-              if(panel_apply.settings[key].configure[config_key].file.indexOf('/') == -1) {
-                var file = panel_apply.settings[key].module + '/' + 
-                  panel_apply.settings[key].configure[config_key].file;
-              } else {
-                var file = panel_apply.settings[key].configure[config_key].file;
-              }
-              if(scripts.indexOf(file) == -1) {
-                scripts.push(file);
-              }
-            }
+            add_files(panel_apply.settings[key].configure[config_key].file, 
+              panel_apply.settings[key].module);
           }
         }
       }
       for(var key in panel_apply.buttons) {
         var button = panel_apply.buttons[key];
-        if(button.file && 
-          scripts.indexOf(button.module + '/' + button.file) == -1) {
-          scripts.push(button.module + '/' +button.file);
-        }
-        if(button.config_files && 
-            $.type(button.config_files) == 'array') {
-          for(var i = 0; i < button.config_files.length; i++) {
-            if(scripts.indexOf(button.config_files[i]) == -1) {
-              scripts.push(button.config_files[i]);
-            }
-          }
-        }
+        add_files(button.file, 
+          button.module);
         $.each(button.configure || {}, function(i) {
-          if(this.file && scripts.indexOf(button.module + '/' + this.file) == -1) {
-            scripts.push(button.module + '/' + this.file);
-          }
+          add_files(this.file, button.module);
         });
       }
       for(var key in panel_apply.widgets) {
         var widget = panel_apply.widgets[key];
-        if(widget.file && 
-          scripts.indexOf(widget.module + '/' + widget.file) == -1) {
-          scripts.push(widget.module + '/' + widget.file);
-        }
-        if(widget.config_files && 
-            $.type(widget.config_files) == 'array') {
-          for(var i = 0; i < widget.config_files.length; i++) {
-            if(scripts.indexOf(widget.config_files[i]) == -1) {
-              scripts.push(widget.config_files[i]);
-            }
-          }
-        }
+        add_files(widget.file, widget.module);
         $.each(widget.configure || {}, function(i) {
-          if(this.file && scripts.indexOf(widget.module + '/' + this.file) == -1) {
-            scripts.push(widget.module + '/' + this.file);
-          }
+          add_files(this.file, widget.module);
         });
       }
       panel.loadScript(scripts, callback);

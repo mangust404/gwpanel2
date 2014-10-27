@@ -3,6 +3,7 @@
   var selected_variant = 'default';
   var selected_options = {};
   var item_index = 0;
+  var $next_button;
   var selected = {
     arguments: {
     }
@@ -38,7 +39,8 @@
   }
 
   function panel_master_form2($content) {
-    $content.parent().find('h2').html('Шаг ' + (item_index + 1) + ' из ' + Object.keys(selected_options.master).length);
+    $content.parent().find('center').remove();
+    $content.parent().find('h2').html('Шаг ' + (item_index + 1) + ' из ' + (Object.keys(selected_options.master).length + 1));
     var next_item = selected_options.master[Object.keys(selected_options.master)[item_index]];
     var form = {};
     form[Object.keys(selected_options.master)[item_index]] = next_item;
@@ -62,6 +64,7 @@
           panel.dispatchException(e);
         }
       });
+      $next_button.removeClass('ui-disabled');
     });
     $content.trigger('create');
     
@@ -79,22 +82,67 @@
       }).appendTo($center);
     }
     if(item_index < Object.keys(selected_options.master).length - 1) {
-      $('<a class="ui-btn ui-btn-inline ui-btn-icon-right ui-icon-carat-r">Далее</a>').click(function() {
+      $next_button = $('<a class="ui-btn ui-btn-inline ui-btn-icon-right ui-icon-carat-r ui-disabled">Далее</a>').click(function() {
         item_index++;
         $content.html('');
         $center.remove();
         panel_master_form2($content);
       }).appendTo($center);
+
+      if($.type(selected.arguments[Object.keys(selected_options.master)[item_index]]) != 'undefined') {
+        $next_button.removeClass('ui-disabled');
+      }
     } else {
-      $('<a class="ui-btn ui-btn-inline ui-btn-icon-right ui-icon-carat-r">Сохранить</a>').click(function() {
-        delete selected_options['master'];
-        panel.setOptions(selected_options, false, function() {
-          $('#panel-settings-editor').fadeOut();      
-          panel.showFlash('Настройки успешно созданы. Нажмите F5 чтобы увидеть изменения.');
-        });
+      $('<a class="ui-btn ui-btn-inline ui-btn-icon-right ui-icon-carat-r">Далее</a>').click(function() {
+        $content.parent().hide();
+        panel_master_form3($('#panel-settings-editor .step3 .content').parent().show().end());
+          //panel.showFlash('Настройки успешно созданы. Нажмите F5 чтобы увидеть изменения.');
       }).appendTo($center);
     }
     //console.log(selected_variant, selected_options);
+  }
+
+  function panel_master_form3($content) {
+    $content.parent().find('center').remove();
+    $content.html('');
+    $('<label>Укажите для каких комплектов создавать кнопки:</label>').appendTo($content);
+
+    var $center = $('<center>').css({
+      position: 'absolute',
+      bottom: 5,
+      width: '95%'
+    }).appendTo($content.parent());
+
+    $('<a class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-l">Назад</a>').click(function() {
+      $content.parent().hide();
+      panel_master_form2($('#panel-settings-editor .step2 .content').empty().parent().show().end());
+    }).appendTo($center);
+
+    $next_button = $('<a class="ui-btn ui-btn-inline ui-btn-icon-right ui-icon-carat-r">Далее</a>').click(function() {
+      $content.parent().hide();
+      panel_master_finish($('#panel-settings-editor .finish .content').parent().show().end());
+    }).appendTo($center);
+
+    //delete selected_options['master'];
+    //panel.setOptions(selected_options, false, function() {
+    //$('#panel-settings-editor').fadeOut();
+  }
+
+  function panel_master_finish($content) {
+    $content.parent().children('center').remove();
+
+    var $center = $('<center>').css({
+      position: 'absolute',
+      bottom: 5,
+      width: '95%'
+    }).appendTo($content.parent());
+
+    $('<a class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-l">Назад</a>').click(function() {
+      $content.parent().hide();
+      panel_master_form3($('#panel-settings-editor .step3 .content').empty().parent().show().end());
+    }).appendTo($center);
+
+    '<label>'
   }
 
 
@@ -114,6 +162,15 @@ jQuery.extend(panel, {
   <div class="container step2" style="display: none;">\
     <h2 style="margin: 20px 0;">Основные настройки</h2>\
     <div class="content edit-wrapper"></div>\
+  </div>\
+  <div class="container step3" style="display: none;">\
+    <h2 style="margin: 20px 0;">Комплекты</h2>\
+    <div class="content edit-wrapper"></div>\
+  </div>\
+  <div class="container finish" style="display: none;">\
+    <h2 style="margin: 20px 0;">Поздравляем, всё готово!</h2>\
+    <div class="content edit-wrapper">Настройки успешно созданы. Нажмите F5 чтобы перезагрузить страницу, или нажмите на кнопку ниже.\
+    <center><a class="ui-btn ui-btn-inline ui-btn-icon-right ui-icon-check" onclick="location.href = location.href;">Закрыть мастер и обновить страницу</a></center></div>\
   </div>\
 </div>');
         var $content = $master.find('.step1 .content');
