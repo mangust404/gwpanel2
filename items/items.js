@@ -1,8 +1,35 @@
 (function(panel, $) {
+  var slots = {
+    'Голова': 'hd',
+    'Левая рука': 'lh',
+    'Правая рука': 'rh',
+    'В руках': 'bh',
+    'Корпус': 'bd',
+    'Спина': 'bk',
+    'Граната': 'gr',
+    'Пояс': 'bt',
+    'Ноги': 'ft',
+    'Транспорт': 'tr',
+    'Левый': 'lp',
+    'Правый': 'rp',
+    'Очки': 'gl',
+    'Чипсет': 'ch',
+  }
+
 jQuery.extend(panel, {
 
   items_sets: function() {
     var $set_id = $('select[name="set_id"]');
+    /// вытаскиваем сеты и определяем какой сейчас надет
+    var dressed = panel.get_set_str();
+    for(var i = 1; i <= parseInt($set_id.find('option:last').val()); i++) {
+      panel.get('items_set_' + i, function(set) {
+        if(dressed == set) {
+          $set_id.val(i).change();
+          i = 999;
+        }
+      })
+    }
     var $form = $set_id.closest('form');
     var $set_name = $form.find('input[name="set_name"]');
     var current_icon;
@@ -91,31 +118,61 @@ jQuery.extend(panel, {
       if($set_name.val() == '' && $set_name.attr('placeholder') != '(нет комплекта)') {
         $set_name.val($set_name.attr('placeholder'));
       }
-      var current_options = panel.getOptions();
+      /// Запоминаем сет в ЛС
+      panel.set('items_set_' + $set_id.val(), 
+        panel.get_set_str(),
+        function() {
+        panel.set('items_current_set', $set_id.val());
 
-      panel.loadScript('panel/panel_settings.js', function() {
-        if($('#edit-button:checked').length) {
-          current_options.panes[pane_id].buttons[button_id].img = current_icon;
-          current_options.panes[pane_id].buttons[button_id].title = $set_name.val();
-          panel.setOptions(current_options);
-          $('.pane').remove();
-          panel.showFlash('Кнопка изменена');
-        } else if($('#add-button:checked').length) {
-          panel.addButton(first_pane_with_buttons, 
-            'items_putset_button', 
-            $.extend(panel_apply.buttons.items_putset_button, {
-              title: $set_name.val(),
-              arguments: {set_id: $set_id.val()},
-              img: current_icon
-            }
-          ));
-          panel.setOptions(current_options);
-          panel.showFlash('Кнопка добавлена');
-        }
-        $form.submit();
+        var current_options = panel.getOptions();
+        panel.loadScript('panel/panel_settings.js', function() {
+          if($('#edit-button:checked').length) {
+            current_options.panes[pane_id].buttons[button_id].img = current_icon;
+            current_options.panes[pane_id].buttons[button_id].title = $set_name.val();
+            panel.setOptions(current_options);
+            $('.pane').remove();
+            panel.showFlash('Кнопка изменена');
+          } else if($('#add-button:checked').length) {
+            panel.addButton(first_pane_with_buttons, 
+              'items_putset_button', 
+              $.extend(panel_apply.buttons.items_putset_button, {
+                title: $set_name.val(),
+                arguments: {set_id: $set_id.val()},
+                img: current_icon
+              }
+            ));
+            panel.setOptions(current_options);
+            panel.showFlash('Кнопка добавлена');
+          }
+          $form.submit();
+        });
       });
       return false;
     });
+  },
+
+  get_set_str: function(data) {
+    var elem;
+    if(data) {
+      $elem = $(data);
+    } else {
+      $elem = $('#itemsbody');
+    }
+    var ar = $elem.find('table:first')
+      .find('a[href*="item.php?"]')
+      .map(function() {
+        var $parent = $(this).closest('tr');
+        var slot;
+        for(var key in slots) {
+          if($parent.find('td:contains(' + key + ')').length) {
+            slot = slots[key];
+            break;
+          }
+        }
+        return slot + '=' + this.href.split('item_id=')[1];
+      }).toArray();
+    return ar.join('+');
   }
+
 });
 })(window.__panel, jQuery);

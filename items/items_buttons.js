@@ -11,6 +11,7 @@
           } else {
             $(that).addClass('button-error');
           }
+          panel.set('items_current_set', options.set_id);
         }, 
         error: function() {
           $(that).addClass('button-error');
