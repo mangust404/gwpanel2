@@ -1,0 +1,44 @@
+{
+  "requires": "", 
+  "excludes": "",
+  "access": "", 
+  "title": "Разработка",
+  "author": "гном убийца",
+  "author_link": "http://www.ganjawars.ru/info.php?id=433067",
+  "weight": 1, 
+  "apply": {
+    "*": [
+      "object_viewer"
+    ]
+  }, 
+  "settings": {
+    "object_viewer": {
+      "file": "object_viewer.js",
+      "description": "Модуль отладки"
+    }
+  },
+
+  "widgets": {
+    "launch_methods": {
+      "title": "Кнопка для отладки",
+      "configure": {
+        "title": {
+          "type": "text",
+          "title": "Заголовок",
+          "default": "Отладка",
+          "description": "Поле для свободного ввода любого текста"
+        },
+        "functions_todo": {
+          "type": "text",
+          "title": "Код для выполнения",
+          "default": "",
+          "description": "Поле для свободного ввода любого текста"
+        }
+      },
+      "callback": "dev_widget",
+      "file": "dev_widgets.js",
+      "width": 1,
+      "height": 1
+    }
+  }
+}
