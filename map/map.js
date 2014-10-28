@@ -1,6 +1,9 @@
 (function(panel, $) {
 jQuery.extend(panel, {
   map_mmupdate: function(event) {
+    if($('table[background*="/i/map"]').length > 0) {
+      panel.showFlash('Ошибка! Скорее всего у вас нет GPS-навигатора и ваш транспорт не оборудован им.');
+    }
     //Перезаписываем функцию игры для обновления таймера при передвижении по секторам
     window.mmupdate = function() {
       if (window.mmtimer>=0) clearTimeout(window.mmtimer);

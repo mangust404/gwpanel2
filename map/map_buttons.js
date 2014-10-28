@@ -20,16 +20,16 @@ jQuery.extend(panel, {
   },
 
   map_goport: function(options) {
-    if(options.port) {
+    if(options.sector) {
       __panel.loadScript('map/map_sectors.js', function() {
-        var port_href = 'http://www.ganjawars.ru/object.php?id=' + __panel.map_ports[options.port].id;
+        var port_href = 'http://www.ganjawars.ru/object.php?id=' + __panel.map_ports[options.sector].id;
         __panel.get('map_sector', function(sector) {
-          if(sector == options.port) {
+          if(sector == options.sector) {
             __panel.gotoHref(port_href);
           } else {
             __panel.set('moveHref', port_href, function() {
-              __panel.set('moveDest', 'Порт в ' + __panel.map_ports[options.port].name, function() {
-                __panel.gotoHref('http://www.ganjawars.ru/map.move.php?gps=1&sxy=' + options.port);
+              __panel.set('moveDest', 'Порт в ' + __panel.map_ports[options.sector].name, function() {
+                __panel.gotoHref('http://www.ganjawars.ru/map.move.php?gps=1&sxy=' + options.sector);
               });
             });
           }
@@ -51,7 +51,7 @@ jQuery.extend(panel, {
               break;
             }
           }
-          if(__panel.map_ports[sector].sector == options.port) {
+          if(__panel.map_ports[sector] && __panel.map_ports[sector].sector == options.port) {
             __panel.gotoHref('http://www.ganjawars.ru/map.move.php?seaway=1&sectorin=12&sectorout=' + options.port + '&confirm=1');
           } else {
             __panel.set('moveHref', 'http://www.ganjawars.ru/map.move.php?seaway=1&sectorin=12&sectorout=' + options.port + '&confirm=1', function() {
