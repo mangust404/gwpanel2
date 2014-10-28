@@ -24,6 +24,7 @@
     });
 
     selected_options = window.panelSettingsCollection.default;
+    panel.set(panel.getEnv() + '_opts_var_' + panel.currentPlayerID(), 'default');
 
     panel.panel_configure_form(form1, {
       arguments: {
@@ -107,6 +108,33 @@
     $content.html('');
     $('<label>Укажите для каких комплектов создавать кнопки:</label>').appendTo($content);
 
+    var use_sets = {
+      arguments: {
+        sets: []
+      }
+    };
+    var sets_data;
+
+    panel.loadScript('items/items_data.js', function() {
+      panel.items_get_sets_async(function(sets) {
+        sets_data = sets;
+        /// делаем все комплекты выбранными по-дефолту
+        use_sets.arguments.sets = Object.keys(sets);
+        panel.panel_configure_form({
+          sets: {
+            'type': 'checkboxes',
+            'title': 'Укажите для каких комплектов создавать кнопки:',
+            options: sets
+          }
+        }, use_sets, $content, function(set_id, checked) {
+          use_sets.arguments.sets = checked;
+        });
+        $content.trigger('create');
+      });
+    });
+
+    $('<div class="description">учтите что для определения содержимого комплектов скрипт попытается их надеть, и в конце всех операций будет снята вся аммуниция.</div>').appendTo($content);
+
     var $center = $('<center>').css({
       position: 'absolute',
       bottom: 5,
@@ -119,13 +147,76 @@
     }).appendTo($center);
 
     $next_button = $('<a class="ui-btn ui-btn-inline ui-btn-icon-right ui-icon-carat-r">Далее</a>').click(function() {
-      $content.parent().hide();
-      panel_master_finish($('#panel-settings-editor .finish .content').parent().show().end());
+      panel.loadScript(['items/items.js', 'panel/panel_settings.js'], function() {
+        try {
+          if(use_sets.arguments.sets.length > 0) {
+            var data;
+            /// сперва находим первое попавшееся окно с кнопками
+            var first_pane_with_buttons = null;
+            for(var i = 0; i < selected_options.panes.length; i++) {
+              if($.type(selected_options.panes[i]) != 'object') continue;
+              if($.type(selected_options.panes[i].buttons) != 'array') continue;
+              if(selected_options.panes[i].buttons.length > 0) {
+                first_pane_with_buttons = i;
+                break;
+              }
+            }
+            if(first_pane_with_buttons === null) first_pane_with_buttons = 0;
+
+            /// Расширяем окно на 2 пункта
+            selected_options.panes[first_pane_with_buttons].width += 2;
+
+            var left = selected_options.panes[first_pane_with_buttons].width - 2;
+            var top = 0;
+
+            panel.setOptions(selected_options);
+
+            $.each(use_sets.arguments.sets, function(i, set_id) {
+              data = $.ajax('http://www.ganjawars.ru/home.do.php?putset=' + set_id, {
+                async: false
+              });
+              var $data = $(data.responseText);
+              var set = panel.get_set_str($data);
+              panel.set('items_set_' + set_id, set);
+
+              /// определяем иконку, это либо оружие, либо первый предмет, либо дефолтная
+              var image = $data.find('table:first').find('tr:contains(Правая рука) img[src*="/items/"]').attr('src') ||
+                          $data.find('table:first').find('tr:contains(В руках) img[src*="/items/"]').attr('src') ||
+                          $data.find('table:first').find('img[src*="/items/"]:first').attr('src') ||
+                          'http://images.ganjawars.ru/img/forum/f30.gif';
+              /// Добавляем кнопку
+              var button = panel.addButton(first_pane_with_buttons, 
+                'items_putset_button', 
+                $.extend(panel_apply.buttons.items_putset_button, {
+                  title: sets_data[set_id],
+                  arguments: {set_id: set_id},
+                  img: image
+                }
+              ));
+
+              button.left = left;
+              button.top = top;
+
+              left++;
+              /// заполняем по очереди две колонки
+              if(left >= selected_options.panes[first_pane_with_buttons].width) {
+                left = selected_options.panes[first_pane_with_buttons].width - 2;
+                top++;
+              }
+            });
+            if(data && $(data.responseText).find('a[href*="dress_off"]').length) {
+              $.ajax($(data.responseText).find('a[href*="dress_off"]').attr('href'), {
+                async: false
+              });
+            }
+          }
+        } catch(e) {}
+
+        $content.parent().hide();
+        panel_master_finish($('#panel-settings-editor .finish .content').parent().show().end());
+      });
     }).appendTo($center);
 
-    //delete selected_options['master'];
-    //panel.setOptions(selected_options, false, function() {
-    //$('#panel-settings-editor').fadeOut();
   }
 
   function panel_master_finish($content) {
@@ -133,8 +224,7 @@
 
     var $center = $('<center>').css({
       position: 'absolute',
-      bottom: 5,
-      width: '95%'
+      bottom: 5
     }).appendTo($content.parent());
 
     $('<a class="ui-btn ui-btn-inline ui-btn-icon-left ui-icon-carat-l">Назад</a>').click(function() {
@@ -142,7 +232,14 @@
       panel_master_form3($('#panel-settings-editor .step3 .content').empty().parent().show().end());
     }).appendTo($center);
 
-    '<label>'
+    $('.finish-button').click(function() {
+      delete selected_options['master'];
+      panel.setOptions(selected_options, false, function() {
+        $('#panel-settings-editor').fadeOut(function() {
+          location.href = location.href;
+        });
+      });
+    });
   }
 
 
@@ -169,8 +266,8 @@ jQuery.extend(panel, {
   </div>\
   <div class="container finish" style="display: none;">\
     <h2 style="margin: 20px 0;">Поздравляем, всё готово!</h2>\
-    <div class="content edit-wrapper">Настройки успешно созданы. Нажмите F5 чтобы перезагрузить страницу, или нажмите на кнопку ниже.\
-    <center><a class="ui-btn ui-btn-inline ui-btn-icon-right ui-icon-check" onclick="location.href = location.href;">Закрыть мастер и обновить страницу</a></center></div>\
+    <div class="content edit-wrapper">Настройки успешно созданы. Нажмите на кнопку ниже чтобы сохранить их и перезагрузить страницу.\
+    <center><a class="finish-button ui-btn ui-btn-inline ui-btn-icon-right ui-icon-check">Сохранить настройки и закрыть мастер</a></center></div>\
   </div>\
 </div>');
         var $content = $master.find('.step1 .content');

@@ -34,14 +34,14 @@ jQuery.extend(panel, {
     var $set_name = $form.find('input[name="set_name"]');
     var current_icon;
     $set_name.focus(function() {
-      if($(this).val() == '') {
+      if($(this).val() == '' && $(this).attr('placeholder') != '(нет комплекта)') {
         $(this).val($(this).attr('placeholder'));
       }
     });
 
-    var pane_id;
-    var first_pane_with_buttons;
-    var button_id;
+    var pane_id = null;
+    var first_pane_with_buttons = null;
+    var button_id = null;
 
     $set_id.change(function() {
       $set_name.attr('placeholder', 
@@ -56,7 +56,7 @@ jQuery.extend(panel, {
       for(var i = 0; i < current_options.panes.length; i++) {
         if($.type(current_options.panes[i]) != 'object') continue;
         if($.type(current_options.panes[i].buttons) != 'array') continue;
-        if($.type(first_pane_with_buttons) == 'undefined' && 
+        if(first_pane_with_buttons === null && 
            current_options.panes[i].buttons.length > 0) {
           first_pane_with_buttons = i;
         }
@@ -89,7 +89,7 @@ jQuery.extend(panel, {
       });
       var right_hand_img = $('#itemsbody').find('table:first').find('tr:contains(Правая рука) img[src*="/items/"]').attr('src') ||
                            $('#itemsbody').find('table:first').find('tr:contains(В руках) img[src*="/items/"]').attr('src');
-      if(is_edit && images.indexOf(panel.iconURL(current_options.panes[pane_id].buttons[button_id].img)) == -1) {
+      if(is_edit && !isNaN(pane_id) && !isNaN(button_id) && images.indexOf(panel.iconURL(current_options.panes[pane_id].buttons[button_id].img)) == -1) {
         images.push(current_options.panes[pane_id].buttons[button_id].img);
       }
 
@@ -115,7 +115,7 @@ jQuery.extend(panel, {
     }).change().closest('form');
 
     $form.find('input[type=submit]').click(function() {
-      if($set_name.val() == '' && $set_name.attr('placeholder') != '(нет комплекта)') {
+      if($set_name.val() == '') {
         $set_name.val($set_name.attr('placeholder'));
       }
       /// Запоминаем сет в ЛС

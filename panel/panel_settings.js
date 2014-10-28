@@ -1345,6 +1345,7 @@
       data.left = places[1];
 
       current_options.panes[paneID].buttons.push(data);
+      return current_options.panes[paneID].buttons[current_options.panes[paneID].buttons.length - 1];
     },
 
     updateButton: function(paneID, id, data) {
@@ -1355,6 +1356,7 @@
          panel.iconURL(data.img)
       );
       $.extend(current_options.panes[paneID].buttons[data.index], data);
+      return current_options.panes[paneID].buttons[data.index];
     },
 
     /**

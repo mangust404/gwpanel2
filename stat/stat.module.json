@@ -22,7 +22,8 @@
 
   "settings": {
     "stat_update_personal": {
-      "file": "stat.personal.js"
+      "file": "stat.personal.js",
+      "description": "Счетчики на домашней странице"
     },
     "stat_draw_main_counters": {
       "file": "stat.personal.js"

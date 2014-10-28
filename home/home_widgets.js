@@ -84,7 +84,7 @@
     }
     if(health.hp_start == health.hp_max) {
       this.progressBar.css({width: '100%'});
-      if(this.options.autohide) this.fadeOut();
+      if(this.options.autohide && this.is(':visible')) this.fadeOut();
     }
   }
   
