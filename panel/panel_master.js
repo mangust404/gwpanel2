@@ -25,6 +25,7 @@
 
     selected_options = window.panelSettingsCollection.default;
     panel.set(panel.getEnv() + '_opts_var_' + panel.currentPlayerID(), 'default');
+    panel.setOptionsID(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + 'default');
 
     panel.panel_configure_form(form1, {
       arguments: {
@@ -34,9 +35,28 @@
       if(name == 'collection') {
         selected_variant = value;
         selected_options = window.panelSettingsCollection[value];
+        panel.setOptionsID(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + selected_variant);
         panel.set(panel.getEnv() + '_opts_var_' + panel.currentPlayerID(), selected_variant);
       }
     });
+
+    panel.haveServerSync(function(have) {
+      if(!have) return;
+      panel.loadScript('panel/panel_settings.js', function() {
+        var $download_button = $('<a class="ui-btn ui-btn-inline ui-icon-arrow-d ui-btn-icon-right">Скачать настройки с сервера</a>').click(function() {
+          $download_button.addClass('ui-disabled').html('Пожалуйста, подождите...');
+          panel.auth(function() {
+            panel.panel_settings_download($download_button, function() {
+              $download_button.html($download_button.html() + ', обновляем страницу');
+              setTimeout(function() {
+                location.href = location.href;
+              }, 2000);
+            });
+          });
+        }).appendTo($content);
+      });
+    });
+
   }
 
   function panel_master_form2($content) {
@@ -204,6 +224,17 @@
                 top++;
               }
             });
+            /// добавляем кнопку "снять всё"
+            selected_options.panes[first_pane_with_buttons].buttons.push({
+              type: "items_undress_button",
+              arguments:{},
+              id:"items_undress_button_0",
+              title:"",
+              img:"http://images.ganjawars.ru/img/forum/f18.gif",
+              top: top,
+              left: left
+            });
+
             if(data && $(data.responseText).find('a[href*="dress_off"]').length) {
               $.ajax($(data.responseText).find('a[href*="dress_off"]').attr('href'), {
                 async: false

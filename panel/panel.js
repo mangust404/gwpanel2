@@ -1901,6 +1901,10 @@ window.Panel2 = new function() {
     getOptionsID: function() {
       return optionsID;
     },
+
+    setOptionsID: function(id) {
+      optionsID = id;
+    },
     /**
     * Установка опций
     * @param set_options - хеш всех опций либо для конкретного модуля,

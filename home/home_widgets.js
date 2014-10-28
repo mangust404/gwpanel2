@@ -148,9 +148,12 @@ $.extend(panel, {
       .appendTo($widget);
     panel.get('health', function(health) {
       home_health_progress.apply($widget, [false, health]);
-      panel.bind('hp_update', function(health) {
-        panel.set('health', health);
-        home_health_progress.apply($widget, [true, health]);
+      panel.bind('hp_update', function(new_health) {
+        if(health.hp_current != new_health.hp_start) {
+          panel.set('health', new_health, function() {
+            home_health_progress.apply($widget, [true, new_health]);
+          });
+        }
       });
     });
 
