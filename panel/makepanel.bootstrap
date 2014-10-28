@@ -782,7 +782,15 @@ file_put_contents($gwpanel_path . '/bootstrap_container.js', $bootstrap_containe
 print 'Bootstrap container written to ' . $gwpanel_path . '/bootstrap_container.js' . "\n";*/
 
 //создаём список файлов для синхронизации с ганей
-shell_exec('/usr/bin/find ./ ! \( -iwholename *\.git* \) ! \( -iwholename "\./doc/*" \) ! \( -iwholename "\./server/*" \) ! \( -iname version \) -regextype posix-egrep -regex ".*\.(js|css|png|gif)"  -type f | /usr/bin/sort | /bin/gzip > ' . $gwpanel_path . '/package.gz');
+$list = shell_exec('/usr/bin/find ./ ! \( -iwholename *\.git* \) ! \( -iwholename "\./doc/*" \) ! \( -iwholename "\./server/*" \) ! \( -iwholename "\./panel/production/*" \) ! \( -iname version \) -regextype posix-egrep -regex ".*\.(js|css|png|gif)"  -type f | /usr/bin/sort');
+/// добавляем в список последний пакет
+if($new_package) {
+  $list .= shell_exec('/usr/bin/find ' . dirname($new_package) . ' -type f');
+} else {
+  $list .= shell_exec('/usr/bin/find ' . dirname($current_package) . ' -type f');
+}
+
+ //| /bin/gzip > ' . $gwpanel_path . '/package.gz'
 
 /// Создаём gwpanel.tar.gz для загрузки на ganjafile.ru
 
