@@ -206,6 +206,8 @@ window.panel_tests = ' . json_encode($tests) . ';');
 // @exclude       http://chat.ganjawars.ru/*
 // @exclude       http://photos.ganjawars.ru/*
 // @exclude       http://*.ganjawars.ru/index.php
+// @exclude       http://*.ganjawars.ru/login.php
+// @exclude       http://ganjawars.ru/login.php
 // @exclude       http://*.ganjawars.ru/
 // @exclude       http://*.ganjawars.ru/b0/btk.php
 ';
