@@ -2066,7 +2066,7 @@ window.Panel2 = new function() {
     * })
     */
     currentPlayerName: function(callback) {
-      instance.get('panel_currentPlayerName', callback);
+      instance.get('currentPlayerName', callback);
     },
 
     /**
@@ -2077,7 +2077,7 @@ window.Panel2 = new function() {
       if(location.search == "?logged"){
         name = $('a[href*="info.php?id="]').get(0).textContent;
         id = instance.currentPlayerID();
-        instance.set("panel_currentPlayerName", name);
+        instance.set("currentPlayerName", name);
         instance.triggerEvent("login", {"currentPlayerName": name, "currentPlayerID": id});
         $.ajax('http://' + document.domain + '/syndicates.php', {
           success: function(data) {
