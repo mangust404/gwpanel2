@@ -625,18 +625,6 @@ window.Panel2 = new function() {
         }
       }
     }
-    if(buttons == 0) {
-      /// все кнопки были удалены, добавляем дефолтную 
-      /// кнопку настроек в первое пустое окошко
-      for(var i = 0; i < 7; i++) {
-        if((!options.panes[i].buttons || !options.panes[i].buttons.length) &&
-            (!options.panes[i].widgets || !options.panes[i].widgets.length)) {
-          options.panes[i].buttons = [{ 'type': 'panel_settings', 'left': 0,'top': 0 }];
-          have_settings_button = true;
-          break;
-        }
-      }
-    }
     if(!have_settings_button) {
       /// Если пользователь каким-то образом удалил кнопку настроек, то добавляем её
       for(var i = 6; i >= 0; i--) {
@@ -646,10 +634,17 @@ window.Panel2 = new function() {
           options.panes[i].buttons.push({ 'type': 'panel_settings', 
                                           'left': options.panes[i].width - 1,
                                           'top': options.panes[i].height - 1 });
+          have_settings_button = true;
           break;
         }
       }
     }
+    if(!have_settings_button == 0) {
+      /// все кнопки были удалены, добавляем дефолтную 
+      /// кнопку настроек в первое пустое окошко
+      options.panes[0].buttons = [{ 'type': 'panel_settings', 'left': 0,'top': 0 }];
+    }
+    console.log('draw_pane_bubbles: ', options);
     for(var i = 0; i < 4; i++) {
       if($.type(options.panes[i]) == 'object') {
         $('<div id="pane-bubble-' + i + '" class="pane-bubble' + (i < 2? ' left': ' right') + (i % 2 > 0? ' bottom': ' top') + '"></div>')
@@ -1350,7 +1345,7 @@ window.Panel2 = new function() {
             }
           } else {
             /// Вызываем мастер настроек
-            if(document.domain.indexOf('ganjawars.ru') > -1) {
+            if(document.domain.indexOf('ganjawars.ru') > -1 && environment != 'testing') {
               instance.loadScript('panel/panel_master.js', function() {
                 instance.panel_master();
               });
@@ -1750,7 +1745,7 @@ window.Panel2 = new function() {
         throw('Error: you can\'t set protected property directly');
       }
       /// Если значение есть на текущем домене, то выставляем и его
-      if(document.domain == domain) {
+      if(document.domain == 'ganjawars.ru') {
         localStorage['gwp2_' + key] = JSON.stringify(value);
         if(callback) callback();
         return;
@@ -1781,7 +1776,7 @@ window.Panel2 = new function() {
     get: function(key, callback) {
       checkTime('get ' + key);
       /// Пытаемся найти значение на текущем домене
-      if(document.domain == domain) {
+      if(document.domain == 'ganjawars.ru') {
         try {
           var val = JSON.parse(localStorage['gwp2_' + key]);
           return callback(val);
@@ -1803,7 +1798,7 @@ window.Panel2 = new function() {
         }
       }
       var __callback = function(value) {
-        if(document.domain != domain) {
+        if(document.domain != 'ganjawars.ru') {
           localStorage['gwp2_' + key] = JSON.stringify(value);
         }
         if(callback) callback(value);

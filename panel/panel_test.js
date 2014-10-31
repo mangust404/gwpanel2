@@ -59,7 +59,7 @@ QUnit.test("Тест объекта __panel", function(assert) {
                    {'foo': 'bar', 'bar': 'foo'}, '__panel.toQueryParams');
   assert.ok(__panel.currentPlayerID() > 0, 'ID игрока > 0');
   assert.ok(String(__panel.getOptionsID()).indexOf("testing") != -1, 
-    'optionsID содержат "testing"');
+    'optionsID содержат "testing": ' + __panel.getOptionsID());
 });
 
 QUnit.test("Тест объекта __panel.crossWindow", function(assert) {
@@ -126,7 +126,6 @@ QUnit.asyncTest("Тест передачи массива", function(assert) {
   });
 });
 
-
 QUnit.asyncTest("Тест передачи длинной строки", function(assert) {
   expect(2);
   var huge_string = '';
@@ -185,6 +184,29 @@ QUnit.asyncTest("Тест очистки", function(assert) {
       });
     });
   });
+});
+
+QUnit.asyncTest("Тест функции panel.crossWindow.set/get", function(assert) {
+  var eventdata = {'foreign test': 'успех'};
+  var rand = Math.random();
+
+  $('<iframe id="sync-test-iframe" src="http://www.ganjawars.ru/me/' + 
+    '?gwpanel_testing&continue"></iframe>').load(function() {
+    var that = this;
+    waitPanelInitialization(that.contentWindow, function() {
+      if(that.contentWindow.location.href.indexOf('step1') > -1) {
+        that.contentWindow.__panel.crossWindow.get('param', function(data) {
+          assert.equal(data, rand);
+          QUnit.start();
+        })
+      } else {
+        that.contentWindow.__panel.set('param', rand, function() {
+          that.contentWindow.location.href = 'http://www.ganjawars.ru/me/' + 
+                                             '?gwpanel_testing&continue&step1';
+        });
+      }
+    });
+  }).appendTo('#qunit-fixture');
 });
 
 QUnit.asyncTest("Тест событий из текущего окна", function(assert) {
@@ -567,7 +589,6 @@ QUnit.asyncTest('Установка и считывание опций', functio
 //});
 
 QUnit.asyncTest('Тестирование открытия и закрытия бабблов', function(assert) {
-  expect(8);
   var options = jQuery.extend({}, panelSettingsCollection.default);
   options.panes[0] = {
     width: 6,
@@ -589,7 +610,9 @@ QUnit.asyncTest('Тестирование открытия и закрытия �
       (function($) {
       /// кликаем по бабблу
       $('.pane-bubble:first').click();
-      assert.ok($('.pane:visible').length > 0, 'Открылось окошко');
+      setTimeout(function() {
+        assert.ok($('.pane').length > 0, 'Открылось окошко');
+      }, 20);
       var that = this;
       waitFor(function() {
         return $('.pane:visible .button').length > 0;
@@ -633,7 +656,7 @@ QUnit.asyncTest('Тестирование открытия и закрытия �
     });
   }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
   
-  //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
+  $('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 
 });
 
@@ -664,7 +687,9 @@ QUnit.asyncTest('Тест drag-n-drop для перетаскивании кно
         return $('.pane:visible .button').length > 0;
       }, function() {
         var pane = $('.pane:visible');
-        assert.ok(pane.length > 0, 'Открылось окошко');
+        setTimeout(function() {
+          assert.ok(pane.length > 0, 'Открылось окошко');
+        }, 20);
         var button = pane.find('.button');
         assert.ok(button.length > 0,
                   'Кнопка видна');
@@ -1248,19 +1273,25 @@ QUnit.asyncTest("Тест открытия окна настроек", function(
   }
 
   __panel.setOptions(options, undefined, function() {
+    console.log('after set: ', options);
     $('<iframe id="settings-open-iframe" src="' + document.location.href.split('?')[0]
        + '?gwpanel_testing&continue"></iframe>').load(function() {
       var that = this;
       waitPanelInitialization(this.contentWindow, function() {
         (function($) {
+          var opts = that.contentWindow.__panel.getOptions();
+          assert.equal(opts.panes[0].buttons.length, 0, 'Кнопок в настройках не должно быть');
+          /// кликаем по бабблу
+          $('.pane-bubble:first').click();
+          
           assert.equal($('.pane-bubble:visible').length, 1, 
             'При пустой концигурации кнопка настроек должна появиться в первом окне');
           if($('.pane-bubble:visible').length != 1) {
             window.jQuery('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
             return;
           }
-          /// кликаем по бабблу
-          $('.pane-bubble:first').click();
+          parent.console.log('panel frame options: ', that.contentWindow.__panel.getOptions());
+          window.jQuery('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 
           waitFor(function() {
             return $('.pane:visible .button').length > 0;
