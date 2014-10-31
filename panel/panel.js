@@ -111,7 +111,6 @@ window.Panel2 = new function() {
     var pane;
     var pane_options = options.panes[paneID];
     var hold_positions = {};
-    
     if((pane = $('#pane-' + paneID)).length) {
       if(pane.css('display') == 'none') {
         instance.hideAllPanes();
@@ -603,18 +602,10 @@ window.Panel2 = new function() {
     }
   }
   
-  /**
-  * Вывод плашек активации
-  */
-  function draw_pane_bubbles() {
-    if(!options || !options.panes || !options.panes.length) return;
-
-    checkTime('draw_pane_bubbles begin');
-    var buttons = 0;
+  function check_settings_button() {
     var have_settings_button;
     for(var i = 0; i < 7; i++) {
       if($.type(options.panes[i].buttons) == 'array') {
-        buttons += options.panes[i].buttons.length;
         if(!have_settings_button) {
           for(var j = 0; j < options.panes[i].buttons.length; j++) {
             if(options.panes[i].buttons[j].type == 'panel_settings') {
@@ -625,31 +616,39 @@ window.Panel2 = new function() {
         }
       }
     }
-    if(buttons == 0) {
-      /// все кнопки были удалены, добавляем дефолтную 
-      /// кнопку настроек в первое пустое окошко
-      for(var i = 0; i < 7; i++) {
-        if((!options.panes[i].buttons || !options.panes[i].buttons.length) &&
-            (!options.panes[i].widgets || !options.panes[i].widgets.length)) {
-          options.panes[i].buttons = [{ 'type': 'panel_settings', 'left': 0,'top': 0 }];
+    if(!have_settings_button) {
+      /// Если пользователь каким-то образом удалил кнопку настроек, то добавляем её
+      for(var i = 6; i >= 0; i--) {
+        if((options.panes[i].buttons && options.panes[i].buttons.length) ||
+            (options.panes[i].widgets && options.panes[i].widgets.length)) {
+          if($.type(options.panes[i].buttons) != 'array') options.panes[i].buttons = [];
+          options.panes[i].buttons.push({ 'type': 'panel_settings', 
+                                          'left': options.panes[i].width - 1,
+                                          'top': options.panes[i].height - 1,
+                                          'id': 'panel_settings_0' });
           have_settings_button = true;
           break;
         }
       }
     }
     if(!have_settings_button) {
-      /// Если пользователь каким-то образом удалил кнопку настроек, то добавляем её
-      for(var i = 6; i >= 0; i--) {
-        if((options.panes[i].buttons && options.panes[i].buttons.length) ||
-            (options.panes[i].widgets && options.panes[i].widgets.length)) {
-
-          options.panes[i].buttons.push({ 'type': 'panel_settings', 
-                                          'left': options.panes[i].width - 1,
-                                          'top': options.panes[i].height - 1 });
-          break;
-        }
-      }
+      options.panes[0].buttons = [];
+      options.panes[0].buttons.push({ 'type': 'panel_settings', 
+                                          'left': options.panes[0].width - 1,
+                                          'top': options.panes[0].height - 1,
+                                          'id': 'panel_settings_0' });
     }
+
+  }  
+  /**
+  * Вывод плашек активации
+  */
+  function draw_pane_bubbles() {
+    if(!options || !options.panes || !options.panes.length) return;
+
+    checkTime('draw_pane_bubbles begin');
+    check_settings_button();
+
     for(var i = 0; i < 4; i++) {
       if($.type(options.panes[i]) == 'object') {
         $('<div id="pane-bubble-' + i + '" class="pane-bubble' + (i < 2? ' left': ' right') + (i % 2 > 0? ' bottom': ' top') + '"></div>')
@@ -1243,7 +1242,9 @@ window.Panel2 = new function() {
         if(__local_options != null && 
            __local_options.length > 0) {
           $.extend(options, JSON.parse(__local_options));
-          fastInitReady = true;
+          if($.type(options) == 'object') {
+            fastInitReady = true;
+          }
         }
       }
 
@@ -1336,17 +1337,19 @@ window.Panel2 = new function() {
         instance.get(optionsID, function(__options) {
           checkTime('get optionsID ' + optionsID);
           if(__options != null && $.type(__options) == 'object') {
-            options = $.extend(options, __options);
-            var domainPrefix = document.domain.split('.')[0];
-            var cachedDomains = instance.getCookies()['gwp2_c'] || '';
-            cachedDomains = cachedDomains.split('-');
-            if(cachedDomains.indexOf(domainPrefix) == -1) {
-              cachedDomains.push(domainPrefix);
-              instance.setCacheDomains(cachedDomains);
-            }
+            if(!fastInitReady) {
+              options = $.extend(options, __options);
+              var domainPrefix = document.domain.split('.')[0];
+              var cachedDomains = instance.getCookies()['gwp2_c'] || '';
+              cachedDomains = cachedDomains.split('-');
+              if(cachedDomains.indexOf(domainPrefix) == -1) {
+                cachedDomains.push(domainPrefix);
+                instance.setCacheDomains(cachedDomains);
+              }
 
-            if(domain != document.domain) {
-              localStorage['gwp2_' + optionsID] = JSON.stringify(options);
+              if(domain != document.domain) {
+                localStorage['gwp2_' + optionsID] = JSON.stringify(options);
+              }
             }
           } else {
             /// Вызываем мастер настроек
@@ -1932,6 +1935,7 @@ window.Panel2 = new function() {
           }
         }
         options = new_options;
+        check_settings_button();
 
         instance.set(optionsID, options, function() {
           instance.triggerEvent('options_change', {options: options, 
