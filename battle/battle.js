@@ -20,7 +20,9 @@ jQuery.extend(panel, {
     window.__updatebf = window.updatebf;
     window.updatebf = function() {
       window.__updatebf();
-      panel.triggerEvent('updatebf', {}, true);
+      setTimeout(function() {
+        panel.triggerEvent('updatebf', {}, true);
+      }, 10);
     };
     window.__updatedata = window.updatedata;
     window.updatedata = function() {
