@@ -424,7 +424,7 @@ jQuery.extend(panel, {
     if(!bgenerator) {
       bgenerator = $('<div id="generator"></div>').css({'margin':'0 0 0 20px','position':'absolute'});
       if(!$bgenchk) {
-        $bgenchk = $('<input type="checkbox">')
+        $bgenchk = $('<input type="checkbox" id="bgenchk">')
           .appendTo(bgenerator)
           .change(function(e) {
             panel.setOptions({'autogen': this.checked}, 'battle');
@@ -544,10 +544,10 @@ jQuery.extend(panel, {
     jsEnabled = true;
     //panel.battle_players_init();
     panel.bind('makebf', function() {
-      if($bgenchk) {
+      if(__genInitHandler) {
         __genInitHandler();
       }
-      if($bredochk) {
+      if(__redoInitHandler) {
         __redoInitHandler()
       };
       if(!enemySelectBox) enemySelectBox = document.getElementsByTagName('select')[0];
