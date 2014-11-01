@@ -50,7 +50,9 @@ jQuery.extend(panel, {
     window.__makebf = window.makebf;
     window.makebf = function() {
       window.__makebf();
-      panel.triggerEvent('makebf', {}, true);
+      setTimeout(function() {
+        panel.triggerEvent('makebf', {}, true);
+      }, 10);
     };
     $(window).keydown(function(e) {
       if(e.keyCode == 13 && e.ctrlKey) {
@@ -63,13 +65,17 @@ jQuery.extend(panel, {
     window.fight = function() {
       panel.triggerEvent('beforeFight', {}, true);
       window.__fight();
-      panel.triggerEvent('fight', {}, true);
+      setTimeout(function() {
+        panel.triggerEvent('fight', {}, true);
+      }, 10);
     };
     window.__updatechatlines = window.updatechatlines;
     
     window.updatechatlines = function() {
       window.__updatechatlines();
-      panel.triggerEvent('updatechatlines', {}, true);
+      setTimeout(function() {
+        panel.triggerEvent('updatechatlines', {}, true);
+      }, 10);
     };
   
     window.__clrline = window.clrline;
@@ -421,14 +427,15 @@ jQuery.extend(panel, {
         $bgenchk = $('<input type="checkbox">')
           .appendTo(bgenerator)
           .change(function(e) {
-            panel.setOptions({'autogen': panel.checked}, 'battle');
-            if(panel.checked){
+            panel.setOptions({'autogen': this.checked}, 'battle');
+            if(this.checked){
               if($bredochk && $bredochk.attr('checked')) $bredochk.click();
             };
           });
       }
       $('#walk').change(function() {
         if(this.checked) walk = true;
+        else walk = false;
       });
       if(parseInt(options.autogen) && 
          (!panel.getOptions().settings.battle.battle_redo || 
@@ -460,8 +467,7 @@ jQuery.extend(panel, {
         $('#defence'+prevDefence).click();
       };
       if(walk) {
-        var __walk = document.getElementsByName('walk');
-        if(__walk && __walk.length && __walk[0]) __walk[0].click();
+        $('input[name=walk]').click();
       };
       var bf = $('#bf');
       if(bf.length) bf.prepend(bredo);
@@ -471,33 +477,32 @@ jQuery.extend(panel, {
       };
     };
     __redoFillHandler = function() {
-      if($('#right_attack1')) {
-        if($('#right_attack1').checked) {
+      if($('#right_attack1').length) {
+        if($('#right_attack1:checked').length) {
           prevRightAttack = 1;
-        } else if($('#right_attack2').checked) {
+        } else if($('#right_attack2:checked').length) {
           prevRightAttack = 2;
-        } else if($('#right_attack3').checked) {
+        } else if($('#right_attack3:checked').length) {
           prevRightAttack = 3;
         };
       }
-      if($('#left_attack1')) {
-        if($('#left_attack1').checked) {
+      if($('#left_attack1').length) {
+        if($('#left_attack1:checked').length) {
           prevLeftAttack = 1;
-        } else if($('#left_attack2').checked) {
+        } else if($('#left_attack2:checked').length) {
           prevLeftAttack = 2;
-        } else if($('#left_attack3').checked) {
+        } else if($('#left_attack3:checked').length) {
           prevLeftAttack = 3;
         };
       };
-      if($('#defence1').checked) {
+      if($('#defence1:checked').length) {
         prevDefence = 1;
-      } else if($('#defence2').checked) {
+      } else if($('#defence2:checked').length) {
         prevDefence = 2;
-      } else if($('#defence3').checked) {
+      } else if($('#defence3:checked').length) {
         prevDefence = 3;
       };
-      var __walk = document.getElementsByName('walk');
-      if(__walk && __walk.length && __walk[0]) walk = __walk[0].checked;
+      walk = $('input[name=walk]:checked').length > 0;
     };
     
     bredo = $('<div id="redo_move"></div>')
