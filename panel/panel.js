@@ -40,7 +40,8 @@ window.Panel2 = new function() {
       theme: 'base'
     },
     /// настройки включенных окон
-    panes: { 0: {}}
+    panes: [],
+    widgets: []
   };
   /// mouseDelta и mouseSpeed - переменные, необходимые для слежения за поведением курсора мыши
   var mouseDeltaX = 0;
@@ -111,7 +112,6 @@ window.Panel2 = new function() {
     var pane;
     var pane_options = options.panes[paneID];
     var hold_positions = {};
-    
     if((pane = $('#pane-' + paneID)).length) {
       if(pane.css('display') == 'none') {
         instance.hideAllPanes();
@@ -603,18 +603,10 @@ window.Panel2 = new function() {
     }
   }
   
-  /**
-  * Вывод плашек активации
-  */
-  function draw_pane_bubbles() {
-    if(!options || !options.panes || !options.panes.length) return;
-
-    checkTime('draw_pane_bubbles begin');
-    var buttons = 0;
+  function check_settings_button() {
     var have_settings_button;
     for(var i = 0; i < 7; i++) {
       if($.type(options.panes[i].buttons) == 'array') {
-        buttons += options.panes[i].buttons.length;
         if(!have_settings_button) {
           for(var j = 0; j < options.panes[i].buttons.length; j++) {
             if(options.panes[i].buttons[j].type == 'panel_settings') {
@@ -630,21 +622,35 @@ window.Panel2 = new function() {
       for(var i = 6; i >= 0; i--) {
         if((options.panes[i].buttons && options.panes[i].buttons.length) ||
             (options.panes[i].widgets && options.panes[i].widgets.length)) {
-
+          if($.type(options.panes[i].buttons) != 'array') options.panes[i].buttons = [];
           options.panes[i].buttons.push({ 'type': 'panel_settings', 
                                           'left': options.panes[i].width - 1,
-                                          'top': options.panes[i].height - 1 });
+                                          'top': options.panes[i].height - 1,
+                                          'id': 'panel_settings_0' });
           have_settings_button = true;
           break;
         }
       }
     }
-    if(!have_settings_button == 0) {
+    if(!have_settings_button) {
       /// все кнопки были удалены, добавляем дефолтную 
       /// кнопку настроек в первое пустое окошко
-      options.panes[0].buttons = [{ 'type': 'panel_settings', 'left': 0,'top': 0 }];
+      options.panes[0].buttons = [];
+      options.panes[0].buttons.push({ 'type': 'panel_settings', 
+                                          'left': options.panes[0].width - 1,
+                                          'top': options.panes[0].height - 1,
+                                          'id': 'panel_settings_0' });
     }
-    console.log('draw_pane_bubbles: ', options);
+  }  
+  /**
+  * Вывод плашек активации
+  */
+  function draw_pane_bubbles() {
+    if(!options || !options.panes || !options.panes.length) return;
+
+    checkTime('draw_pane_bubbles begin');
+    check_settings_button();
+
     for(var i = 0; i < 4; i++) {
       if($.type(options.panes[i]) == 'object') {
         $('<div id="pane-bubble-' + i + '" class="pane-bubble' + (i < 2? ' left': ' right') + (i % 2 > 0? ' bottom': ' top') + '"></div>')
@@ -1238,7 +1244,9 @@ window.Panel2 = new function() {
         if(__local_options != null && 
            __local_options.length > 0) {
           $.extend(options, JSON.parse(__local_options));
-          fastInitReady = true;
+          if($.type(options) == 'object') {
+            fastInitReady = true;
+          }
         }
       }
 
@@ -1310,14 +1318,15 @@ window.Panel2 = new function() {
           instance.__load = null;
         }
         if(environment == 'testing' && location.search.indexOf('gwpanel_pause') != -1) {
+          instance.__ready = __initFunc;
         } else {
           setTimeout(instance.__load, 1);
         }
       }, domain);
-
       checkTime('crossWindow init');
       /// функция полной готовности окна
       instance.get(variantID, function(__variant) {
+        //parent.console.log('variantID: ', variantID);
         checkTime('get variantID ' + variantID);
         if(!__variant) {
           checkTime('set default variant for ' + __variant);
@@ -1330,18 +1339,21 @@ window.Panel2 = new function() {
         optionsID = environment + '_' + instance.currentPlayerID() + '_' + __variant;
         instance.get(optionsID, function(__options) {
           checkTime('get optionsID ' + optionsID);
+          //parent.console.log('optionsID: ', optionsID);
           if(__options != null && $.type(__options) == 'object') {
-            options = $.extend(options, __options);
-            var domainPrefix = document.domain.split('.')[0];
-            var cachedDomains = instance.getCookies()['gwp2_c'] || '';
-            cachedDomains = cachedDomains.split('-');
-            if(cachedDomains.indexOf(domainPrefix) == -1) {
-              cachedDomains.push(domainPrefix);
-              instance.setCacheDomains(cachedDomains);
-            }
+            if(!fastInitReady) {
+              options = $.extend(options, __options);
+              var domainPrefix = document.domain.split('.')[0];
+              var cachedDomains = instance.getCookies()['gwp2_c'] || '';
+              cachedDomains = cachedDomains.split('-');
+              if(cachedDomains.indexOf(domainPrefix) == -1) {
+                cachedDomains.push(domainPrefix);
+                instance.setCacheDomains(cachedDomains);
+              }
 
-            if(domain != document.domain) {
-              localStorage['gwp2_' + optionsID] = JSON.stringify(options);
+              if(domain != document.domain) {
+                localStorage['gwp2_' + optionsID] = JSON.stringify(options);
+              }
             }
           } else {
             /// Вызываем мастер настроек
@@ -1356,14 +1368,13 @@ window.Panel2 = new function() {
             }
           }
 
-          if(!fastInitReady) {
-            if(environment == 'testing' && location.search.indexOf('gwpanel_pause') != -1) {
-              /// задержка инициализации, чтобы тесты могли встроить дополнительные функции
-              instance.__ready = __initFunc;
-            } else {
-              /// медленная инициализация
-              __initFunc();
-            }
+          if(environment == 'testing' && location.search.indexOf('gwpanel_pause') != -1) {
+                  /// задержка инициализации, чтобы тесты могли встроить дополнительные функции
+            instance.__ready = __initFunc;
+            //console.log('gwpanel_pause __ready');
+          } else if(!fastInitReady) {
+            /// медленная инициализация
+            __initFunc();
           }
           is_ready = true;
           checkTime('panel ready stack launch');
@@ -1758,10 +1769,14 @@ window.Panel2 = new function() {
         localStorage['gwp2_' + key] = JSON.stringify(value);
         if(callback) callback();
       }
+      //console.log('initialized: ', initialized);
+      //console.log('window set', key, value);
       if(initialized) {
+        //console.log('set because initialized: ', initialized);
         instance.crossWindow.set(key, value, __callback);
       } else {
         instance.onload(function() {
+          //console.log('set after onload: ', initialized);
           instance.crossWindow.set(key, value, __callback);
         });
       }
@@ -1821,11 +1836,16 @@ window.Panel2 = new function() {
     */    
     del: function(key, callback) {
       if($.type(localStorage['gwp2_' + key]) != 'undefined') {
-        localStorage.removeItem('gwp2_' + key);
+        delete localStorage['gwp2_' + key];
       }
-      var __key = key;
-      var __callback = callback;
-      instance.crossWindow.del(key, callback);
+      //console.log('panel del ' + key, localStorage['gwp2_' + key]);
+      if(initialized) {
+        instance.crossWindow.del(key, callback);
+      } else {
+        instance.onload(function() {
+          instance.crossWindow.del(key, callback);
+        });
+      }
     },
     /**
     * Запуск события
@@ -1908,7 +1928,7 @@ window.Panel2 = new function() {
     *                    в котором хранятся указанные опции
     */
     setOptions: function(set_options, namespace, callback) {
-      instance.onload(function() {
+      instance.ready(function() {
         if($.type(optionsID) == 'undefined') {
           console.log('wrong optionsID: ' + optionsID);
           console.log((new Error).stack);
@@ -1927,6 +1947,7 @@ window.Panel2 = new function() {
           }
         }
         options = new_options;
+        check_settings_button();
 
         instance.set(optionsID, options, function() {
           instance.triggerEvent('options_change', {options: options, 
@@ -2061,7 +2082,7 @@ window.Panel2 = new function() {
     * })
     */
     currentPlayerName: function(callback) {
-      instance.get('panel_currentPlayerName', callback);
+      instance.get('currentPlayerName', callback);
     },
 
     /**
@@ -2072,7 +2093,7 @@ window.Panel2 = new function() {
       if(location.search == "?logged"){
         name = $('a[href*="info.php?id="]').get(0).textContent;
         id = instance.currentPlayerID();
-        instance.set("panel_currentPlayerName", name);
+        instance.set("currentPlayerName", name);
         instance.triggerEvent("login", {"currentPlayerName": name, "currentPlayerID": id});
         $.ajax('http://' + document.domain + '/syndicates.php', {
           success: function(data) {
@@ -2319,48 +2340,85 @@ window.Panel2 = new function() {
     getCached: function(generator, callback, condition) {
       var cid = 'cached_' + generator.toString().replace(/[\n\s\t]/g, '').hashCode();
       instance.get(cid, function(data) {
-        if(!condition || $.type(data) == 'null' || 
-          (data.type == 'time' && data.expiration < (new Date).getTime())
-          ) {
-          /// Генерируем
-          data = {
-            type: isNaN(condition)? 'event': 'time'
-          };
-          if(data.type == 'time') {
-            data.expiration = (new Date).getTime() + condition * 1000;
-          } else {
-            /// Устанавливаем слежку за событием
-            instance.bind(condition, function() {
-              instance.del(cid);
-            });
-            /// Добавляем запись кеша к слушателям кеша
-            if(!cacheListeners[condition]) cacheListeners[condition] = [];
-            if(cacheListeners[condition].indexOf(cid) == -1) {
-              cacheListeners[condition].push(cid);
-              instance.set('cacheListeners', cacheListeners);
+        instance.get('cacheListeners', function(__listeners) {
+          cacheListeners = __listeners;
+          //console.log('getCached cid=', cid, 'data=', data);
+          if(!condition || $.type(data) == 'null' || 
+            (data.type == 'time' && data.expiration < (new Date).getTime())
+            ) {
+            /// Генерируем
+            data = {
+              type: isNaN(condition)? 'event': 'time'
+            };
+            var runFunc = function() {
+              /// запускаем генератор
+              generator(function(generated_data) {
+                data.data = generated_data;
+                /// Записываем данные
+                //console.log('setCached, cid=', cid, 'data=', data);
+                instance.set(cid, data, function() {
+                  callback(data.data);
+                });
+              });
             }
+            if(data.type == 'time') {
+              data.expiration = (new Date).getTime() + condition * 1000;
+              runFunc();
+            } else {
+              /// Устанавливаем слежку за событием
+              instance.bind(condition, function() {
+                instance.del(cid);
+              });
+              /// Добавляем запись кеша к слушателям кеша
+              instance.get('cacheListeners', function(__listeners) {
+                cacheListeners = __listeners;
+                if(!cacheListeners[condition]) cacheListeners[condition] = [];
+                if(cacheListeners[condition].indexOf(cid) == -1) {
+                  cacheListeners[condition].push(cid);
+                  instance.set('cacheListeners', cacheListeners, function() {
+                    //console.log('listeners changed: ', JSON.stringify(cacheListeners));
+                    runFunc();
+                  });
+                }
+              });
+            }
+          } else {
+            /// данные в кеше есть и они не истекли, вызываем обратную функцию
+            callback(data.data);
           }
-          /// запускаем генератор
-          generator(function(generated_data) {
-            data.data = generated_data;
-            /// Записываем данные
-            instance.set(cid, data, function() {
-              callback(data.data);
-            });
-          });
-        } else {
-          /// данные в кеше есть и они не истекли, вызываем обратную функцию
-          callback(data.data);
-        }
+        });
       });
     },
 
     /**
     * Функция удаления данных из кеша
     */
-    clearCached: function(generator) {
+    clearCached: function(generator, callback) {
       var cid = 'cached_' + generator.toString().replace(/[\n\s\t]/g, '').hashCode();
-      instance.del(cid);
+      //console.log('clearCached, cid:', cid);
+      instance.get('cacheListeners', function(__listeners) {
+        cacheListeners = __listeners;
+        //console.log('cleanup listeners before: ', JSON.stringify(cacheListeners));
+        var cleaned = false;
+        for(var condition in cacheListeners) {
+          var i = cacheListeners[condition].indexOf(cid);
+          if(i > -1) {
+            cacheListeners[condition].splice(i, 1);
+            if(cacheListeners[condition].length == 0) {
+              delete cacheListeners[condition];
+            }
+            cleaned = true;
+          }
+        }
+        //console.log('cleanup listeners after: ', JSON.stringify(cacheListeners), 'cleaned: ', cleaned);
+        if(cleaned) {
+          instance.set('cacheListeners', cacheListeners, function() {
+            instance.del(cid, callback);
+          });
+        } else {
+          instance.del(cid, callback);
+        }
+      });
     },
     /**
     * Функция проверки последней версии

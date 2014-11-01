@@ -709,6 +709,7 @@
             if(jQuery.type(window.panelSettingsCollection[collection]) == 'object') {
               /// выбрана коллекция настроек
               $.extend(new_options, window.panelSettingsCollection[collection]);
+              delete new_options['master'];
               saveVariant(new_options);
             } else if(collection.indexOf('clone_') == 0) {
               collection = collection.substr(6);

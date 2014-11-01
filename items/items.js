@@ -15,6 +15,7 @@
     'Очки': 'gl',
     'Чипсет': 'ch',
   }
+  var is_edit = false;
 
 jQuery.extend(panel, {
 
@@ -63,7 +64,7 @@ jQuery.extend(panel, {
         for(var b = 0; b < current_options.panes[i].buttons.length; b++) {
           if(current_options.panes[i].buttons[b].type == 'items_putset_button'
              && current_options.panes[i].buttons[b].arguments.set_id == set_id) {
-            pane_id = 0;
+            pane_id = i;
             button_id = b;
             is_edit = true;
             break;
