@@ -55,6 +55,7 @@
         setTimeout(function() {
           that.removeClass('shake shake-constant');
         }, 1000);
+        panel.set('health', health);
       });
     }
   }

@@ -5,9 +5,9 @@ jQuery.extend(panel, {
     if(location.path == '/me/') panel.clearTimeouts();
     if(!window.hp_start || (initialized && $(document.body).hasClass('ajax-processed'))) return;
     panel.get('health', function(data) {
-      var new_data = {hp_start: window.hp_start, hp_max: window.hp_max, hp_speed: window.hp_speed, date: (new Date).getTime()};
+      var new_data = {hp_start: window.hp_start, hp_max: window.hp_max, hp_speed: window.hp_speed, date: (new Date).getTime(), hp_current: window.hp_current};
       initialized = true;
-      if(!data || data.hp_start != new_data.hp_start || data.hp_max != window.hp_max) {
+      if(!data || data.hp_start != new_data.hp_start || data.hp_max != window.hp_max || data.hp_current != window.hp_current) {
         panel.onload(function() {
           panel.triggerEvent('hp_update', new_data);
         });
