@@ -416,6 +416,10 @@ jQuery.extend(panel, {
         bgenerated = true;
         
       }
+      $('#walk').change(function() {
+        if(this.checked) walk = true;
+        else walk = false;
+      });
       if($('#bf').length) $('#bf').prepend(bgenerator);
       else {
         $('#battleform').closest('div').before(bgenerator);
