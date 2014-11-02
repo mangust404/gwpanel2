@@ -670,7 +670,7 @@ QUnit.asyncTest("Тест изменения видимости плавающи
 });
 
 QUnit.asyncTest("Тест изменения настроек модулей", function(assert) {
-  expect(6);
+  expect(7);
   var options = jQuery.extend({}, panelSettingsCollection.empty);
 
   var apply_initialized;
@@ -697,6 +697,11 @@ QUnit.asyncTest("Тест изменения настроек модулей", f
             checkbox: {
               type: 'checkbox',
               title: 'тестовый checkbox',
+              default: true
+            },
+            checkbox1: {
+              type: 'checkbox',
+              title: 'тестовый checkbox2',
               default: true
             }
           }
@@ -749,6 +754,8 @@ QUnit.asyncTest("Тест изменения настроек модулей", f
                 var options = that.contentWindow.__panel.getOptions();
                 assert.equal(options.settings.panel.panel_test_func.checkbox, false,
                   'чекбокс в настройках должен быть отключен');
+                assert.equal(options.settings.panel.panel_test_func.checkbox1, true,
+                  'чекбокс в настройках должен быть включен');
 
                 $('input[name=panel_test_func]').prev().click();
 

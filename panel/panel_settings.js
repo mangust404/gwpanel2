@@ -529,21 +529,33 @@
 
               var current_options = panel.getOptions();
               var __settings = {};
+              /// дефолтные настройки
+              for(var key in panel_apply.settings[func_name].configure) {
+                __settings[key] = panel_apply.settings[func_name].configure[key].default;
+              }
               if(current_options.settings && 
                  current_options.settings[module_name] && 
                  current_options.settings[module_name][func_name]) {
-                __settings = current_options.settings[module_name][func_name];
+                if(Object.keys(current_options.settings[module_name][func_name]).length == 0 && 
+                   Object.keys(__settings).length > 0) {
+                  /// если в настройках этой функции пусто, а дефолтные значения есть
+                  /// то выставляем их и сохраняем опции
+                  current_options.settings[module_name][func_name] = __settings;
+                  panel.setOptions(current_options);
+                }
+                __settings = $.extend(__settings, current_options.settings[module_name][func_name]);
               }
               panel.panel_configure_form(panel_apply.settings[func_name].configure, 
                 {arguments: __settings, id: func_name}, add_fieldset, function(param, value) {
-                  var current_options = panel.getOptions();
-                  if(!current_options.settings) current_options.settings = {};
-                  if(!current_options.settings[module_name]) 
-                    current_options.settings[module_name] = {};
-                  if(!current_options.settings[module_name][func_name]) 
-                    current_options.settings[module_name][func_name] = {};
-                  current_options.settings[module_name][func_name][param] = value;
-                  panel.setOptions(current_options);
+                  var new_options = panel.getOptions();
+                  if(!new_options.settings) new_options.settings = {};
+                  if(!new_options.settings[module_name]) 
+                    new_options.settings[module_name] = {};
+                  if(!new_options.settings[module_name][func_name]) 
+                    new_options.settings[module_name][func_name] = {};
+                  //console.log('new params: ', JSON.stringify(new_options.settings));
+                  new_options.settings[module_name][func_name][param] = value;
+                  panel.setOptions(new_options);
                 });
             }
           });
