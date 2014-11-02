@@ -1222,7 +1222,6 @@ window.Panel2 = new function() {
           instance.loadCSS('../../lib/qunit-1.15.0.css');
           var tests = window.panel_tests || [];
           instance.loadScript(tests);
-          if(QUnit.config.semaphore != 0) QUnit.start();
         }
         if(window.opera || 
            original_environment == "staging" || 

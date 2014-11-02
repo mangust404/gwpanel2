@@ -340,6 +340,14 @@ var __initPanel = "var loadedLibs = 0; var _files = [\"lib/settings.js\", \"lib/
 
   $output .= '
 
+var qunit = document.createElement("div");
+qunit.id = "qunit";
+document.body.insertBefore(qunit, document.body.firstChild);
+var qunit_fixture = document.createElement("div");
+qunit_fixture.id = "qunit-fixture";
+document.body.insertBefore(qunit_fixture, document.body.firstChild);
+
+
 var __init = "";
 if(location.pathname == "/tmp/panelcontainer.html") {
   __init = __initLibs + __initClient + \'}\'; 
