@@ -26,9 +26,13 @@ jQuery.extend(panel, {
           var $target = $(document.body);
         }
         __panel.get('moveDest', function(moveDest) {
-          $target.append('<center>Пункт назначения: ' + moveDest + '</center>');
+          if(moveDest) {
+            $target.append('<center>Пункт назначения: ' + moveDest + '</center>');
+          }
         });
-        $target.append('<center>Ссылка возврата: ' + moveHref + '</center>');
+        if(moveHref) {
+          $target.append('<center>Ссылка возврата: ' + moveHref + '</center>');
+        }
         window.BattleRefreshChat = function() {
           $.ajax(location.pathname.substr(1), {
             success: function() {

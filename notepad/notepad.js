@@ -32,11 +32,11 @@ jQuery.extend(panel, {
           }
         });
         $notepad.fadeOut();
-        panel.set('notepad_' + panel.currentPlayerID(), $notepad.find('textarea').val());
+        panel.set('notepad', $notepad.find('textarea').val(), function() {}, true);
       }).appendTo($notepad);
     }
 
-    panel.get('notepad_' + panel.currentPlayerID(), function(data) {
+    panel.get('notepad', function(data) {
       $notepad.find('textarea').val(data);
       panel.haveServerSync(function(have) {
         if(have) {
@@ -62,7 +62,7 @@ jQuery.extend(panel, {
           $notepad.find('textarea').focus();
         }
       });
-    });
+    }, true);
   }
   
 });

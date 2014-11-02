@@ -8,10 +8,20 @@
   "weight": 1, 
   "apply": {
     "/items.php": ["items_sets"]
-  }, 
+  },
+  "event": {
+    "battleend": {
+      "file": "items.js", 
+      "callback": "items_set_check"
+    }
+  },
   "settings": {
     "items_sets": {
       "description": "Улучшенное редактирование комплектов",
+      "file": "items.js"
+    },
+    "items_set_check": {
+      "description": "Проверять текущий надетый комплект после боя",
       "file": "items.js"
     }
   },

@@ -197,7 +197,7 @@
               });
               var $data = $(data.responseText);
               var set = panel.get_set_str($data);
-              panel.set('items_set_' + set_id, set);
+              panel.set('items_set_' + set_id, set, function() {}, true);
 
               /// определяем иконку, это либо оружие, либо первый предмет, либо дефолтная
               var image = $data.find('table:first').find('tr:contains(Правая рука) img[src*="/items/"]').attr('src') ||

@@ -29,7 +29,7 @@ jQuery.extend(panel, {
           $set_id.val(i).change();
           i = 999;
         }
-      })
+      }, true);
     }
     var $form = $set_id.closest('form');
     var $set_name = $form.find('input[name="set_name"]');
@@ -147,7 +147,7 @@ jQuery.extend(panel, {
           }
           $form.submit();
         });
-      });
+      }, true);
       return false;
     });
   },
@@ -173,6 +173,23 @@ jQuery.extend(panel, {
         return slot + '=' + this.href.split('item_id=')[1];
       }).toArray();
     return ar.join('+');
+  },
+
+  items_set_check: function() {
+    panel.get('items_current_set', function(set_id) {
+      panel.get('items_set_' + set_id, function(set) {
+        if(set) {
+          $.ajax('http://www.ganjawars.ru/items.php', {
+            success: function(data) {
+              var dressed = panel.get_set_str($(data));
+              if(dressed != set) {
+                panel.showFlash('Внимание! Комплект который сейчас надет неполный, возможно что-то поломалось');
+              }
+            }
+          });
+        }
+      }, true);
+    }, true);
   }
 
 });

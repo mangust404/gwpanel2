@@ -1111,6 +1111,7 @@ window.Panel2 = new function() {
         instance.bind(type.event, function() {
           var that = this;
           var _args = arguments;
+          if(options.blacklist && options.blacklist.indexOf(type.callback) > -1) return;
           instance.loadScript(panel_apply.scripts[type.callback], function() {
             if($.type(instance[type.callback]) == 'undefined') {
               throw('Function ' + type + ' in module ' + panel_apply.scripts[type] + ' not found');
@@ -1752,7 +1753,10 @@ window.Panel2 = new function() {
     * @param value - значение переменной
     * @param callback - функция, которая будет вызвана после успешной установки значения
     */
-    set: function(key, value, callback) {
+    set: function(key, value, callback, playerUnique) {
+      if(playerUnique) {
+        key = instance.currentPlayerID() + '_' + key;
+      }
       if(['options'].indexOf(key) != -1) {
         throw('Error: you can\'t set protected property directly');
       }
@@ -1789,7 +1793,10 @@ window.Panel2 = new function() {
     * @param callback - функция, которая будет вызвана после считывания значения
     * в эту функцию первым аргументом передаётся считанное значение
     */
-    get: function(key, callback) {
+    get: function(key, callback, playerUnique) {
+      if(playerUnique) {
+        key = instance.currentPlayerID() + '_' + key;
+      }
       checkTime('get ' + key);
       /// Пытаемся найти значение на текущем домене
       if(document.domain == 'ganjawars.ru') {
@@ -1835,7 +1842,10 @@ window.Panel2 = new function() {
     * @param key - название переменной
     * @param callback - функция, которая будет вызвана после удаления значения
     */    
-    del: function(key, callback) {
+    del: function(key, callback, playerUnique) {
+      if(playerUnique) {
+        key = instance.currentPlayerID() + '_' + key;
+      }
       if($.type(localStorage['gwp2_' + key]) != 'undefined') {
         delete localStorage['gwp2_' + key];
       }
@@ -2441,6 +2451,19 @@ window.Panel2 = new function() {
         if(callback) callback(window.current_panel_version);
       }, false);
       document.getElementsByTagName("head")[0].appendChild(s);
+
+      /// проверка stage
+      if(environment == 'staging') {
+        var s = document.createElement("script");
+        s.type = "text/javascript";
+        s.src = baseURL + '/release/stage.js?' + (new Date).getTime();
+        s.addEventListener('load', function() {
+          if(instance.getCookies().stage != window.current_panel_stage) {
+            window.__clearCache();
+          }
+        }, false);
+        document.getElementsByTagName("head")[0].appendChild(s);
+      }
     },
 
     /**

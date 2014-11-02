@@ -14,7 +14,7 @@ $.extend(panel, {
     }
     var dayStart = new Date; dayStart.setHours(0); dayStart.setMinutes(0); dayStart.setSeconds(0); dayStart.setMilliseconds(0);
     var monthStart = new Date; monthStart.setDate(1); monthStart.setHours(0); monthStart.setMinutes(0); monthStart.setSeconds(0);  monthStart.setMilliseconds(0);
-    panel.get(panel.currentPlayerID() + '_stat_skills', function(stat) {
+    panel.get('stat_skills', function(stat) {
       var changes = {};
       var changed;
       
@@ -60,13 +60,13 @@ $.extend(panel, {
         }
       }
       if(changed) {
-        panel.set(panel.currentPlayerID() + '_stat_skills', stat, function() {
+        panel.set('stat_skills', stat, function() {
           //panel.triggerEvent('stat_skills', {stat_skills: stat, changes: changes});
-        });
+        }, true);
       }
 
 
-    });
+    }, true);
 
     $('span > nobr > a').each(function() {
       if(this.href.indexOf('syndicate.php?id=') != -1) {
@@ -76,7 +76,7 @@ $.extend(panel, {
     
     if(syndnode) {
       
-      panel.get(panel.currentPlayerID() + '_stat_syndexp', function(stat) {
+      panel.get('stat_syndexp', function(stat) {
         var changes = {};
         var changed;
         
@@ -96,7 +96,7 @@ $.extend(panel, {
           stat.daily[dayStart.getTime()] = 0;
           stat.monthly[monthStart.getTime()] = 0;
           changed = true;
-          panel.set(panel.currentPlayerID() + '_stat_syndexp', stat);
+          panel.set('stat_syndexp', stat, function() {}, true);
         } else {
           panel.loadScript('data/exp_table.js', function() {
             for(var i = 0; i < panel.expTable.length; i++) {
@@ -129,13 +129,13 @@ $.extend(panel, {
               }
             }
             if(changed) {
-              panel.set(panel.currentPlayerID() + '_stat_syndexp', stat, function() {
+              panel.set('stat_syndexp', stat, function() {
                 panel.triggerEvent('stat_syndexp', {stat_syndexp: stat, exp: expCount});
-              });
+              }, true);
             }
           });
         }
-      });
+      }, true);
     }
     
     expTable = $skillsTable.get(0).parentNode.previousSibling.getElementsByTagName('table')[0];
@@ -147,14 +147,14 @@ $.extend(panel, {
       actualExp.product = parseFloat(text.match(/Производственный:[0-9]+[ ]\(([0-9\.]+)\)/)[1]);
     } catch(e) {};
     
-    panel.get(panel.currentPlayerID() + '_stat_exp', function(stat) {
+    panel.get('stat_exp', function(stat) {
       if(!stat) {
         stat = {
           battle: {curr: actualExp.battle, prev: actualExp.battle, start: actualExp.battle, daily: {}, monthly: {}},
           economic: {curr: actualExp.economic, prev: actualExp.economic, start: actualExp.economic, daily: {}, monthly: {}},
           product: {curr: actualExp.product, prev: actualExp.product, start: actualExp.product, daily: {}, monthly: {}}
         }
-        panel.set(panel.currentPlayerID() + '_stat_exp', stat);
+        panel.set('stat_exp', stat, function() {}, true);
       } else {
         var changed = false;
         var i = 0;
@@ -180,17 +180,17 @@ $.extend(panel, {
           i++;
         }
         if(changed) {
-          panel.set(panel.currentPlayerID() + '_stat_exp', stat, function() {
+          panel.set('stat_exp', stat, function() {
             panel.triggerEvent('stat_exp', {stat_exp: stat, exp: overall});
-          });
+          }, true);
         };   
       }
-    });
+    }, true);
     $('<a class="stat-reset">сброс</a>').click(function() {
       if(confirm('Вы уверены что хотите обнулить все счётчики?')) {
-        panel.del(panel.currentPlayerID() + '_stat_exp');
-        panel.del(panel.currentPlayerID() + '_stat_skills');
-        panel.del(panel.currentPlayerID() + '_stat_syndexp');
+        panel.del('stat_exp', function(){}, true);
+        panel.del('stat_skills', function(){}, true);
+        panel.del('stat_syndexp', function(){}, true);
         alert('Счетчики обнулены, обновите страницу');
       }
     }).appendTo($skillsTable);
