@@ -336,8 +336,8 @@ function make_bootstrap($domain, $path, $libs) {
           }
           document.getElementsByTagName(\'head\')[0].appendChild(link);
         } else {
-          if(localStorage["gwp2_f_" + path[i]]) {
-            css = localStorage["gwp2_f_" + path[i]];
+          if(sessionStorage["gwp2_f_" + path[i]]) {
+            css = sessionStorage["gwp2_f_" + path[i]];
             if(typeof(css) != undefined && css.length) {
               jQuery("<style type=\'text/css\'></style>").html(css).attr("gwpanel", true).appendTo("head");
               loaded++;
@@ -348,7 +348,7 @@ function make_bootstrap($domain, $path, $libs) {
           } else {
             __checkoutPackage(panel_version, function(package) {
               if(typeof(package[path[i]]) != undefined && package[path[i]].length) {
-                localStorage["gwp2_f_" + path[i]] = package[path[i]];
+                sessionStorage["gwp2_f_" + path[i]] = package[path[i]];
                 jQuery("<style type=\'text/css\'></style>").html(package[path[i]]).attr("gwpanel", true).appendTo("head");
                 loaded++;
                 if(callback && loaded == path.length) setTimeout(callback, 1);

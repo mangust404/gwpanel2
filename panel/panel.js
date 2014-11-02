@@ -1887,7 +1887,7 @@ window.Panel2 = new function() {
         return instance.crossWindow.bind(type, callback);
       } else {
         /// Генерируем ID привязки самостоятельно
-        var callerFunc = ((new Error).stack || arguments.callee.toString()).split("\n")[1];
+        var callerFunc = ((new Error).stack || arguments.callee.toString()).split("\n")[1] || 'anonymous';
         var listenerID = (callerFunc.substring(0, callerFunc.indexOf("@")).replace(/[<>]+/g, '') 
                           || "anoynmous") + '_' + (new Date).getTime() + '_preinit';
         if(!listenersStack[type]) listenersStack[type] = {};
@@ -2459,6 +2459,7 @@ window.Panel2 = new function() {
         s.src = baseURL + '/release/stage.js?' + (new Date).getTime();
         s.addEventListener('load', function() {
           if(instance.getCookies().stage != window.current_panel_stage) {
+            instance.showFlash('В скриптах что-то поменялось, сейчас будут загружены изменения');
             window.__clearCache();
           }
         }, false);

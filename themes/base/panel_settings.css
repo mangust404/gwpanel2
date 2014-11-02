@@ -8,6 +8,8 @@
   bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
+  -moz-transform: translateX(-50%);
+  -webkit-transform: translateX(-50%);
   width: 90%;
   max-width: 900px;
   -webkit-transform-style: preserve-3d;
