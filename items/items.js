@@ -179,8 +179,10 @@ jQuery.extend(panel, {
     panel.get('items_current_set', function(set_id) {
       panel.get('items_set_' + set_id, function(set) {
         if(set) {
+          $(document.body).addClass('ajax-loading');
           $.ajax('http://www.ganjawars.ru/items.php', {
             success: function(data) {
+              $(document.body).removeClass('ajax-loading');
               var dressed = panel.get_set_str($(data));
               if(dressed != set) {
                 panel.showFlash('Внимание! Комплект который сейчас надет неполный, возможно что-то поломалось');
