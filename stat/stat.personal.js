@@ -186,6 +186,14 @@ $.extend(panel, {
         };   
       }
     });
+    $('<a class="stat-reset">сброс</a>').click(function() {
+      if(confirm('Вы уверены что хотите обнулить все счётчики?')) {
+        panel.del(panel.currentPlayerID() + '_stat_exp');
+        panel.del(panel.currentPlayerID() + '_stat_skills');
+        panel.del(panel.currentPlayerID() + '_stat_syndexp');
+        alert('Счетчики обнулены, обновите страницу');
+      }
+    }).appendTo($skillsTable);
   },
   
   stat_update_info_personal: function() {
