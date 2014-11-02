@@ -1301,7 +1301,7 @@ window.Panel2 = new function() {
       // настройки и события с других страниц, и даже тупо не сможем проверить почту чтобы вывести
       // уведомления
       instance.crossWindow = new __crossWindow(
-                                    original_environment == 'testing'? 
+                                    original_environment == 'testing' || original_environment == 'dev'? 
                                     '/tmp/panelcontainer.html':
                                     '/tmp/panel2container.html', function() {
         initialized = true;
