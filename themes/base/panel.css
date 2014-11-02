@@ -312,9 +312,4 @@ body.map-php.ajax-processed td[width="100%"] + td select {
 
 .stat-reset {
   cursor: pointer;
-  font-size: 8px;
-  margin-left: 44px;
-  margin-top: 3px;
-  position: absolute;
-  text-decoration: underline;
 }

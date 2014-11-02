@@ -187,7 +187,11 @@ $.extend(panel, {
       }
     }, true);
     $('<a class="stat-reset">сброс</a>').css({
-      position: 'absolute'
+      position: 'absolute',
+      'font-size': '8px',
+      'margin-left': '44px',
+      'margin-top': '3px',
+      'text-decoration': 'underline'
     }).click(function() {
       if(confirm('Вы уверены что хотите обнулить все счётчики?')) {
         panel.del('stat_exp', function(){}, true);
