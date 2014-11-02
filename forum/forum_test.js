@@ -1,1 +1,1 @@
-QUnit.module('forum');
+//QUnit.module('forum');

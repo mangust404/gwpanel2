@@ -1,5 +1,7 @@
 (function(panel, $) {
   var bgenerated, rightattack, leftattack, defence, prevRightAttack, prevLeftAttack, prevDefence, bsrcframe, toAllies, battlechat, bgenerator, $bgenchk, walk, bredo;
+  var generator_options;
+  var redo_options;
   var battleFixed;
   var allies = {name: []}, enemies = {name: []};
   var enemySelectBox;
@@ -20,9 +22,7 @@ jQuery.extend(panel, {
     window.__updatebf = window.updatebf;
     window.updatebf = function() {
       window.__updatebf();
-      setTimeout(function() {
-        panel.triggerEvent('updatebf', {}, true);
-      }, 10);
+      panel.triggerEvent('updatebf', {}, true);
     };
     window.__updatedata = window.updatedata;
     window.updatedata = function() {
@@ -50,9 +50,7 @@ jQuery.extend(panel, {
     window.__makebf = window.makebf;
     window.makebf = function() {
       window.__makebf();
-      setTimeout(function() {
-        panel.triggerEvent('makebf', {}, true);
-      }, 10);
+      panel.triggerEvent('makebf', {}, true);
     };
     $(window).keydown(function(e) {
       if(e.keyCode == 13 && e.ctrlKey) {
@@ -65,17 +63,13 @@ jQuery.extend(panel, {
     window.fight = function() {
       panel.triggerEvent('beforeFight', {}, true);
       window.__fight();
-      setTimeout(function() {
-        panel.triggerEvent('fight', {}, true);
-      }, 10);
+      panel.triggerEvent('fight', {}, true);
     };
     window.__updatechatlines = window.updatechatlines;
     
     window.updatechatlines = function() {
       window.__updatechatlines();
-      setTimeout(function() {
-        panel.triggerEvent('updatechatlines', {}, true);
-      }, 10);
+      panel.triggerEvent('updatechatlines', {}, true);
     };
   
     window.__clrline = window.clrline;
@@ -386,13 +380,18 @@ jQuery.extend(panel, {
   },
   */
   battle_generator: function(options) {
-    __genInitHandler = function(){
+    generator_options = options;
+    //console.log(options);
+    __genInitHandler = function() {
+      //console.log((new Error).stack);
+      //console.log('__genInitHandler)');
       if(bgenerated && defence) {
-        if(!isNaN(rightattack) && $('#right_attack' + rightattack)) $('#right_attack' + rightattack).click();
+        if(!isNaN(rightattack) && $('#right_attack' + rightattack).length) 
+          $('#right_attack' + rightattack).click();
         if(!isNaN(defence)) $('#defence' + defence).click();
         if(!isNaN(leftattack)) $('#left_attack' + leftattack).click();
         if(walk) $('#walk').attr('checked', 1);
-      } else if($bgenchk.attr('checked')) {
+      } else {
         if($('#right_attack1').length){
           var r = Math.floor(Math.random() * 3) + 1;
           $('#right_attack'+r).click();
@@ -417,7 +416,7 @@ jQuery.extend(panel, {
       }
       if($('#bf').length) $('#bf').prepend(bgenerator);
       else {
-        bgenerator.prepend(document.getElementsByTagName('script')[4]);
+        $('#battleform').closest('div').before(bgenerator);
       };
     };
     
@@ -427,8 +426,15 @@ jQuery.extend(panel, {
         $bgenchk = $('<input type="checkbox" id="bgenchk">')
           .appendTo(bgenerator)
           .change(function(e) {
-            panel.setOptions({'autogen': this.checked}, 'battle');
+            //console.log(options);
+            options.autogen = this.checked;
+            options.save();
+
             if(this.checked){
+              if(redo_options) {
+                redo_options.autoredo = false;
+                redo_options.save();
+              }
               if($bredochk && $bredochk.attr('checked')) $bredochk.click();
             };
           });
@@ -437,89 +443,96 @@ jQuery.extend(panel, {
         if(this.checked) walk = true;
         else walk = false;
       });
-      if(parseInt(options.autogen) && 
-         (!panel.getOptions().settings.battle.battle_redo || 
-          !parseInt(panel.getOptions().settings.battle.battle_redo.autoredo))) {
+      if(options.autogen) {
         $bgenchk.attr('checked', 1);
       }
-      $('<a href="#">случайный ход</a>').click(
-        function(){ bgenerated = false; __genInitHandler();
+      $('<a href="#">случайный ход</a>').click(function(){
+        bgenerated = false;
+        __genInitHandler();
       }).appendTo(bgenerator);
+      if($('#bf').length) $('#bf').prepend(bgenerator);
+      else {
+        $('#battleform').closest('div').before(bgenerator);
+      };
     }
     if($('#bf').length) $('#bf').prepend(bgenerator);
     else {
       bgenerator.prepend(document.getElementsByTagName('script')[4]);
     };
+
     if($bgenchk.attr('checked')) {
       setTimeout(function() { __genInitHandler(); }, 10);
     };
   },
   
   battle_redo: function(options) {
+    redo_options = options;
+    //console.log(options);
     __redoInitHandler = function(){
-      if(prevRightAttack) {
-        $('#right_attack'+prevRightAttack).click();
-      };
-      if(prevLeftAttack) {
-        $('#left_attack'+prevLeftAttack).click();
-      };
-      if(prevDefence) {
-        $('#defence'+prevDefence).click();
-      };
-      if(walk) {
-        $('input[name=walk]').click();
-      };
+      if(options.autoredo) {
+        if(options.prevRightAttack) {
+          $('#right_attack' + options.prevRightAttack).click();
+        };
+        if(options.prevLeftAttack) {
+          $('#left_attack' + options.prevLeftAttack).click();
+        };
+        if(options.prevDefence) {
+          $('#defence' + options.prevDefence).click();
+        };
+        if(options.walk) {
+          $('input[name=walk]').click();
+        };
+      }
       var bf = $('#bf');
       if(bf.length) bf.prepend(bredo);
       else {
-        var s = document.getElementsByTagName('script')[4];
-        $(s).before(bredo);
+        $('#battleform').closest('div').before(bredo);
       };
     };
     __redoFillHandler = function() {
       if($('#right_attack1').length) {
         if($('#right_attack1:checked').length) {
-          prevRightAttack = 1;
+          options.prevRightAttack = 1;
         } else if($('#right_attack2:checked').length) {
-          prevRightAttack = 2;
+          options.prevRightAttack = 2;
         } else if($('#right_attack3:checked').length) {
-          prevRightAttack = 3;
+          options.prevRightAttack = 3;
         };
       }
       if($('#left_attack1').length) {
         if($('#left_attack1:checked').length) {
-          prevLeftAttack = 1;
+          options.prevLeftAttack = 1;
         } else if($('#left_attack2:checked').length) {
-          prevLeftAttack = 2;
+          options.prevLeftAttack = 2;
         } else if($('#left_attack3:checked').length) {
-          prevLeftAttack = 3;
+          options.prevLeftAttack = 3;
         };
       };
       if($('#defence1:checked').length) {
-        prevDefence = 1;
+        options.prevDefence = 1;
       } else if($('#defence2:checked').length) {
-        prevDefence = 2;
+        options.prevDefence = 2;
       } else if($('#defence3:checked').length) {
-        prevDefence = 3;
+        options.prevDefence = 3;
       };
-      walk = $('input[name=walk]:checked').length > 0;
+      options.walk = $('input[name=walk]:checked').length > 0;
+      options.save();
+      //console.log(options);
     };
     
     bredo = $('<div id="redo_move"></div>')
       .css({'margin':'20px 0 0 20px','position':'absolute'});
       
-    var bf = $('#bf');
-    if(bf.length) bf.prepend(bredo);
-    else {
-      var s = document.getElementsByTagName('script')[4];
-      $(s).before(bredo);
-    };
     $bredochk = $('<input type="checkbox" />')
       .change(function(e) {
         var target = e.currentTarget;
         options.autoredo = target.checked;
         options.save();
         if(target.checked) {
+          if(generator_options) {
+            generator_options.autogen = false;
+            generator_options.save();
+          }
           if($bgenchk && $bgenchk.attr('checked')) $bgenchk.click();
         };
       })
@@ -528,30 +541,42 @@ jQuery.extend(panel, {
       
     var a = $('<span>запомнить ход</span>').appendTo(bredo);
     
+    __redoInitHandler();
   },
 
   battle_std_init: function() {
     panel.triggerEvent('battlebegin', {'bid': window.BattleID});
     panel.set('BattleID', window.BattleID);
 
+    $('a:contains("Сделать ход")').click(function() {
+      //console.log('__redoFillHandler');
+      if(__redoFillHandler) {
+        __redoFillHandler();
+      }
+      return true;
+    });
     //panel.battle_players_init();
   },
   
   battle_js_init: function() {
+    //console.log('battle_js_init');
     panel.triggerEvent('battlebegin', {'bid': window.BattleID});
     
     panel.set('BattleID', window.BattleID);
     jsEnabled = true;
     //panel.battle_players_init();
     panel.bind('makebf', function() {
-      if(__genInitHandler) {
-        __genInitHandler();
+      //console.log('makebf');
+      if(generator_options) {
+        panel.battle_generator(generator_options);
       }
-      if(__redoInitHandler) {
-        __redoInitHandler()
+      if(redo_options) {
+        panel.battle_redo(redo_options);
       };
       if(!enemySelectBox) enemySelectBox = document.getElementsByTagName('select')[0];
       if(selectedEnemy) $(enemySelectBox).val(selectedEnemy);
+
+      panel.__clrline = false;
     });
     panel.bind('beforeFight', function() {
       if($bredochk && $bredochk.attr('checked')) {
@@ -596,13 +621,6 @@ jQuery.extend(panel, {
     //     };
     //   });
     // };
-    if(!panel.__makebfHandler) {
-      panel.__makebfHandler = function() {
-        //if(!window.waitforturn) panel.battle_players_init();
-        panel.__clrline = false;
-      };
-      panel.bind('makebf', panel.__makebfHandler);
-    };
 /*    panel.__battlePlayersInit = function() {
       if(!options.nobattlepm) {
         panel.battle_addPM();

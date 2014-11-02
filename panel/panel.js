@@ -40,7 +40,7 @@ window.Panel2 = new function() {
       theme: 'base'
     },
     /// настройки включенных окон
-    panes: [],
+    panes: [{height: 4, width: 6, buttons: [], widgets: []}],
     widgets: []
   };
   /// mouseDelta и mouseSpeed - переменные, необходимые для слежения за поведением курсора мыши
@@ -606,7 +606,7 @@ window.Panel2 = new function() {
   function check_settings_button() {
     var have_settings_button;
     for(var i = 0; i < 7; i++) {
-      if($.type(options.panes[i].buttons) == 'array') {
+      if(options.panes[i] && $.type(options.panes[i].buttons) == 'array') {
         if(!have_settings_button) {
           for(var j = 0; j < options.panes[i].buttons.length; j++) {
             if(options.panes[i].buttons[j].type == 'panel_settings') {
@@ -620,6 +620,7 @@ window.Panel2 = new function() {
     if(!have_settings_button) {
       /// Если пользователь каким-то образом удалил кнопку настроек, то добавляем её
       for(var i = 6; i >= 0; i--) {
+        if(!options.panes[i]) return;
         if((options.panes[i].buttons && options.panes[i].buttons.length) ||
             (options.panes[i].widgets && options.panes[i].widgets.length)) {
           if($.type(options.panes[i].buttons) != 'array') options.panes[i].buttons = [];
@@ -1217,13 +1218,14 @@ window.Panel2 = new function() {
       if(environment == 'testing' && location.search.indexOf('continue') == -1) {
         //alert('test');
         var initTestFunc = function() {
-          $('<div id="qunit-fixture"></div>').prependTo(document.body);
-          $('<div id="qunit"></div>').prependTo(document.body);
           instance.loadCSS('../../lib/qunit-1.15.0.css');
           var tests = window.panel_tests || [];
           instance.loadScript(tests);
+          if(QUnit.config.semaphore != 0) QUnit.start();
         }
-        if(window.opera) {
+        if(window.opera || 
+           original_environment == "staging" || 
+           original_environment == "production") {
           $(initTestFunc);
         } else {
           initTestFunc();
@@ -1299,10 +1301,9 @@ window.Panel2 = new function() {
       // настройки и события с других страниц, и даже тупо не сможем проверить почту чтобы вывести
       // уведомления
       instance.crossWindow = new __crossWindow(
-                                    original_environment == 'production' || 
-                                    original_environment == 'deploy'? 
-                                    '/tmp/panel2container.html':
-                                    '/tmp/panelcontainer.html', function() {
+                                    original_environment == 'testing'? 
+                                    '/tmp/panelcontainer.html':
+                                    '/tmp/panel2container.html', function() {
         initialized = true;
         windowID = instance.crossWindow.windowID;
         instance.__load = function() {
@@ -2127,7 +2128,7 @@ window.Panel2 = new function() {
     *             от других окружений
     */
     setEnv: function(env) {
-      var possible_values = ['dev', 'production', 'deploy', 'testing'];
+      var possible_values = ['dev', 'production', 'staging', 'deploy', 'testing'];
       if(!possible_values.indexOf(env) == -1) {
         return console.log('Possible environments: ' + possible_values.join(', '));
       }
@@ -2341,7 +2342,7 @@ window.Panel2 = new function() {
       var cid = 'cached_' + generator.toString().replace(/[\n\s\t]/g, '').hashCode();
       instance.get(cid, function(data) {
         instance.get('cacheListeners', function(__listeners) {
-          cacheListeners = __listeners;
+          cacheListeners = __listeners || {};
           //console.log('getCached cid=', cid, 'data=', data);
           if(!condition || $.type(data) == 'null' || 
             (data.type == 'time' && data.expiration < (new Date).getTime())
@@ -2370,21 +2371,30 @@ window.Panel2 = new function() {
                 instance.del(cid);
               });
               /// Добавляем запись кеша к слушателям кеша
-              instance.get('cacheListeners', function(__listeners) {
-                cacheListeners = __listeners;
-                if(!cacheListeners[condition]) cacheListeners[condition] = [];
-                if(cacheListeners[condition].indexOf(cid) == -1) {
-                  cacheListeners[condition].push(cid);
-                  instance.set('cacheListeners', cacheListeners, function() {
-                    //console.log('listeners changed: ', JSON.stringify(cacheListeners));
-                    runFunc();
-                  });
-                }
-              });
+              if(!cacheListeners[condition]) cacheListeners[condition] = [];
+              if(cacheListeners[condition].indexOf(cid) == -1) {
+                cacheListeners[condition].push(cid);
+                instance.set('cacheListeners', cacheListeners, function() {
+                  //console.log('listeners changed: ', JSON.stringify(cacheListeners));
+                  runFunc();
+                });
+              } else {
+                runFunc();
+              }
             }
           } else {
-            /// данные в кеше есть и они не истекли, вызываем обратную функцию
-            callback(data.data);
+            /// данные в кеше есть и они не истекли, вызываем обратную функцию, 
+            /// однако проверяем массив cacheListeners, вызов должен быть в массиве
+            if(!cacheListeners[condition]) cacheListeners[condition] = [];
+            if(cacheListeners[condition].indexOf(cid) == -1) {
+              cacheListeners[condition].push(cid);
+              instance.set('cacheListeners', cacheListeners, function() {
+                //console.log('listeners changed: ', JSON.stringify(cacheListeners));
+                callback(data.data);
+              });
+            } else {
+              callback(data.data);
+            }
           }
         });
       });
@@ -2397,7 +2407,7 @@ window.Panel2 = new function() {
       var cid = 'cached_' + generator.toString().replace(/[\n\s\t]/g, '').hashCode();
       //console.log('clearCached, cid:', cid);
       instance.get('cacheListeners', function(__listeners) {
-        cacheListeners = __listeners;
+        cacheListeners = __listeners || {};
         //console.log('cleanup listeners before: ', JSON.stringify(cacheListeners));
         var cleaned = false;
         for(var condition in cacheListeners) {
@@ -2426,7 +2436,7 @@ window.Panel2 = new function() {
     checkVersion: function(callback) {
       var s = document.createElement("script");
       s.type = "text/javascript";
-      s.src = baseURL + '/version_production.js?' + (new Date).getTime();
+      s.src = baseURL + '/release/version_' + environment + '.js?' + (new Date).getTime();
       s.addEventListener('load', function() {
         if(callback) callback(window.current_panel_version);
       }, false);
@@ -2444,7 +2454,7 @@ window.Panel2 = new function() {
       instance.clearCached(instance.checkVersion);
 
       /// Получаем release notes
-      var prod_path = baseURL + '/panel/production';
+      var release_path = baseURL + '/release';
 
       var loaded = 0;
       instance.get('release_notes', function(notes) {
@@ -2456,7 +2466,7 @@ window.Panel2 = new function() {
         }
         $.each(versions, function(i, version_index) {
           str_version = String(version_index);
-          var path = prod_path; 
+          var path = release_path; 
           for(var i = 0; i < str_version.length; i++) {
             path += "/" + str_version.charAt(i);
           }

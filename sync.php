@@ -60,9 +60,6 @@ foreach($package as $file) {
       }
       /// собираем пакет обратно
       $data = 'window.__package=' . json_encode($package);
-    } else if($basename == 'bootstrap.js') {
-      //  - в файле bootstrap.js меняем panelURL на новый
-      $data = str_replace($src, $dst, $data);
     }
 
     if(file_put_contents($current_dir . $file, $data) === FALSE) {

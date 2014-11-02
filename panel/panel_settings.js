@@ -60,11 +60,11 @@
       }
 
       var loaded = 0;
-      var prod_path = panel.base_url() + '/panel/production';
+      var release_path = panel.base_url() + '/release';
 
       $.each(versions, function(i, version_index) {
         str_version = String(version_index);
-        var path = prod_path; 
+        var path = release_path; 
         for(var i = 0; i < str_version.length; i++) {
           path += "/" + str_version.charAt(i);
         }

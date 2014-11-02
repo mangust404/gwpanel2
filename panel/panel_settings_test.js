@@ -940,7 +940,6 @@ QUnit.asyncTest('Тест сохранения опций для плавающ�
   var index = options.widgets.length - 1;
 
   __panel.setOptions(options, undefined, function() {
-    console.log('test1 options set: ', __panel.getOptions());
     var frame;
 
     waitFor(function() {
@@ -1040,7 +1039,6 @@ QUnit.asyncTest('Тест сохранения опций для виджето�
   var apply_initialized;
 
   __panel.setOptions(options, undefined, function() {
-    console.log('test2 options set: ', __panel.getOptions());
     assert.equal(__panel.getOptions().panes[0].widgets.length, 1, 'Опции виджета сохранились');
     var frame;
 

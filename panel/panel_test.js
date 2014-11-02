@@ -58,8 +58,10 @@ QUnit.test("Тест объекта __panel", function(assert) {
   assert.deepEqual(__panel.toQueryParams('foo=bar&bar=foo'), 
                    {'foo': 'bar', 'bar': 'foo'}, '__panel.toQueryParams');
   assert.ok(__panel.currentPlayerID() > 0, 'ID игрока > 0');
-  assert.ok(String(__panel.getOptionsID()).indexOf("testing") != -1, 
-    'optionsID содержат "testing": ' + __panel.getOptionsID());
+  __panel.onload(function() {
+    assert.ok(String(__panel.getOptionsID()).indexOf("testing") != -1, 
+      'optionsID содержат "testing": ' + __panel.getOptionsID());
+  });
 });
 
 QUnit.test("Тест объекта __panel.crossWindow", function(assert) {
@@ -210,13 +212,28 @@ QUnit.asyncTest("Тест функции panel.crossWindow.set/get", function(as
 });
 
 QUnit.asyncTest("Тест событий из текущего окна", function(assert) {
-  expect(1);
+  expect(3);
   var eventdata = {'test': 'успех'};
-  __panel.bind("self-event-test", function(data) {
-    assert.deepEqual(eventdata, data, "значение должно совпадать");
-    QUnit.start();
+  var count = 0;
+  __panel.onload(function() {
+    var l1 = __panel.bind("self-event-test", function(data) {
+      assert.deepEqual(eventdata, data, "значение первого слушателя должно совпадать");
+      count++;
+      if(count >= 2) {
+        QUnit.start();
+      }
+    });
+    var l2 = __panel.bind("self-event-test", function(data) {
+      assert.deepEqual(eventdata, data, "значение первого слушателя должно совпадать");
+      count++;
+      if(count >= 2) {
+        QUnit.start();
+      }
+    });
+    assert.notEqual(l1, l2, 'идентификаторы слушателей отличаются');
+
+    __panel.triggerEvent('self-event-test', eventdata);
   });
-  __panel.triggerEvent('self-event-test', eventdata);
 });
 
 QUnit.asyncTest("Тест событий из чужого окна (iframe)", function(assert) {
@@ -1431,69 +1448,56 @@ QUnit.asyncTest('Тестирование функции getCached с истеч
   var secondFunc = function(callback) {
     callback('123');
   }
-  /// третья функция, нужна для проверки очистки cacheListeners
-  var thirdFunc = function(callback) {
-    callback('234');
-  }
 
   var cid = 'cached_' + runFunc.toString().replace(/[\n\s\t]/g, '').hashCode();
   assert.ok(true, cid);
 
   __panel.getCached(secondFunc, function(data) {
     assert.equal(data, '123');
-  }, event_name);
-  __panel.getCached(thirdFunc, function(data) {
-    assert.equal(data, '234');
-  }, 180);
-
-  __panel.clearCached(runFunc, function() {
-    /// Теперь данные гарантированно должны быть удалены
-    /// удаляем слушателя событий чтобы тест не запустился повторно
-    __panel.getCached(runFunc, function(data) {
-      assert.equal(data, val2);
-    }, event_name)
-    __panel.getCached(runFunc, function(data) {
-      assert.equal(data, val2);
-    }, event_name);
-
-    setTimeout(function() {
+    __panel.clearCached(runFunc, function() {
+      /// Теперь данные гарантированно должны быть удалены
+      /// удаляем слушателя событий чтобы тест не запустился повторно
       __panel.getCached(runFunc, function(data) {
         assert.equal(data, val2);
-        assert.equal(generator, 1, 'Генератор должен быть вызван один раз');
-      }, event_name);
-
-      __panel.bind(event_name, function() {
         __panel.getCached(runFunc, function(data) {
           assert.equal(data, val2);
-          assert.equal(generator, 2, 'Генератор должен быть вызван два раза');
-          /// ещё раз вызываем вторую функцию чтобы объект listeners[event_name]
-          /// содержал хоть что-нибудь т.к. после вызова события он будет пустой
-          __panel.getCached(secondFunc, function(data) {
-            assert.equal(data, '123');
-          }, event_name);
-
-          __panel.clearCached(runFunc, function() {
-            __panel.get('cacheListeners', function(listeners) {
-              assert.equal(jQuery.type(listeners[event_name][cid]), 'undefined', 
-                'Мусор подчищен');
-              //console.log('cleaned listeners: ', JSON.stringify(listeners));
-              assert.equal(jQuery.type(listeners[event_name]), 'array', 
-                'Нужное осталось');
-              assert.equal(jQuery.type(listeners['undefined']), 'array', 
-                'Нужное осталось');
-
-              __panel.clearCached(secondFunc);
-              __panel.clearCached(thirdFunc);
-              QUnit.start();
-            });
-          });
         }, event_name);
-      });
+        __panel.getCached(runFunc, function(data) {
+          assert.equal(data, val2);
+          assert.equal(generator, 1, 'Генератор должен быть вызван один раз');
+        }, event_name);
 
-      __panel.triggerEvent(event_name);
+        __panel.bind(event_name, function() {
+          __panel.getCached(runFunc, function(data) {
+            assert.equal(data, val2);
+            assert.equal(generator, 2, 'Генератор должен быть вызван два раза');
+            /// ещё раз вызываем вторую функцию чтобы объект listeners[event_name]
+            /// содержал хоть что-нибудь т.к. после вызова события он будет пустой
+            __panel.getCached(secondFunc, function(data) {
+              assert.equal(data, '123');
+              __panel.get('cacheListeners', function(listeners) {
+                //console.log('cacheListeners after secondFunc', JSON.stringify(listeners));
+                __panel.clearCached(runFunc, function() {
+                  __panel.get('cacheListeners', function(listeners) {
+                    //console.log('cacheListeners after clean runFunc', JSON.stringify(listeners));
+                    assert.equal(jQuery.type(listeners[event_name]), 'array', 
+                      'Нужное осталось');
+                    assert.equal(jQuery.type(listeners[event_name][cid]), 'undefined', 
+                      'Мусор подчищен');
+                    //console.log('cleaned listeners: ', JSON.stringify(listeners));
+                    __panel.clearCached(secondFunc);
+                    QUnit.start();
+                  });
+                });
+              });
+            }, event_name);
+          }, event_name);
+        });
+        __panel.triggerEvent(event_name);
+      }, event_name)
+    });
+  }, event_name);
 
-    }, 2000);
-  });
 });
 
 QUnit.test('Тест функции pluralize', function(assert) {

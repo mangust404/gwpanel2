@@ -36,13 +36,12 @@
     }
     if(this.hp_current >= health.hp_max) {
       this.progressBar.css({width: '100%'});
-      this.progressText.html('100%');
-      this.progressBarText.html('100%');
+      this.progressText.html('');
+      this.progressBarText.html('');
       health.hp_current = health.hp_start = health.hp_max;
       if(this.options.autohide) this.css({display: 'none'});
       clearInterval(this.healthUpdInterval);
       this.healthUpdInterval = false;
-      this.hp_current = false;
     } else {
       health.hp_start = this.hp_current;
     }
@@ -62,6 +61,7 @@
   
   function home_health_progress(init, health) {
     if(!health) return;
+
     if(((!this.hp_current && health.hp_start != health.hp_max) || this.hp_current < health.hp_start || init)) {
       if(this.options.autohide) this.fadeIn();
       if(this.healthUpdInterval) {
@@ -79,11 +79,11 @@
       var that = this;
       home_health_timer.apply(that, [health]);
 
+      if(this.hp_current >= health.hp_max) return;
       this.healthUpdInterval = setInterval(function() {
         home_health_timer.apply(that, [health]);
       }, 1000);
-    }
-    if(health.hp_start == health.hp_max) {
+    } else if(health.hp_start >= health.hp_max) {
       this.progressBar.css({width: '100%'});
       if(this.options.autohide && this.is(':visible')) this.fadeOut();
     }
@@ -150,7 +150,7 @@ $.extend(panel, {
     panel.get('health', function(health) {
       home_health_progress.apply($widget, [false, health]);
       panel.bind('hp_update', function(new_health) {
-        if(health.hp_current != new_health.hp_start) {
+        if(!health || health.hp_current != new_health.hp_start) {
           panel.set('health', new_health, function() {
             home_health_progress.apply($widget, [true, new_health]);
           });

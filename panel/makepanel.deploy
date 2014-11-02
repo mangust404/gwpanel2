@@ -3,7 +3,7 @@
 $gwpanel_path = realpath(dirname(__FILE__) . '/../');
 
 //создаём список файлов для синхронизации с ганей
-shell_exec('/usr/bin/find ./ ! \( -iwholename *\.git* \) ! \( -iwholename "\./doc/*" \) ! \( -iwholename "\./server/*" \) ! \( -iwholename "\./panel/production/*" \) ! \( -iname version \) -regextype posix-egrep -regex ".*\.(js|css|png|gif)"  -type f | /usr/bin/sort | /bin/gzip > ' . $gwpanel_path . '/package.gz');
+shell_exec('/usr/bin/find ./ ! \( -iwholename *\.git* \) ! \( -iwholename "\./doc/*" \) ! \( -iwholename "\./server/*" \) ! \( -iwholename "\./release/*" \) ! \( -iname version \) -regextype posix-egrep -regex ".*\.(js|css|png|gif)"  -type f | /usr/bin/sort | /bin/gzip > ' . $gwpanel_path . '/package.gz');
 
 /// Создаём gwpanel.tar.gz для загрузки на ganjafile.ru
 

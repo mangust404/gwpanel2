@@ -1,0 +1,390 @@
+<?php
+
+include_once(dirname(__FILE__) . '/../lib/JSMin.php');
+include_once(dirname(__FILE__) . '/../lib/class.JavaScriptPacker.php');
+include_once(dirname(__FILE__) . '/makepanel.inc');
+
+
+ini_set('display_errors', 'off');
+
+$modules = array();
+function module_implements($method) {
+  global $modules;
+  $result = array();
+  
+  foreach($modules as $module) {
+    if(function_exists($module . '_' . $method)) {
+      $result[] = $module;
+    }
+  }
+  return $result;
+}
+
+function url($path) {
+  return 'http://gwpanel.org/' . $path;
+}
+
+
+/// путь к корню gwpanel
+$gwpanel_path = realpath(dirname(__FILE__) . '/..');
+
+$domain = 'gwpanel.org';
+$path = '/panel2';
+
+
+/// Жёстко подключаемые библиотеки, необходимые для запуска
+$libs = array('jquery.min.js');
+
+function get_env() {
+  return 'production';
+}
+
+function get_message() {
+  $message = '';
+
+  global $argc, $argv;
+  for($i = 0; $i < $argc; $i++) {
+    if($argv[$i] == '-m') {
+      $message = trim($argv[$i + 1], ' "\'');
+    }
+  }
+  return $message;
+}
+
+function package_path($version, $env = 'production') {
+  global $gwpanel_path;
+  $result = $gwpanel_path . '/release';
+  $str_v = strval($version);
+  for($i = 0; $i < strlen($str_v); $i++) {
+    $result .= '/' . $str_v{$i};
+  }
+  $result .= '/' . $str_v . '.package.js';
+  return $result;
+}
+/// Определяем последнюю версию
+if(file_exists($gwpanel_path . '/release/version')) {
+  $version = intval(file_get_contents($gwpanel_path . '/release/version'));
+  $current_package = package_path($version, get_env());
+} else {
+  $version = 0;
+}
+
+$restircted_libs = array('jquery.js', 'jquery.min.js', 'jquery.db.js', 
+  'jquery.db.min.js', 'jquery.indexeddb.js', 'jquery.indexeddb.min.js');
+
+$plugins = array();
+/// Подготовка генерации пакета с исходниками
+/// Получаем список файлов
+$files = array();
+$modules = array();
+
+foreach(glob($gwpanel_path . '/*', GLOB_ONLYDIR) as $glob_path) {
+  $dirname = basename($glob_path);
+  if($dirname == 'themes' || $dirname == 'img' || $dirname == 'example' || $dirname == 'dev' || $dirname == 'release') {
+    continue;
+  }
+  foreach(glob($gwpanel_path . '/' . $dirname . '/*.js') as $file) {
+    $filename = basename($file);
+    if($dirname == 'lib' && (in_array($filename, $libs) || 
+                             in_array($filename, $restircted_libs))) {
+      /// пропускаем жёстко подключаемые библиотеки
+      continue;
+    }
+    if($dirname == 'server') continue;
+    $files[] = $file;
+  }
+  if($dirname == 'lib') {
+    foreach(glob($gwpanel_path . '/' . $dirname . '/tests/*.js') as $file) {
+      $files[] = $file;
+    }
+  }
+  if(file_exists($glob_path . '/' . $dirname . '.module.json')) {
+    $modules[] = $dirname;
+
+    $data = json_decode(file_get_contents($glob_path . '/' . $dirname . '.module.json'), TRUE);
+    if($data) {
+      $plugins[$dirname] = $data;
+    } else {
+      print "ERROR!!! Bad json syntax in $module/$module.module.json\n";
+      exit;
+    }
+  }
+}
+$files[] = $gwpanel_path . '/apply.js';
+
+/// Файлы тем
+foreach(explode("\n", shell_exec('find ' . $gwpanel_path . '/themes/ -type f -name *.css')) as $css_path) {
+  if($css_path) $css_files[] = $css_path;
+}
+
+/// CSS файлы в lib/
+foreach(explode("\n", shell_exec('find ' . $gwpanel_path . '/lib/ -type f -name *.css')) as $css_path) {
+  if($css_path) $css_files[] = $css_path;
+}
+
+/// делаем apply-файл
+function _element_sort($a, $b) {
+  $a_weight = (is_array($a) && isset($a['#weight'])) ? $a['#weight'] : 0;
+  $b_weight = (is_array($b) && isset($b['#weight'])) ? $b['#weight'] : 0;
+  if ($a_weight == $b_weight) {
+    return 0;
+  }
+  return ($a_weight < $b_weight) ? -1 : 1;
+}
+
+
+$apply_pages = $apply_scripts = $apply_events = $apply_settings = array();
+uasort($plugins, '_element_sort');
+
+$tests = array();
+$widget_classes = $button_classes = $module_info = array();
+
+foreach($plugins as $plugin_name => $plugin) {
+  if(is_array($plugin['apply'])) {
+    foreach($plugin['apply'] as $page => $scripts) {
+      if(!is_array($scripts)) continue;
+      if(!isset($apply_pages[$page])) $apply_pages[$page] = array();
+      $apply_pages[$page] = array_merge($apply_pages[$page], $scripts);
+    }
+    //$apply_scripts[$plugin_name] = $plugin['applyScript'];
+  }
+  if(isset($plugin['event'])) {
+    foreach($plugin['event'] as $event => $listener) {
+      if(!isset($apply_events[$event])) $apply_events[$event] = array();
+      $listener['event'] = $event;
+      $apply_events[$event][] = $listener;
+      $apply_scripts[$listener['callback']] = $plugin_name . '/' . $listener['file'];
+    }
+  }
+
+  if(isset($plugin['settings']) && is_array($plugin['settings'])) {
+    foreach($plugin['settings'] as $key => $val) {
+      if(!isset($plugin['settings'][$key]['module'])) {
+        $plugin['settings'][$key]['module'] = $plugin_name;
+      }
+    }
+    $apply_settings= array_merge($apply_settings, $plugin['settings']);
+  }  
+
+  if(isset($plugin['buttons']) && is_array($plugin['buttons'])) {
+    foreach($plugin['buttons'] as $type => $button) {
+      $button['module'] = $plugin_name;
+      $button['weight'] = isset($plugin['weight'])? $plugin['weight']: 0;
+      $button_classes[$plugin_name . '_' . $type] = $button;
+    }
+  }
+
+  if(isset($plugin['widgets']) && is_array($plugin['widgets'])) {
+    foreach($plugin['widgets'] as $type => $widget) {
+      $widget['module'] = $plugin_name;
+      $widget['weight'] = isset($plugin['weight'])? $plugin['weight']: 0;
+      $widget_classes[$plugin_name . '_' . $type] = $widget;
+    }
+  }
+
+  foreach(glob(realpath(dirname(__FILE__) . '/../' . $plugin_name) . '/*_test.js') as $_file) {
+    $tests[] = $plugin_name . '/' . basename($_file);
+  }
+
+  $module_info[$plugin_name] = array(
+    'title' => isset($plugin['title'])? $plugin['title']: $plugin_name,
+    'description' => isset($plugin['description'])? $plugin['description']: '',
+    'weight' => isset($plugin['weight'])? $plugin['weight']: 0,
+  );
+}
+
+$themes = array();
+foreach(glob($gwpanel_path . '/themes/*', GLOB_ONLYDIR) as $theme_path) {
+  $theme_name = basename($theme_path);
+  if($theme_name{0} == '.') continue;
+  try {
+    $theme = json_decode(file_get_contents($theme_path . '/theme.json'), TRUE);
+    if(!$theme) continue;
+    if(!isset($theme['icons'])) $theme['icons'] = array();
+    foreach(glob($theme_path . '/icons/*') as $icon) {
+      $icon_name = basename($icon);
+      $ar = explode('.', $icon_name);
+      end($ar);
+      $ext = strtolower(current($ar));
+      if(in_array($ext, array('png', 'gif', 'jpg', 'jpeg'))) {
+        array_unshift($theme['icons'], $icon_name);
+      }
+    }
+    $themes[$theme_name] = $theme;
+  } catch(Exception $e) {
+    continue;
+  }
+}
+
+
+$apply = array();
+$apply['pages'] = $apply_pages;
+$apply['scripts'] = $apply_scripts;
+$apply['settings'] = $apply_settings;
+$apply['events'] = $apply_events;
+$apply['widgets'] = $widget_classes;
+$apply['buttons'] = $button_classes;
+$apply['modules'] = $module_info;
+$apply['themes'] = $themes;
+
+global $gwpanel_path;
+file_put_contents($gwpanel_path . '/apply.js', 
+  'window.panel_apply = ' . json_encode($apply) . ';
+window.panel_tests = ' . json_encode($tests) . ';');
+
+if(get_env() == 'production') {
+  $package = array();
+  foreach($files as $file) {
+    $name = substr($file, strlen($gwpanel_path) + 1);
+    //if(strpos($file, '.min.') === FALSE) {
+    //  $packer = new JavaScriptPacker(file_get_contents($file));
+    //  $package[$name] = $packed = $packer->pack();
+    //} else {
+    $contents = file_get_contents($file);
+    if(!$contents) die('Unable to read: ' . $file);
+    $package[$name] = JSMin::minify($contents);
+    //}
+  }
+
+  foreach($css_files as $file) {
+    $contents = file_get_contents($file);
+    $filepath = dirname(substr($file, strlen($gwpanel_path) + 1));
+    if(preg_match_all('/url\(([^\)]+)\)/i', $contents, $matches)) {
+      foreach($matches[1] as $url) {
+        if(strpos($url, 'http') === FALSE) {
+          $contents = str_replace('url(' . $url . ')', 'url(' . url('panel2/' . $filepath) . '/' . $url . ')', $contents);
+        }
+      }
+    }
+    $data = $contents;
+    $regexp = '/@import[^;]+;/i';
+    preg_match_all($regexp, $data, $matches);
+    $data = preg_replace($regexp, '', $data);
+    $data = implode('', $matches[0]) . $data;
+
+    // Remove comments
+    $data = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $data);
+
+    // Remove space after colons
+    $data = str_replace(': ', ':', $data);
+
+    // Remove whitespace
+    $data = str_replace(array("\r\n", "\r", "\n", "\t" ), '', $data);
+    $data = preg_replace('/[ ]{2,}/m', ' ', $data);
+
+    while(strpos($data, '  ') !== FALSE) {
+      $data = str_replace('  ', ' ', $data);
+    }
+
+    $package[$filepath . '/' . basename($file)] = $data;
+  }
+
+  file_put_contents('/tmp/package.js', 'window.__package=' . json_encode($package));
+
+  //$new = json_decode(substr(file_get_contents('/tmp/package.js'), 17), TRUE);
+  //$old = json_decode(substr(file_get_contents($current_package), 17), TRUE);
+  //print_r(array_diff($new, $old));
+  //exit;
+  //print shell_exec('diff /tmp/package.js ' . $current_package);
+  //exit;
+  if(!$version || !file_exists($current_package) || strlen(shell_exec('diff /tmp/package.js ' . $current_package)) > 1) {
+    /// Файлов нет, либо файлы различаются, делаем новую сборку
+    $message = get_message();
+    if(!strlen($message)) die("Не указано сообщение сборки. Используйте ключ -m \"СООБЩЕНИЕ\"\n");
+    $version++;
+    $new_package = package_path($version);
+
+    $notes_path = dirname($new_package) . '/' . $version . '.notes.js';
+
+    mkdir(dirname($new_package), 0755, TRUE);
+    shell_exec('mv /tmp/package.js ' . $new_package);
+
+    print "Записан файл пакета {$new_package}\n";
+
+    /// Определяем последнюю миграцию, и если найдены новые файлы миграции, то добавляем в notes последнюю миграцию
+    if(file_exists($gwpanel_path . '/migrate')) {
+      $migrate = intval(file_get_contents($gwpanel_path . '/migrate'));
+    } else {
+      $migrate = 0;
+    }
+    $migrate_str = '';
+    $new_migrate = $migrate;
+    foreach(glob($gwpanel_path . '/panel/migration/*.js') as $migration_file) {
+      list($num, $ext) = explode('.', basename($migration_file));
+      $num = intval($num);
+      if($num > 0 && $num > $migrate) {
+        /// добавляем содержимое файла в миграцию
+        $migrate_str .= "\n" . file_get_contents($migration_file);
+        $new_migrate = $num;
+      }
+    }
+    file_put_contents($gwpanel_path . '/migrate', strval($new_migrate));
+
+    file_put_contents($notes_path, 'window.panel_release_notes = window.panel_release_notes || {};
+window.panel_release_date = window.panel_release_date || {};
+window.panel_release_notes[' . $version . '] = ' . json_encode($message) . '; window.panel_release_date[' . $version . '] = "' . date('c') . '";' . $migrate_str);
+    print "Записан файл заметок к версии $notes_path\n";
+    file_put_contents($gwpanel_path . '/release/version', $version);
+    print "Записан файл версии {$gwpanel_path}/release/version\n";
+
+    $stage = 0;
+    file_put_contents($gwpanel_path . '/release/stage', $stage);
+    print "Записан файл версии stage {$gwpanel_path}/release/stage\n";
+    file_put_contents($gwpanel_path . '/release/stage.js', 'window.current_panel_stage = ' . $stage);
+
+    file_put_contents($gwpanel_path . '/release/version_production.js', 'window.current_panel_version = ' . $version);
+    print "Записан файл версии для клиентов $gwpanel_path/release/version_" . get_env() . ".js\n";
+    file_put_contents($gwpanel_path . '/release/version_deploy.js', 'window.current_panel_version = ' . $version);
+    file_put_contents($gwpanel_path . '/release/version_staging.js', 'window.current_panel_version = ' . $version);
+    file_put_contents($gwpanel_path . '/release/version_testing.js', 'window.current_panel_version = ' . $version);
+
+  } else {
+    unlink('/tmp/package.js');
+    print "Скрипты не отличаются от текущих, новой сборки делать не нужно\n";
+  }
+}
+
+/// Подготовка bootstrap.js
+$bootstrap = make_bootstrap($domain, $path, $libs);
+
+file_put_contents($gwpanel_path . '/bootstrap.js', $bootstrap);
+print 'Bootstrap written to ' . $gwpanel_path . '/bootstrap.js' . "\n";
+
+
+//создаём список файлов для синхронизации с ганей
+$list = shell_exec('/usr/bin/find ./ ! \( -iwholename *\.git* \) ! \( -iwholename "\./doc/*" \) ! \( -iwholename "\./server/*" \) ! \( -iwholename "\./release/*" \) ! \( -iname version \) -regextype posix-egrep -regex ".*\.(js|css|png|gif)"  -type f | /usr/bin/sort');
+/// добавляем в список последний пакет
+if(isset($new_package)) {
+  $list .= shell_exec('/usr/bin/find ./' . substr(dirname($new_package), strlen($gwpanel_path) + 1) . ' -type f');
+} else {
+  $list .= shell_exec('/usr/bin/find ./' . substr(dirname($current_package), strlen($gwpanel_path) + 1) . ' -type f');
+}
+
+$list .= './release/version_production.js
+./release/version_deploy.js
+';
+
+file_put_contents($gwpanel_path . '/package', $list);
+if(file_exists($gwpanel_path . '/package.gz')) {
+  unlink($gwpanel_path . '/package.gz');
+}
+shell_exec('gzip ' . $gwpanel_path . '/package');
+ 
+/// Создаём gwpanel.tar.gz для загрузки на ganjafile.ru
+
+if(is_dir($gwpanel_path . '/gwpanel')) {
+  print shell_exec('rm -rf ' . $gwpanel_path . '/gwpanel');
+}
+mkdir($gwpanel_path . '/gwpanel');
+system('cp ' . $gwpanel_path . '/sync.php ' . $gwpanel_path . '/gwpanel/');
+$out = shell_exec('php ' . $gwpanel_path . '/gwpanel/sync.php');
+$ar = explode("\n", $out);
+print "Синхронизировано файлов: " . count($ar) . "\n";
+
+unlink($gwpanel_path . '/gwpanel/sync.php');
+
+system('cd ' . $gwpanel_path . ' && tar -cz ./gwpanel > '. $gwpanel_path . '/gwpanel.tar.gz');
+system('rm -rf ' . $gwpanel_path . '/gwpanel');
+if(file_exists($gwpanel_path . '/gwpanel.tar.gz') && filesize($gwpanel_path . '/gwpanel.tar.gz') > 1000) {
+  print "Файл пакета " . $gwpanel_path . "/gwpanel.tar.gz записан\n";
+}
