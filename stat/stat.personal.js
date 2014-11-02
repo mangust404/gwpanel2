@@ -186,7 +186,9 @@ $.extend(panel, {
         };   
       }
     }, true);
-    $('<a class="stat-reset">сброс</a>').click(function() {
+    $('<a class="stat-reset">сброс</a>').css({
+      position: 'absolute'
+    }).click(function() {
       if(confirm('Вы уверены что хотите обнулить все счётчики?')) {
         panel.del('stat_exp', function(){}, true);
         panel.del('stat_skills', function(){}, true);
