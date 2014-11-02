@@ -12,7 +12,8 @@
   "event": {
     "battleend": {
       "file": "items.js", 
-      "callback": "items_set_check"
+      "callback": "items_set_check",
+      "local": true
     }
   },
   "settings": {
