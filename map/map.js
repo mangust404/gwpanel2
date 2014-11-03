@@ -87,9 +87,11 @@ jQuery.extend(panel, {
         'margin-left': '5px',
 
       }).click(function() {
+        var href = this.href;
         //Запоминаем текущую страницу, чтобы по окончании пути на неё вернуться
-        __panel.set('moveHref', location.href);
-        __panel.gotoHref(this.href);
+        __panel.set('moveHref', location.href, function() {
+          __panel.gotoHref(href);
+        });
         return false;
       });
 
