@@ -12,7 +12,7 @@
         variants[variant] = data.name;
       });
       if($.type(variants) == 'object') {
-        panel.set('variants_' + panel.currentPlayerID(), variants);
+        panel.set(panel.getEnv() + '_variants', variants, function() {}, true);
       }
     });
 
@@ -575,7 +575,7 @@
           return false;
         });
 
-      panel.get('variants_' + panel.currentPlayerID(), function(variants) {
+      panel.get(panel.getEnv() + '_variants', function(variants) {
 
         var $upload_button = $('<a class="ui-btn ui-btn-inline ui-icon-arrow-u ui-btn-icon-right">Закачать</a>').click(function() {
           var upload_data = {
@@ -700,35 +700,34 @@
           variants[id] = name;
 
           variant_select.append('<option value="' + id + '">' + name + '</option>');
-          panel.set('variants_' + panel.currentPlayerID(), variants);
+          panel.set(panel.getEnv() + '_variants', variants, function() {
+            function saveVariant(new_options) {
+              panel.set(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + id, new_options, function() {
+                panel.showFlash('Новый набор настроек добавлен.', 'message', 5000);
+              });
 
-          function saveVariant(new_options) {
-            panel.set(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + id, new_options, function() {
-              panel.showFlash('Новый набор настроек добавлен.', 'message', 5000);
-            });
-
-            $('#add-title').val('');
-            $('.add-options-variant').collapsible('collapse');
-          }
-
-          var new_options = {};
-          var collection = $('#add-collection').val();
-          if(collection == '') {
-            /// минимальный набор настроек, чтобы панель работала
-            $.extend(new_options, panelSettingsCollection.empty);
-            saveVariant(new_options);
-          } else {
-            if(jQuery.type(window.panelSettingsCollection[collection]) == 'object') {
-              /// выбрана коллекция настроек
-              $.extend(new_options, window.panelSettingsCollection[collection]);
-              delete new_options['master'];
-              saveVariant(new_options);
-            } else if(collection.indexOf('clone_') == 0) {
-              collection = collection.substr(6);
-              /// выбран существующий вариант, копируем из него
-              panel.get(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + collection, saveVariant);
+              $('#add-title').val('');
+              $('.add-options-variant').collapsible('collapse');
             }
-          }
+            var new_options = {};
+            var collection = $('#add-collection').val();
+            if(collection == '') {
+              /// минимальный набор настроек, чтобы панель работала
+              $.extend(new_options, panelSettingsCollection.empty);
+              saveVariant(new_options);
+            } else {
+              if(jQuery.type(window.panelSettingsCollection[collection]) == 'object') {
+                /// выбрана коллекция настроек
+                $.extend(new_options, window.panelSettingsCollection[collection]);
+                delete new_options['master'];
+                saveVariant(new_options);
+              } else if(collection.indexOf('clone_') == 0) {
+                collection = collection.substr(6);
+                /// выбран существующий вариант, копируем из него
+                panel.get(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + collection, saveVariant);
+              }
+            }
+          }, true);
           return false;
         }).appendTo(fieldset);
       
@@ -761,7 +760,7 @@
                 delete variants[id];
                 panel.del(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + id);
               });
-              panel.set('variants_' + panel.currentPlayerID(), variants);
+              panel.set(panel.getEnv() + '_variants', variants, function() {}, true);
               panel.haveServerSync(function(have) {
                 if(have) {
                   if(confirm('Удалить выбранные настройки с сервера?')) {
@@ -786,7 +785,7 @@
           }).appendTo(d.find('.ui-body'));
         }
         $('#edit-other-wrapper .options-variants').append(variant_select).append(n).append(d).trigger('create');
-      });
+      }, true);
 
       $('<h2>Текущая версия: <span class="current-version">' + panel.getVersion() + '</span></h2>').append(
         $('<a class="ui-btn ui-btn-inline ui-mini ui-btn-icon-right ui-icon-refresh">проверить</a>').click(function() {
@@ -843,7 +842,7 @@
 
       $('#edit-other-wrapper .versions').trigger('create');
 
-      panel.get('variants_' + panel.currentPlayerID(), function(variants) {
+      panel.get(panel.getEnv() + '_variants', function(variants) {
         if(!variants) variants = {default: 'По-умолчанию'};
         var data = {};
 
@@ -908,7 +907,7 @@
 
         $('<div class="ui-body">').append(import_t).append(import_but).appendTo('.options-variants').trigger('create');
 
-      });
+      }, true);
 
       if(active_section == 'release_notes') {
         $('#edit-other-wrapper').show();
