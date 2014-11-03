@@ -167,10 +167,6 @@ QUnit.asyncTest("Тест добавления кнопки", function(assert) {
 
 QUnit.asyncTest("Тест добавления виджета", function(assert) {
   var options = jQuery.extend({}, panelSettingsCollection.empty);
-  /// Создаём конфигурацию с пустыми окнами
-  for(var i = 0; i < 4; i++) {
-    options.panes[i].buttons = options.panes[i].widgets = [];
-  }
   options.panes[1].width = 4;
   options.panes[2].width = 6;
 
@@ -1233,10 +1229,9 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
   options.system[test_key] = salt;
   var variantID;
 
-  __panel.set('variants_' + __panel.currentPlayerID(), null, function() {
+  __panel.set(__panel.getEnv() + '_variants', null, function() {
   __panel.setOptions(options, undefined, function() {
     var frame;
-
     frame = $('<iframe id="button-options-variants-iframe" src="' + document.location.href.split('?')[0]
        + '?gwpanel_testing&continue"></iframe>').load(function() {
       var that = this;
@@ -1259,16 +1254,20 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
               $('#add-title').val('test2');
               $('.add-options-variant input[type=submit]').click();
 
-              assert.equal($('#add-title:visible').length, 0, 'Форма добавления должна закрыться');
+              setTimeout(function() {
+                assert.equal($('#add-title:visible').length, 0, 'Форма добавления должна закрыться');
 
-              assert.ok($('#variant-name option:contains(test2)').length > 0, 'Вариант добавлен');
-              variantID = $('#variant-name option:contains(test2)').attr('value');
-              $('#variant-name').val(variantID).change();
+                assert.ok($('#variant-name option:contains(test2)').length > 0, 'Вариант добавлен');
+                variantID = $('#variant-name option:contains(test2)').attr('value');
+                $('#variant-name').val(variantID).change();
 
-              that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
-                assert.equal(data, variantID, 'Вариант должен совпадать');
-                that.contentWindow.location.href = that.contentWindow.location.href + '&' + salt;
-              });
+                that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
+                  assert.equal(data, variantID, 'Вариант должен совпадать');
+                  setTimeout(function() {
+                    that.contentWindow.location.href = that.contentWindow.location.href + '&' + salt;
+                  }, 200);
+                });
+              }, 400);
               //QUnit.start();
             });
           } else if(that.contentWindow.location.search.indexOf('finish') == -1) {
@@ -1299,7 +1298,9 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
                 $('#variant-name').val('default').change();
                 that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
                   assert.equal(data, 'default', 'Вариант должен быть default');
-                  that.contentWindow.location.href = that.contentWindow.location.href + '&finish';
+                  setTimeout(function() {
+                    that.contentWindow.location.href = that.contentWindow.location.href + '&finish';
+                  }, 200);
                 });
               });
             });
@@ -1316,8 +1317,8 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
       });
     }).appendTo('#qunit-fixture').css({height: 500, width: 1000}).show().get(0);
   });
-  });
-  //$('#qunit-fixture').css({height: 500, width: 1000, position: 'static'}).show();
+  }, true);
+  $('#qunit-fixture').css({height: 500, width: 1000, position: 'static'}).show();
   
 });
 
@@ -1334,7 +1335,7 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
   options.system[test_key] = salt;
   var variantID;
 
-  __panel.set('variants_' + __panel.currentPlayerID(), null, function() {
+  __panel.set(__panel.getEnv() + '_variants', null, function() {
   __panel.setOptions(options, undefined, function() {
     var frame;
 
@@ -1418,7 +1419,7 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
       });
     }).appendTo('#qunit-fixture').css({height: 500, width: 1000}).show().get(0);
   });
-  });
+  }, true);
   //$('#qunit-fixture').css({height: 500, width: 1000, position: 'static'}).show();
   
 });
