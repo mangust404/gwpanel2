@@ -2670,7 +2670,9 @@ window.Panel2 = new function() {
       if(!instance.getCookies().gwp2_n) {
         instance.loadScript('panel/panel_detect.js', function() {
           instance.panel_detect_greasemonkey(instance.panel_extension_notify);
-          instance.panel_detect_tampermonkey(instance.panel_extension_notify);
+          if(window.chrome) {
+            instance.panel_detect_tampermonkey(instance.panel_extension_notify);
+          }
         });
       }
     },
