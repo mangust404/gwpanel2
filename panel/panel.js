@@ -40,7 +40,13 @@ window.Panel2 = new function() {
       theme: 'base'
     },
     /// настройки включенных окон
-    panes: [{height: 4, width: 6, buttons: [], widgets: []}],
+    panes: [{height: 4, width: 6, buttons: [], widgets: []}, 
+            {height: 4, width: 6, buttons: [], widgets: []},
+            {height: 4, width: 6, buttons: [], widgets: []},
+            {height: 4, width: 6, buttons: [], widgets: []},
+            {height: 4, width: 6, buttons: [], widgets: []},
+            {height: 4, width: 6, buttons: [], widgets: []},
+            {height: 4, width: 6, buttons: [], widgets: []}],
     widgets: []
   };
   /// mouseDelta и mouseSpeed - переменные, необходимые для слежения за поведением курсора мыши
