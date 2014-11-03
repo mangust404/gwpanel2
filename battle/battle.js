@@ -88,7 +88,7 @@ jQuery.extend(panel, {
         var bid = RegExp.$1;
         if(data == bid) {
           panel.onload(function() {
-            panel.triggerEvent('battleend', {bid: bid});
+            panel.triggerEvent('battleend', {bid: bid}, true);
             panel.set('BattleID', false);
           });
         }
