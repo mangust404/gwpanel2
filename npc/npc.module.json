@@ -43,13 +43,6 @@
           "options": "__panel.npc_list_z",
           "default": [],
           "file": "npc_list.js"
-        },
-        "undress": {
-          "type": "checkbox",
-          "title": "Раздеваться при начале разговора :)",
-          "options": "",
-          "default": false,
-          "file": "npc_list.js"
         }
       },
       "callback": "npc_widget",

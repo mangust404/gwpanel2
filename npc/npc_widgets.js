@@ -95,7 +95,7 @@ jQuery.extend(panel, {
           var links = jQuery('<span class="links npc' + id + 'links"></span>');
           if(options.friends.indexOf(String(id)) != -1) {
             links.append(jQuery('<a href="http://www.ganjawars.ru/npc.php?id=' + id + '&'
-               + (options.undress? 'gwp': '') + 'talk=1" title="Начать разговор">\
+               + 'talk=1" title="Начать разговор">\
                <img src="http://images.ganjawars.ru/i/home/friends.gif"></a>')
               .click(npcMoveFunc));
           } else if(options.enemies.indexOf(String(id)) != -1) {

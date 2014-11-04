@@ -62,23 +62,6 @@ jQuery.extend(panel, {
         location.href = href;
       }
     }
-    if(params['gwptalk'] == 1) {
-      var href = jQuery('a:contains(Начать разговор)').attr('href');
-      if(href && href.length) {
-        jQuery('a:contains(Начать разговор)').html('Раздеваемся...:)').attr('href', '');
-        jQuery.ajax('http://www.ganjawars.ru/items.php', {
-          success: function(data) {
-            if(data.match(/(\/home\.do\.php\?dress_off=[0-9a-z]+)/)) {
-              jQuery.ajax('http://www.ganjawars.ru' + RegExp.$1, {
-                success: function(data) {
-                  location.href = href;
-                }
-              });
-            }
-          }
-        });
-      }
-    }
   }, 
   
   npc_questInit: function(data, quest) {
@@ -173,7 +156,7 @@ jQuery.extend(panel, {
               'line-height': '40px'
             }).click(function() {
               //Запоминаем текущую страницу, чтобы по окончании пути на неё вернуться
-              __panel.set('moveHref', location.href + '&gwptalk=1');
+              __panel.set('moveHref', location.href + '&talk=1');
               __panel.gotoHref(location.href);
               return false;
             }).appendTo('center:contains("Вы находитесь в другом секторе"):first');
