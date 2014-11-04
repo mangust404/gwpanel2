@@ -396,7 +396,7 @@ jQuery.extend(panel, {
           $('#right_attack' + rightattack).click();
         if(!isNaN(defence)) $('#defence' + defence).click();
         if(!isNaN(leftattack)) $('#left_attack' + leftattack).click();
-        if(walk) $('#walk').attr('checked', 1);
+        //if(walk) $('#walk').attr('checked', 1);
       } else {
         if($('#right_attack1').length){
           var r = Math.floor(Math.random() * 3) + 1;
@@ -416,14 +416,14 @@ jQuery.extend(panel, {
           $('#defence' + d).click();
           defence = d;
         };
-        if(walk) $('#walk').attr('checked', 1);
+        //if(walk) $('#walk').attr('checked', 1);
         bgenerated = true;
         
       }
-      $('#walk').change(function() {
+      /*$('#walk').change(function() {
         if(this.checked) walk = true;
         else walk = false;
-      });
+      });*/
       if($('#bf').length) $('#bf').prepend(bgenerator);
       else {
         $('#battleform').closest('div').before(bgenerator);
@@ -449,10 +449,10 @@ jQuery.extend(panel, {
             };
           });
       }
-      $('#walk').change(function() {
+      /*$('#walk').change(function() {
         if(this.checked) walk = true;
         else walk = false;
-      });
+      });*/
       if(options.autogen) {
         $bgenchk.attr('checked', 1);
       }
@@ -489,9 +489,9 @@ jQuery.extend(panel, {
         if(options.prevDefence) {
           $('#defence' + options.prevDefence).click();
         };
-        if(options.walk) {
+/*        if(options.walk) {
           $('input[name=walk]').click();
-        };
+        };*/
       }
       var bf = $('#bf');
       if(bf.length) bf.prepend(bredo);
@@ -525,7 +525,7 @@ jQuery.extend(panel, {
       } else if($('#defence3:checked').length) {
         options.prevDefence = 3;
       };
-      options.walk = $('input[name=walk]:checked').length > 0;
+//      options.walk = $('input[name=walk]:checked').length > 0;
       options.save();
       //console.log(options);
     };
