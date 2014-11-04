@@ -1,0 +1,130 @@
+{
+  "sniperGun":{
+    "1":{"fullName":"Damage Multiplier Light","name":"[DM]","descriptions":"Повреждение +8","frequency":"1/10"},
+    "2":{"fullName":"Barrel Greaser","name":"[BG]","descriptions":"Повреждение +13","frequency":"1/70"},
+    "3":{"fullName":"Damage Multiplier Heavy","name":"[DH]","descriptions":"Повреждение +10","frequency":"1/40"},
+    "6":{"fullName":"Longbow Barrel","name":"[LB]","descriptions":"Дальность +2","frequency":"«крайне редко»[1]"},
+    "49":{"fullName":"WunderGewehr","name":"[WG]","descriptions":"+6 % к вероятности второго выстрела","frequency":"1/50"}
+  },
+
+
+  "pp":{
+    "7":{"fullName":"Reloader","name":"[RL]","descriptions":"Кол-во выстрелов +4","frequency":"«крайне редко»"},
+    "31":{"fullName":"One Hand Shot","name":"[OHS]","descriptions":"Кол-во выстрелов +1[2]","frequency":"«крайне редко»"},
+    "32":{"fullName":"Two Extra Shots","name":"[TES]","descriptions":"Кол-во выстрелов +2","frequency":"«крайне редко»"},
+    "33":{"fullName":"Mad Shooting","name":"[MS]","descriptions":"Кол-во выстрелов +3","frequency":"«крайне редко»"},
+    "34":{"fullName":"Bullet Proof","name":"[BP]","descriptions":"Дальность стрельбы +2","frequency":"«крайне редко»"},
+    "35":{"fullName":"Ancient Damage","name":"[AD]","descriptions":"Повреждение +1","frequency":"1/10"},
+    "36":{"fullName":"Two Nails","name":"[TN]","descriptions":"Кол-во выстрелов +2","frequency":"«крайне редко»"},
+    "37":{"fullName":"Third and Mortal","name":"[TM]","descriptions":"Кол-во выстрелов +3","frequency":"«крайне редко»"},
+    "38":{"fullName":"One Plus Three","name":"[OPT]","descriptions":"Кол-во выстрелов +4","frequency":"«крайне редко»"},
+    "42":{"fullName":"Heavy Bullets","name":"[HB]","descriptions":"Повреждение +4","frequency":"1/70"},
+    "43":{"fullName":"Digital Distance","name":"[DD]","descriptions":"Дальность стрельбы +1","frequency":"1/40"},
+    "44":{"fullName":"Sharp Shooter","name":"[ShS]","descriptions":"Точность стрельбы +10 %","frequency":"1/20"}
+  },
+
+  "assaultGun":{
+    "4":{"fullName":"FastShot","name":"[FS]","descriptions":"Кол-во выстрелов +4","frequency":"«крайне редко»"},
+    "10":{"fullName":"Iron Bullets","name":"[IB]","descriptions":"Повреждение +1","frequency":"1/10"},
+    "11":{"fullName":"Killing Thing","name":"[KT]","descriptions":"Повреждение +2","frequency":"1/10"},
+    "12":{"fullName":"Heavy Killing Thing","name":"[HKT]","descriptions":"Повреждение +3","frequency":"1/30"},
+    "13":{"fullName":"Poisoned Bullets","name":"[PB]","descriptions":"Повреждение +5","frequency":"«крайне редко»"},
+    "14":{"fullName":"Extreme Shots","name":"[ES]","descriptions":"Повреждение +4","frequency":"1/70"},
+    "15":{"fullName":"Digital Distance","name":"[DD]","descriptions":"Дальность стрельбы +1","frequency":"1/30"},
+    "16":{"fullName":"Longshot Yellow","name":"[LY]","descriptions":"Дальность стрельбы +2","frequency":"1/80"},
+    "17":{"fullName":"Speed Switch","name":"[SS]","descriptions":"Кол-во выстрелов +2","frequency":"1/50"},
+    "18":{"fullName":"Ultra Shooter","name":"[US]","descriptions":"Кол-во выстрелов +3","frequency":"1/80"},
+    "19":{"fullName":"One Bullet","name":"[OB]","descriptions":"Кол-во выстрелов +1","frequency":"1/10"},
+    "20":{"fullName":"Digital Aim","name":"[DA]","descriptions":"Точность стрельбы +10 %","frequency":"1/20"},
+    "21":{"fullName":"SharpShooter","name":"[ShS]","descriptions":"Точность стрельбы +15 %","frequency":"1/50"}
+  },
+
+  "heavyGun":{
+    "22":{"fullName":"Big Heavy Gun","name":"[BHG]","descriptions":"Кол-во выстрелов +5","frequency":"1/70"},
+    "23":{"fullName":"Floo Shots","name":"[FSh]","descriptions":"Кол-во выстрелов +3","frequency":"1/40"},
+    "24":{"fullName":"Deadly Plumbum","name":"[DP]","descriptions":"Повреждение +1","frequency":"1/10"},
+    "25":{"fullName":"Head Shots","name":"[HS]","descriptions":"Повреждение +2","frequency":"1/50"},
+    "26":{"fullName":"High Density","name":"[HD]","descriptions":"Точность +3 %","frequency":"1/40"},
+    "39":{"fullName":"Freakin Gun","name":"[FG]","descriptions":"Дальность стрельбы +2","frequency":"1/70"},
+    "40":{"fullName":"Super High Density","name":"[SHD]","descriptions":"Кол-во выстрелов +7","frequency":"«крайне редко»"},
+    "41":{"fullName":"Heavy Optics","name":"[HO]","descriptions":"Дальность стрельбы +2, Кол-во выстрелов +2, Урон +2","frequency":"«крайне редко»"}
+  },
+
+  "shotgun":{
+    "5":{"fullName":"Fast Loader","name":"[FL]","descriptions":"Кол-во выстрелов +1","frequency":"1/10"},
+    "8":{"fullName":"JackLong","name":"[JL]","descriptions":"Дальность стрельбы +2","frequency":"1/70"},
+    "9":{"fullName":"Salted Bullets","name":"[SB]","descriptions":"Повреждение +10","frequency":"«крайне редко»"}
+  },
+
+  "rocketLauncher":{
+    "27":{"fullName":"Boom Distance","name":"[BD]","descriptions":"Дальность стрельбы +1","frequency":"1/40"},
+    "28":{"fullName":"Super Boom Distance","name":"[SBD]","descriptions":"Дальность стрельбы +2","frequency":"«крайне редко»"},
+    "29":{"fullName":"Kaboom Kaboom","name":"[KK]","descriptions":"Повреждение +10","frequency":"1/70"},
+    "30":{"fullName":"BoomBastic","name":"[BB]","descriptions":"Точность стрельбы +10 %","frequency":"1/70"}
+  },
+
+  "camouflage":{
+    "23":{"fullName":"More mask","name":"[MM]","descriptions":"+1 % маскировки","frequency":"1/10"},
+    "24":{"fullName":"Cigar Smoke","name":"[CS]","descriptions":"+2 % маскировки","frequency":"1/30"},
+    "25":{"fullName":"Invisible Man","name":"[IM]","descriptions":"+3 % маскировки","frequency":"«крайне редко»"},
+    "26":{"fullName":"Strongman","name":"[S]","descriptions":"+2 к «Выносливости»","frequency":"1/50"},
+    "27":{"fullName":"Super Strongman","name":"[SS]","descriptions":"+3 к «Выносливости»","frequency":"«крайне редко»"}
+  },
+
+  "thermalImage":{
+    "19":{"fullName":"Clean Optics","name":"[CO]","descriptions":"+3 % тепловизора","frequency":"«крайне редко»"},
+    "20":{"fullName":"Light Vision","name":"[LV]","descriptions":"+2 % тепловизора","frequency":"1/50"},
+    "21":{"fullName":"Extra Power","name":"[EP]","descriptions":"+1 % тепловизора","frequency":"1/10"},
+    "22":{"fullName":"Bushnell Trophy","name":"[BT]","descriptions":"+2 к «Меткости»","frequency":"1/50"}
+  },
+
+  "headArmor":{
+    "1":{"fullName":"Extra Armour","name":"[EA]","descriptions":"+1 к броне головы","frequency":"1/10"},
+    "2":{"fullName":"Delta Force","name":"[DF]","descriptions":"+2 к броне головы","frequency":"1/30"},
+    "3":{"fullName":"TiHelmet","name":"[TH]","descriptions":"+3 к броне головы","frequency":"1/50"},
+    "10":{"fullName":"Red Cross","name":"[RC]","descriptions":"+1 к «Здоровью»","frequency":"1/10"},
+    "13":{"fullName":"Bushnell Trophy(BT)","name":"[BT]","descriptions":"+2 к «Меткости»","frequency":"1/50"},
+    "14":{"fullName":"Bushnell Elite","name":"[BE]","descriptions":"+3 к «Меткости»","frequency":"«крайне редко»"}
+  },
+
+  "bodyArmor":{
+    "1":{"fullName":"Extra Armour","name":"[EA]","descriptions":"+1 к броне головы","frequency":"1/10"},
+    "5":{"fullName":"Kenny Hope","name":"[KH]","descriptions":"+2 к броне корпуса","frequency":"1/50"},
+    "6":{"fullName":"Heavy Mass","name":"[HM]","descriptions":"+3 к броне корпуса","frequency":"«крайне редко»"},
+    "11":{"fullName":"Red Cross","name":"[RC]","descriptions":"+1 к «Здоровью»","frequency":"1/10"},
+    "15":{"fullName":"Strongman","name":"[S]","descriptions":"+2 к «Выносливости»","frequency":"1/50"},
+    "16":{"fullName":"Power Armour","name":"[PA]","descriptions":"+3 к «Выносливости»","frequency":"«крайне редко»"}
+  },
+
+  "legsArmor":{
+    "7":{"fullName":"Extra Armour","name":"[EA]","descriptions":"+1 к броне ног","frequency":"1/10"},
+    "8":{"fullName":"Bush Stump","name":"[BS]","descriptions":"+2 к броне ног","frequency":"1/50"},
+    "9":{"fullName":"Titanium Buttons","name":"[TB]","descriptions":"+3 к броне ног","frequency":"«крайне редко»"},
+    "12":{"fullName":"Red Cross","name":"[RC]","descriptions":"+1 к «Здоровью»","frequency":"1/10"},
+    "17":{"fullName":"Power Boots","name":"[PB]","descriptions":"+2 к «Силе»","frequency":"1/50"},
+    "18":{"fullName":"Hardened Power Boots","name":"[HPB]","descriptions":"+3 к «Силе»","frequency":"«крайне редко»"}
+  },
+
+  "weapons":{
+  "45":{"fullName":"Bloodlust","name":"[BL]","descriptions":"+10 % к урону","frequency":"«крайне редко»"},
+  "46":{"fullName":"Second Try","name":"[ST]","descriptions":"+10 % к вероятности второго выстрела","frequency":"«крайне редко»"},
+  "47":{"fullName":"Steel Doctor","name":"[SD]","descriptions":"+1 к бонусу «Самолечения»","frequency":"«крайне редко»"},
+  "48":{"fullName":"Optics Master","name":"[OM]","descriptions":"+8 к «Меткости»","frequency":"1/50"},
+  "49":{"fullName":"WunderGewehr","name":"[WG]","descriptions":"+6 % к вероятности второго выстрела","frequency":"1/50"},
+  "50":{"fullName":"Enchanted Grenade","name":"[EG]","descriptions":"+1 к бонусу «Туз в рукаве»","frequency":"1/50"},
+  "51":{"fullName":"More Exp Please","name":"[MEP]","descriptions":"+2 бонуса опыта","frequency":"«крайне редко»"},
+  "52":{"fullName":"More Skills Please","name":"[MSP]","descriptions":"+2 бонуса умений","frequency":"«крайне редко»"},
+  "53":{"fullName":"Super Durable","name":"[SD]","descriptions":"+3 бонуса прочности","frequency":"«крайне редко»"}
+  },
+
+  "armor":{
+    "28":{"fullName":"Extra Armour","name":"[EAA]","descriptions":"+4% активной брони головы","frequency":"1/30"},
+    "29":{"fullName":"Extra Armour","name":"[EAA]","descriptions":"+4% активной брони тела","frequency":"1/30"},
+    "30":{"fullName":"Extra Armour","name":"[EAA]","descriptions":"+4% активной брони ног","frequency":"1/30"},
+    "31":{"fullName":"Heavy Armour","name":"[HAA]","descriptions":"+8% активной брони головы","frequency":"«крайне редко»"},
+    "32":{"fullName":"Heavy Armour","name":"[HAA]","descriptions":"+8% активной брони тела","frequency":"«крайне редко»"},
+    "33":{"fullName":"Heavy Armour","name":"[HAA]","descriptions":"+8% активной брони ног","frequency":"«крайне редко»"},
+    "34":{"fullName":"Extra Skills ","name":"[ES]","descriptions":"+2 бонуса умений","frequency":"«крайне редко»"},
+    "35":{"fullName":"Extra Exp ","name":"[EE]","descriptions":"+2 бонуса опыта","frequency":"«крайне редко»"}
+  }
+}
