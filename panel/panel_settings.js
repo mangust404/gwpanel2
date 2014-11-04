@@ -1366,8 +1366,12 @@
         var drawFunc = function() {
           switch(that.type) {
             case 'checkboxes':
-              var ul = $('<div data-role="collapsible">' + 
-                      '<h4>' + that.title + '</h4>' + 
+              var collapsible = true;
+              if($.type(that.collapsible) != 'undefined') {
+                collapsible = that.collapsible;
+              }
+              var ul = $('<div data-role="' + (collapsible? 'collapsible': '') + '">' + 
+                      (collapsible? '<h4>' + that.title + '</h4>': '') + 
                       '<ul data-role="listview"></ul></div>').appendTo(append_to).find('ul');
               var is_array = $.type(that.options) == 'array';
               $.each(that.options, function(key, value) {
