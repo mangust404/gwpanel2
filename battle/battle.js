@@ -215,10 +215,10 @@ jQuery.extend(panel, {
       });
     });
   },
-  
+  */
   battle_to_allies: function(options) {
     var battlechat = battlechat = document.forms['battlechat'];
-    toAllies = $('<input type="checkbox">')
+    toAllies = $('<input type="checkbox" id="to-allies">')
       .change(function(e) {
         var target = e.currentTarget;
         if(jsEnabled) {
@@ -229,7 +229,8 @@ jQuery.extend(panel, {
         var ch = msgfield.value.charAt(0);
         if(target.checked) {
           if(ch == '~' || ch == '%' || ch == '*') return;
-          msgfield.value='~' + msgfield.value;
+          msgfield.focus();
+          msgfield.value = '~' + msgfield.value;
           msgfield.focus();
         } else {
           if(ch == '~' || ch == '%' || ch == '*') {
@@ -248,8 +249,9 @@ jQuery.extend(panel, {
       if(!enemySelectBox) enemySelectBox = document.getElementsByTagName('select')[0];
       selectedEnemy = $(enemySelectBox).val();
     });
-    $(battlechat).prepend('<font>своим</font>');
+    $(battlechat).prepend('<label for="to-allies">своим</label>');
     var bowrds;
+    /*
     if(options.bwords && (bwords = options.bwords.split('|')) && bwords.length) {
       var wordsdiv = $('<div id="wordsdiv"></div>')
         .css({
@@ -290,7 +292,8 @@ jQuery.extend(panel, {
         $('#wordsdiv:visible').hide();
       });
       btn.before(s);
-    };
+    };*/
+
     var r = $('<button>Обновить</button>')
       .css({'background': '#D0EED0'})
       .click(function(e) {
@@ -299,6 +302,7 @@ jQuery.extend(panel, {
       }).appendTo(battlechat);
   },
   
+  /*
   battle_modify_chat: function() {
     try {
       var logField;

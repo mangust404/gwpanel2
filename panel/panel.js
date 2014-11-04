@@ -732,7 +732,8 @@ window.Panel2 = new function() {
       if(href.indexOf('/battle.php') > -1 || 
          href.indexOf('edit.php') > -1 ||
          href.indexOf('market.php') > -1 ||
-         href.indexOf('attack') > -1) return true;
+         href.indexOf('attack') > -1 || 
+         $(this).html().indexOf('Торговый терминал') == 0) return true;
       if(document.location.toString().indexOf(href) > -1) return true;
       var link_title = $(this).text();
       ajaxGoto(href, link_title);
