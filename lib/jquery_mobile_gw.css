@@ -415,3 +415,9 @@ button[disabled],
 	outline-width: 1px;
 	outline-style: auto;
 }
+
+
+#panel-settings-editor .ui-body .ui-listview > .ui-li-static, #settings-form-popup .ui-body .ui-listview > .ui-li-static {
+	padding: 0;
+	border: 0;
+}
