@@ -66,6 +66,9 @@ jQuery.extend(panel, {
         this.$textarea.show().focus()
         return false;
       });
+    $('<div class="hint">настройки</div>').appendTo($widget).click(function() {
+      $widget.dblclick();
+    });
     setTimeout(function() {
       if($t.height() > $widget.height()) {
         t_overflow = true;
