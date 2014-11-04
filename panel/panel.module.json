@@ -63,7 +63,8 @@
       "title": "Выход",
       "callback": "panel_exit",
       "img": "exit.png",
-      "description": "Кнопка выхода из игры"
+      "description": "Кнопка выхода из игры",
+      "file": "panel_buttons.js"
     }
   }
 }

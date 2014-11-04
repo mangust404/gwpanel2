@@ -1,4 +1,4 @@
-(function(panel) {
+(function(panel, $) {
 jQuery.extend(panel, {
   // функция для базовой кнопки - переход по ссылке
   panel_link: function(options) {
@@ -12,4 +12,4 @@ jQuery.extend(panel, {
     location.href = 'http://www.ganjawars.ru/logout.php';
   }
 });
-})(window.__panel);
+})(window.__panel, jQuery);

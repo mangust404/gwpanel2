@@ -701,7 +701,7 @@ window.Panel2 = new function() {
   
   var loaderTO;
 
-  function ajaxGoto(href, title) {
+  function ajaxGoto(href, title, callback) {
     if(loaderTO > 0) clearTimeout(loaderTO);
     /// показываем крутилку если запрос длится больше 300 миллисекунд
     loaderTO = setTimeout(function() {
@@ -716,6 +716,7 @@ window.Panel2 = new function() {
     $.ajax(href, {
       success: function(data) {
         instance.ajaxUpdateContent(data, href);
+        if(callback) callback();
       },
       error: function() {
         window.location = href;
@@ -2674,14 +2675,14 @@ window.Panel2 = new function() {
           }
         }
       }
-      instance.gotoHref = function(href, element) {
+      instance.gotoHref = function(href, element, callback) {
         if(href.indexOf('http://') == 0 && href.indexOf('http://' + document.domain + '/') == -1) {
           window.location = href;
           return;
         }
         var text = $(element).text();
         if(text.length > 15) text = text.substr(0, 15) + '...';
-        ajaxGoto(href, text);
+        ajaxGoto(href, text, callback);
       }
 
       if(!instance.getCookies().gwp2_n && document.domain.indexOf('gwpanel.org') == -1) {
