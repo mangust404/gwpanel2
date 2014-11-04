@@ -17,7 +17,7 @@
       switch(data.timer) {
         case 'next_quest':
           var endTime = data.starttime + data.timeout * 1000;
-          widget.npcIntervals[data.id] = setInterval(function() {
+          widget.npcIntervals[data.id] = panel.setInterval(function() {
             var now = (new Date()).getTime();
             if(endTime <= now) {
               panel.triggerEvent('npc_timer', {type: data.timer, id: data.id, timeout: data.timeout});
@@ -31,7 +31,7 @@
         break;
         case 'attack':
           var endTime = data.starttime + data.timeout * 1000;
-          widget.npcIntervals[data.id] = setInterval(function() {
+          widget.npcIntervals[data.id] = panel.setInterval(function() {
             var now = (new Date()).getTime();
             if(endTime <= now) {
               panel.triggerEvent('npc_timer', {type: data.timer, id: data.id, timeout: data.timeout});

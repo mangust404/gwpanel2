@@ -84,6 +84,8 @@ window.Panel2 = new function() {
   /// доступ к функциям сервера, для членов синдиката #5787
   var haveServerSync = false;
   
+  /// Списки таймаутов и интервалов, которые не нужно удалять при AJAX-переходах
+  var safeIntervals = [];
   /******************************
   *******Приватные методы********
   *******************************/
@@ -453,7 +455,7 @@ window.Panel2 = new function() {
                   $('.pane-placeholder').remove();
                 }
               }).data('draggable')._mouseDown(e);
-              that[0].dragClassTO = setTimeout(function() {
+              that[0].dragClassTO = instance.setTimeout(function() {
                 that.addClass('ui-draggable-dragging');
               }, 1500);
               //e.stopPropagation();
@@ -729,7 +731,8 @@ window.Panel2 = new function() {
       var href = $(this).attr('href');
       if(href.indexOf('/battle.php') > -1 || 
          href.indexOf('edit.php') > -1 ||
-         href.indexOf('market.php') > -1) return true;
+         href.indexOf('market.php') > -1 ||
+         href.indexOf('attack') > -1) return true;
       if(document.location.toString().indexOf(href) > -1) return true;
       var link_title = $(this).text();
       ajaxGoto(href, link_title);
@@ -2212,7 +2215,15 @@ window.Panel2 = new function() {
       if(!w) w = window;
       var s = w.setTimeout('void 0;', 1000);
       for(var i = s; i > s - 100; i--) {
-        w.clearTimeout(i);
+        if(safeIntervals.indexOf(i) == -1) {
+          w.clearTimeout(i);
+        }
+      };
+      var s = w.setInterval('void 0;', 1000);
+      for(var i = s; i > s - 100; i--) {
+        if(safeIntervals.indexOf(i) == -1) {
+          w.clearInterval(i);
+        }
       };
     },
 
@@ -2610,15 +2621,16 @@ window.Panel2 = new function() {
       if(location.pathname.indexOf('/b0/') == 0 || 
          location.pathname.indexOf('edit.php') > -1 ||
          location.pathname.indexOf('market.php') > -1) return;
+      var $elem;
       if($('table.topill').length > 0) {
         ///новое оформление
-        elem = $('table.topill').next();
+        $elem = $('table.topill').next();
         $('.gw-footer').remove();
       } else {
         ///старое оформление
-        var elem = $('body > table[bgcolor="#f5fff5"]');
-        if(!elem.length) {
-          elem = $('body > table[bgcolor="#d0eed0"]').next('center');
+        var $elem = $('body > table[bgcolor="#f5fff5"]');
+        if(!$elem.length) {
+          $elem = $('body > table[bgcolor="#d0eed0"]').next('center');
         }
       }
       // У нас есть структура форм в document.forms, которую браузер почему-то
@@ -2633,11 +2645,12 @@ window.Panel2 = new function() {
         $(this).addClass('form-' + i + ' broken-form').attr('form-id', i);
         $(this.elements).addClass('form-' + i);
       });
-      if(elem.length > 0) {
-        var $all_elements = elem.nextAll().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
+      if($elem.length > 0) {
+        var $all_elements = $elem.nextAll().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
       } else {
         var $all_elements = $('body').children().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
       }
+
       if($all_elements.length > 0) {
         originalData = $('#gw-content').html();
         originalTitle = document.title;
@@ -2658,6 +2671,7 @@ window.Panel2 = new function() {
         }
       }
       instance.gotoHref = function(href, element) {
+        instance.clearTimeouts();
         if(href.indexOf('http://') == 0 && href.indexOf('http://' + document.domain + '/') == -1) {
           window.location = href;
           return;
@@ -2858,6 +2872,13 @@ window.Panel2 = new function() {
       document.cookie = "gwp2_c=" + domains.join('-') + ";expires=" + myDate 
                + ";domain=." + domain + ";path=/";
     },
+
+    setInterval: function(func, timeout) {
+      var i = setInterval(func, timeout);
+      safeIntervals.push(i);
+      return i;
+    },
+
     /**
     * Публичные аттрибуты
     */

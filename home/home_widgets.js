@@ -80,7 +80,7 @@
       home_health_timer.apply(that, [health]);
 
       if(this.hp_current >= health.hp_max) return;
-      this.healthUpdInterval = setInterval(function() {
+      this.healthUpdInterval = panel.setInterval(function() {
         home_health_timer.apply(that, [health]);
       }, 1000);
     } else if(health.hp_start >= health.hp_max) {
@@ -93,7 +93,7 @@ $.extend(panel, {
   home_health_widget: function(options) {
     var $widget = this;
     $widget.hide();
-    if(location.pathname == '/b0/btl.php' || location.pathname == '/b0/b.php') {
+    if(location.pathname == '/b0/btl.php' || location.pathname == '/b0/b.php' || document.domain == 'quest.ganjawars.ru') {
       return;
     }
     this.options = options;

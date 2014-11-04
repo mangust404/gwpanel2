@@ -36,9 +36,7 @@
       }
 
       panel.loadCSS('outland/pokemon_title.css');
-      $('body').append('<div id="pt_tooltips"></div>');
-
-      $container = $('#pt_tooltips');
+      $container = $('<div class="pt_tooltips"></div>').hide().appendTo(document.body);
 
       $('img[src*="bot100.gif"]').each(
         function(){
@@ -98,7 +96,13 @@
 
           $container.append($tooltip);
         }
-      )
+      );
+
+      $container.fadeIn();
+      
+      panel.onunload(function() {
+        $('.pt_tooltips').remove();
+      });
     }
   });
 })(window.__panel, jQuery);
