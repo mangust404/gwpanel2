@@ -2672,7 +2672,6 @@ window.Panel2 = new function() {
         }
       }
       instance.gotoHref = function(href, element) {
-        instance.clearTimeouts();
         if(href.indexOf('http://') == 0 && href.indexOf('http://' + document.domain + '/') == -1) {
           window.location = href;
           return;
@@ -2810,7 +2809,7 @@ window.Panel2 = new function() {
         window.hptimer = 0;
       }
       $(window).scrollTop(0);
-      //instance.clearTimeouts();
+      instance.clearTimeouts();
       $(document.body).addClass('ajax-processed');
       if(href.indexOf('/sms.php') > -1) $('img[src$="sms.gif"]').closest('a').remove();
       var jqs = false;
