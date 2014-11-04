@@ -86,7 +86,19 @@
 
     "outland_auto_pick": {
       "description": "Автоматически подбирать вещи",
-      "file": "outland.js"
+      "file": "outland.js",
+      "configure": {
+        "type_loot": {
+          "type": "checkboxes",
+          "title": "Что не подбирать",
+          "options": {"test1":"true"},
+          "options": "__panel.type_loot",
+          "default": {},
+          "file": "outland_data.js",
+          "collapsible": false,
+          "description": "Можно выбрать несколько значений"
+        }
+      }
     },
 
     "outland_highlight": {
