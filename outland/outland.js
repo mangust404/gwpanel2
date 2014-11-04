@@ -95,7 +95,7 @@ jQuery.extend(__panel, {
     mlinks = {};
     for(var i = 0; i < document.links.length; i++) {
       var link = document.links[i];
-      if(link.href.search(/walk(\.op|\.ep)\.php\?w=[0-9]+&wx=([0-9\-]+)&wy=([0-9\-]+)/) != -1 && (link.innerHTML.indexOf('t.gif') != -1 || link.innerHTML.indexOf('turist') != -1)) {
+      if(link.href.search(/walk(\.op|\.ep|\.p)\.php\?w=[0-9]+&wx=([0-9\-]+)&wy=([0-9\-]+)/) != -1 && (link.innerHTML.indexOf('t.gif') != -1 || link.innerHTML.indexOf('turist') != -1)) {
         var x = parseInt(RegExp.$2);
         var y = parseInt(RegExp.$3);
         if(!mmoves['topleft'] || (mmoves['topleft'][0] + mmoves['topleft'][1] > x + y)) {
