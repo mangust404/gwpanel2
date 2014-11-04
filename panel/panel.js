@@ -734,6 +734,7 @@ window.Panel2 = new function() {
          href.indexOf('market.php') > -1 ||
          href.indexOf('attack') > -1 || 
          href.indexOf('market') > -1 ||
+         href.indexOf('home.senditem') > -1 ||
          $(this).html().indexOf('Торговый терминал') == 0) return true;
       if(document.location.toString().indexOf(href) > -1) return true;
       var link_title = $(this).text();
