@@ -784,6 +784,29 @@ window.Panel2 = new function() {
       });
 
     }).addClass('processed');
+
+    /// Находим все "осиротевшие"" кнопки отправки и привязываем их к формам
+    $('input[type="submit"]').filter(function() {
+      return $(this).closest('form').length == 0;
+    }).click(function() {
+      var $this = $(this);
+      var $forms = $(this).closest('table').find('form');
+      if($forms.length == 1) {
+        $('<input>', {
+          type: 'hidden',
+          name: $this.attr('name'),
+          value: $this.attr('value')
+        }).appendTo($forms);
+        $forms.sendForm({
+          success: function(data) {
+            instance.ajaxUpdateContent(data, $forms.attr('action'));
+          }
+        });
+      } else {
+        location.href = location.href;
+      }
+      return false;
+    });
   }
 
   /**

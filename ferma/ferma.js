@@ -45,12 +45,16 @@
     } else if(keys['down'] && mlinks['bottom']) {
       __goto = mlinks['bottom'];
     } else if(keys['center']) {
-      if($('input[value="Посадить"]').length) {
+      if($('input[value="Посадить везде"]').length) {
+        $('input[value="Посадить везде"]').click();
+        mlinks = {};
+        return false;
+      } else if($('input[value="Посадить"]').length) {
         $('input[value="Посадить"]').click();
         mlinks = {};
         return false;
       } else {
-        __goto = $('a:contains("Вскопать"), a:contains("Собрать урожай"), a:contains("Полить")').eq(0);
+        __goto = $('a:contains("Собрать весь урожай"), a:contains("Вскопать"), a:contains("Собрать урожай"), a:contains("Полить")').last();
       }
     } else if(keys['space']) {
       __goto = $('td:contains("Ближайшее действие")').find('a');
@@ -109,25 +113,46 @@ jQuery.extend(__panel, {
       $(window).off('keydown', keydown)
         .off('keyup', keyup);
     });
-
-    $('input[value="Посадить"]').click(function() {
-      $form = $(this).closest('form');
-      if(!$form.length) {
-        var _class = $('input[value="Посадить"]').prop('class');
-        if(_class) {
-          $form = $('form.' + _class);
+    panel.get('ferma_hide_hint', function(hide) {
+      var $right_td = $($('table[background$="ferma_bg.jpg"]').parents('table').eq(1).get(0).rows[0].cells[1]);
+      $right_td.css({position: 'relative'});
+      var $hint = $('<div class="hint"></div>')
+        .css({
+          position: 'absolute',
+          padding: '5px 10px',
+          border: '1px dotted #040',
+          opacity: '0.5',
+          bottom: 0,
+          left: 6,
+          right: 0
+        })
+      .html('<h4 style="margin: 5px 0;">Горячие клавиши</h4>\
+<p><b>Стрелки</b> &larr;&uarr;&rarr;&darr; &ndash; переход между грядками</p>\
+<p><b>Пробел</b> &ndash; переход к &laquo;Ближайшему действию&raquo;</p>\
+<p><b>Enter</b> &ndash; выполнение действия (собрать/полить/посадить)</p>')
+      .appendTo($right_td);
+      var $hide_link = $('<a>скрыть</a>').css({
+        position: 'absolute',
+        right: 8,
+        top: 10,
+        cursor: 'pointer',
+        'font-size': 10
+      }).click(function() {
+        if($hide_link.html() == 'скрыть') {
+          $hide_link.html('раскрыть');
+          $hint.find('p').hide();
+          panel.set('ferma_hide_hint', true, function() {}, true);
+        } else {
+          $hide_link.html('скрыть');
+          $hint.find('p').show();
+          panel.set('ferma_hide_hint', false, function() {}, true);
         }
+      }).appendTo($hint);
+      if(hide || $right_td.find('input[value="Посадить"]').length > 0) {
+        $hide_link.html('раскрыть');
+        $hint.find('p').hide();
       }
-      if(!$form.length) {
-        $form = $('form[action$="ferma.php"]');
-      }
-      $form.sendForm({
-        success: function(data) {
-          panel.ajaxUpdateContent(data, $form.attr('action'));
-        }
-      });
-      return false;
-    });
+    }, true);
   }
   
 })
