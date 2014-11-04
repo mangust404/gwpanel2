@@ -1371,7 +1371,7 @@
                 collapsible = that.collapsible;
               }
               var ul = $('<div data-role="' + (collapsible? 'collapsible': '') + '">' + 
-                      (collapsible? '<h4>' + that.title + '</h4>': '') + 
+                      '<h4>' + that.title + '</h4>' + 
                       '<ul data-role="listview"></ul></div>').appendTo(append_to).find('ul');
               var is_array = $.type(that.options) == 'array';
               $.each(that.options, function(key, value) {
