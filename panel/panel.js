@@ -2621,6 +2621,7 @@ window.Panel2 = new function() {
       if(location.pathname.indexOf('/b0/') == 0 || 
          location.pathname.indexOf('edit.php') > -1 ||
          location.pathname.indexOf('market.php') > -1) return;
+      if(document.domain.indexOf('gwpanel.org') > -1) return;
       var $elem;
       if($('table.topill').length > 0) {
         ///новое оформление
@@ -2681,7 +2682,7 @@ window.Panel2 = new function() {
         ajaxGoto(href, text);
       }
 
-      if(!instance.getCookies().gwp2_n) {
+      if(!instance.getCookies().gwp2_n && document.domain.indexOf('gwpanel.org') == -1) {
         instance.loadScript('panel/panel_detect.js', function() {
           instance.panel_detect_greasemonkey(instance.panel_extension_notify);
           if(window.chrome) {

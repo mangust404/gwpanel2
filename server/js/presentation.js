@@ -5,7 +5,7 @@ function presentation_start(callback) {
   myDate.setMonth(myDate.getMonth() + 120);
   var s = document.createElement('script');
   s.type = 'text/javascript';
-  s.src = 'http://gwpanel.org/panel2/version_production.js?_' + (new Date).getTime();
+  s.src = 'http://gwpanel.org/panel2/release/version_production.js?_' + (new Date).getTime();
   s.addEventListener('load', function() {
     document.cookie = "gwp2_v=" + window.current_panel_version + ";expires=" + myDate 
                       + ";domain=.gwpanel.org;path=/";
