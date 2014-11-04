@@ -294,7 +294,7 @@ jQuery.extend(panel, {
       btn.before(s);
     };*/
 
-    var r = $('<input type="submit">Обновить</input>')
+    var r = $('<input type="submit" value="Обновить">')
       .click(function(e) {
         updatedata();
         return false;
