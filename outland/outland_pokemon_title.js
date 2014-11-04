@@ -98,7 +98,7 @@
         }
       );
 
-      $container.fadeIn();
+      $container.show();
       
       panel.onunload(function() {
         $('.pt_tooltips').remove();
