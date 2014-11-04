@@ -90,8 +90,7 @@
       "configure": {
         "type_loot": {
           "type": "checkboxes",
-          "title": "Что не подбирать",
-          "options": {"test1":"true"},
+          "title": "Какой лут не подбирать:",
           "options": "__panel.type_loot",
           "default": {},
           "file": "outland_data.js",

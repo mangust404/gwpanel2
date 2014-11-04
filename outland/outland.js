@@ -159,9 +159,28 @@ jQuery.extend(__panel, {
     if(e.length) document.forms[1].submit();
   },
 
-  outland_auto_pick: function() {
-    var e = document.getElementsByName('take');
-    if(e.length) document.forms[1].submit();
+  outland_auto_pick: function(options) {
+    var $button;
+    var loot, i, length, take, ignoredLoot;
+
+    $button = $('input[value="Взять"]');
+
+    if($button.length){
+      take = true;
+      loot = $button.closest('table').find('b').eq(1).text();
+      ignoredLoot = options.type_loot;
+
+      for(i = 0, length = ignoredLoot.length; i <length; i++){
+        if(ignoredLoot[i] == loot){
+          take = false;
+          break;
+        }
+      }
+      
+      if(take){
+        $button.trigger('click');
+      }
+    }
   },
 
   outland_check_set: function(options) {
