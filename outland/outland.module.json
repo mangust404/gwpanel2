@@ -30,6 +30,15 @@
       "outland_highlight",
       "outland_hotkeys",
       "outland_pokemon_title"
+    ],
+    "/walk.p.php": [
+      "outland_check_set",
+      "outland_auto_sail",
+      "outland_auto_close",
+      "outland_auto_pick",
+      "outland_highlight",
+      "outland_hotkeys",
+      "outland_pokemon_title"
     ]
   },
   "settings": {
