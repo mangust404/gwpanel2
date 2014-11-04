@@ -2,7 +2,7 @@
 jQuery.extend(panel, {
   map_mmupdate: function(event) {
     if($('table[background*="/i/map"]').length > 0) {
-      panel.showFlash('Ошибка! Скорее всего у вас нет GPS-навигатора и ваш транспорт не оборудован им.');
+      panel.showFlash('Ошибка! Скорее всего у вас нет GPS-навигатора и ваш транспорт не оборудован им, либо вы в заявке на бой.');
     }
     //Перезаписываем функцию игры для обновления таймера при передвижении по секторам
     window.mmupdate = function() {
