@@ -294,8 +294,7 @@ jQuery.extend(panel, {
       btn.before(s);
     };*/
 
-    var r = $('<button>Обновить</button>')
-      .css({'background': '#D0EED0'})
+    var r = $('<input type="submit">Обновить</input>')
       .click(function(e) {
         updatedata();
         return false;
