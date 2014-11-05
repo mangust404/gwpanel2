@@ -287,18 +287,7 @@
 
       $('<a class="close-settings ui-btn ui-btn-icon-right ui-icon-delete ui-btn-inline">Закрыть</a>')
         .click(function() {
-          $(document.body).removeClass('panel-settings');
-          $('.configuring').removeClass('configuring');
-          $('.configure').removeClass('configure');
-          panel.unbind('pane_show', listener);
-          /// возвращаем стили на место
-          $.each(document.styleSheets, function(i, stylesheet) {
-            if(stylesheet.disabled) stylesheet.disabled = false;
-          });
-
-          $('#panel-settings-editor').fadeOut(function() {
-            $('#panel-settings-editor, #settings-form-popup').remove();
-          });
+          location.href = location.href;
           return false;
         }).appendTo(editor.find('.close-button-wrapper'));
       /// готовим галерею иконок
