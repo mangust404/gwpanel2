@@ -115,7 +115,7 @@ jQuery.extend(__panel, {
     });
     panel.get('ferma_hide_hint', function(hide) {
       var $right_td = $($('table[background$="ferma_bg.jpg"]').parents('table').eq(1).get(0).rows[0].cells[1]);
-      $right_td.css({position: 'relative'});
+      $right_td.css({position: 'relative', 'padding-bottom': 40});
       var $hint = $('<div class="hint"></div>')
         .css({
           position: 'absolute',
