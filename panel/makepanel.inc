@@ -183,11 +183,7 @@ function make_bootstrap($domain, $path, $libs) {
   
   var delDB = function() {
     if($indexeddb) {
-      $indexeddb.transaction("packages").then(function() {
-      }, function() {
-      }, function(t) {
-        t.deleteObjectStore("packages");
-      });
+      $indexeddb.objectStore("packages").each(function(item) { item.delete() });
     } else if($websql) {
       $websql.dropTable({name: "packages"});
     }
