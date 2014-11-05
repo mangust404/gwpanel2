@@ -421,3 +421,7 @@ button[disabled],
 	padding: 0;
 	border: 0;
 }
+
+.ui-mobile .ui-page-active {
+	background: transparent !important;
+}
