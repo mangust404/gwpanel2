@@ -86,6 +86,7 @@ window.Panel2 = new function() {
   
   /// Списки таймаутов и интервалов, которые не нужно удалять при AJAX-переходах
   var safeIntervals = [];
+  var safeTimeouts = [];
   /******************************
   *******Приватные методы********
   *******************************/
@@ -455,7 +456,7 @@ window.Panel2 = new function() {
                   $('.pane-placeholder').remove();
                 }
               }).data('draggable')._mouseDown(e);
-              that[0].dragClassTO = instance.setTimeout(function() {
+              that[0].dragClassTO = setTimeout(function() {
                 that.addClass('ui-draggable-dragging');
               }, 1500);
               //e.stopPropagation();
@@ -704,7 +705,7 @@ window.Panel2 = new function() {
   function ajaxGoto(href, title, callback) {
     if(loaderTO > 0) clearTimeout(loaderTO);
     /// показываем крутилку если запрос длится больше 300 миллисекунд
-    loaderTO = setTimeout(function() {
+    loaderTO = instance.setTimeout(function() {
       $(document.body).addClass('ajax-loading');
     }, 300);
 
@@ -1019,7 +1020,7 @@ window.Panel2 = new function() {
         mouseSpeedX = (instance.__mouseprevx - e.clientX) / (instance.__mousestartTime - (new Date()).getTime());
         mouseSpeedY = (instance.__mouseprevy - e.clientY) / (instance.__mousestartTime - (new Date()).getTime());
         if(instance.__mousestartTO > 0) clearTimeout(instance.__mousestartTO);
-        instance.__mousestartTO = setTimeout(function() {
+        instance.__mousestartTO = instance.setTimeout(function() {
           instance.__mousestart = false;
           mouseDeltaX = 0;
           mouseDeltaY = 0;
@@ -1324,7 +1325,7 @@ window.Panel2 = new function() {
         __initFunc();
         initInterface();
         /// функция загрузки css довольно долгая, так что выполняем её параллельно
-        setTimeout(function() {
+        instance.setTimeout(function() {
           instance.loadCSS('panel.css');
         }, 1);
         checkTime('fastInit');
@@ -1357,7 +1358,7 @@ window.Panel2 = new function() {
         if(environment == 'testing' && location.search.indexOf('gwpanel_pause') != -1) {
           instance.__ready = __initFunc;
         } else {
-          setTimeout(instance.__load, 1);
+          instance.setTimeout(instance.__load, 1);
         }
       }, domain);
       checkTime('crossWindow init');
@@ -2229,7 +2230,7 @@ window.Panel2 = new function() {
         });
       /// таймаут скрытия по-умолчанию
       if(!timeout) timeout = 20000;
-      setTimeout(function() {
+      instance.setTimeout(function() {
         flash.animate({bottom: parseInt(flash.css('bottom')) + 300},
           { duration: 200, queue: false });
         flash.fadeOut(100, function() {
@@ -2647,7 +2648,8 @@ window.Panel2 = new function() {
       if(!history.pushState) return;
       if(location.pathname.indexOf('/b0/') == 0 || 
          location.pathname.indexOf('edit.php') > -1 ||
-         location.pathname.indexOf('market.php') > -1) return;
+         location.pathname.indexOf('market.php') > -1 || 
+         location.pathname.indexOf('terminal') > -1) return;
       if(document.domain.indexOf('gwpanel.org') > -1) return;
       var $elem;
       if($('table.topill').length > 0) {
@@ -2845,7 +2847,7 @@ window.Panel2 = new function() {
         data = data.substr(11);
         jqs = true;
         var first_hr = data.indexOf('<hr>');
-        if(first_hr < 100) {
+        if(first_hr < 300) {
           data = data.substr(0, first_hr) + data.substr(first_hr + 4);
         }
       } else {
@@ -2906,6 +2908,11 @@ window.Panel2 = new function() {
       return i;
     },
 
+    setTimeout: function(func, timeout) {
+      var i = setTimeout(func, timeout);
+      safeTimeouts.push(i);
+      return i;
+    },
     /**
     * Публичные аттрибуты
     */
