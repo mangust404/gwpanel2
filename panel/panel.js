@@ -166,7 +166,7 @@ window.Panel2 = new function() {
             options.panes[paneID].buttons[index].id = id;
           }
           added_id.push(id);
-          var __button = $('<div class="button ' + that.type + '" id="' + id + '"></div>').append(
+          var $button = $('<div class="button ' + that.type + '" id="' + id + '"></div>').append(
             $('<a><div class="img"><img src="' + img + '" /></div><h3>' + 
               (that.title? that.title: type.title) + 
               '</h3></a>').click(function(e) {
@@ -206,7 +206,7 @@ window.Panel2 = new function() {
                 });
                 __that.parentNode.clicked = true;
                 try {
-                  callback.apply(__button.get(0), [__options]);
+                  callback.apply($button.get(0), [__options]);
                 } catch(e) {
                   instance.dispatchException(e);
                 }
@@ -221,8 +221,14 @@ window.Panel2 = new function() {
           })
           .attr('left', that.left).attr('top', that.top).attr('index', index)
           .appendTo(paneContainer);
+          instance.setTimeout(function() {
+            console.log($button.find('h3').get(0).clientHeight);
+            if($button.find('h3').get(0).clientHeight > 30) {
+              $button.find('h3').addClass('big');
+            }
+          }, 10);
           if(!hold_positions[that.top]) hold_positions[that.top] = {};
-          hold_positions[that.top][that.left] = __button.attr('id');
+          hold_positions[that.top][that.left] = $button.attr('id');
         });
       }
       if((pane_options.buttons && pane_options.buttons.length > 0) || 

@@ -177,6 +177,18 @@
   width: 100%;
 }
 
+.pane .button h3.big {
+  font-size: 10px;
+  line-height: 10px;
+  max-height: 30px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;  
+}
+
 .pane .button .img {
   height: 51px;
 }
