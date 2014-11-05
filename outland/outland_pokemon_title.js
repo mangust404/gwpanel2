@@ -53,15 +53,15 @@
 
           if(options.quantity){
             content += "<div>Количество: "+ currentBot.quantity +"</div>";
-            height += 15;
+            height += 11;
           }
           if(options.power && currentBot.power){
             content += "<div>Мощность: "+ currentBot.power +"</div>";
-            height += 15;
+            height += 11;
           }
           if(options.prize){
             content += "<div>Премия: "+ currentBot.prize +"%</div>";
-            height += 15;
+            height += 11;
           }
 
           position = $bot.position();
@@ -70,7 +70,7 @@
 
           if(position.top < 0){
             position.left = position.left + 20;
-            position.top = 20;
+            position.top = 24;
           }
 
           $tooltip = $('<div>')

@@ -15,17 +15,17 @@ jQuery.extend(panel, {
       var d = new Date;
       window.timeleft = window.arriveTime - parseInt(d.getTime() / 1000);
       if (window.timeleft<0) window.timeleft=0;
-      $('#mmdiv').html(__panel.map_formatTime(timeleft));
+      $('#mmdiv').html(panel.map_formatTime(timeleft));
     };
     
-    __panel.get('moveHref', function(moveHref) {
+    panel.get('moveHref', function(moveHref) {
       if(moveHref && moveHref.length) {
         if($('#gw-content').length) {
           var $target = $('#gw-content');
         } else {
           var $target = $(document.body);
         }
-        __panel.get('moveDest', function(moveDest) {
+        panel.get('moveDest', function(moveDest) {
           if(moveDest) {
             $target.append('<center>Пункт назначения: ' + moveDest + '</center>');
           }
@@ -36,19 +36,19 @@ jQuery.extend(panel, {
         window.BattleRefreshChat = function() {
           $.ajax(location.pathname.substr(1), {
             success: function() {
-              __panel.set('moveHref', 0);
-              location.href = moveHref;
+              panel.set('moveHref', 0);
+              panel.gotoHref(moveHref);
             }
           });
         };
       }
     });
-    __panel.loadScript('map/map_sectors.js', function() {
+    panel.loadScript('map/map_sectors.js', function() {
       if($(document.body).html().match(/в <nobr><b>([^<]+)<\/b>/)) {
         var sector = RegExp.$1;
-        for(var key in __panel.map_names) {
-          if(__panel.map_names[key] == sector) {
-            __panel.set('map_sector', key);
+        for(var key in panel.map_names) {
+          if(panel.map_names[key] == sector) {
+            panel.set('map_sector', key);
             break;
           }
         }
@@ -61,7 +61,7 @@ jQuery.extend(panel, {
     $(function() {
       if($(document.body).html().match(/Район: <a href=['"]*\/map\.php\?sx=([0-9]+)[^=]+sy=([0-9]+)/)) {
         //alert(RegExp.$1 + 'x' + RegExp.$2);
-        __panel.set('map_sector', RegExp.$1 + 'x' + RegExp.$2);
+        panel.set('map_sector', RegExp.$1 + 'x' + RegExp.$2);
       }
     });
   },
@@ -89,8 +89,8 @@ jQuery.extend(panel, {
       }).click(function() {
         var href = this.href;
         //Запоминаем текущую страницу, чтобы по окончании пути на неё вернуться
-        __panel.set('moveHref', location.href, function() {
-          __panel.gotoHref(href);
+        panel.set('moveHref', location.href, function() {
+          panel.gotoHref(href);
         });
         return false;
       });

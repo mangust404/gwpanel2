@@ -91,6 +91,27 @@
 
   }
 
+  function formatNotesDate(d) {
+    var _d = new Date(d);
+    var now = _d.getTime();
+
+    var today = new Date();
+    today.setHours(0); today.setMinutes(0); today.setSeconds(0);
+    today = today.getTime();
+    var yesterday = today - 86400000;
+    var before_yesterday = today - 86400000 * 2;
+
+    var seconds = Math.floor(((new Date).getTime() - _d.getTime()) / 1000);
+    if(seconds < 120) return 'только что';
+    if(seconds < 300) return Math.floor(seconds / 60) + ' минуты назад';
+    if(seconds < 1200) return Math.floor(seconds / 60) + ' минут назад';
+    if(seconds < 3600) return 'меньше часа назад';
+    if(now > today) return 'сегодня, ' + d.replace('+03:00', '').split('T')[1];
+    if(now < today && now > yesterday) return 'вчера, ' + d.replace('+03:00', '').split('T')[1];
+    if(now < yesterday && now > before_yesterday) return 'позавчера, ' + d.replace('+03:00', '').split('T')[1];
+    return d.replace('T', ' ').replace('+03:00', '');
+  }
+
   $.extend(panel, {
     /**
     * Инициализация настроек
@@ -99,6 +120,7 @@
     panel_settings_init: function(callback) {
       /// Убиваем лайвинтернет, иначе он поганит всю страницу, да и все скрипты с document.write
       $.each(document.scripts, function(i, script) {
+        if(!script) return;
         if(!script.src && script.innerHTML.indexOf('document.write') != -1) {
           $(script).remove();
         }
@@ -787,7 +809,7 @@
                   '<p class="release-note active release-note-' + version +
                   '">Выпуск #<span class="release-num">' + version + 
                   '</span>: <span class="notes">' + notes.notes + 
-                  '</span><span class="date">' + notes.date + 
+                  '</span><span class="date">' + formatNotesDate(notes.date) + 
                   '</span></p>'
                 );
               });
@@ -822,7 +844,7 @@
               'release-note-' + keys[i] +
               '">Выпуск #<span class="release-num">' + keys[i] + 
               '</span>: <span class="notes">' + release_notes[keys[i]].notes + 
-              '</span><span class="date">' + release_notes[keys[i]].date + 
+              '</span><span class="date">' + formatNotesDate(release_notes[keys[i]].date) + 
               '</span></p>').appendTo(releases);
             if(i > 10) return;
           }

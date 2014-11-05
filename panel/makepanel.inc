@@ -183,11 +183,7 @@ function make_bootstrap($domain, $path, $libs) {
   
   var delDB = function() {
     if($indexeddb) {
-      $indexeddb.transaction("packages").then(function() {
-      }, function() {
-      }, function(t) {
-        t.deleteObjectStore("packages");
-      });
+      $indexeddb.objectStore("packages").each(function(item) { item.delete() });
     } else if($websql) {
       $websql.dropTable({name: "packages"});
     }
@@ -434,7 +430,8 @@ function make_bootstrap($domain, $path, $libs) {
                               "apply.js"], function() {
           window.__panel = new window.Panel2(environment, panelURL);
           window.__panel.init();
-        }, function() {
+        }, function(e) {
+          if(window.console) console.log(e);
           if(confirm("' . iconv('UTF-8', 'CP1251', 'Упс. Кажется в версии GWPanel, которая у вас сейчас сохранена, произошла какая-то ошибка.\n Скорее всего она уже исправлена, надо просто обновиться. Вы хотите попробовать это сделать?') . '")) {
             var myDate = new Date();
             document.cookie = "gwp2_v=0;expires=" + myDate
