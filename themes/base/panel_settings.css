@@ -340,13 +340,18 @@ body.panel-settings .pane .configure {
 
 .release-note {
   border-bottom: 1px solid #ddd;
-  padding: 12px 8px;
+  padding: 12px 145px 12px 8px;
   margin: 0;
+  position: relative;
 }
 
 .release-note .date {
   float: right;
   color: #aaa;
+  position: absolute;
+  right: 0px;
+  top: 10px;
+  text-align: right;
 }
 
 .release-note .release-num {
