@@ -1484,21 +1484,10 @@ window.Panel2 = new function() {
       var _orgAjax = jQuery.ajaxSettings.xhr;
       jQuery.ajaxSettings.xhr = function () {
         xhr = _orgAjax();
-        xhr.withCredentials = true;
-        //console.log(xhr);
         var origonreadystatechange = xhr.onreadystatechange;
         xhr.onreadystatechange = function() {
-          //you can log xhr.readystate here
-          //console.log('readystate', xhr.readyState);
           if(origonreadystatechange) origonreadystatechange();
         }
-        /*xhr.onloadend = function() {
-          //you can log xhr.readystate here
-          console.log('onloadend', xhr.readyState);
-        }
-        xhr.onprogress = function() {
-          console.log('onprogress', xhr.readyState);
-        }*/
         return xhr;
       };
 
