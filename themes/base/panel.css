@@ -325,3 +325,7 @@ body.map-php.ajax-processed td[width="100%"] + td select {
 .stat-reset {
   cursor: pointer;
 }
+
+#gw-content {
+  padding-bottom: 100px;
+}
