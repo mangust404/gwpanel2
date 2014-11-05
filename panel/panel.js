@@ -222,7 +222,6 @@ window.Panel2 = new function() {
           .attr('left', that.left).attr('top', that.top).attr('index', index)
           .appendTo(paneContainer);
           instance.setTimeout(function() {
-            console.log($button.find('h3').get(0).clientHeight);
             if($button.find('h3').get(0).clientHeight > 30) {
               $button.find('h3').addClass('big');
             }
@@ -2738,7 +2737,6 @@ window.Panel2 = new function() {
             var close = content.lastIndexOf('<!--/#gw-content-->');
             if(open > 0 && close > 0) {
               content = content.substr(open + 21, close - open - 21 - 6);
-              console.log(content);
             }
             //<div id="gw-content">
 
