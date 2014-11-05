@@ -86,6 +86,8 @@ window.Panel2 = new function() {
   
   /// Списки таймаутов и интервалов, которые не нужно удалять при AJAX-переходах
   var safeIntervals = [];
+
+  var xhr;
   /******************************
   *******Приватные методы********
   *******************************/
@@ -701,7 +703,7 @@ window.Panel2 = new function() {
   
   var loaderTO;
 
-  function ajaxGoto(href, title, callback) {
+  function ajaxGoto(href, callback) {
     if(loaderTO > 0) clearTimeout(loaderTO);
     /// показываем крутилку если запрос длится больше 300 миллисекунд
     loaderTO = setTimeout(function() {
@@ -713,9 +715,11 @@ window.Panel2 = new function() {
         callback();
       } catch(e) {}
     }
+    var i;
+    var count = 0;
     $.ajax(href, {
       success: function(data) {
-        instance.ajaxUpdateContent(data, href);
+        instance.ajaxUpdateContent(data, xhr.responseURL || href);
         if(callback) callback();
       },
       error: function() {
@@ -773,7 +777,7 @@ window.Panel2 = new function() {
             if(href == 'object-hdo.php') {
               href = location.href;
             }
-            instance.ajaxUpdateContent(data, href);
+            instance.ajaxUpdateContent(data, xhr.responseURL || href);
           }
         };
 
@@ -799,7 +803,7 @@ window.Panel2 = new function() {
         }).appendTo($forms);
         $forms.sendForm({
           success: function(data) {
-            instance.ajaxUpdateContent(data, $forms.attr('action'));
+            instance.ajaxUpdateContent(data, xhr.responseURL || $forms.attr('action'));
           }
         });
       } else {
@@ -1476,6 +1480,28 @@ window.Panel2 = new function() {
           }
         }, 1800);
       });
+
+      var _orgAjax = jQuery.ajaxSettings.xhr;
+      jQuery.ajaxSettings.xhr = function () {
+        xhr = _orgAjax();
+        xhr.withCredentials = true;
+        //console.log(xhr);
+        var origonreadystatechange = xhr.onreadystatechange;
+        xhr.onreadystatechange = function() {
+          //you can log xhr.readystate here
+          //console.log('readystate', xhr.readyState);
+          if(origonreadystatechange) origonreadystatechange();
+        }
+        /*xhr.onloadend = function() {
+          //you can log xhr.readystate here
+          console.log('onloadend', xhr.readyState);
+        }
+        xhr.onprogress = function() {
+          console.log('onprogress', xhr.readyState);
+        }*/
+        return xhr;
+      };
+
     },
     /**
     * Обработка исключений. Если есть консоль, то выводим в консоль.
@@ -2029,7 +2055,8 @@ window.Panel2 = new function() {
     * в будущем её можно использовать для чего-нибудь ещё, например для слежения
     * за переходами и сбора статистики
     */
-    gotoHref: function(href) {
+    gotoHref: function(href, callback) {
+      if(callback) callback();
       if(contentFrame) {
         contentFrame.contentWindow.postMessage(JSON.stringify({'type': 'location', 'href': href}), '*');
         $('.pane:visible').hide();
@@ -2678,34 +2705,50 @@ window.Panel2 = new function() {
       } else {
         var $all_elements = $('body').children().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
       }
-
-      if($all_elements.length > 0) {
-        originalData = $('#gw-content').html();
+      var $content = $('#gw-content');
+      $content.after('<!--/#gw-content-->');
+      if($all_elements.length > 0 && $content.length > 0) {
         originalTitle = document.title;
 
-        history.replaceState({data: originalData, title: document.title}, document.title, location.href);
+        history.replaceState({
+          data: '<head>' + $('head').html() + '</head><body>' + 
+          $('body').html() + '</body>', 
+          title: document.title
+        }, document.title, location.href);
 
         $(ajaxifyContent);
 
         window.onpopstate = function(event) {
           if(event.state && event.state.data && event.state.title) {
-            $('#gw-content').html(event.state.data);
-            document.title = event.state.title;
+            /*var $div = $('<div>').hide().html(event.state.data).appendTo(document.body);
+            if($div.find('#gw-content').length > 0) {
+              var content = $div.find('#gw-content').html();
+            }*/
+            var content = event.state.data;
+            var open = content.indexOf('<div id="gw-content">');
+            var close = content.lastIndexOf('<!--/#gw-content-->');
+            if(open > 0 && close > 0) {
+              content = content.substr(open + 21, close - open - 21 - 6);
+              console.log(content);
+            }
+            //<div id="gw-content">
+
+            instance.ajaxUpdateContent(content, null, true);
+
+            /*document.title = event.state.title;
             __initFunc();
             ajaxifyContent();
             tearDownFloatWidgets();
-            initFloatWidgets();
+            initFloatWidgets();*/
           }
         }
       }
-      instance.gotoHref = function(href, element, callback) {
+      instance.gotoHref = function(href, callback) {
         if(href.indexOf('http://') == 0 && href.indexOf('http://' + document.domain + '/') == -1) {
           window.location = href;
           return;
         }
-        var text = $(element).text();
-        if(text.length > 15) text = text.substr(0, 15) + '...';
-        ajaxGoto(href, text, callback);
+        return ajaxGoto(href, callback);
       }
 
       if(!instance.getCookies().gwp2_n && document.domain.indexOf('gwpanel.org') == -1) {
@@ -2826,7 +2869,7 @@ window.Panel2 = new function() {
         }).appendTo(document.body);
     },
 
-    ajaxUpdateContent: function(data, href) {
+    ajaxUpdateContent: function(data, href, noHistory) {
       if(window.hptimer_header > 0) {
         clearTimeout(window.hptimer_header);
         window.hptimer_header = 0;
@@ -2838,7 +2881,7 @@ window.Panel2 = new function() {
       $(window).scrollTop(0);
       instance.clearTimeouts();
       $(document.body).addClass('ajax-processed');
-      if(href.indexOf('/sms.php') > -1) $('img[src$="sms.gif"]').closest('a').remove();
+      if(href && href.indexOf('/sms.php') > -1) $('img[src$="sms.gif"]').closest('a').remove();
       var jqs = false;
       var __title;
       if(data.indexOf('JQS loaded.') == 0) {
@@ -2857,6 +2900,8 @@ window.Panel2 = new function() {
           var title_close = data.indexOf('</title>', title_open);
           __title = data.substr(title_open + 7, title_close - title_open - 7);
           data = data.substr(body_end + 1, body_close - body_end - 1);
+        } else {
+          jqs = true;
         }
       }
       data = data.replace(/<script[^>]*>.*?<\/script>/ig, '');
@@ -2870,7 +2915,13 @@ window.Panel2 = new function() {
       }
       //if(title) document.title = title + ' :: Ganjawars.ru :: Ганджубасовые войны';
       $(document.body).removeClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
-      history.pushState({data: data, title: document.title}, document.title, href);
+      if(!noHistory) {
+        history.pushState({
+          data: '<head>' + jQuery('head').html() + '</head><body>' + 
+          jQuery('body').html() + '</body>', 
+          title: document.title
+        }, document.title, href);
+      }
       $(document.body).addClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
       clearTimeout(loaderTO);
       loaderTO = 0;
@@ -2906,6 +2957,13 @@ window.Panel2 = new function() {
       return i;
     },
 
+    /**
+    * Функция возвращает responseURL последнего AJAX-запроса.
+    * её реализовали совсем недавно, см. http://stackoverflow.com/questions/8056277/how-to-get-response-url-in-xmlhttprequest
+    */
+    responseURL: function() {
+      return xhr.responseURL;
+    },
     /**
     * Публичные аттрибуты
     */
