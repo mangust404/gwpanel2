@@ -2669,7 +2669,11 @@ window.Panel2 = new function() {
       if($('table.topill').length > 0) {
         ///новое оформление
         $elem = $('table.topill').next();
-        $('.gw-footer').remove();
+        try {
+          $('.gw-footer').remove();
+        } catch(e) {
+          /// почему то в хроме выдаёт ошибку в этом месте из-за конфликта с Prototype
+        }
       } else {
         ///старое оформление
         var $elem = $('body > table[bgcolor="#f5fff5"]');
@@ -2695,6 +2699,14 @@ window.Panel2 = new function() {
         var $all_elements = $('body').children().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
       }
       var $content = $('#gw-content');
+
+      /// вырезаем все оставшиеся текстовые ноды и добавляем к содержимому
+      var __break = false;
+      var textNodes = $content.parent().contents().filter(function() {
+        if(this.id == 'gw-content') __break = true;
+        return this.nodeType === 3 && !__break && this.data.length > 1;
+      });
+      textNodes.remove().prependTo($content);
       $content.after('<!--/#gw-content-->');
       if($all_elements.length > 0 && $content.length > 0) {
         originalTitle = document.title;
@@ -2877,7 +2889,7 @@ window.Panel2 = new function() {
         data = data.substr(11);
         jqs = true;
         var first_hr = data.indexOf('<hr>');
-        if(first_hr < 100) {
+        if(first_hr < 200) {
           data = data.substr(0, first_hr) + data.substr(first_hr + 4);
         }
       } else {

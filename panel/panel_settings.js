@@ -121,6 +121,7 @@
     panel_settings_init: function(callback) {
       /// Убиваем лайвинтернет, иначе он поганит всю страницу, да и все скрипты с document.write
       $.each(document.scripts, function(i, script) {
+        if(!script) return;
         if(!script.src && script.innerHTML.indexOf('document.write') != -1) {
           $(script).remove();
         }
