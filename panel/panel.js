@@ -736,9 +736,8 @@ window.Panel2 = new function() {
       var href = $(this).attr('href');
       if(href.indexOf('/battle.php') > -1 || 
          href.indexOf('edit.php') > -1 ||
-         href.indexOf('market.php') > -1 ||
-         href.indexOf('attack') > -1 || 
          href.indexOf('market') > -1 ||
+         href.indexOf('attack') > -1 || 
          href.indexOf('home.senditem') > -1 ||
          href.indexOf('logout.php') > -1 ||
          $(this).html().indexOf('Торговый терминал') == 0) return true;
