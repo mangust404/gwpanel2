@@ -2675,7 +2675,7 @@ window.Panel2 = new function() {
       if(!history.pushState) return;
       if(location.pathname.indexOf('/b0/') == 0 || 
          location.pathname.indexOf('edit.php') > -1 ||
-         location.pathname.indexOf('market.php') > -1) return;
+         location.pathname.indexOf('market') > -1) return;
       if(document.domain.indexOf('gwpanel.org') > -1) return;
       var $elem;
       if($('table.topill').length > 0) {
