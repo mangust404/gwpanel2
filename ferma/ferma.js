@@ -131,26 +131,35 @@ jQuery.extend(__panel, {
 <p><b>Пробел</b> &ndash; переход к &laquo;Ближайшему действию&raquo;</p>\
 <p><b>Enter</b> &ndash; выполнение действия (собрать/полить/посадить)</p>')
       .appendTo($right_td);
+      function hide() {
+        $hint.find('*').hide().end().css({
+          left: 'auto'
+        });;
+        $hide_link.html('?').show().css({position: 'static'});
+      }
+      function show() {
+        $hide_link.html('скрыть').show().css({position: 'absolute'});
+        $hint.find('*').show();
+      }
       var $hide_link = $('<a>скрыть</a>').css({
         position: 'absolute',
         right: 8,
         top: 10,
         cursor: 'pointer',
+        padding: '4px 7px',
+        margin: '-4px -7px',
         'font-size': 10
       }).click(function() {
         if($hide_link.html() == 'скрыть') {
-          $hide_link.html('раскрыть');
-          $hint.find('p').hide();
+          hide();
           panel.set('ferma_hide_hint', true, function() {}, true);
         } else {
-          $hide_link.html('скрыть');
-          $hint.find('p').show();
+          show();
           panel.set('ferma_hide_hint', false, function() {}, true);
         }
       }).appendTo($hint);
-      if(hide || $right_td.find('input[value="Посадить"]').length > 0) {
-        $hide_link.html('раскрыть');
-        $hint.find('p').hide();
+      if(hide) {
+        hide();
       }
     }, true);
   }
