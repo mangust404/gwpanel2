@@ -1,5 +1,6 @@
 QUnit.module('panel_settings');
 
+(function($) {
 function waitPanelInitialization(__window, callback) {
   // Ждём появления в документе указанного окна CSS-ки panel.css
   var check = function() {
@@ -1423,3 +1424,5 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
   //$('#qunit-fixture').css({height: 500, width: 1000, position: 'static'}).show();
   
 });
+
+})(jQuery);

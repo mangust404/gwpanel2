@@ -1,5 +1,6 @@
 QUnit.module('panel');
 
+(function($) {
 function waitPanelInitialization(__window, callback) {
   // Ждём появления в документе указанного окна CSS-ки panel.css
   var check = function() {
@@ -1728,3 +1729,5 @@ QUnit.test('Исправление форм, продвинутый вариан
   assert.equal($fixture.find('select' + className + '[name=sxy]').length, 1);
   assert.equal($fixture.find('textarea' + className + '[name=textarea]').length, 1);
 });
+
+})(jQuery);
