@@ -751,8 +751,7 @@ window.Panel2 = new function() {
          href.indexOf('logout.php') > -1 ||
          $(this).html().indexOf('Торговый терминал') == 0) return true;
       if(document.location.toString().indexOf(href) > -1) return true;
-      var link_title = $(this).text();
-      ajaxGoto(href, link_title);
+      ajaxGoto(href);
       return false;
     });
   }
@@ -764,7 +763,7 @@ window.Panel2 = new function() {
       var onclick = $(this).attr('onclick');
       var match = onclick.match(/(document|window)\.location=["\']+([^"']+)["\']+/);
       if(match) {
-        $(this).attr('onclick', onclick.replace(match[0], '__panel.gotoHref("' + match[2] + '", this)'));
+        $(this).attr('onclick', onclick.replace(match[0], '__panel.gotoHref("' + match[2] + '")'));
       }
     });
     $('.broken-form:not(.processed)').each(function() {
@@ -3026,6 +3025,10 @@ $.fn.sendForm = function(options) {
     } else {
       var s_data = $form.serializeArray();
     }
+
+    __panel.setTimeout(function() {
+      $(document.body).addClass('ajax-loading');
+    }, 300);
 
     /// функция-обход для отправки через браузер
     function regularSend() {
