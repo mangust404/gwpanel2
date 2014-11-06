@@ -744,7 +744,7 @@ window.Panel2 = new function() {
          href.indexOf('edit.php') > -1 ||
          href.indexOf('market') > -1 ||
          href.indexOf('attack') > -1 || 
-         href.indexOf('home.senditem') > -1 ||
+         href.indexOf('home.') > -1 ||
          href.indexOf('logout.php') > -1 ||
          $(this).html().indexOf('Торговый терминал') == 0) return true;
       if(document.location.toString().indexOf(href) > -1) return true;
@@ -2669,6 +2669,7 @@ window.Panel2 = new function() {
       if(!history.pushState) return;
       if(location.pathname.indexOf('/b0/') == 0 || 
          location.pathname.indexOf('edit.php') > -1 ||
+         location.pathname.indexOf('home.') > -1 ||
          location.pathname.indexOf('terminal') > -1 ||
          location.pathname.indexOf('market') > -1) return;
       if(document.domain.indexOf('gwpanel.org') > -1) return;
