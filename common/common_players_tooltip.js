@@ -7,13 +7,24 @@
       // Интервал, через который имя для передачи (денег, предметов) будет удалено (ms).
       var clearDataTimeout = 300000;
 
-      var $player, $toolWindow, $playerLink, $playerLinkOnInfo;
+      var $toolWindow;
       var showWaitId, hideWaitId;
 
-      $toolWindow = $('<div id="playerToolWindow"></div>');
+      $toolWindow = $('<div id="playerToolWindow"></div>')
+        .mouseenter(
+          function(){
+            clearTimeout(hideWaitId);
+          }
+        ).mouseleave(
+        function(){
+          hideWaitId = setTimeout(function(){
+            $toolWindow.fadeOut();
+          }, 500);
+        }
+      );
 
       if(location.pathname == "/info.php"){
-        $playerLinkOnInfo = $('img[src*="male.gif"]').closest('td').find('b');
+        var $playerLinkOnInfo = $('img[src*="male.gif"]').closest('td').find('b');
         $playerLinkOnInfo.replaceWith(
           $('<a>')
             .prop('href', location.href)
@@ -22,43 +33,23 @@
         );
       }
 
-      $player = $('a[href*="info.php?id="]');
-
-      $player.mouseenter(
+      $('a[href*="info.php?id="]').mouseenter(
         function(){
-          $playerLink = $(this);
+          var $playerLink = $(this);
           showWaitId = setTimeout(function(){
             createToolWindow($toolWindow);
             showToolWindow($playerLink)
           }, 750);
           if($playerLink.text().search('info.php?') != -1) clearTimeout(showWaitId);
         }
-      );
-
-      $player.mouseleave(
+      ).mouseleave(
         function(){
           clearTimeout(showWaitId);
           hideWaitId = setTimeout(function(){
             $toolWindow.fadeOut();
           }, 500);
         }
-      );
-
-      $toolWindow.mouseenter(
-        function(){
-          clearTimeout(hideWaitId);
-        }
-      );
-
-      $toolWindow.mouseleave(
-        function(){
-          hideWaitId = setTimeout(function(){
-            $toolWindow.fadeOut();
-          }, 500);
-        }
-      );
-
-      $player.click(
+      ).click(
         function(){
           clearTimeout(showWaitId);
         }
