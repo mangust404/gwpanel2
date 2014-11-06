@@ -1,4 +1,4 @@
-(function(panel) {
+(function(panel, $) {
   var npcLocationsUpdate, npcLocationsUpdateScript;
   
   function npc_timerFormat(s) {
@@ -167,4 +167,4 @@ jQuery.extend(panel, {
   }
   
 });
-})(window.__panel);
+})(window.__panel, jQuery);

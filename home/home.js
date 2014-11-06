@@ -1,4 +1,4 @@
-(function(panel) {
+(function(panel, $) {
 jQuery.extend(panel, {
   home_durability: function(options) {
     __panel.loadScript('data/items.js', function() {
@@ -32,4 +32,4 @@ jQuery.extend(panel, {
     });
   }
 });
-})(window.__panel);
+})(window.__panel, jQuery);
