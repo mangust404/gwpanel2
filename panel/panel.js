@@ -2882,6 +2882,9 @@ window.Panel2 = new function() {
     },
 
     ajaxUpdateContent: function(data, href, noHistory) {
+      if(href.indexOf('bid=') !== -1) {
+        location.href = href;
+      }
       if(window.hptimer_header > 0) {
         clearTimeout(window.hptimer_header);
         window.hptimer_header = 0;

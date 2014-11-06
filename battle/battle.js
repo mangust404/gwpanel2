@@ -11,7 +11,7 @@
   var battleMovesRequest;
   var selectedEnemy, savedMove;
 
-jQuery.extend(panel, {
+$.extend(panel, {
   battle_fix: function(options) {
     if(battleFixed) return;
     window.bf3 = window.bf3.replace(/<a/, '<a id="updbutton"');
@@ -888,4 +888,4 @@ jQuery.extend(panel, {
     };
   }*/
 
-})})(window.__panel, $);
+})})(window.__panel, jQuery);
