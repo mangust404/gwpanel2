@@ -7,7 +7,7 @@ jQuery.extend(panel, {
     //Перезаписываем функцию игры для обновления таймера при передвижении по секторам
     window.mmupdate = function() {
       if (window.mmtimer>=0) clearTimeout(window.mmtimer);
-      window.mmtimer = setTimeout('mmupdate()',1000);
+      window.mmtimer = panel.setTimeout('mmupdate()',1000);
       if(!window.arriveTime) {
         var d = new Date;
         window.arriveTime = parseInt(d.getTime() / 1000) + timeleft - 1;

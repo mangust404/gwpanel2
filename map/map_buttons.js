@@ -1,15 +1,34 @@
 (function(panel, $) {
+  function distance(sector1, sector2) {
+    var ar1 = sector1.split('x');
+    var ar2 = sector2.split('x');
+    return Math.sqrt(Math.pow(ar1[0] - ar2[0], 2) + Math.pow(ar1[1] - ar2[1], 2));
+  }
+
+  function closestPort(current_sector) {
+    var min_sector;
+    var min_distance = 20;
+    $.each(panel.map_ports, function(port_sector, port_data) {
+      var d = distance(current_sector, port_sector);
+      if(d < min_distance) {
+        min_distance = d;
+        min_sector = port_sector;
+      }
+    });
+    return panel.map_ports[min_sector].sector;
+  }
+
 jQuery.extend(panel, {
   // функция для базовой кнопки - переход по ссылке
   map_gohome: function(options) {
     if(options.sector) {
-      __panel.get('map_sector', function(sector) {
+      panel.get('map_sector', function(sector) {
         if(sector == options.sector) {
-          __panel.gotoHref('http://www.ganjawars.ru/me/');
+          panel.gotoHref('http://www.ganjawars.ru/me/');
         } else {
-          __panel.set('moveHref', 'http://www.ganjawars.ru/me/', function() {
-            __panel.set('moveDest', 'Домашняя страничка', function() {
-              __panel.gotoHref('http://www.ganjawars.ru/map.move.php?gps=1&sxy=' + options.sector);
+          panel.set('moveHref', 'http://www.ganjawars.ru/me/', function() {
+            panel.set('moveDest', 'Домашняя страничка', function() {
+              panel.gotoHref('http://www.ganjawars.ru/map.move.php?gps=1&sxy=' + options.sector);
             });
           });
         }
@@ -20,78 +39,108 @@ jQuery.extend(panel, {
   },
 
   map_goport: function(options) {
-    if(options.sector) {
-      __panel.loadScript('map/map_sectors.js', function() {
-        var port_href = 'http://www.ganjawars.ru/object.php?id=' + __panel.map_ports[options.sector].id;
-        __panel.get('map_sector', function(sector) {
-          if(sector == options.sector) {
-            __panel.gotoHref(port_href);
-          } else {
-            __panel.set('moveHref', port_href, function() {
-              __panel.set('moveDest', 'Порт в ' + __panel.map_ports[options.sector].name, function() {
-                __panel.gotoHref('http://www.ganjawars.ru/map.move.php?gps=1&sxy=' + options.sector);
-              });
-            });
+    panel.loadScript('map/map_sectors.js', function() {
+      panel.get('map_sector', function(current_sector) {
+        var port = options.sector;
+        if(!port) {
+          port_id = closestPort(current_sector);
+          for(var sector in panel.map_ports) {
+            if(panel.map_ports[sector].sector == port_id) {
+              port = sector;
+              break;
+            }
           }
-        });
+          if(!port) {
+            alert('Не удалось найти ближайший порт');
+            return;
+          }
+        }
+        var port_href = 'http://www.ganjawars.ru/object.php?id=' + panel.map_ports[port].id;
+        if(current_sector == port) {
+          panel.gotoHref(port_href);
+        } else {
+          panel.set('moveHref', port_href, function() {
+            panel.set('moveDest', 'Порт в ' + panel.map_ports[port].name, function() {
+              panel.gotoHref('http://www.ganjawars.ru/map.move.php?gps=1&sxy=' + port);
+            });
+          });
+        }
       });
-    } else {
-      alert('не указан порт');
-    }
+    });
   },
 
   map_goout: function(options) {
-    if(options.port) {
-      __panel.loadScript('map/map_sectors.js', function() {
-        __panel.get('map_sector', function(sector) {
-          var port_href;
-          for(var key in __panel.map_ports) {
-            if(__panel.map_ports[key].sector == options.port) {
-              port_href = 'http://www.ganjawars.ru/map.move.php?gps=1&sxy=' + key;
-              break;
-            }
+    panel.loadScript('map/map_sectors.js', function() {
+      panel.get('map_sector', function(sector) {
+        var port = options.port;
+        if(!port) {
+          port = closestPort(sector);
+          if(!port) {
+            alert('Не удалось найти ближайший порт');
+            return;
           }
-          if(__panel.map_ports[sector] && __panel.map_ports[sector].sector == options.port) {
-            __panel.gotoHref('http://www.ganjawars.ru/map.move.php?seaway=1&sectorin=12&sectorout=' + options.port + '&confirm=1');
-          } else {
-            __panel.set('moveHref', 'http://www.ganjawars.ru/map.move.php?seaway=1&sectorin=12&sectorout=' + options.port + '&confirm=1', function() {
-              __panel.set('moveDest', 'Ejection Point', function() {
-                __panel.gotoHref(port_href);
-              });
+        }
+        /// если мы уже в портовом секторе
+        if($.type(panel.map_ports[sector]) != 'undefined' && 
+            panel.map_ports[sector].sector > 0) {
+          panel.gotoHref('http://www.ganjawars.ru/map.move.php?seaway=1&sectorin=12&sectorout=' + panel.map_ports[sector].sector + '&confirm=1');
+          return;
+        }
+        var port_href;
+        for(var key in panel.map_ports) {
+          if(panel.map_ports[key].sector == port) {
+            port_href = 'http://www.ganjawars.ru/map.move.php?gps=1&sxy=' + key;
+            break;
+          }
+        }
+        if(panel.map_ports[sector] && panel.map_ports[sector].sector == port) {
+          panel.gotoHref('http://www.ganjawars.ru/map.move.php?seaway=1&sectorin=12&sectorout=' + port + '&confirm=1');
+        } else {
+          panel.set('moveHref', 'http://www.ganjawars.ru/map.move.php?seaway=1&sectorin=12&sectorout=' + port + '&confirm=1', function() {
+            panel.set('moveDest', 'Ejection Point', function() {
+              panel.gotoHref(port_href);
             });
-          }
-        });
+          });
+        }
       });
-    } else {
-      alert('не указан порт');
-    }
+    });
   },
   
   map_gooverlord: function(options) {
-    if(options.port) {
-      __panel.loadScript('map/map_sectors.js', function() {
-        __panel.get('map_sector', function(sector) {
-          var port_href;
-          for(var key in __panel.map_ports) {
-            if(__panel.map_ports[key].sector == options.port) {
-              port_href = 'http://www.ganjawars.ru/map.move.php?gps=1&sxy=' + key;
-              break;
-            }
+    panel.loadScript('map/map_sectors.js', function() {
+      panel.get('map_sector', function(sector) {
+        var port = options.port;
+        if(!port) {
+          port = closestPort(sector);
+          if(!port) {
+            alert('Не удалось найти ближайший порт');
+            return;
           }
-          if(__panel.map_ports[sector] && __panel.map_ports[sector].sector == options.port) {
-            __panel.gotoHref('http://www.ganjawars.ru/map.move.php?seaway=1&sectorin=13&sectorout=' + options.port + '&confirm=1');
-          } else {
-            __panel.set('moveHref', 'http://www.ganjawars.ru/map.move.php?seaway=1&sectorin=13&sectorout=' + options.port + '&confirm=1', function() {
-              __panel.set('moveDest', 'Overlord', function() {
-                __panel.gotoHref(port_href);
-              });
+        }
+        /// если мы уже в портовом секторе
+        if($.type(panel.map_ports[sector]) != 'undefined' && 
+            panel.map_ports[sector].sector > 0) {
+          panel.gotoHref('http://www.ganjawars.ru/map.move.php?seaway=1&sectorin=13&sectorout=' + panel.map_ports[sector].sector + '&confirm=1');
+          return;
+        }
+        var port_href;
+        for(var key in panel.map_ports) {
+          if(panel.map_ports[key].sector == port) {
+            port_href = 'http://www.ganjawars.ru/map.move.php?gps=1&sxy=' + key;
+            break;
+          }
+        }
+        if(panel.map_ports[sector] && panel.map_ports[sector].sector == port) {
+          panel.gotoHref('http://www.ganjawars.ru/map.move.php?seaway=1&sectorin=13&sectorout=' + port + '&confirm=1');
+        } else {
+          panel.set('moveHref', 'http://www.ganjawars.ru/map.move.php?seaway=1&sectorin=13&sectorout=' + port + '&confirm=1', function() {
+            panel.set('moveDest', 'Overlord', function() {
+              panel.gotoHref(port_href);
             });
-          }
-        });
+          });
+        }
       });
-    } else {
-      alert('не указан порт');
-    }
+    });
   }
 });
 })(window.__panel, jQuery);

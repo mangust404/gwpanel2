@@ -186,7 +186,7 @@ $.extend(panel, {
         };   
       }
     }, true);
-    $('<a class="stat-reset">сброс</a>').css({
+    $('<a class="stat-reset">сбросить счётчики</a>').css({
       position: 'absolute',
       'font-size': '8px',
       'margin-left': '44px',

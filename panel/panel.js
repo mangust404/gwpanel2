@@ -1,4 +1,9 @@
 window.jQuery = jQuery.noConflict();
+if(!window.console) {
+  window.console = {
+    log: function() {}
+  }
+}
 
 (function($) {
 
@@ -718,11 +723,7 @@ window.Panel2 = new function() {
       $(document.body).addClass('ajax-loading');
     }, 300);
 
-    while(callback = tearDownStack.pop()) {
-      try {
-        callback();
-      } catch(e) {}
-    }
+    instance.tearDown();
     var i;
     var count = 0;
     $.ajax(href, {
@@ -2882,7 +2883,7 @@ window.Panel2 = new function() {
     },
 
     ajaxUpdateContent: function(data, href, noHistory) {
-      if(href.indexOf('bid=') !== -1) {
+      if(href && href.indexOf('bid=') !== -1) {
         location.href = href;
       }
       if(window.hptimer_header > 0) {
@@ -2982,7 +2983,19 @@ window.Panel2 = new function() {
     * её реализовали совсем недавно, см. http://stackoverflow.com/questions/8056277/how-to-get-response-url-in-xmlhttprequest
     */
     responseURL: function() {
-      return xhr.responseURL;
+      if(xhr) {
+        return xhr.responseURL;
+      } else {
+        return location.href;
+      }
+    },
+
+    tearDown: function() {
+      while(callback = tearDownStack.pop()) {
+        try {
+          callback();
+        } catch(e) {}
+      }
     },
     /**
     * Публичные аттрибуты
@@ -3013,6 +3026,22 @@ $.fn.sendForm = function(options) {
     } else {
       var s_data = $form.serializeArray();
     }
+
+    /// функция-обход для отправки через браузер
+    function regularSend() {
+      var $new_form = $('<form>', {
+        method: 'POST',
+        action: $form.attr('action') || location.href
+      }).appendTo(document.body);
+      $.each(s_data, function(i, item) {
+        $('<input>', {
+          type: 'hidden',
+          name: item.name,
+          value: item.value
+        }).appendTo($new_form);
+      });
+      $new_form.submit();
+    }
     /// Обходим функцию jQuery.param, чтобы данные не кодировались повторно
     var params = [];
     jQuery.each(s_data, function() {
@@ -3021,13 +3050,25 @@ $.fn.sendForm = function(options) {
     /// отдаём в data строку
     options.data = params.join('&');
 
-    if($form.attr('method') && $form.attr('method').toLowerCase() == 'get') {
+    /// на ауте не работает форма отплытия если она отправляется сперва аяксом 
+    /// а потом обычным способом, надо сразу отправлять обычным
+    if(location.hostname == 'quest.ganjawars.ru' && options.data.indexOf('sectorout') > -1) {
+      regularSend();
+    }
+
+    if(!$form.attr('method') || ($form.attr('method') && $form.attr('method').toLowerCase() == 'get')) {
       var href = ($form.attr('action') || location.pathname);
       if(href.indexOf('http:') == -1) {
         href = location.protocol + '//' + location.hostname + href;
       }
       __panel.gotoHref(href + '?' + options.data)
       return;
+    }
+
+    options.error = function(t) {
+      /// В случае ошибки, скорее всего это редирект, 
+      /// отправляем форму средствами браузера
+      regularSend();
     }
 
     $.ajax($form.attr('action') || location.href, options);
@@ -3144,7 +3185,11 @@ $.fn.html = function(html) {
 
       /// вытаскиваем все баттоны, textarea
     });*/
+    if(__panel.responseURL().indexOf('quest.ganjawars.ru') != -1) {
+      html = html.replace('document.forms.chatform.newline.focus()', 'jQuery("#newline").focus();');
+    }
   }
+
   var result = origHtml.apply(this, [html]);
 
   if(forms_fixed) {
@@ -3156,13 +3201,13 @@ $.fn.html = function(html) {
       var action = $this.attr('action');
       if(action.indexOf('javascript:') > -1) {
         /// Добавляем в форму все элементы, которые были из неё удалены
-
-        return true;
+        throw 'javascript form';
       }
 
       $(this).sendForm({
         data: $('.gwp-form-' + index + '-item:not([type=submit]):not([type=image])').serializeArray(),
         success: function(data) {
+          __panel.tearDown();
           __panel.ajaxUpdateContent(data, __panel.responseURL() || $this.attr('action'));
         }
       });
@@ -3196,6 +3241,7 @@ $.fn.html = function(html) {
         $form.sendForm({
           data: data,
           success: function(data) {
+            __panel.tearDown();
             __panel.ajaxUpdateContent(data, __panel.responseURL() || $form.attr('action'));
           }
         });
@@ -3212,9 +3258,14 @@ $.fn.html = function(html) {
         });
       }
 
+      var origSubmit = this.submit;
       var that = this;
       this.submit = function() {
-        $(that).submit();
+        try {
+          $(that).submit();
+        } catch(e) {
+          origSubmit();
+        }
       }
     });
   }

@@ -31,7 +31,7 @@
     this.progressBarText.html(text);
     
     this.hp_current += health.hp_speed;
-    if($('#hpheader').length > 0) {
+    if($('#hpheader').length > 0 && !isNaN(this.hp_current) && this.hp_current < this.hp_max) {
       $('#hpheader font').html(parseInt(this.hp_current));
     }
     if(this.hp_current >= health.hp_max) {
