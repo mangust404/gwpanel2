@@ -772,7 +772,7 @@ window.Panel2 = new function() {
       $('input.form-' + form_id + '[type=submit], ' + 
         'input.form-' + form_id + '[type=image]').click(function() {
         if($(this).attr('onclick')) return true;
-        var s_data = $('input.form-' + form_id + ', textarea.form-' + form_id).serializeArray();
+        var s_data = $('input.form-' + form_id + ', textarea.form-' + form_id + ', select.form-' + form_id).serializeArray();
         var params = [];
         $.each(s_data, function() {
             params.push(this.name + '=' + __panel.encodeURIComponent(this.value || options.data[this.name]));
