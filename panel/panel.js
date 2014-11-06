@@ -1,3 +1,5 @@
+window.jQuery = jQuery.noConflict();
+
 (function($) {
 
 String.prototype.hashCode = function(){
@@ -755,7 +757,7 @@ window.Panel2 = new function() {
   }
 
   function ajaxifyContent() {
-    var selector = 'a[href*="http://' + document.domain + '"]:visible:not(.ajax):not([onclick]), a[href*="/"]:visible:not(.ajax):not([onclick])';
+    var selector = 'a[href*="http://' + document.domain + '"]:visible:not(.ajax):not([onclick], [target]), a[href*="/"]:visible:not(.ajax):not([onclick] [target])';
     ajaxifyLinks($(selector));
     $('*[onclick*="location="]').each(function() {
       var onclick = $(this).attr('onclick');
@@ -796,7 +798,7 @@ window.Panel2 = new function() {
     }).addClass('processed');
 
     /// Находим все "осиротевшие"" кнопки отправки и привязываем их к формам
-    $('input[type="submit"]').filter(function() {
+    /*$('input[type="submit"]').filter(function() {
       return $(this).closest('form').length == 0;
     }).click(function() {
       var $this = $(this);
@@ -816,7 +818,7 @@ window.Panel2 = new function() {
         location.href = location.href;
       }
       return false;
-    });
+    });*/
   }
 
   /**
@@ -2655,10 +2657,12 @@ window.Panel2 = new function() {
     * Перекодирование UTF в CP1251 для отправки через AJAX
     */
     encodeURIComponent: function(str) {
+      if(!str) return str;
       str = String(str).replace(/%/g, '%25').replace(/\+/g, '%2B');
       var a = document.createElement('a');
       a.href = "http://www.ganjawars.ru/encoded_str=?" + str;
-      return a.href.split('encoded_str=?')[1].replace(/%20/g, '+');
+      return a.href.split('encoded_str=?')[1].replace(/%20/g, '+')
+              .replace(/=/g, '%3D').replace(/&/g, '%26');
     },
 
     /**
@@ -2913,11 +2917,11 @@ window.Panel2 = new function() {
         }
       }
       data = data.replace(/<script[^>]*>.*?<\/script>/ig, '');
-      data = instance.fixForms(data);
+      //data = instance.fixForms(data);
       var $content = $('#gw-content').html(data);
       if(jqs) {
         document.title = ($content.find('#doc-title').text() || 'Онлайн игра')
-                          + ' GanjaWars.Ru';
+                          + ' GanjaWars.Ru :: Ганджубасовые войны';
       } else {
         document.title = __title;
       }
@@ -2995,23 +2999,223 @@ window.Panel2 = new function() {
 * Функция для ajax-отправки формы
 * @param options - массив опций, передаётся в функцию jQuery.ajax
 */
-jQuery.fn.sendForm = function(options) {
+$.fn.sendForm = function(options) {
   this.each(function() {
     var $form = $(this);
     options = $.extend({
       type: String($form.attr('method') || 'post').toLowerCase()
     }, options || {});
-    var s_data = $form.serializeArray();
+    if(options.data) {
+      var s_data = options.data;
+    } else {
+      var s_data = $form.serializeArray();
+    }
     /// Обходим функцию jQuery.param, чтобы данные не кодировались повторно
     var params = [];
     jQuery.each(s_data, function() {
-      params.push(this.name + '=' + __panel.encodeURIComponent(this.value || options.data[this.name]));
+      params.push(this.name + '=' + __panel.encodeURIComponent(this.value || options.data[this.name] || ''));
     });
     /// отдаём в data строку
     options.data = params.join('&');
+
+    if($form.attr('method') && $form.attr('method').toLowerCase() == 'get') {
+      var href = ($form.attr('action') || location.pathname);
+      if(href.indexOf('http:') == -1) {
+        href = location.protocol + '//' + location.hostname + href;
+      }
+      __panel.gotoHref(href + '?' + options.data)
+      return;
+    }
+
     $.ajax($form.attr('action') || location.href, options);
   });
   return this;
+}
+
+/**
+* Функция-враппер над стандартным методом .html
+* её смысл заключается в том, чтобы предварительно определить какие элементы
+* должны быть на форме, пометить их и затем при отправке формы связать их
+* с самой формой не смотря на то, помещены они вовнутрь формы или нет.
+* функция должна исправлять абсолютно все формы в игре.
+*/
+var origHtml = jQuery.fn.html;
+/// глобальный счётчик форм, каждая форма уникальная.
+var form_index = 0;
+
+function convertParams(params, className) {
+  param_ex = /(\b\w+\b)\s*(=\s*("[^"]+"|'[^']+'|[^"'<>\s]+))?\s*/g
+  //console.log('params to parse: ', params);
+
+  var params_ar = [];
+  var has_class = false;
+
+  while(m_p = param_ex.exec(params)) {
+    //console.log(m_p);
+    var name = m_p[1];
+    var value = m_p[3];
+    if(!value) {
+      params_ar.push({name: name});
+      continue;
+    }
+
+    if(value.charAt(0) == '\'' && value.charAt(value.length - 1) == '\'') {
+      value = value.substr(1, value.length - 2);
+    }
+    if(value.charAt(0) == '"' && value.charAt(value.length - 1) == '"') {
+      value = value.substr(1, value.length - 2);
+    }
+
+    if(name == 'class') {
+      has_class = true;
+      value += ' ' + className;
+    }
+    params_ar.push({name: name, value: value});
+  }
+  //console.log('parsed params: ', params_ar);
+
+  if(!has_class) {
+    params_ar.push({name: 'class', value: className});
+  }
+
+  //console.log('params: ', params, 'new params: ', params_ar);
+  return $.map(params_ar, function(item) {
+    if(item.value) {
+      return item.name + '="' + item.value.replace('"', '&quot;') + '"';
+    } else {
+      return item.name;
+    }
+  }).join(' ');
+}
+
+$.fn.html = function(html) {
+  var forms_fixed;
+  if(html && $.type(html) == 'string') {
+    //console.log('preparing html');
+    /// вытаскиваем все формы
+    var form_ex = /<form ([^>]+)>([.\s\S]*?)<\/form>/ig
+    var input_ex = /<input[ ]?([^>]*)[\/]?>/ig
+    var other_ex = /<(button|textarea|select)([^>]*)>([.\s\S]*?)<\/(button|textarea|select)>/ig
+//console.log(html);
+    var form_start = html.indexOf('<form');
+
+    while(m_f = form_ex.exec(html)) {
+      //console.log(m_f);
+
+      if(m_f[1].indexOf('gwp-form') > -1 || html.substr(m_f.index - 20, 20).indexOf('innerHTML') > -1) {
+        continue;
+      }
+
+      var form_contents = m_f[2];
+      //console.log('form_contents', form_contents);
+
+      while(m_i = input_ex.exec(form_contents)) {
+        form_contents = form_contents.substr(0, m_i.index) + '<input ' + 
+        convertParams(m_i[1], 'gwp-form-' + form_index + '-item') + '/>' + 
+        form_contents.substr(m_i.index + m_i[0].length);
+      }
+
+      while(m_o = other_ex.exec(form_contents)) {
+        //console.log(m_o);
+        form_contents = form_contents.substr(0, m_o.index) + '<' + m_o[1] + ' ' + 
+        convertParams(m_o[2], 'gwp-form-' + form_index + '-item') + '>' + m_o[3] + 
+        '</' + m_o[4] + '>' + form_contents.substr(m_o.index + m_o[0].length);
+      }
+
+      //console.log('new form_contents', form_contents);
+
+      /// изменяем html формы
+      html = html.substr(0, m_f.index) + '<form index="' + form_index + '" ' + 
+        convertParams(m_f[1], 'gwp-fixed-form gwp-form-' + form_index) + '>' + form_contents + 
+        '</form>' + html.substr(m_f.index + m_f[0].length);
+
+      //console.log('new html: ', html);
+      form_index++;
+      forms_fixed = true;
+    }
+/*    var ar = html.match() || [];
+    $.each(ar, function(index, form) {
+      /// вытаскиваем все инпуты
+      var inputs = form.match(/<input[^>]+[\/]?>/g) || [];
+
+
+      /// вытаскиваем все баттоны, textarea
+    });*/
+  }
+  var result = origHtml.apply(this, [html]);
+
+  if(forms_fixed) {
+    result.find('.gwp-fixed-form').submit(function() {
+      /// Перед сабмитом собираем все элементы
+      var $this = $(this);
+      var index = $this.attr('index');
+      //console.log($('.gwp-form-' + index + '-item').serializeArray());
+      var action = $this.attr('action');
+      if(action.indexOf('javascript:') > -1) {
+        /// Добавляем в форму все элементы, которые были из неё удалены
+
+        return true;
+      }
+
+      $(this).sendForm({
+        data: $('.gwp-form-' + index + '-item:not([type=submit], [type=image])').serializeArray(),
+        success: function(data) {
+          __panel.ajaxUpdateContent(data, __panel.responseURL() || $this.attr('action'));
+        }
+      });
+      return false;
+    }).each(function() {
+      var index = $(this).attr('index');
+
+      /// находим все сабмиты для этой формы и привязываем по клику отправку формы
+      $('.gwp-form-' + index + '-item[type=submit], .gwp-form-' + index + '-item[type=image]').click(function(e) {
+        var onclick = this.onclick;
+        if(onclick) {
+          if(onclick() === false) {
+            //console.log('false');
+            return false;
+          }
+        }
+
+        var data = $('.gwp-form-' + index + '-item:not([type=submit], [type=image])').serializeArray();
+        /// Если сабмит имеет имя, то добавляем к параметрам имя кликнутого сабмита
+        if(this.name) {
+          data.push({name: this.name, value: this.value});
+        }
+        var $form = $('.gwp-form-' + index).eq(0);
+
+        var action = $form.attr('action');
+        if(action.indexOf('javascript:') > -1) {
+          $form.submit();
+          return true;
+        }
+
+        $form.sendForm({
+          data: data,
+          success: function(data) {
+            __panel.ajaxUpdateContent(data, __panel.responseURL() || $form.attr('action'));
+          }
+        });
+        return false;
+      });
+
+      /// Если у формы есть имя то проставляем все document.forms.<NAME>
+      if(this.name) {
+        var formName = this.name;
+        $('.gwp-form-' + index + '-item[name]').each(function() {
+          if(!document.forms[formName][this.name]) {
+            document.forms[formName][this.name] = this;
+          }
+        });
+      }
+
+      var that = this;
+      this.submit = function() {
+        $(that).submit();
+      }
+    });
+  }
+  return result;
 }
 
 })(jQuery);

@@ -1533,6 +1533,7 @@ QUnit.test('Тест функции encodeURIComponent', function(assert) {
     assert.equal(encodeURIComponent('РСТУФХЦЧШЩЪЫЬЭЮЯ'), '%D0%D1%D2%D3%D4%D5%D6%D7%D8%D9%DA%DB%DC%DD%DE%DF', 'РСТУФХЦЧШЩЪЫЬЭЮЯ');
     assert.equal(encodeURIComponent('абвгдежзийклмноп'), '%E0%E1%E2%E3%E4%E5%E6%E7%E8%E9%EA%EB%EC%ED%EE%EF', 'абвгдежзийклмноп');
     assert.equal(encodeURIComponent('рстуфхцчшщъыьэюя'), '%F0%F1%F2%F3%F4%F5%F6%F7%F8%F9%FA%FB%FC%FD%FE%FF', 'рстуфхцчшщъыьэюя');
+    assert.equal(encodeURIComponent('sx=150&sy=150'), 'sx%3D150%26sy%3D150', 'sx=150&sy=150');
   }
 });
 
@@ -1687,4 +1688,43 @@ href=/ferma.php?x=1&y=0&section=items>Постройки</a></center><form style
 </td></tr></table>\n\
 </form>');
   assert.ok(result.indexOf('</form>') > result.indexOf('</table>'), '</form> перед </table>');
+});
+
+QUnit.test('Исправление форм, продвинутый вариант', function(assert) {
+  var html = '<table>\
+<tr><td class=greengreenbg>Трава</td>\
+<td>0</td>\
+<form action=object-hdo.php method=POST>\
+<input type=hidden name=t value=3>\
+<input type=checkbox checked name="chk1">\
+<input type=radio checked value="val1" name="radio1">\
+<input type=radio value="val2" name="radio1">\
+<input type=hidden  name=object_id value=41498>\
+<input type=hidden name=resource value=\'metal\'>\
+<select name=sxy style=\'width:100%\'>\
+<option value=\'150x149\'>[Z] Crystal Sector</option><option value=\'150x150\'>[Z] Cyborg Capital</option>\
+</select>\
+<td><input type=text name=am_in size=4 value=0></td>\
+<td><input type=text name=am_out size=4 value=0></td>\
+<td><input type=submit name=submit value=\'&raquo;\' class=mainbutton> <input type=submit name=submit value=\'ещё сабмит\' class=mainbutton></td>\
+<td><button>тест</button>\
+<td><textarea name="textarea">тест textarea</textarea></td>\
+</form>\
+</tr><tr><td class=greenbg>Всего:</td><td class=greenbg>500</td><td class=greenbg>66</td><td class=greenbg colspan=3>&nbsp;</td></tr></table></td></tr></table>';
+
+  var $fixture = $('#qunit-fixture').html(html);
+
+  assert.equal($fixture.find('form').length, 1);
+
+  var className = $fixture.find('form').eq(0).attr('class');
+  assert.ok(className.indexOf('gwp-form-') > -1);
+  var index = $fixture.find('form').eq(0).attr('index');
+  className = '.gwp-form-' + index + '-item';
+
+  //console.log($fixture.find(className + '[name=chk1]'));
+  assert.equal($fixture.find(className + '[name=chk1]').attr('checked'), 'checked');
+  assert.equal($fixture.find(className + '[name=radio1][value=val1]').attr('checked'), 'checked');
+  assert.equal($fixture.find(className + '[name=radio1][value=val2]').attr('checked'), undefined);
+  assert.equal($fixture.find('select' + className + '[name=sxy]').length, 1);
+  assert.equal($fixture.find('textarea' + className + '[name=textarea]').length, 1);
 });
