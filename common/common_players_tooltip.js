@@ -7,8 +7,10 @@
       // Интервал, через который имя для передачи (денег, предметов) будет удалено (ms).
       var clearDataTimeout = 300000;
 
-      var $player, $playerLink, $playerLinkOnInfo;
-      var showWaitId;
+      var $player, $toolWindow, $playerLink, $playerLinkOnInfo;
+      var showWaitId, hideWaitId;
+
+      $toolWindow = $('<div id="playerToolWindow"></div>');
 
       if(location.pathname == "/info.php"){
         $playerLinkOnInfo = $('img[src*="male.gif"]').closest('td').find('b');
@@ -26,10 +28,39 @@
         function(){
           $playerLink = $(this);
           showWaitId = setTimeout(function(){
-            createToolWidow($playerLink, showWaitId);
+            createToolWindow($toolWindow);
             showToolWindow($playerLink)
           }, 750);
           if($playerLink.text().search('info.php?') != -1) clearTimeout(showWaitId);
+        }
+      );
+
+      $player.mouseleave(
+        function(){
+          clearTimeout(showWaitId);
+          hideWaitId = setTimeout(function(){
+            $toolWindow.fadeOut();
+          }, 500);
+        }
+      );
+
+      $toolWindow.mouseenter(
+        function(){
+          clearTimeout(hideWaitId);
+        }
+      );
+
+      $toolWindow.mouseleave(
+        function(){
+          hideWaitId = setTimeout(function(){
+            $toolWindow.fadeOut();
+          }, 500);
+        }
+      );
+
+      $player.click(
+        function(){
+          clearTimeout(showWaitId);
         }
       );
 
@@ -39,69 +70,9 @@
     }
   });
 
-function createToolWidow($player, showWaitId){
-  var paramButtons, hideWaitId, toolHTML, i, length;
-  var $toolWindow;
-
-  $toolWindow = $('#playerToolWindow');
-  if($toolWindow.length) return true;
-
-  paramButtons = [
-    "Написать письмо",          "send_mail.png",
-    "Передать деньги",          "send_money.png",
-    "Добавить в друзья",        "friend_list.png",
-    "Список аренды",            "list_rents.png",
-    /* вторая строка */
-    "Письма от персонажа ",     "mails_from.png",
-    "Передать предмет",         "send_item.png",
-    "Добавить в черный список", "black_list.png",
-    "Иски игрока",              "claims.png"
-  ];
-  toolHTML = "&nbsp;";
-
-  for(i = 0, length = paramButtons.length; i < length; i = i + 2){
-    if(i == 8) toolHTML += "<br>";
-    toolHTML += '<a title="'+ paramButtons[i] +'"><img src="'+ panel.iconURL(paramButtons[i+1]) +'"></a>&nbsp;';
-  }
-
-  $toolWindow = $('<div id="playerToolWindow"></div>').html(toolHTML).addClass('pane left').hide();
-  $('body').append($toolWindow);
-
-  $player.mouseleave(
-    function(){
-      clearTimeout(showWaitId);
-      hideWaitId = setTimeout(function(){
-        $toolWindow.fadeOut();
-      }, 500);
-    }
-  );
-
-  $toolWindow.mouseenter(
-    function(){
-      clearTimeout(hideWaitId);
-    }
-  );
-
-  $toolWindow.mouseleave(
-    function(){
-      hideWaitId = setTimeout(function(){
-        $toolWindow.fadeOut();
-      }, 500);
-    }
-  );
-
-  $player.click(
-    function(){
-      clearTimeout(showWaitId);
-    }
-  );
-}
-
 function showToolWindow($playerLink){
   var $toolWindow, $urlTool;
   var dimensions, left, top, id, name, login, bodyWidth, info;
-
-  createToolWidow();
 
   id   = $playerLink.prop("href").match(/(\d+)/)[0];
   name = $playerLink.text();
@@ -173,6 +144,34 @@ function showToolWindow($playerLink){
 
   //Иски игрока
   $urlTool.eq(7).prop("href", "http://www.ganjawars.ru/isks.php?sid=" + id + "&st=1&period=4");
+}
+
+function createToolWindow($toolWindow){
+  var paramButtons, toolHTML, i, length;
+
+  if( $('#playerToolWindow').length) return true;
+
+  paramButtons = [
+    "Написать письмо",          "send_mail.png",
+    "Передать деньги",          "send_money.png",
+    "Добавить в друзья",        "friend_list.png",
+    "Список аренды",            "list_rents.png",
+    /* вторая строка */
+    "Письма от персонажа ",     "mails_from.png",
+    "Передать предмет",         "send_item.png",
+    "Добавить в черный список", "black_list.png",
+    "Иски игрока",              "claims.png"
+  ];
+
+  toolHTML = "&nbsp;";
+  for(i = 0, length = paramButtons.length; i < length; i = i + 2){
+    if(i == 8) toolHTML += "<br>";
+    toolHTML += '<a title="'+ paramButtons[i] +'"><img src="'+ panel.iconURL(paramButtons[i+1]) +'"></a>&nbsp;';
+  }
+
+  $('body').append(
+    $toolWindow.html(toolHTML).addClass('pane left').hide()
+  );
 }
 
 function addToFriendOrEnemy(type, name){
