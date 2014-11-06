@@ -308,12 +308,12 @@ body.ajax-loading:before {
   -webkit-transform: translateX(-50%);
 }
 
-td > form {
+/*td > form {
   display: inline;
   margin: 0;
 }
-
-body.map-php.ajax-processed td[width="100%"] + td {
+*/
+/*body.map-php.ajax-processed td[width="100%"] + td {
   width: 230px;
   display: block;
 }
@@ -321,11 +321,11 @@ body.map-php.ajax-processed td[width="100%"] + td {
 body.map-php.ajax-processed td[width="100%"] + td select {
   width: 175px !important;
 }
-
+*/
 .stat-reset {
   cursor: pointer;
 }
 
-#gw-content {
+/*#gw-content {
   padding-bottom: 100px;
-}
+}*/
