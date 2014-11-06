@@ -1,4 +1,4 @@
-(function(panel) {
+(function(panel, $) {
 jQuery.extend(panel, {
   // функция для базовой кнопки - переход по ссылке
   map_gohome: function(options) {
@@ -94,4 +94,4 @@ jQuery.extend(panel, {
     }
   }
 });
-})(window.__panel);
+})(window.__panel, jQuery);

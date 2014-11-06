@@ -757,7 +757,7 @@ window.Panel2 = new function() {
   }
 
   function ajaxifyContent() {
-    var selector = 'a[href*="http://' + document.domain + '"]:visible:not(.ajax):not([onclick], [target]), a[href*="/"]:visible:not(.ajax):not([onclick] [target])';
+    var selector = 'a[href*="http://' + document.domain + '"]:visible:not(.ajax):not([onclick]):not([target]), a[href*="/"]:visible:not(.ajax):not([onclick]):not([target])';
     ajaxifyLinks($(selector));
     $('*[onclick*="location="]').each(function() {
       var onclick = $(this).attr('onclick');
@@ -772,7 +772,7 @@ window.Panel2 = new function() {
       $('input.form-' + form_id + '[type=submit], ' + 
         'input.form-' + form_id + '[type=image]').click(function() {
         if($(this).attr('onclick')) return true;
-        var s_data = $('input.form-' + form_id + ', textarea.form-' + form_id).serializeArray();
+        var s_data = $('input.form-' + form_id + ', textarea.form-' + form_id + ', select.form-' + form_id).serializeArray();
         var params = [];
         $.each(s_data, function() {
             params.push(this.name + '=' + __panel.encodeURIComponent(this.value || options.data[this.name]));
@@ -3158,7 +3158,7 @@ $.fn.html = function(html) {
       }
 
       $(this).sendForm({
-        data: $('.gwp-form-' + index + '-item:not([type=submit], [type=image])').serializeArray(),
+        data: $('.gwp-form-' + index + '-item:not([type=submit]):not([type=image])').serializeArray(),
         success: function(data) {
           __panel.ajaxUpdateContent(data, __panel.responseURL() || $this.attr('action'));
         }
@@ -3177,7 +3177,7 @@ $.fn.html = function(html) {
           }
         }
 
-        var data = $('.gwp-form-' + index + '-item:not([type=submit], [type=image])').serializeArray();
+        var data = $('.gwp-form-' + index + '-item:not([type=submit]):not([type=image])').serializeArray();
         /// Если сабмит имеет имя, то добавляем к параметрам имя кликнутого сабмита
         if(this.name) {
           data.push({name: this.name, value: this.value});

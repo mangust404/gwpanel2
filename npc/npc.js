@@ -1,4 +1,4 @@
-(function(panel) {
+(function(panel, $) {
 jQuery.extend(panel, {
   npc_getStatus: function(dtext) {
     //Парсинг статуса с НПЦ по HTML страницы
@@ -168,4 +168,4 @@ jQuery.extend(panel, {
   }
   
 });
-})(window.__panel);
+})(window.__panel, jQuery);

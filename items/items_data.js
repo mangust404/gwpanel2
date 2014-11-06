@@ -1,23 +1,23 @@
-(function(panel) {
+(function(panel, $) {
 jQuery.extend(panel, {
   /**
   * Получение списка комплектов
   */
   items_get_sets_async: function(callback) {
     var sets = {};
-    var links = jQuery('a[href*="/home.do.php?putset="]');
+    var links = $('a[href*="/home.do.php?putset="]');
     if(links.length) {
       /// ссылки с комплектами найдены на текущей странице
       links.each(function() {
-        sets[jQuery(this).attr('href').split('=')[1]] = jQuery(this).html();
+        sets[$(this).attr('href').split('=')[1]] = $(this).html();
       });
       callback(sets);
     } else {
-      jQuery.ajax('/items.php', {
+      $.ajax('/items.php', {
         success: function(data) {
-          links = jQuery(data).find('a[href*="/home.do.php?putset="]');
+          links = $(data).find('a[href*="/home.do.php?putset="]');
           links.each(function() {
-            sets[jQuery(this).attr('href').split('=')[1]] = jQuery(this).html();
+            sets[$(this).attr('href').split('=')[1]] = $(this).html();
           });
           callback(sets);
         },
@@ -28,4 +28,4 @@ jQuery.extend(panel, {
     }
   }
 });
-})(window.__panel);
+})(window.__panel, jQuery);
