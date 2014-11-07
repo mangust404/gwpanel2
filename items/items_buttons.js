@@ -11,12 +11,37 @@
             panel.get('items_set_' + options.set_id, function(set) {
               if(set) {
                 panel.loadScript('items/items.js', function() {
-                  var dressed = panel.get_set_str($(data));
+                  var $data = $(data);
+                  var dressed = panel.get_set_str($data);
                   if(set == dressed) {
                     $(that).addClass('button-ok');
                   } else {
-                    panel.showFlash('сет не полный, возможно что-то сломалось');
-                    $(that).addClass('button-error');
+                    if($data.find('#extras').length == 0) {
+                      panel.showFlash('Пожалуйста, включите новый вариант оформления экипировки чтобы узнавать наделся ли комплект (галочка "Старое оформление экипировки" в <a href="http://www.ganjawars.ru/info.edit.php">настройках игры</a> не должна стоять');
+                      return false;
+                    }
+                    var ar_dressed = dressed.split('+');
+                    var ar_set = set.split('+');
+
+                    var missed_items = '';
+
+                    $.each(ar_set, function(i, item) {
+                      if(ar_dressed.indexOf(item) == -1) {
+                        item = item.split('=')[1];
+                        var ar = item.split('&');
+                        var item_id = ar[0];
+                        missed_items += '<a href="http://www.ganjawars.ru/item.php?item_id=' + 
+                          item + '"><img src="http://images.ganjawars.ru/img/items/' + item_id + '_s.jpg" /></a>';
+                      }
+                    });
+
+                    if(missed_items) {
+                      panel.showFlash('<p>Cет не полный, не хватает вещей:</p><center>' + 
+                        missed_items + '</center>');
+                      $(that).addClass('button-error');
+                    } else {
+                      $(that).addClass('button-ok');
+                    }
                   }
                 });
               } else {
