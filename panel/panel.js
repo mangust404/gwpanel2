@@ -2888,13 +2888,20 @@ window.Panel2 = new function() {
         clearTimeout(window.hptimer);
         window.hptimer = 0;
       }
-      var pathname;
+      var pathname, search;
       try {
         if(href) {
-          pathname = href.split(document.domain)[1].split('?')[0];
+          var ar = href.split(document.domain)[1].split('?');
+          pathname = ar[0];
+          search = '?' + ar[1];
         }
       } catch(e) {}
+      var performSmoothScroll = false;
       if(pathname == location.pathname) {
+        if(search.indexOf('page_id') > -1 && $(window).scrollTop() > $(window).height() / 2) {
+          /// делаем плавный скролл
+          performSmoothScroll = true;
+        }
       } else if(!noHistory) {
         $(window).scrollTop(0);
       }
@@ -2938,6 +2945,12 @@ window.Panel2 = new function() {
         //console.log('noHistory, using prevScrollTop', prevScrollTop);
         $(window).scrollTop(prevScrollTop);
       } else {
+        if(performSmoothScroll) {
+          $('html,body').animate({
+            scrollTop: $('a[href$="' + pathname + search + '"]').offset().top - 40
+          }, 1000);
+          
+        }
         //console.log('pushing scrollTop: ', prevScrollTop);
         history.pushState({
           data: data, 

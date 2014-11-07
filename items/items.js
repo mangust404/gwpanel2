@@ -212,7 +212,7 @@ jQuery.extend(panel, {
                 });
 
                 //http://images.ganjawars.ru/img/items/warlordboots_s.jpg
-                panel.showFlash('<p>Внимание! В комплекте, который сейчас надет, не найдены:</p><center>' + missed_items + '</center>');
+                panel.showFlash('<p>Внимание! В комплекте не найдены:</p><center>' + missed_items + '</center>');
               }
             }
           });
