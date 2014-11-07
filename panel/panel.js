@@ -747,12 +747,7 @@ window.Panel2 = new function() {
       if(e.ctrlKey || e.altKey || e.button != 0) return true;
       var href = $(this).attr('href');
       if(href.indexOf('/battle.php') > -1 || 
-         href.indexOf('edit.php') > -1 ||
-         href.indexOf('market') > -1 ||
-         href.indexOf('attack') > -1 || 
-         href.indexOf('home.') > -1 ||
-         href.indexOf('logout.php') > -1 ||
-         $(this).html().indexOf('Торговый терминал') == 0) return true;
+         href.indexOf('logout.php') > -1) return true;
       if(document.location.toString().indexOf(href) > -1) return true;
       ajaxGoto(href);
       return false;
@@ -2676,11 +2671,7 @@ window.Panel2 = new function() {
     panel_ajaxify: function() {
       if($('#gw-content').length > 0) return;
       if(!history.pushState) return;
-      if(location.pathname.indexOf('/b0/') == 0 || 
-         location.pathname.indexOf('edit.php') > -1 ||
-         location.pathname.indexOf('home.') > -1 ||
-         location.pathname.indexOf('terminal') > -1 ||
-         location.pathname.indexOf('market') > -1) return;
+      if(location.pathname.indexOf('/b0/') == 0) return;
       if(document.domain.indexOf('gwpanel.org') > -1) return;
       var $elem;
       if($('table.topill').length > 0) {
@@ -2728,11 +2719,10 @@ window.Panel2 = new function() {
       if($all_elements.length > 0 && $content.length > 0) {
         originalTitle = document.title;
 
-        history.replaceState({
-          data: '<head>' + $('head').html() + '</head><body>' + 
-          $('body').html() + '</body>', 
+/*        history.replaceState({
+          data: null, 
           title: document.title
-        }, document.title, location.href);
+        }, document.title, location.href);*/
 
         $(ajaxifyContent);
 
@@ -2742,15 +2732,7 @@ window.Panel2 = new function() {
             if($div.find('#gw-content').length > 0) {
               var content = $div.find('#gw-content').html();
             }*/
-            var content = event.state.data;
-            var open = content.indexOf('<div id="gw-content">');
-            var close = content.lastIndexOf('<!--/#gw-content-->');
-            if(open > 0 && close > 0) {
-              content = content.substr(open + 21, close - open - 21 - 6);
-            }
-            //<div id="gw-content">
-
-            instance.ajaxUpdateContent(content, null, true);
+            instance.ajaxUpdateContent(event.state.data, null, true);
 
             /*document.title = event.state.title;
             __initFunc();
@@ -2924,7 +2906,7 @@ window.Panel2 = new function() {
           jqs = true;
         }
       }
-      data = data.replace(/<script[^>]*>.*?<\/script>/ig, '');
+      //data = data.replace(/<script[^>]*>.*?<\/script>/ig, '');
       //data = instance.fixForms(data);
       var $content = $('#gw-content').html(data);
       if(jqs) {
@@ -2937,8 +2919,7 @@ window.Panel2 = new function() {
       $(document.body).removeClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
       if(!noHistory) {
         history.pushState({
-          data: '<head>' + jQuery('head').html() + '</head><body>' + 
-          jQuery('body').html() + '</body>', 
+          data: data, 
           title: document.title
         }, document.title, href);
       }
@@ -3328,39 +3309,43 @@ $.fn.html = function(html) {
         formID = formID.split('fake-')[1];
         // получаем "подложный" объект
         var fakeForm = document.forms[formID];
-        fakeForm.id = 'old-' + formID;
-        /// Меняем айди формы на правильный
-        $(this).attr('id', formID);
-        // заполняем правильную форму значениями из предыдущей
-        $.each(fakeForm.elements, function(i, item) {
-          if(document.forms[formID][this.name]) {
-            document.forms[formID][this.name].value = this.value;
-          } else {
-            /// Элемент не прописался в форму, добавляем его принудительно
-            document.forms[formID][this.name] = document.forms[formID]['elements'][this.name] = 
-              $('.gwp-form-' + index + '-item[name="' + this.name + '"]').get(0);
-          }
-        });
-        $(fakeForm).remove();
+        if(fakeForm) {
+          fakeForm.id = 'old-' + formID;
+          /// Меняем айди формы на правильный
+          $(this).attr('id', formID);
+          // заполняем правильную форму значениями из предыдущей
+          $.each(fakeForm.elements, function(i, item) {
+            if(document.forms[formID][this.name]) {
+              document.forms[formID][this.name].value = this.value;
+            } else {
+              /// Элемент не прописался в форму, добавляем его принудительно
+              document.forms[formID][this.name] = document.forms[formID]['elements'][this.name] = 
+                $('.gwp-form-' + index + '-item[name="' + this.name + '"]').get(0);
+            }
+          });
+          $(fakeForm).remove();
+        }
       } else if(formName) {
         /// То же самое с именем
         formName = formName.split('fake-')[1];
         // получаем "подложный" объект
         var fakeForm = document.forms[formName];
-        fakeForm.name = 'old-' + formName;
-        /// Меняем айди формы на правильный
-        $(this).attr('name', formName);
-        // заполняем правильную форму значениями из предыдущей
-        $.each(fakeForm.elements, function(i, item) {
-          if(document.forms[formName][this.name]) {
-            document.forms[formName][this.name].value = this.value;
-          } else {
-            /// Элемент не прописался в форму, добавляем его принудительно
-            document.forms[formName][this.name] = document.forms[formName]['elements'][this.name] = 
-              $('.gwp-form-' + index + '-item[name="' + this.name + '"]').get(0);
-          }
-        });
-        $(fakeForm).remove();
+        if(fakeForm) {
+          fakeForm.name = 'old-' + formName;
+          /// Меняем айди формы на правильный
+          $(this).attr('name', formName);
+          // заполняем правильную форму значениями из предыдущей
+          $.each(fakeForm.elements, function(i, item) {
+            if(document.forms[formName][this.name]) {
+              document.forms[formName][this.name].value = this.value;
+            } else {
+              /// Элемент не прописался в форму, добавляем его принудительно
+              document.forms[formName][this.name] = document.forms[formName]['elements'][this.name] = 
+                $('.gwp-form-' + index + '-item[name="' + this.name + '"]').get(0);
+            }
+          });
+          $(fakeForm).remove();
+        }
       }
 
       var origSubmit = this.submit;
