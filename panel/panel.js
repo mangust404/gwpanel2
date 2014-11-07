@@ -1146,33 +1146,34 @@ window.Panel2 = new function() {
     }
   }
   
-  function __initFunc() {
+  function __initFunc(ajax) {
     // Инициализация слушателей событий
-    for(var key in panel_apply.events) {
-      $(panel_apply.events[key]).each(function(index, type) {
-        if(type.condition) {
-          try {
-            if(!eval(type.condition)) return;
-          } catch(e) {
-            instance.dispatchException(e, 'condition for loaded script error: ');
-            return;
-          }
-        }
-        instance.bind(type.event, function() {
-          var that = this;
-          var _args = arguments;
-          if(options.blacklist && options.blacklist.indexOf(type.callback) > -1) return;
-          instance.loadScript(panel_apply.scripts[type.callback], function() {
-            if($.type(instance[type.callback]) == 'undefined') {
-              throw('Function ' + type + ' in module ' + panel_apply.scripts[type] + ' not found');
-            } else {
-              instance[type.callback].apply(that, _args);
+    if(!ajax) {
+      for(var key in panel_apply.events) {
+        $(panel_apply.events[key]).each(function(index, type) {
+          if(type.condition) {
+            try {
+              if(!eval(type.condition)) return;
+            } catch(e) {
+              instance.dispatchException(e, 'condition for loaded script error: ');
+              return;
             }
-          });
-        }, type.local);
-      });
+          }
+          instance.bind(type.event, function() {
+            var that = this;
+            var _args = arguments;
+            if(options.blacklist && options.blacklist.indexOf(type.callback) > -1) return;
+            instance.loadScript(panel_apply.scripts[type.callback], function() {
+              if($.type(instance[type.callback]) == 'undefined') {
+                throw('Function ' + type + ' in module ' + panel_apply.scripts[type] + ' not found');
+              } else {
+                instance[type.callback].apply(that, _args);
+              }
+            });
+          }, type.local);
+        });
+      }
     }
-
     // Инициализация подгружаемых скриптов
     var pages = [];
     if($.type(panel_apply.pages[location.pathname]) == 'array') {
@@ -2948,7 +2949,7 @@ window.Panel2 = new function() {
       clearTimeout(loaderTO);
       loaderTO = 0;
       $(document.body).removeClass('ajax-loading');
-      __initFunc();
+      __initFunc(true);
       ajaxifyContent();
       instance.hideAllPanes();
       tearDownFloatWidgets();
