@@ -3095,12 +3095,11 @@ var origHtml = jQuery.fn.html;
 /// глобальный счётчик форм, каждая форма уникальная.
 var form_index = 0;
 
-function convertParams(params, className) {
+function parseParams(params) {
   param_ex = /(\b\w+\b)\s*(=\s*("[^"]+"|'[^']+'|[^"'<>\s]+))?\s*/g
   //console.log('params to parse: ', params);
 
   var params_ar = [];
-  var has_class = false;
 
   while(m_p = param_ex.exec(params)) {
     //console.log(m_p);
@@ -3118,13 +3117,21 @@ function convertParams(params, className) {
       value = value.substr(1, value.length - 2);
     }
 
-    if(name == 'class') {
-      has_class = true;
-      value += ' ' + className;
-    }
     params_ar.push({name: name, value: value});
   }
-  //console.log('parsed params: ', params_ar);
+
+  return params_ar;
+}
+
+function convertParams(params_ar, className) {
+  var has_class = false;
+
+  $.each(params_ar, function(i, item) {
+    if(item.name == 'class') {
+      has_class = true;
+      item.value += ' ' + className;
+    }
+  });
 
   if(!has_class) {
     params_ar.push({name: 'class', value: className});
@@ -3160,25 +3167,81 @@ $.fn.html = function(html) {
 
       var form_contents = m_f[2];
       //console.log('form_contents', form_contents);
+      var formParams = parseParams(m_f[1]);
+
+      var formID, formName;
+      var _formID = formParams.filter(function(item) { return item.name == 'id'})[0];
+      var _formName = formParams.filter(function(item) { return item.name == 'name'})[0];
+
+      /// делаем виртуальную форму
+      var $form_element;
+
+      if(_formID) {
+        // Если форма имеет ID, то мы подменяем его на другой и создаём
+        // пустой объект в document.forms.ID_Формы. 
+        // Это нужно для того чтобы инлайновые скрипты, которые будут выполнены ниже 
+        // при установке html() заполняли этот пустой объект, а затем мы переименуем
+        // эту форму и подставим все значения которые выставляли инлайновые скрипты.
+        formID = _formID.value;
+        _formID.value = 'fake-' + formID;
+        if(!$form_element) {
+          $form_element = $('<form>').appendTo(document.body);
+        }
+        $form_element.attr('id', formID);
+      }
+      if(_formName) {
+        // то же самое с именованными формами
+        formName = _formName.value;
+        _formName.value = 'fake-' + formName;
+        if(!$form_element) {
+          $form_element = $('<form>').appendTo(document.body);
+        }
+        $form_element.attr('name', formName);
+      }
 
       while(m_i = input_ex.exec(form_contents)) {
+        var params = parseParams(m_i[1]);
+        var _name = params.filter(function(item) { return item.name == 'name'})[0];
+        var _value = params.filter(function(item) { return item.name == 'value'})[0];
+        if(_name) {
+          var $item = $('<input>', {type: 'hidden', name: _name.value}).appendTo($form_element);
+          if(_value && $.type(_value.value) == 'string') {
+            $item.val(_value.value);
+          }
+          var _id = params.filter(function(item) { return item.name == 'id'})[0];
+          if(_id && $.type(_id.value) == 'string') {
+            $item.attr('id', _id.value);
+          }
+        }
         form_contents = form_contents.substr(0, m_i.index) + '<input ' + 
-        convertParams(m_i[1], 'gwp-form-' + form_index + '-item') + '/>' + 
+        convertParams(params, 'gwp-form-' + form_index + '-item') + '/>' + 
         form_contents.substr(m_i.index + m_i[0].length);
       }
 
       while(m_o = other_ex.exec(form_contents)) {
         //console.log(m_o);
+        var params = parseParams(m_o[2]);
+        var _name = params.filter(function(item) { return item.name == 'name'})[0];
+        var _value = params.filter(function(item) { return item.name == 'value'})[0];
+        if(_name) {
+          var $item = $('<input>', {type: 'hidden', name: _name.value}).appendTo($form_element);
+          if(_value && $.type(_value.value) == 'string') {
+            $item.val(_value.value);
+          }
+          var _id = params.filter(function(item) { return item.name == 'id'})[0];
+          if(_id && $.type(_id.value) == 'string') {
+            $item.attr('id', _id.value);
+          }
+        }
         form_contents = form_contents.substr(0, m_o.index) + '<' + m_o[1] + ' ' + 
-        convertParams(m_o[2], 'gwp-form-' + form_index + '-item') + '>' + m_o[3] + 
+        convertParams(params, 'gwp-form-' + form_index + '-item') + '>' + m_o[3] + 
         '</' + m_o[4] + '>' + form_contents.substr(m_o.index + m_o[0].length);
       }
 
       //console.log('new form_contents', form_contents);
-
       /// изменяем html формы
       html = html.substr(0, m_f.index) + '<form index="' + form_index + '" ' + 
-        convertParams(m_f[1], 'gwp-fixed-form gwp-form-' + form_index) + '>' + form_contents + 
+        convertParams(formParams, 'gwp-fixed-form gwp-form-' + form_index) + '>' + form_contents + 
         '</form>' + html.substr(m_f.index + m_f[0].length);
 
       //console.log('new html: ', html);
@@ -3193,9 +3256,9 @@ $.fn.html = function(html) {
 
       /// вытаскиваем все баттоны, textarea
     });*/
-    if(__panel.responseURL().indexOf('quest.ganjawars.ru') != -1) {
+    /*if(__panel.responseURL().indexOf('quest.ganjawars.ru') != -1) {
       html = html.replace('document.forms.chatform.newline.focus()', 'jQuery("#newline").focus();');
-    }
+    }*/
   }
 
   var result = origHtml.apply(this, [html]);
@@ -3256,14 +3319,48 @@ $.fn.html = function(html) {
         return false;
       });
 
-      /// Если у формы есть имя то проставляем все document.forms.<NAME>
-      if(this.name) {
-        var formName = this.name;
-        $('.gwp-form-' + index + '-item[name]').each(function() {
-          if(!document.forms[formName][this.name]) {
-            document.forms[formName][this.name] = this;
+      // Если форма именованная, то мы должны убрать из её ID префикс "fake-"
+      // и заполнить её всеми инпутами и значениями которые были установлены
+      // в "подставной"" объект
+      var formID = $(this).attr('id');
+      var formName = $(this).attr('name');
+      if(formID) {
+        formID = formID.split('fake-')[1];
+        // получаем "подложный" объект
+        var fakeForm = document.forms[formID];
+        fakeForm.id = 'old-' + formID;
+        /// Меняем айди формы на правильный
+        $(this).attr('id', formID);
+        // заполняем правильную форму значениями из предыдущей
+        $.each(fakeForm.elements, function(i, item) {
+          if(document.forms[formID][this.name]) {
+            document.forms[formID][this.name].value = this.value;
+          } else {
+            /// Элемент не прописался в форму, добавляем его принудительно
+            document.forms[formID][this.name] = document.forms[formID]['elements'][this.name] = 
+              $('.gwp-form-' + index + '-item[name="' + this.name + '"]').get(0);
           }
         });
+        $(fakeForm).remove();
+      } else if(formName) {
+        /// То же самое с именем
+        formName = formName.split('fake-')[1];
+        // получаем "подложный" объект
+        var fakeForm = document.forms[formName];
+        fakeForm.name = 'old-' + formName;
+        /// Меняем айди формы на правильный
+        $(this).attr('name', formName);
+        // заполняем правильную форму значениями из предыдущей
+        $.each(fakeForm.elements, function(i, item) {
+          if(document.forms[formName][this.name]) {
+            document.forms[formName][this.name].value = this.value;
+          } else {
+            /// Элемент не прописался в форму, добавляем его принудительно
+            document.forms[formName][this.name] = document.forms[formName]['elements'][this.name] = 
+              $('.gwp-form-' + index + '-item[name="' + this.name + '"]').get(0);
+          }
+        });
+        $(fakeForm).remove();
       }
 
       var origSubmit = this.submit;
