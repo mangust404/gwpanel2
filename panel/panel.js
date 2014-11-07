@@ -2896,11 +2896,29 @@ window.Panel2 = new function() {
           search = '?' + ar[1];
         }
       } catch(e) {}
-      var performSmoothScroll = false;
+
+      var smoothScrollTop, smoothScrollBottom;
+
       if(pathname == location.pathname) {
-        if(search.indexOf('page_id') > -1 && $(window).scrollTop() > $(window).height() / 2) {
-          /// делаем плавный скролл
-          performSmoothScroll = true;
+        if(search.indexOf('page_id') > -1) {
+          // проверяем page_id у предыдущего урла и у следующего, плавно
+          // пролистываем только если переход на следующую страницу
+          var prev_page, next_page;
+          if(location.search.search(/page_id=([0-9]+)/)) {
+            prev_page = parseInt(RegExp.$1);
+          }
+          if(search.search(/page_id=([0-9]+)/)) {
+            next_page = parseInt(RegExp.$1);
+          }
+
+          if((prev_page < next_page || (!prev_page && next_page > 0)) &&
+              $(window).scrollTop() > $(window).height() / 2) {
+            /// делаем плавный скролл
+            smoothScrollTop = true;
+          } else if((prev_page > next_page && next_page > 0) && 
+             $(window).scrollTop() < $(window).height() / 2) {
+            smoothScrollBottom = true;
+          }
         }
       } else if(!noHistory) {
         $(window).scrollTop(0);
@@ -2945,11 +2963,14 @@ window.Panel2 = new function() {
         //console.log('noHistory, using prevScrollTop', prevScrollTop);
         $(window).scrollTop(prevScrollTop);
       } else {
-        if(performSmoothScroll) {
+        if(smoothScrollTop) {
           $('html,body').animate({
-            scrollTop: $('a[href$="' + pathname + search + '"]').offset().top - 40
+            scrollTop: $('a[href$="' + pathname + search + '"]:first').offset().top - 40
           }, 1000);
-          
+        } else if(smoothScrollBottom) {
+          $('html,body').animate({
+            scrollTop: $('a[href$="' + pathname + search + '"]:last').offset().top - $(window).height() + 100
+          }, 1000);
         }
         //console.log('pushing scrollTop: ', prevScrollTop);
         history.pushState({
