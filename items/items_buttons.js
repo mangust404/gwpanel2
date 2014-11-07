@@ -43,6 +43,10 @@
                       $(that).addClass('button-ok');
                     }
                   }
+                  if($(that).hasClass('button-ok') && $('a.ajax:first').length > 0 && 
+                     (location.pathname == '/me/' || location.pathname == '/items.php')) {
+                    panel.gotoHref(location.href, null, true);
+                  }
                 });
               } else {
                 /// содержимое комплекта не было сохранено, предполагаем что он наделся

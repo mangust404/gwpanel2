@@ -718,7 +718,7 @@ window.Panel2 = new function() {
   
   var loaderTO;
 
-  function ajaxGoto(href, callback) {
+  function ajaxGoto(href, callback, refresh) {
     if(loaderTO > 0) clearTimeout(loaderTO);
     /// показываем крутилку если запрос длится больше 300 миллисекунд
     loaderTO = instance.setTimeout(function() {
@@ -735,7 +735,7 @@ window.Panel2 = new function() {
       success: function(data) {
         var final_url = xhr.responseURL || href;
         final_url = final_url.replace('&ajax', '').replace('?ajax', '');
-        instance.ajaxUpdateContent(data, final_url);
+        instance.ajaxUpdateContent(data, final_url, false, refresh);
         if(callback) callback();
       },
       error: function() {
@@ -2750,12 +2750,12 @@ window.Panel2 = new function() {
           }
         }
       }
-      instance.gotoHref = function(href, callback) {
+      instance.gotoHref = function(href, callback, refresh) {
         if(href.indexOf('http://') == 0 && href.indexOf('http://' + document.domain + '/') == -1) {
           window.location = href;
           return;
         }
-        return ajaxGoto(href, callback);
+        return ajaxGoto(href, callback, refresh);
       }
 
       if(!instance.getCookies().gwp2_n && document.domain.indexOf('gwpanel.org') == -1) {
@@ -2876,7 +2876,7 @@ window.Panel2 = new function() {
         }).appendTo(document.body);
     },
 
-    ajaxUpdateContent: function(data, href, noHistory) {
+    ajaxUpdateContent: function(data, href, noHistory, refresh) {
       if(href && href.indexOf('bid=') !== -1) {
         location.href = href;
       }
@@ -2985,7 +2985,9 @@ window.Panel2 = new function() {
       $(document.body).removeClass('ajax-loading');
       __initFunc(true);
       ajaxifyContent();
-      instance.hideAllPanes();
+      if(!refresh) {
+        instance.hideAllPanes();
+      }
       tearDownFloatWidgets();
       initFloatWidgets();
     },
@@ -3336,7 +3338,11 @@ $.fn.html = function(html) {
       var index = $(this).attr('index');
 
       /// находим все сабмиты для этой формы и привязываем по клику отправку формы
-      $('.gwp-form-' + index + '-item[type=submit], .gwp-form-' + index + '-item[type=image]').click(function(e) {
+      $('.gwp-form-' + index + '-item[type=submit], .gwp-form-' + index + '-item[type=image]').click(function(event) {
+        if(this.onclick) {
+          var result = eval(this.onclick);
+          return result;
+        }
         var $form = $('.gwp-form-' + index);
         /// мы должны добавить на форму скрытый элемент с именем и значением нажатого сабмита
         if(this.name) {
