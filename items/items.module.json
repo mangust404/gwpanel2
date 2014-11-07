@@ -7,7 +7,8 @@
   "author_link": "http://www.ganjawars.ru/info.php?id=158249",
   "weight": 1, 
   "apply": {
-    "/items.php": ["items_sets"]
+    "/items.php": ["items_sets"],
+    "*": ["items_dress"]
   },
   "event": {
     "battleend": {
@@ -24,6 +25,9 @@
     "items_set_check": {
       "description": "Проверять текущий надетый комплект после боя",
       "file": "items.js"
+    },
+    "items_dress": {
+      "file": "items_dress.js"
     }
   },
   

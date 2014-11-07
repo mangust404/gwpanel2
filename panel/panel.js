@@ -3052,7 +3052,6 @@ $.fn.sendForm = function(options) {
     jQuery.each(s_data, function() {
       params.push(this.name + '=' + __panel.encodeURIComponent(this.value || options.data[this.name] || ''));
     });
-    console.log(s_data, params);
     /// отдаём в data строку
     options.data = params.join('&');
 

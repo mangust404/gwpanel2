@@ -44,6 +44,7 @@ jQuery.extend(panel, {
     var first_pane_with_buttons = null;
     var button_id = null;
 
+    /// При изменении селектбокса с комплектами
     $set_id.change(function() {
       $set_name.attr('placeholder', 
         $(this).find('option[value=' + $(this).val() + ']').text().substr(3)
@@ -149,6 +150,15 @@ jQuery.extend(panel, {
         });
       }, true);
       return false;
+    });
+  
+    /// если страница была вызвана через putset=N, то запоминаем комплект
+    panel.get('dress_on_set', function(set_id) {
+      if(set_id) {
+        panel.del('dress_on_set', function() {
+          panel.set('items_set_' + set_id, panel.get_set_str());
+        });
+      }
     });
   },
 
