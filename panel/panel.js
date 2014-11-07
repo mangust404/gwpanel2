@@ -3341,7 +3341,7 @@ $.fn.html = function(html) {
       $('.gwp-form-' + index + '-item[type=submit], .gwp-form-' + index + '-item[type=image]').click(function(event) {
         if(this.onclick) {
           var result = eval(this.onclick);
-          return result;
+          if(result === false) return result;
         }
         var $form = $('.gwp-form-' + index);
         /// мы должны добавить на форму скрытый элемент с именем и значением нажатого сабмита
