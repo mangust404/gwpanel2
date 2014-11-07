@@ -2877,7 +2877,7 @@ window.Panel2 = new function() {
     },
 
     ajaxUpdateContent: function(data, href, noHistory, refresh) {
-      if(href && href.indexOf('bid=') !== -1) {
+      if(href && href.indexOf('bid=') !== -1 && href.indexOf('/b0/') > -1) {
         location.href = href;
       }
       if(window.hptimer_header > 0) {
@@ -3349,7 +3349,12 @@ $.fn.html = function(html) {
           $('<input type="hidden" name="' + this.name + '" value="' + this.value +
             '" class="gwp-form-' + index + '-item">').appendTo($form);
         }
-        $form.eq(0).submit();
+        if(!$(this.form).closest('form').hasClass('.gwp-form-' + index)) {
+          /// Если сабмит "выпал"" из родной формы, то сабмитим родную форму
+          /// а не то где он сейчас находится
+          $form.eq(0).submit();
+          return false;
+        }
       });
 
       // Если форма именованная, то мы должны убрать из её ID префикс "fake-"
