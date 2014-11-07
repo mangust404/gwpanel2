@@ -3337,7 +3337,13 @@ $.fn.html = function(html) {
 
       /// находим все сабмиты для этой формы и привязываем по клику отправку формы
       $('.gwp-form-' + index + '-item[type=submit], .gwp-form-' + index + '-item[type=image]').click(function(e) {
-        $('.gwp-form-' + index).eq(0).submit();
+        var $form = $('.gwp-form-' + index);
+        /// мы должны добавить на форму скрытый элемент с именем и значением нажатого сабмита
+        if(this.name) {
+          $('<input type="hidden" name="' + this.name + '" value="' + this.value +
+            '" class="gwp-form-' + index + '-item">').appendTo($form);
+        }
+        $form.eq(0).submit();
       });
 
       // Если форма именованная, то мы должны убрать из её ID префикс "fake-"
