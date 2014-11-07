@@ -71,6 +71,7 @@
         this.over80 = true;
         this.addClass('over80');
       }
+      if(!this.hp_current) this.hp_current = health.hp_current;
       //this.show();
       var width = Math.round(100 * 100 * this.hp_current / health.hp_max) / 100;
       this.progressBar.css({width: width + '%'});
@@ -79,7 +80,7 @@
       var that = this;
       home_health_timer.apply(that, [health]);
 
-      if(this.hp_current >= health.hp_max) return;
+      if(this.hp_current >= health.hp_max || !health.hp_speed) return;
       this.healthUpdInterval = panel.setInterval(function() {
         home_health_timer.apply(that, [health]);
       }, 1000);
