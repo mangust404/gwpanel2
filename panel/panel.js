@@ -3331,6 +3331,7 @@ $.fn.html = function(html) {
         success: function(data) {
           __panel.tearDown();
           __panel.ajaxUpdateContent(data, __panel.responseURL() || $this.attr('action'));
+          $(window).scrollTop(0);
         }
       });
       return false;

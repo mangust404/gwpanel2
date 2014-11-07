@@ -160,6 +160,33 @@ jQuery.extend(panel, {
         });
       }
     });
+
+    if(location.search.search(/seek=([^=]+)/)) {
+      var seek = decodeURIComponent(RegExp.$1);
+      var $first_tr;
+      var trFound;
+      /// находим все предметы удовлетворяющие условию
+      $('a[href*="' + seek + '"]').each(function() {
+        var $item_tr = $(this).closest('tr[id*="item_tr"]');
+        if(!$first_tr) $first_tr = $item_tr;
+        if($item_tr.length > 0 && $item_tr.find('a[href*="workshop.php"]').length > 0) {
+          /// точное соответствие найдено
+          $item_tr.css({
+            'background-color': '#ffe0e0'
+          })
+          $('html,body').animate({
+            scrollTop: $item_tr.offset().top - 40
+          }, 1000);
+          trFound = true;
+        }
+      });
+      /// соответствие не найдено, переходим к первому похожему
+      if(!trFound) {
+        $('html,body').animate({
+          scrollTop: $first_tr.offset().top - 40
+        }, 1000);
+      }
+    }
   },
 
   get_set_str: function(data) {
@@ -203,17 +230,24 @@ jQuery.extend(panel, {
 
                 $.each(ar_set, function(i, item) {
                   if(ar_dressed.indexOf(item) == -1) {
-                    item = item.split('=')[1];
+                    item = item.substr(item.indexOf('=') + 1);
                     var ar = item.split('&');
                     var item_id = ar[0];
-                    missed_items += '<a href="http://www.ganjawars.ru/item.php?item_id=' + 
-                      item + '"><img src="http://images.ganjawars.ru/img/items/' + item_id + '_s.jpg" /></a>';
+                    missed_items += '<a href="http://www.ganjawars.ru/items.php?seek=' + 
+                      panel.encodeURIComponent(item) + '"><img src="http://images.ganjawars.ru/img/items/' + item_id + '_s.jpg" /></a>';
                   }
                 });
 
                 if(missed_items) {
                 //http://images.ganjawars.ru/img/items/warlordboots_s.jpg
                   panel.showFlash('<p>Внимание! В комплекте не найдены:</p><center>' + missed_items + '</center>');
+                  if($('a.ajax:first').length > 0) {
+                    $('.panel-flash a').click(function() {
+                      panel.gotoHref(this.href);
+                      $('.panel-flash').remove();
+                      return false;
+                    });
+                  }
                 }
               }
             }
