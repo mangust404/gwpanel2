@@ -2658,11 +2658,13 @@ window.Panel2 = new function() {
     */
     encodeURIComponent: function(str) {
       if(!str) return str;
-      str = String(str).replace(/%/g, '%25').replace(/\+/g, '%2B');
+      str = String(str).replace(/%/g, '%25').replace(/\+/g, '%2B')
+              .replace(/\r/g, '\\r').replace(/\n/g, '\\n');
       var a = document.createElement('a');
       a.href = "http://www.ganjawars.ru/encoded_str=?" + str;
       return a.href.split('encoded_str=?')[1].replace(/%20/g, '+')
-              .replace(/=/g, '%3D').replace(/&/g, '%26');
+              .replace(/=/g, '%3D').replace(/&/g, '%26')
+              .replace(/\\n/g, "\n").replace(/\\r/g, "\r");
     },
 
     /**
@@ -3050,6 +3052,7 @@ $.fn.sendForm = function(options) {
     jQuery.each(s_data, function() {
       params.push(this.name + '=' + __panel.encodeURIComponent(this.value || options.data[this.name] || ''));
     });
+    console.log(s_data, params);
     /// отдаём в data строку
     options.data = params.join('&');
 

@@ -1535,6 +1535,7 @@ QUnit.test('Тест функции encodeURIComponent', function(assert) {
     assert.equal(encodeURIComponent('абвгдежзийклмноп'), '%E0%E1%E2%E3%E4%E5%E6%E7%E8%E9%EA%EB%EC%ED%EE%EF', 'абвгдежзийклмноп');
     assert.equal(encodeURIComponent('рстуфхцчшщъыьэюя'), '%F0%F1%F2%F3%F4%F5%F6%F7%F8%F9%FA%FB%FC%FD%FE%FF', 'рстуфхцчшщъыьэюя');
     assert.equal(encodeURIComponent('sx=150&sy=150'), 'sx%3D150%26sy%3D150', 'sx=150&sy=150');
+    assert.equal(encodeURIComponent("test\r\nпривет\r\n"), "test\r\n%EF%F0%E8%E2%E5%F2\r\n", "переносы строк");
   }
 });
 
