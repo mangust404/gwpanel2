@@ -726,9 +726,12 @@ window.Panel2 = new function() {
     instance.tearDown();
     var i;
     var count = 0;
-    $.ajax(href, {
+    var goto_href = href + (href.indexOf('?') > -1? '&ajax': '?ajax');
+    $.ajax(goto_href, {
       success: function(data) {
-        instance.ajaxUpdateContent(data, xhr.responseURL || href);
+        var final_url = xhr.responseURL || href;
+        final_url = final_url.replace('&ajax', '').replace('?ajax', '');
+        instance.ajaxUpdateContent(data, final_url);
         if(callback) callback();
       },
       error: function() {
