@@ -96,6 +96,8 @@ window.Panel2 = new function() {
   var safeTimeouts = [];
 
   var xhr;
+
+  var prevScrollTop;
   /******************************
   *******Приватные методы********
   *******************************/
@@ -727,6 +729,8 @@ window.Panel2 = new function() {
     var i;
     var count = 0;
     var goto_href = href + (href.indexOf('?') > -1? '&ajax': '?ajax');
+
+    prevScrollTop = $(window).scrollTop();
     $.ajax(goto_href, {
       success: function(data) {
         var final_url = xhr.responseURL || href;
@@ -2732,7 +2736,10 @@ window.Panel2 = new function() {
             if($div.find('#gw-content').length > 0) {
               var content = $div.find('#gw-content').html();
             }*/
+
             instance.ajaxUpdateContent(event.state.data, null, true);
+
+            prevScrollTop = event.state.scrollTop;
 
             /*document.title = event.state.title;
             __initFunc();
@@ -2880,7 +2887,16 @@ window.Panel2 = new function() {
         clearTimeout(window.hptimer);
         window.hptimer = 0;
       }
-      $(window).scrollTop(0);
+      var pathname;
+      try {
+        if(href) {
+          pathname = href.split(document.domain)[1].split('?')[0];
+        }
+      } catch(e) {}
+      if(pathname == location.pathname) {
+      } else if(!noHistory) {
+        $(window).scrollTop(0);
+      }
       instance.clearTimeouts();
       $(document.body).addClass('ajax-processed');
       if(href && href.indexOf('/sms.php') > -1) $('img[src$="sms.gif"]').closest('a').remove();
@@ -2917,10 +2933,15 @@ window.Panel2 = new function() {
       }
       //if(title) document.title = title + ' :: Ganjawars.ru :: Ганджубасовые войны';
       $(document.body).removeClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
-      if(!noHistory) {
+      if(noHistory) {
+        //console.log('noHistory, using prevScrollTop', prevScrollTop);
+        $(window).scrollTop(prevScrollTop);
+      } else {
+        //console.log('pushing scrollTop: ', prevScrollTop);
         history.pushState({
           data: data, 
-          title: document.title
+          title: document.title,
+          scrollTop: prevScrollTop
         }, document.title, href);
       }
       $(document.body).addClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
@@ -3047,6 +3068,9 @@ $.fn.sendForm = function(options) {
 
     if(!$form.attr('method') || ($form.attr('method') && $form.attr('method').toLowerCase() == 'get')) {
       var href = ($form.attr('action') || location.pathname);
+      if(href.indexOf('javascript:') == 0) {
+        return;
+      }
       if(href.indexOf('http:') == -1) {
         href = location.protocol + '//' + location.hostname + href;
       }
@@ -3077,7 +3101,7 @@ var origHtml = jQuery.fn.html;
 var form_index = 0;
 
 function parseParams(params) {
-  param_ex = /(\b\w+\b)\s*(=\s*("[^"]+"|'[^']+'|[^"'<>\s]+))?\s*/g
+  var param_ex = /(\b\w+\b)\s*(=\s*("[^"]+"|'[^']+'|[^"'<>\s]+))?\s*/g
   //console.log('params to parse: ', params);
 
   var params_ar = [];
@@ -3129,7 +3153,7 @@ function convertParams(params_ar, className) {
 }
 
 $.fn.html = function(html) {
-  var forms_fixed;
+  var forms_fixed = false;
   if(html && $.type(html) == 'string') {
     //console.log('preparing html');
     /// вытаскиваем все формы
@@ -3140,8 +3164,6 @@ $.fn.html = function(html) {
     var form_start = html.indexOf('<form');
 
     while(m_f = form_ex.exec(html)) {
-      //console.log(m_f);
-
       if(m_f[1].indexOf('gwp-form') > -1 || html.substr(m_f.index - 20, 20).indexOf('innerHTML') > -1) {
         continue;
       }
@@ -3150,12 +3172,16 @@ $.fn.html = function(html) {
       //console.log('form_contents', form_contents);
       var formParams = parseParams(m_f[1]);
 
-      var formID, formName;
+      var formID = null;
+      var formName = null;
       var _formID = formParams.filter(function(item) { return item.name == 'id'})[0];
       var _formName = formParams.filter(function(item) { return item.name == 'name'})[0];
 
+      //console.log('formParams: ', JSON.stringify(formParams));
+      //console.log('_formID: ', _formID, '_formName: ', _formName);
+      //console.log('formID: ', formID, 'formName: ', formName);
       /// делаем виртуальную форму
-      var $form_element;
+      var $form_element = null;
 
       if(_formID) {
         // Если форма имеет ID, то мы подменяем его на другой и создаём
@@ -3165,20 +3191,20 @@ $.fn.html = function(html) {
         // эту форму и подставим все значения которые выставляли инлайновые скрипты.
         formID = _formID.value;
         _formID.value = 'fake-' + formID;
-        if(!$form_element) {
-          $form_element = $('<form>').appendTo(document.body);
-        }
-        $form_element.attr('id', formID);
+        $form_element = $('<form id="' + formID + '">').appendTo(document.body);
       }
       if(_formName) {
         // то же самое с именованными формами
         formName = _formName.value;
         _formName.value = 'fake-' + formName;
-        if(!$form_element) {
-          $form_element = $('<form>').appendTo(document.body);
+        if($form_element) {
+          /// если форма уже создана
+          $form_element.attr('name', formName);
+        } else {
+          $form_element = $('<form name="' + formName + '">').appendTo(document.body);
         }
-        $form_element.attr('name', formName);
       }
+      //console.log('form: ', formID, formName);
 
       while(m_i = input_ex.exec(form_contents)) {
         var params = parseParams(m_i[1]);
@@ -3219,7 +3245,8 @@ $.fn.html = function(html) {
         '</' + m_o[4] + '>' + form_contents.substr(m_o.index + m_o[0].length);
       }
 
-      //console.log('new form_contents', form_contents);
+      //console.log('new form_params: ', convertParams(formParams, 'gwp-fixed-form gwp-form-' + form_index));
+      //console.log('new form_contents: ', form_contents);
       /// изменяем html формы
       html = html.substr(0, m_f.index) + '<form index="' + form_index + '" ' + 
         convertParams(formParams, 'gwp-fixed-form gwp-form-' + form_index) + '>' + form_contents + 
@@ -3245,6 +3272,7 @@ $.fn.html = function(html) {
   var result = origHtml.apply(this, [html]);
 
   if(forms_fixed) {
+    if(!forms_fixed) return;
     result.find('.gwp-fixed-form').submit(function() {
       /// Перед сабмитом собираем все элементы
       var $this = $(this);
@@ -3253,7 +3281,12 @@ $.fn.html = function(html) {
       var action = $this.attr('action');
       if(action.indexOf('javascript:') > -1) {
         /// Добавляем в форму все элементы, которые были из неё удалены
-        throw 'javascript form';
+        try {
+          eval(action);
+        } catch(e) {
+          if(window.console) console.log(e);
+        }
+        return false;
       }
 
       $(this).sendForm({
@@ -3269,35 +3302,7 @@ $.fn.html = function(html) {
 
       /// находим все сабмиты для этой формы и привязываем по клику отправку формы
       $('.gwp-form-' + index + '-item[type=submit], .gwp-form-' + index + '-item[type=image]').click(function(e) {
-        var onclick = this.onclick;
-        if(onclick) {
-          if(onclick() === false) {
-            //console.log('false');
-            return false;
-          }
-        }
-
-        var data = $('.gwp-form-' + index + '-item:not([type=submit]):not([type=image])').serializeArray();
-        /// Если сабмит имеет имя, то добавляем к параметрам имя кликнутого сабмита
-        if(this.name) {
-          data.push({name: this.name, value: this.value});
-        }
-        var $form = $('.gwp-form-' + index).eq(0);
-
-        var action = $form.attr('action');
-        if(action.indexOf('javascript:') > -1) {
-          $form.submit();
-          return true;
-        }
-
-        $form.sendForm({
-          data: data,
-          success: function(data) {
-            __panel.tearDown();
-            __panel.ajaxUpdateContent(data, __panel.responseURL() || $form.attr('action'));
-          }
-        });
-        return false;
+        $('.gwp-form-' + index).eq(0).submit();
       });
 
       // Если форма именованная, то мы должны убрать из её ID префикс "fake-"
@@ -3305,12 +3310,14 @@ $.fn.html = function(html) {
       // в "подставной"" объект
       var formID = $(this).attr('id');
       var formName = $(this).attr('name');
+      //console.log('processing form, ', 'formID: ', formID, ', formName: ', formName);
       if(formID) {
         formID = formID.split('fake-')[1];
         // получаем "подложный" объект
         var fakeForm = document.forms[formID];
         if(fakeForm) {
-          fakeForm.id = 'old-' + formID;
+          //console.log(fakeForm);
+          $(fakeForm).attr('id', 'old-' + formID);
           /// Меняем айди формы на правильный
           $(this).attr('id', formID);
           // заполняем правильную форму значениями из предыдущей
@@ -3328,10 +3335,12 @@ $.fn.html = function(html) {
       } else if(formName) {
         /// То же самое с именем
         formName = formName.split('fake-')[1];
+        //console.log('real name: ', formName);
         // получаем "подложный" объект
         var fakeForm = document.forms[formName];
+        //console.log('fake form: ', fakeForm);
         if(fakeForm) {
-          fakeForm.name = 'old-' + formName;
+          $(fakeForm).attr('name', 'old-' + formName);
           /// Меняем айди формы на правильный
           $(this).attr('name', formName);
           // заполняем правильную форму значениями из предыдущей
@@ -3348,10 +3357,17 @@ $.fn.html = function(html) {
         }
       }
 
+      /// Переопределяем стандартную функцию сабмита в аяксовую
       var origSubmit = this.submit;
       var that = this;
       this.submit = function() {
         try {
+          var action = $(that).attr('action');
+          if(action.indexOf('javascript:') > -1) {
+            if(eval(action.split('javascript:')[1]) === false) {
+              return false;
+            }
+          }
           $(that).submit();
         } catch(e) {
           origSubmit();
