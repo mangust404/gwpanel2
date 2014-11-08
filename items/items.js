@@ -22,15 +22,23 @@ jQuery.extend(panel, {
   items_sets: function() {
     var $set_id = $('select[name="set_id"]');
     /// вытаскиваем сеты и определяем какой сейчас надет
-    var dressed = panel.get_set_str();
-    for(var i = 1; i <= parseInt($set_id.find('option:last').val()); i++) {
-      panel.get('items_set_' + i, function(set) {
-        if(dressed == set) {
-          $set_id.val(i).change();
-          i = 999;
+    panel.get('items_current_set', function(current_set) {
+      if(current_set > 0) {
+        /// если мы знаем какой комлект сейчас надет, то выбираем его
+        $set_id.val(current_set).change();
+      } else {
+        var dressed = panel.get_set_str();
+        /// если не знаем, то пытаемся определить из всех сохранённых комплектов
+        for(var i = 1; i <= parseInt($set_id.find('option:last').val()); i++) {
+          panel.get('items_set_' + i, function(set) {
+            if(dressed == set) {
+              $set_id.val(i).change();
+              i = 999;
+            }
+          }, true);
         }
-      }, true);
-    }
+      }
+    }, true);
     var $form = $set_id.closest('form');
     var $set_name = $form.find('input[name="set_name"]');
     var current_icon;
@@ -133,7 +141,7 @@ jQuery.extend(panel, {
                 current_options.panes[pane_id].buttons[button_id].title = $set_name.val();
                 panel.setOptions(current_options);
                 $('.pane').remove();
-                panel.showFlash('Кнопка изменена');
+                panel.showFlash('Кнопка изменена', 'message', 3000);
               } else if($('#add-button:checked').length) {
                 panel.addButton(first_pane_with_buttons, 
                   'items_putset_button', 
@@ -144,7 +152,7 @@ jQuery.extend(panel, {
                   }
                 ));
                 panel.setOptions(current_options);
-                panel.showFlash('Кнопка добавлена');
+                panel.showFlash('Кнопка добавлена', 'message', 3000);
               }
               $form.submit();
             });
@@ -156,9 +164,13 @@ jQuery.extend(panel, {
     /// если страница была вызвана через putset=N, то запоминаем комплект
     panel.get('dress_on_set', function(set_id) {
       if(set_id) {
-        panel.del('dress_on_set', function() {
-          panel.set('items_set_' + set_id, panel.get_set_str());
-        });
+        panel.set('items_current_set', set_id, function() {
+          /// меняем текущий выбранный комплект
+          $set_id.val(set_id).change();
+          panel.del('dress_on_set', function() {
+            panel.set('items_set_' + set_id, panel.get_set_str());
+          });
+        }, true);
       }
     });
 
@@ -195,7 +207,7 @@ jQuery.extend(panel, {
         window.postdo = function(href) {
           originalPostdo(href);
           setTimeout(function() {
-            panel.items_sets();
+            panel.ajaxRefresh();
           }, 1000);
           return false;
         }
