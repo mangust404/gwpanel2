@@ -238,6 +238,7 @@ function make_bootstrap($domain, $path, $libs) {
           package = window.__package;
 
           setDB(package_version, package, function() {
+            sessionStorage.clear();
             callback(package);
           });
         }, false);

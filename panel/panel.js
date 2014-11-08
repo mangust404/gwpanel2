@@ -3359,21 +3359,18 @@ $.fn.html = function(html) {
       while(m_o = other_ex.exec(form_contents)) {
         //console.log(m_o);
         var params = parseParams(m_o[2]);
+
+        var item_html = '<' + m_o[1] + ' ' + 
+          convertParams(params, 'gwp-form-' + form_index + '-item') + '>' + m_o[3] + 
+          '</' + m_o[4] + '>';
+
         var _name = params.filter(function(item) { return item.name == 'name'})[0];
         var _value = params.filter(function(item) { return item.name == 'value'})[0];
         if(_name) {
-          var $item = $('<input>', {type: 'hidden', name: _name.value}).appendTo($form_element);
-          if(_value && $.type(_value.value) == 'string') {
-            $item.val(_value.value);
-          }
-          var _id = params.filter(function(item) { return item.name == 'id'})[0];
-          if(_id && $.type(_id.value) == 'string') {
-            $item.attr('id', _id.value);
-          }
+          var $item = $(item_html).appendTo($form_element);
         }
-        form_contents = form_contents.substr(0, m_o.index) + '<' + m_o[1] + ' ' + 
-        convertParams(params, 'gwp-form-' + form_index + '-item') + '>' + m_o[3] + 
-        '</' + m_o[4] + '>' + form_contents.substr(m_o.index + m_o[0].length);
+        form_contents = form_contents.substr(0, m_o.index) + item_html + 
+                        form_contents.substr(m_o.index + m_o[0].length);
       }
 
       //console.log('new form_params: ', convertParams(formParams, 'gwp-fixed-form gwp-form-' + form_index));
