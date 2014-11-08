@@ -749,7 +749,10 @@ window.Panel2 = new function() {
   var originalData, originalTitle;
 
   function ajaxifyLinks($links) {
-    $links.addClass('ajax').click(function(e) {
+    function ajaxClickFunc(e) {
+      if(e.isDefaultPrevented() && e.isPropagationStopped()) {
+        return false;
+      }
       if(e.ctrlKey || e.altKey || e.button != 0) return true;
       var href = $(this).attr('href');
       if(href.indexOf('/battle.php') > -1 || 
@@ -757,7 +760,16 @@ window.Panel2 = new function() {
       if(document.location.toString().indexOf(href) > -1) return true;
       ajaxGoto(href);
       return false;
-    });
+    }
+
+    $links.addClass('ajax')
+      .click(ajaxClickFunc)
+      .mousedown(function() {
+        /// утаскиваем местный обработчик click в конец массива событий
+        $._data(this, 'events').click.sort(function(a, b) {
+            if(a.handler == ajaxClickFunc) return 1;
+        });
+      });
   }
 
   function ajaxifyContent() {
@@ -3041,6 +3053,18 @@ window.Panel2 = new function() {
         } catch(e) {}
       }
     },
+
+    ajaxRefresh: function(refresh) {
+      instance.tearDown();
+      instance.clearTimeouts();
+      __initFunc(true);
+      ajaxifyContent();
+      if(!refresh) {
+        instance.hideAllPanes();
+      }
+      tearDownFloatWidgets();
+      initFloatWidgets();
+    },
     /**
     * Публичные аттрибуты
     */
@@ -3341,8 +3365,10 @@ $.fn.html = function(html) {
     }).each(function() {
       var index = $(this).attr('index');
 
-      /// находим все сабмиты для этой формы и привязываем по клику отправку формы
-      $('.gwp-form-' + index + '-item[type=submit], .gwp-form-' + index + '-item[type=image]').click(function(event) {
+      function submitClickHandler(event) {
+        if(event.isDefaultPrevented() && event.isPropagationStopped()) {
+          return false;
+        }
         if(this.onclick) {
           var result = eval(this.onclick);
           if(result === false) return result;
@@ -3359,7 +3385,17 @@ $.fn.html = function(html) {
           $form.eq(0).submit();
           return false;
         }
-      });
+      }
+      /// находим все сабмиты для этой формы и привязываем по клику отправку формы
+      $('.gwp-form-' + index + '-item[type=submit], ' + 
+        '.gwp-form-' + index + '-item[type=image]')
+        .click(submitClickHandler)
+        .mousedown(function() {
+          /// утаскиваем местный обработчик click в конец массива событий
+          $._data(this, 'events').click.sort(function(a, b) {
+            if(a.handler == submitClickHandler) return 1;
+          });
+        });
 
       // Если форма именованная, то мы должны убрать из её ID префикс "fake-"
       // и заполнить её всеми инпутами и значениями которые были установлены
