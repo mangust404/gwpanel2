@@ -24,7 +24,13 @@
     },
     "items_set_check": {
       "description": "Проверять текущий надетый комплект после боя",
-      "file": "items.js"
+      "file": "items.js",
+      "configure": {
+        "nocheck_grenade": {
+          "type": "checkbox",
+          "title": "Не проверять гранату"
+        }
+      }
     },
     "items_dress": {
       "file": "items_dress.js"

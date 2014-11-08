@@ -207,8 +207,12 @@ jQuery.extend(panel, {
         window.postdo = function(href) {
           $.ajax(href, {
             success: function(data) {
-              __panel.ajaxUpdateContent(data);
-              panel.ajaxRefresh();
+              if($('a.ajax:first').length) {
+                __panel.ajaxUpdateContent(data);
+                panel.ajaxRefresh();
+              } else {
+                $('#itemsbody').html(data);
+              }
             }
           });
           return false;
@@ -240,7 +244,7 @@ jQuery.extend(panel, {
     return ar.join('+');
   },
 
-  items_set_check: function() {
+  items_set_check: function(options, event) {
     panel.get('items_current_set', function(set_id) {
       panel.get('items_set_' + set_id, function(set) {
         if(set) {
@@ -258,6 +262,8 @@ jQuery.extend(panel, {
 
                 $.each(ar_set, function(i, item) {
                   if(ar_dressed.indexOf(item) == -1) {
+                    var slot = item.substr(0, item.indexOf('='));
+                    if(options.nocheck_grenade && slot == 'gr') return;
                     item = item.substr(item.indexOf('=') + 1);
                     var ar = item.split('&');
                     var item_id = ar[0];
