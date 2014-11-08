@@ -310,7 +310,22 @@ jQuery.extend(panel, {
           panel_master_form2($master.find('.step2 .content'));
         })));
 
-        
+        $('<a class="ui-btn ui-icon-delete ui-btn-icon-right">Закрыть</a>')
+          .css({
+            position: 'absolute',
+            bottom: 0,
+            right: 10
+          })
+          .click(function() {
+            if(confirm('Если вы закроете мастер, вам будут выставлены настройки по-умолчанию и их придётся настраивать вручную.\nЭто может быть довольно утомительно :-(\nВы уверены что хотите это сделать?')) {
+              document.cookie = 'gwp2_mc=1;domain=.ganjawars.ru';
+              $('#panel-settings-editor').fadeOut(function() {
+                location.href = location.href;
+              });
+            }
+            return false;
+          })
+          .appendTo($master);
         $master.appendTo(document.body).trigger('create');
       });
     });

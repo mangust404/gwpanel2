@@ -44,7 +44,9 @@ window.Panel2 = new function() {
     /// системные опции
     system: {
       /// текущая тема
-      theme: 'base'
+      theme: 'base',
+      btnwidth: 70,
+      btnheight: 85
     },
     /// настройки включенных окон
     panes: [{height: 4, width: 6, buttons: [], widgets: []}, 
@@ -1409,7 +1411,7 @@ window.Panel2 = new function() {
             }
           } else {
             /// Вызываем мастер настроек
-            if(document.domain.indexOf('ganjawars.ru') > -1 && environment != 'testing') {
+            if(document.domain.indexOf('ganjawars.ru') > -1 && environment != 'testing' && !instance.getCookies()['gwp2_mc']) {
               instance.loadScript('panel/panel_master.js', function() {
                 instance.panel_master();
               });
@@ -1865,8 +1867,7 @@ window.Panel2 = new function() {
           var val = JSON.parse(localStorage['gwp2_' + key]);
           return callback(val);
         } catch(e) {
-          console.log('wrong value for ' + key + ': ' + localStorage['gwp2_' + key]);
-          console.log(e);
+          instance.dispatchException(e);
         }
         callback(null);
         return;
