@@ -209,6 +209,7 @@ jQuery.extend(panel, {
             success: function(data) {
               if($('a.ajax:first').length) {
                 __panel.ajaxUpdateContent(data);
+                panel.ajaxTearDown();
                 panel.ajaxRefresh();
               } else {
                 $('#itemsbody').html(data);

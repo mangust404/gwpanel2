@@ -413,22 +413,45 @@ function make_bootstrap($domain, $path, $libs) {
       }
     }
 
-    window.__clearCache = function() {
+    window.__getCookies = function() {
+      var cookie, i, length, keyValue;
+      var __cookies = {};
+      cookie = document.cookie.split('; ');
+      for(i = 0, length = cookie.length; i < length; i++){
+        keyValue = cookie[i].split("=");
+        __cookies[keyValue[0]] = encodeURIComponent(keyValue[1]);
+      }
+      return __cookies;
+    }
+
+    window.__clearCache = function(domain_prefix) {
+      var myDate = new Date();
+      if(!domain_prefix) {
+        /// если не указан префикс домена, то это глобальная очистка
+        document.cookie = "gwp2_c=;expires=" + myDate 
+                         + ";domain=.ganjawars.ru;path=/";
+        /// очищаем остальные куки
+        document.cookie = "gwp2_st=;expires=" + myDate 
+                       + ";domain=.ganjawars.ru;path=/";
+        document.cookie = "gwp2_v=;expires=" + myDate 
+                       + ";domain=.ganjawars.ru;path=/";
+      }
       /// предотвращаем заполнение sessionStorage скриптами из старого пакета
       package = false;
-      /// очищаем временное хранилище
+      /// очищаем временное хранилище для этого домена
       sessionStorage.clear();
-      /// очищаем базу
+      /// очищаем базу для этого домена
       delDB();
-      /// очищаем куки
-      var myDate = new Date();
-      document.cookie = "gwp2_st=;expires=" + myDate 
-                     + ";domain=.ganjawars.ru;path=/";
-      document.cookie = "gwp2_v=;expires=" + myDate 
-                     + ";domain=.ganjawars.ru;path=/";
     }
 
     var panelInitFunc = function(version) {
+      /// определяем, нужно ли очистить кеш для этого домена
+      var domainPrefix = document.domain.split(\'.\')[0];
+      var cachedDomains = (__getCookies().gwp2_c || \'\').split("-");
+      if(cachedDomains.length > 0 && cachedDomains.indexOf(domainPrefix) == -1) {
+        __clearCache(domainPrefix);
+      }
+
       window.__checkoutPackage(version, function(package) {
         window.__loadScript(["lib/settings.js", 
                               "panel/panel.js", 
@@ -436,6 +459,17 @@ function make_bootstrap($domain, $path, $libs) {
                               "apply.js"], function() {
           window.__panel = new window.Panel2(environment, panelURL);
           window.__panel.init();
+          window.__panel.ready(function() {
+            /// проверяем закеширован ли домен. Если нет, добавляем.
+            /// по идее панель должна была добавить домен в список
+            var cachedDomains = (__getCookies().gwp2_c || \'\').split(\'-\');
+            if(cachedDomains.indexOf(domainPrefix) == -1) {
+              cachedDomains.push(domainPrefix);
+              var myDate = new Date();
+              myDate.setMonth(myDate.getMonth() + 120);
+              document.cookie = "gwp2_c=" + cachedDomains.join(\'-\') + ";expires=" + myDate + ";domain=.ganjawars.ru;path=/";
+            }
+          });
         }, function(e) {
           if(window.console) console.log(e);
           if(confirm("' . iconv('UTF-8', 'CP1251', 'Упс. Кажется в версии GWPanel, которая у вас сейчас сохранена, произошла какая-то ошибка.\n Скорее всего она уже исправлена, надо просто обновиться. Вы хотите попробовать это сделать?') . '")) {
