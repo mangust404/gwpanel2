@@ -785,14 +785,32 @@ window.Panel2 = new function() {
     $('.broken-form:not(.processed)').each(function() {
       var form_id = $(this).attr('form-id');
       var $form = $(this);
+
       $('input.form-' + form_id + '[type=submit], ' + 
         'input.form-' + form_id + '[type=image]').click(function() {
         if($(this).attr('onclick')) return true;
+
         var s_data = $('input.form-' + form_id + ', textarea.form-' + form_id + ', select.form-' + form_id).serializeArray();
         var params = [];
         $.each(s_data, function() {
             params.push(this.name + '=' + __panel.encodeURIComponent(this.value || options.data[this.name]));
         });
+
+        function regularSend() {
+          /// функция-обход для отправки через браузер если произошла ошибка
+          var $new_form = $('<form>', {
+            method: 'POST',
+            action: $form.attr('action') || location.href
+          }).appendTo(document.body);
+          $.each(s_data, function(i, item) {
+            $('<input>', {
+              type: 'hidden',
+              name: item.name,
+              value: item.value
+            }).appendTo($new_form);
+          });
+          $new_form.submit();
+        }
 
         var href = $form.attr('action') || location.href;
         var options = {
@@ -802,10 +820,20 @@ window.Panel2 = new function() {
               href = location.href;
             }
             instance.ajaxUpdateContent(data, xhr.responseURL || href);
+          },
+          error: function() {
+            regularSend();
           }
         };
 
         options.data = params.join('&');
+
+        /// форма отплытия
+        if(location.hostname == 'quest.ganjawars.ru' && options.data.indexOf('sectorout') > -1) {
+          regularSend();
+          return false;
+        }
+
         $.ajax(href, options);
 
         return false;

@@ -205,10 +205,12 @@ jQuery.extend(panel, {
       var originalPostdo = window.postdo;
       if(originalPostdo.toString().indexOf('originalPostdo') == -1) {
         window.postdo = function(href) {
-          originalPostdo(href);
-          setTimeout(function() {
-            panel.ajaxRefresh();
-          }, 1000);
+          $.ajax(href, {
+            success: function(data) {
+              __panel.ajaxUpdateContent(data);
+              panel.ajaxRefresh();
+            }
+          });
           return false;
         }
       }
