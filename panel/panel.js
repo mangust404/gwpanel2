@@ -2577,7 +2577,7 @@ window.Panel2 = new function() {
           for(var i = 0; i < str_version.length; i++) {
             path += "/" + str_version.charAt(i);
           }
-          path += "/" + str_version + ".notes.js";
+          path += "/" + str_version + ".notes.js?" + (new Date).getTime();
           var s = document.createElement('script');
           s.type = 'text/javascript';
           s.src = path;
