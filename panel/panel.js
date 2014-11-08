@@ -3071,9 +3071,9 @@ $.fn.sendForm = function(options) {
       var s_data = $form.serializeArray();
     }
 
-    __panel.setTimeout(function() {
-      $(document.body).addClass('ajax-loading');
-    }, 300);
+    //__panel.setTimeout(function() {
+    $(document.body).addClass('ajax-loading');
+    //}, 300);
 
     /// функция-обход для отправки через браузер
     function regularSend() {
