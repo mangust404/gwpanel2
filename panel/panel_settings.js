@@ -798,30 +798,44 @@
         $('#edit-other-wrapper .options-variants').append(variant_select).append(n).append(d).trigger('create');
       }, true);
 
-      $('<h2>Текущая версия: <span class="current-version">' + panel.getVersion() + '</span></h2>').append(
-        $('<a class="ui-btn ui-btn-inline ui-mini ui-btn-icon-right ui-icon-refresh">проверить</a>').click(function() {
-          var $that = $(this);
-          panel.checkVersion(function(remote_version) {
-            if(remote_version != panel.getVersion()) {
-              $that.html('обновлено');
-              panel.updateVersion(remote_version, function(notes, version) { 
-                $('#edit-other-wrapper .versions .release-note:first').parent().prepend(
-                  '<p class="release-note active release-note-' + version +
-                  '">Выпуск #<span class="release-num">' + version + 
-                  '</span>: <span class="notes">' + notes.notes + 
-                  '</span><span class="date">' + formatNotesDate(notes.date) + 
-                  '</span></p>'
-                );
-              });
-              $('.current-version').html(remote_version);
-            } else {
-              $that.html('у вас самая свежая версия').addClass('ui-btn-active ui-focus');
-            }
-            $that.removeClass('ui-icon-refresh').addClass('ui-icon-check');
-          })
-          return false;
-        }).css({marginLeft: 30})
-      ).appendTo('#edit-other-wrapper .versions');
+      $('<h2>Текущая версия: <span class="current-version">' + panel.getVersion() + '</span></h2>')
+        .append(
+          $('<a class="ui-btn ui-btn-inline ui-mini ui-btn-icon-right ui-icon-refresh">проверить</a>')
+            .click(function() {
+              var $that = $(this);
+              panel.checkVersion(function(remote_version) {
+                if(remote_version != panel.getVersion()) {
+                  $that.html('обновлено');
+                  panel.updateVersion(remote_version, function(notes, version) { 
+                    $('#edit-other-wrapper .versions .release-note:first').parent().prepend(
+                      '<p class="release-note active release-note-' + version +
+                      '">Выпуск #<span class="release-num">' + version + 
+                      '</span>: <span class="notes">' + notes.notes + 
+                      '</span><span class="date">' + formatNotesDate(notes.date) + 
+                      '</span></p>'
+                    );
+                  });
+                  $('.current-version').html(remote_version);
+                } else {
+                  $that.html('у вас самая свежая версия').addClass('ui-btn-active ui-focus');
+                }
+                $that.removeClass('ui-icon-refresh').addClass('ui-icon-check');
+              })
+              return false;
+            })
+            .css({marginLeft: 30})
+        )
+        .append(
+          $('<a class="ui-btn ui-btn-inline ui-mini ui-btn-icon-right ui-icon-delete">очистить кеш</a>')
+            .click(function() {
+              $(this)
+                .html('Кеш скриптов очищен, обновите страницу')
+                .addClass('ui-btn-active ui-focus');
+              return false;
+            })
+            .css({marginLeft: 30})
+        )
+        .appendTo('#edit-other-wrapper .versions');
 
       var releases = $('<div class="releases" data-role="collapsible"' + 
         (active_section == 'release_notes'? 'data-collapsed="false"': '') + 
