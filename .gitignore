@@ -1,4 +1,5 @@
 release/
+!release/migration/
 doc/
 gwpanel2.user.js
 apply.js
