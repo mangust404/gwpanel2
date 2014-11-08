@@ -245,7 +245,7 @@ window.Panel2 = new function() {
          (pane_options.widgets && pane_options.widgets.length > 0)) {
 
         paneContainer.mousedown(function(e) {
-          var that = $(e.target).parents('.button, .widget');
+          var that = $(e.target).closest('.button, .widget');
           if(!that.length) return false;
           var is_widget = that.hasClass('widget');
           that.clicked = false;
@@ -1209,7 +1209,47 @@ window.Panel2 = new function() {
               if($.type(instance[type.callback]) == 'undefined') {
                 throw('Function ' + type + ' in module ' + panel_apply.scripts[type] + ' not found');
               } else {
-                instance[type.callback].apply(that, _args);
+                var func_options = {};
+                try {
+                  if(!options.settings) {
+                    options.settings = {};
+                  }
+                  if(!options.settings[type.module]) {
+                    options.settings[type.module] = {};
+                  }
+                  if(!options.settings[type.module][type.callback]) {
+                    options.settings[type.module][type.callback] = {};
+                  }
+                  $.extend(func_options, options.settings[type.module][type.callback]);
+                  if($.isEmptyObject(func_options) && panel_apply.settings[type.callback].configure) {
+                    /// инициализируем опции с дефолтными значениями
+                    $.each(panel_apply.settings[type.callback].configure, function(option, configure) {
+                      if($.type(configure.default) != 'undefined') {
+                        func_options[option] = configure.default;
+                      }
+                    });
+                  }
+                  $.extend(func_options, {
+                    save: function(callback) {
+                      for(var key in func_options) {
+                        if(key == 'save') continue;
+                        options.settings[type.module][type.callback][key] = func_options[key];
+                      }
+                      instance.setOptions(options, undefined, function() {
+                        if(callback) callback();
+                        /*instance.triggerEvent('options_change_' + func, 
+                          {options: func_options, playerID: instance.currentPlayerID()});*/
+                      });
+                    }
+                  });
+                } catch(e) {
+                  instance.dispatchException(e);
+                }
+                var args = [func_options];
+                for(var key in _args) {
+                  args.push(_args[key]);
+                }
+                instance[type.callback].apply(that, args);
               }
             });
           }, type.local);
@@ -1307,6 +1347,7 @@ window.Panel2 = new function() {
       /// то эта функция будет запущена сразу
       /// если копии нет, то сперва получаем опции из контейнера с ganjawars.ru
       checkTime('init_func');
+      $('script[src$="prototype.js"]').remove();
 
       /// Инициализация тестов если в запросе указан ?gwpanel_test и это не встроенный фрейм
       if(environment == 'testing' && location.search.indexOf('continue') == -1) {

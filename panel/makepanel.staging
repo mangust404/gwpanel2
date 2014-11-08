@@ -159,6 +159,7 @@ foreach($plugins as $plugin_name => $plugin) {
     foreach($plugin['event'] as $event => $listener) {
       if(!isset($apply_events[$event])) $apply_events[$event] = array();
       $listener['event'] = $event;
+      $listener['module'] = $plugin_name;
       $apply_events[$event][] = $listener;
       $apply_scripts[$listener['callback']] = $plugin_name . '/' . $listener['file'];
     }
