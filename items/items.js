@@ -181,7 +181,7 @@ jQuery.extend(panel, {
         }
       });
       /// соответствие не найдено, переходим к первому похожему
-      if(!trFound) {
+      if(!trFound && $first_tr) {
         $('html,body').animate({
           scrollTop: $first_tr.offset().top - 40
         }, 1000);
