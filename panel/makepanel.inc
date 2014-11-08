@@ -413,8 +413,13 @@ function make_bootstrap($domain, $path, $libs) {
     }
 
     window.__clearCache = function() {
+      /// предотвращаем заполнение sessionStorage скриптами из старого пакета
+      package = null;
+      /// очищаем временное хранилище
       sessionStorage.clear();
+      /// очищаем базу
       delDB();
+      /// очищаем куки
       var myDate = new Date();
       document.cookie = "gwp2_st=;expires=" + myDate 
                      + ";domain=.ganjawars.ru;path=/";
