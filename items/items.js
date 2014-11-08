@@ -187,6 +187,19 @@ jQuery.extend(panel, {
         }, 1000);
       }
     }
+
+    $(function() {
+      var originalPostdo = window.postdo;
+      if(originalPostdo.toString().indexOf('originalPostdo') == -1) {
+        window.postdo = function(href) {
+          originalPostdo(href);
+          setTimeout(function() {
+            panel.items_sets();
+          }, 1000);
+          return false;
+        }
+      }
+    });
   },
 
   get_set_str: function(data) {
