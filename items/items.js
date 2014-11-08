@@ -124,31 +124,32 @@ jQuery.extend(panel, {
       panel.set('items_set_' + $set_id.val(), 
         panel.get_set_str(),
         function() {
-        panel.set('items_current_set', $set_id.val(), function() {
-          var current_options = panel.getOptions();
-          panel.loadScript('panel/panel_settings.js', function() {
-            if($('#edit-button:checked').length) {
-              current_options.panes[pane_id].buttons[button_id].img = current_icon;
-              current_options.panes[pane_id].buttons[button_id].title = $set_name.val();
-              panel.setOptions(current_options);
-              $('.pane').remove();
-              panel.showFlash('Кнопка изменена');
-            } else if($('#add-button:checked').length) {
-              panel.addButton(first_pane_with_buttons, 
-                'items_putset_button', 
-                $.extend(panel_apply.buttons.items_putset_button, {
-                  title: $set_name.val(),
-                  arguments: {set_id: $set_id.val()},
-                  img: current_icon
-                }
-              ));
-              panel.setOptions(current_options);
-              panel.showFlash('Кнопка добавлена');
-            }
-            $form.submit();
-          });
-        });
-      }, true);
+          /// выставляем текущий надетый сет
+          panel.set('items_current_set', $set_id.val(), function() {
+            var current_options = panel.getOptions();
+            panel.loadScript('panel/panel_settings.js', function() {
+              if($('#edit-button:checked').length) {
+                current_options.panes[pane_id].buttons[button_id].img = current_icon;
+                current_options.panes[pane_id].buttons[button_id].title = $set_name.val();
+                panel.setOptions(current_options);
+                $('.pane').remove();
+                panel.showFlash('Кнопка изменена');
+              } else if($('#add-button:checked').length) {
+                panel.addButton(first_pane_with_buttons, 
+                  'items_putset_button', 
+                  $.extend(panel_apply.buttons.items_putset_button, {
+                    title: $set_name.val(),
+                    arguments: {set_id: $set_id.val()},
+                    img: current_icon
+                  }
+                ));
+                panel.setOptions(current_options);
+                panel.showFlash('Кнопка добавлена');
+              }
+              $form.submit();
+            });
+          }, true);
+        }, true);
       return false;
     });
   
