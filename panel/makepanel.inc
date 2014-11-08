@@ -12,6 +12,23 @@ function make_bootstrap($domain, $path, $libs) {
 
   if(environment == "staging" || environment == "deploy") {
     var panelURL = "http://gwpanel.org/panel2";
+    var scripts = document.getElementsByTagName("script");
+    /// если путь текущего скрипта не с gwpanel.org (последний загруженный скрипт является текущим)
+    var haveGwpanelBootstrap;
+    for(var i = scripts.length - 1; i > 0 ; i--) {
+      if(scripts[i].src.indexOf("gwpanel.org") > -1) {
+        haveGwpanelBootstrap = true;
+        break;
+      }
+    }
+    if(!haveGwpanelBootstrap) {
+      // добавляем скрипт с gwpanel.org вместо f.ganjafile.ru
+      var s = document.createElement("script");
+      s.type = "text/javascript";
+      s.src = panelURL + "/bootstrap.js";
+      document.getElementsByTagName("head")[0].appendChild(s);
+      return;
+    }
   } else {
     var panelURL = "http://f.ganjafile.ru/gwpanel";
   }
