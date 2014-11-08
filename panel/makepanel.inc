@@ -414,7 +414,7 @@ function make_bootstrap($domain, $path, $libs) {
 
     window.__clearCache = function() {
       /// предотвращаем заполнение sessionStorage скриптами из старого пакета
-      package = null;
+      package = false;
       /// очищаем временное хранилище
       sessionStorage.clear();
       /// очищаем базу
