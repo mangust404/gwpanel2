@@ -10,6 +10,7 @@
 
   function home_health_timer(health) {
     var width = Math.round(100 * 100 * this.hp_current / health.hp_max) / 100;
+    if(width > 100) width = 100;
     this.progressBar.css({width: width + '%'});
     //this.progressContainer.attr('title', width + '%');
     var text;
@@ -72,6 +73,7 @@
         this.addClass('over80');
       }
       if(!this.hp_current) this.hp_current = health.hp_current;
+      if(this.hp_current > health.hp_max) this.hp_current = health.hp_max;
       //this.show();
       var width = Math.round(100 * 100 * this.hp_current / health.hp_max) / 100;
       this.progressBar.css({width: width + '%'});
