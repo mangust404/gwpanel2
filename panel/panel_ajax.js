@@ -822,6 +822,13 @@ $.fn.html = function(html) {
         }
       }
 
+      /// при нажатии enter в осиротевших элементах отсылаем форму
+      $('.' + className).keypress(function(event) {
+        if(event.which == 13 && !$(this).closest('form').hasClass('.gwp-form-' + index)) {
+          $('form.gwp-form-' + index).submit();
+        }
+      });
+
       /// Переопределяем стандартную функцию сабмита в аяксовую
       var origSubmit = this.submit;
       var that = this;
