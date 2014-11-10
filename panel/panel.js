@@ -1120,6 +1120,13 @@ window.Panel2 = new function() {
         }
       }
     }
+    pages.sort(function(a, b) {
+      var a_weight = panel_apply.modules[panel_apply.settings[a].module].weight;
+      var b_weight = panel_apply.modules[panel_apply.settings[b].module].weight;
+      if(a_weight > b_weight) return 1;
+      if(a_weight < b_weight) return -1; 
+      return 0;
+    });
     $(pages).each(function(index, func) {
       if(
           /// если функция в чёрном списке

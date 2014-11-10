@@ -129,6 +129,7 @@
 
   }
 
+  var invokedOnReady = false;
 
   $.extend(panel, {
     /**
@@ -137,7 +138,6 @@
     panel_ajaxify: function() {
       if($('#gw-content').length > 0) return;
       if(!history.pushState) return;
-      if(location.pathname.indexOf('/b0/') == 0) return;
       if(document.domain.indexOf('gwpanel.org') > -1) return;
       var $elem;
       if($('table.topill').length > 0) {
@@ -169,8 +169,13 @@
       });
       if($elem.length > 0) {
         var $all_elements = $elem.nextAll().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
-      } else {
+      } else if(!invokedOnReady) {
+        /// страница не готова, пытаемся аяксифицировать на document ready
+        invokedOnReady = true;
         $(panel.panel_ajaxify);
+        return;
+      } else {
+        /// страница не поддаётся аяксификации
         return;
       }
       var $content = $('#gw-content');
@@ -186,23 +191,28 @@
       if($all_elements.length > 0 && $content.length > 0) {
         originalTitle = document.title;
 
-/*        history.replaceState({
-          data: null, 
+        history.replaceState({
+          data: $('#gw-content').html(), 
           title: document.title
-        }, document.title, location.href);*/
+        }, document.title, location.href);
 
         $(ajaxifyContent);
+        //console.log('setting window.onpopstate');
 
-        window.onpopstate = function(event) {
-          if(event.state && event.state.data && event.state.title) {
+        $(window).bind('popstate', function(event) {
+          //console.log(event.originalEvent.state);
+          if(event.originalEvent.state && event.originalEvent.state.data && 
+             event.originalEvent.state.title) {
             /*var $div = $('<div>').hide().html(event.state.data).appendTo(document.body);
             if($div.find('#gw-content').length > 0) {
               var content = $div.find('#gw-content').html();
             }*/
+            //console.log('pop data: ', event.originalEvent.state.data.substr(0, 15), ', length: ', event.originalEvent.state.data.length, event.originalEvent.state);
+            try {
+              panel.ajaxUpdateContent(event.originalEvent.state.data, null, true);
+            } catch(e) {}
 
-            panel.ajaxUpdateContent(event.state.data, null, true);
-
-            prevScrollTop = event.state.scrollTop;
+            prevScrollTop = event.originalEvent.state.scrollTop;
 
             /*document.title = event.state.title;
             __initFunc();
@@ -210,7 +220,7 @@
             tearDownFloatWidgets();
             initFloatWidgets();*/
           }
-        }
+        });
       }
       panel.gotoHref = function(href, callback, refresh) {
         if(href.indexOf('http://') == 0 && href.indexOf('http://' + document.domain + '/') == -1) {
@@ -305,7 +315,7 @@
           jqs = true;
         }
       }
-      //data = data.replace(/<script[^>]*>.*?<\/script>/ig, '');
+      //data = data.replace(/<script.*src=".*\/prototype.js">.*?<\/script>/g, '');
       //data = panel.fixForms(data);
       var $content = $('#gw-content').html(data);
       if(jqs) {
@@ -329,7 +339,7 @@
             scrollTop: $('a[href$="' + pathname + search + '"]:last').offset().top - $(window).height() + 100
           }, 1000);
         }
-        //console.log('pushing scrollTop: ', prevScrollTop);
+        //console.log('pushing data: ', data.substr(0, 20), ', length: ', data.length);
         history.pushState({
           data: data, 
           title: document.title,
@@ -389,12 +399,16 @@
       //__panel.setTimeout(function() {
       $(document.body).addClass('ajax-loading');
       //}, 300);
-
+  
+      var action = $form.attr('action') || location.href;
+      if(action.indexOf('http:') == -1 && action.charAt(0) != '/') {
+        action = '/' + action;
+      }
       /// функция-обход для отправки через браузер
       function regularSend() {
         var $new_form = $('<form>', {
           method: 'POST',
-          action: $form.attr('action') || location.href
+          action: action
         }).appendTo(document.body);
         $.each(s_data, function(i, item) {
           $('<input>', {
@@ -421,7 +435,7 @@
       }
 
       if(!$form.attr('method') || ($form.attr('method') && $form.attr('method').toLowerCase() == 'get')) {
-        var href = ($form.attr('action') || location.pathname);
+        var href = action;
         if(href.indexOf('javascript:') == 0) {
           return;
         }
@@ -442,7 +456,7 @@
         $(document.body).removeClass('ajax-loading');
       }
 
-      $.ajax($form.attr('action') || location.href, options);
+      $.ajax(action, options);
     });
     return this;
   }
