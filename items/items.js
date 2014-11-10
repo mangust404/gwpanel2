@@ -207,8 +207,8 @@ jQuery.extend(panel, {
         window.postdo = function(href) {
           $.ajax(href, {
             success: function(data) {
-              if($('a.ajax:first').length) {
-                __panel.ajaxUpdateContent(data);
+              if(panel.panel_ajaxify) {
+                panel.ajaxUpdateContent(data);
                 panel.ajaxTearDown();
                 panel.ajaxRefresh();
               } else {
@@ -276,7 +276,7 @@ jQuery.extend(panel, {
                 if(missed_items) {
                 //http://images.ganjawars.ru/img/items/warlordboots_s.jpg
                   panel.showFlash('<p>Внимание! В комплекте не найдены:</p><center>' + missed_items + '</center>');
-                  if($('a.ajax:first').length > 0) {
+                  if(panel.panel_ajaxify) {
                     $('.panel-flash a').click(function() {
                       panel.gotoHref(this.href);
                       $('.panel-flash').remove();

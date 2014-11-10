@@ -276,7 +276,7 @@
       } else if(!noHistory) {
         $(window).scrollTop(0);
       }
-      panel.ajaxTeardown();
+      panel.ajaxTearDown();
       
       $(document.body).addClass('ajax-processed');
       if(href && href.indexOf('/sms.php') > -1) $('img[src$="sms.gif"]').closest('a').remove();
@@ -313,7 +313,7 @@
       }
       //if(title) document.title = title + ' :: Ganjawars.ru :: Ганджубасовые войны';
       $(document.body).removeClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
-      if(noHistory) {
+      if(noHistory && !refresh) {
         //console.log('noHistory, using prevScrollTop', prevScrollTop);
         $(window).scrollTop(prevScrollTop);
       } else {
@@ -366,6 +366,84 @@
     return xhr;
   };
 
+  /**
+  * Функция для ajax-отправки формы
+  * @param options - массив опций, передаётся в функцию jQuery.ajax
+  */
+  $.fn.sendForm = function(options) {
+    this.each(function() {
+      var $form = $(this);
+      options = $.extend({
+        type: String($form.attr('method') || 'post').toLowerCase()
+      }, options || {});
+
+      if(options.data && $.type(options.data) == 'array' && options.data[0].name) {
+        var s_data = options.data;
+      } else {
+        var s_data = $form.serializeArray();
+      }
+
+      //__panel.setTimeout(function() {
+      $(document.body).addClass('ajax-loading');
+      //}, 300);
+
+      /// функция-обход для отправки через браузер
+      function regularSend() {
+        var $new_form = $('<form>', {
+          method: 'POST',
+          action: $form.attr('action') || location.href
+        }).appendTo(document.body);
+        $.each(s_data, function(i, item) {
+          $('<input>', {
+            type: 'hidden',
+            name: item.name,
+            value: item.value
+          }).appendTo($new_form);
+        });
+        $new_form.submit();
+      }
+      /// Обходим функцию jQuery.param, чтобы данные не кодировались повторно
+      var params = [];
+      jQuery.each(s_data, function() {
+        params.push(this.name + '=' + __panel.encodeURIComponent(this.value || options.data[this.name] || ''));
+      });
+      /// отдаём в data строку
+      options.data = params.join('&');
+
+      /// на ауте не работает форма отплытия если она отправляется сперва аяксом 
+      /// а потом обычным способом, надо сразу отправлять обычным
+      if(location.hostname == 'quest.ganjawars.ru' && options.data.indexOf('sectorout') > -1) {
+        regularSend();
+        return false;
+      }
+
+      if(!$form.attr('method') || ($form.attr('method') && $form.attr('method').toLowerCase() == 'get')) {
+        var href = ($form.attr('action') || location.pathname);
+        if(href.indexOf('javascript:') == 0) {
+          return;
+        }
+        if(href.indexOf('http:') == -1) {
+          href = location.protocol + '//' + location.hostname + href;
+        }
+        __panel.gotoHref(href + '?' + options.data)
+        return;
+      }
+
+      options.error = function(t) {
+        /// В случае ошибки, скорее всего это редирект, 
+        /// отправляем форму средствами браузера
+        regularSend();
+      }
+
+      options.complete = function() {
+        $(document.body).removeClass('ajax-loading');
+      }
+
+      $.ajax($form.attr('action') || location.href, options);
+    });
+    return this;
+  }
+
 /**
 * Функция-враппер над стандартным методом .html
 * её смысл заключается в том, чтобы предварительно определить какие элементы
@@ -388,7 +466,11 @@ function parseParams(params) {
     var name = m_p[1];
     var value = m_p[3];
     if(!value) {
-      params_ar.push({name: name});
+      if(name == 'checked') {
+        params_ar.push({name: name, value: name});
+      } else {
+        params_ar.push({name: name});
+      }
       continue;
     }
 
@@ -432,10 +514,13 @@ function convertParams(params_ar, className) {
 $.fn.html = function(html) {
   var forms_fixed = false;
   if(html && $.type(html) == 'string') {
+    html = html.replace(/'([>]+)'/g, function(str, p1) {
+      return str.replace(/>/g, '&gt;');
+    });
     //console.log('preparing html');
     /// вытаскиваем все формы
     var form_ex = /<form ([^>]+)>([.\s\S]*?)<\/form>/ig
-    var input_ex = /<input[ ]?([^>]*)[\/]?>/ig
+    var input_ex = /<input[ ]?([^>]+)[\/]?>/ig
     var other_ex = /<(button|textarea|select)([^>]*)>([.\s\S]*?)<\/(button|textarea|select)>/ig
 //console.log(html);
     var form_start = html.indexOf('<form');
@@ -485,20 +570,16 @@ $.fn.html = function(html) {
 
       while(m_i = input_ex.exec(form_contents)) {
         var params = parseParams(m_i[1]);
+        var item_html = '<input ' + 
+        convertParams(params, 'gwp-form-' + form_index + '-item') + '/>';
+        //console.log(m_i[0], item_html);
+
         var _name = params.filter(function(item) { return item.name == 'name'})[0];
-        var _value = params.filter(function(item) { return item.name == 'value'})[0];
-        if(_name) {
-          var $item = $('<input>', {type: 'hidden', name: _name.value}).appendTo($form_element);
-          if(_value && $.type(_value.value) == 'string') {
-            $item.val(_value.value);
-          }
-          var _id = params.filter(function(item) { return item.name == 'id'})[0];
-          if(_id && $.type(_id.value) == 'string') {
-            $item.attr('id', _id.value);
-          }
+        var _id = params.filter(function(item) { return item.name == 'id'})[0];
+        if(_name || _id) {
+          var $item = $(item_html).appendTo($form_element);
         }
-        form_contents = form_contents.substr(0, m_i.index) + '<input ' + 
-        convertParams(params, 'gwp-form-' + form_index + '-item') + '/>' + 
+        form_contents = form_contents.substr(0, m_i.index) + item_html + 
         form_contents.substr(m_i.index + m_i[0].length);
       }
 
@@ -511,8 +592,8 @@ $.fn.html = function(html) {
           '</' + m_o[4] + '>';
 
         var _name = params.filter(function(item) { return item.name == 'name'})[0];
-        var _value = params.filter(function(item) { return item.name == 'value'})[0];
-        if(_name) {
+        var _id = params.filter(function(item) { return item.name == 'id'})[0];
+        if(_name || _id) {
           var $item = $(item_html).appendTo($form_element);
         }
         form_contents = form_contents.substr(0, m_o.index) + item_html + 
@@ -566,7 +647,6 @@ $.fn.html = function(html) {
       $(this).sendForm({
         data: $('.gwp-form-' + index + '-item:not([type=submit]):not([type=image])').serializeArray(),
         success: function(data) {
-          __panel.tearDown();
           __panel.ajaxUpdateContent(data, __panel.responseURL() || $this.attr('action'));
           if(location.href.indexOf('messages.php') == -1) {
             $(window).scrollTop(0);
@@ -582,7 +662,8 @@ $.fn.html = function(html) {
           return false;
         }
         if(this.onclick) {
-          var result = eval(this.onclick);
+          var result;
+          eval('function anon() { ' + this.onclick.replace('javascript:', '') + '}; result = anon();');
           if(result === false) return result;
         }
         var $form = $('.gwp-form-' + index);
@@ -614,6 +695,7 @@ $.fn.html = function(html) {
       // в "подставной"" объект
       var formID = $(this).attr('id');
       var formName = $(this).attr('name');
+      var className = 'gwp-form-' + index + '-item';
       //console.log('processing form, ', 'formID: ', formID, ', formName: ', formName);
       if(formID) {
         formID = formID.split('fake-')[1];
@@ -626,12 +708,43 @@ $.fn.html = function(html) {
           $(this).attr('id', formID);
           // заполняем правильную форму значениями из предыдущей
           $.each(fakeForm.elements, function(i, item) {
-            if(document.forms[formID][this.name]) {
-              document.forms[formID][this.name].value = this.value;
-            } else {
+            var identity = this.name;
+            if(!identity && this.id) identity = this.id;
+            if(!identity) return;
+
+            var element = document.forms[formID][identity];
+            if(!element) {
               /// Элемент не прописался в форму, добавляем его принудительно
-              document.forms[formID][this.name] = document.forms[formID]['elements'][this.name] = 
-                $('.gwp-form-' + index + '-item[name="' + this.name + '"]').get(0);
+              if(this.name) {
+                element = $('.gwp-form-' + index + '-item[name="' + this.name + '"]').get(0);
+              } else {
+                element = $('#' + this.id + '.gwp-form-' + index + '-item').get(0);
+              }
+              if(this.type == 'radio') {
+                document.forms[formID][this.name] = document.forms[formID][this.name] || [];
+                document.forms[formID][this.name].push(element);
+                document.forms[formID]['elements'][this.name] = document.forms[formID][this.name];
+              } else {
+                document.forms[formID][identity] = element;
+                document.forms[formID]['elements'] = document.forms[formID]['elements'] || [];
+                document.forms[formID]['elements'][identity] = element;
+                //document.forms[formID]['elements'][document.forms[formID]['elements'].length] = element;
+              }
+            }
+
+            if($.type(element) != 'object') return;
+
+            if(!$(element).hasClass(className)) {
+              $(element).addClass(className)
+            }
+
+            $(element).val(this.value);
+            if(this.type == 'checkbox' || this.type == 'radio') {
+              if(this.checked) {
+                $(element).attr('checked', 'checked');
+              } else {
+                $(element).removeAttr('checked');
+              }
             }
           });
           $(fakeForm).remove();
@@ -649,14 +762,45 @@ $.fn.html = function(html) {
           $(this).attr('name', formName);
           // заполняем правильную форму значениями из предыдущей
           $.each(fakeForm.elements, function(i, item) {
-            if(document.forms[formName][this.name]) {
-              document.forms[formName][this.name].value = this.value;
-            } else {
+            var identity = this.name;
+            if(!identity && this.id) identity = this.id;
+            if(!identity) return;
+
+            var element = document.forms[formName][identity];
+            if(!document.forms[formName][identity] || !document.forms[formName]['elements'][identity]) {
               /// Элемент не прописался в форму, добавляем его принудительно
-              document.forms[formName][this.name] = document.forms[formName]['elements'][this.name] = 
-                $('.gwp-form-' + index + '-item[name="' + this.name + '"]').get(0);
+              if(this.name) {
+                element = $('.gwp-form-' + index + '-item[name="' + this.name + '"]').get(0);
+              } else {
+                element = $('#' + this.id + '.gwp-form-' + index + '-item').get(0);
+              }
+              if(this.type == 'radio') {
+                document.forms[formName][this.name] = document.forms[formName][this.name] || [];
+                document.forms[formName][this.name].push(element);
+                document.forms[formName]['elements'][this.name] = document.forms[formName][this.name];
+              } else {
+                document.forms[formName][identity] = element;
+                document.forms[formName]['elements'] = document.forms[formName]['elements'] || [];
+                document.forms[formName]['elements'][identity] = element;
+                //document.forms[formName]['elements'][document.forms[formName]['elements'].length ] = element;
+              }
+            }
+
+            if($.type(element) != 'object') return;
+
+            if(!$(element).hasClass(className)) {
+              $(element).addClass(className)
+            }
+            $(element).val(this.value);
+            if(this.type == 'checkbox' || this.type == 'radio') {
+              if(this.checked) {
+                $(element).attr('checked', 'checked');
+              } else {
+                $(element).removeAttr('checked');
+              }
             }
           });
+
           $(fakeForm).remove();
         }
       }

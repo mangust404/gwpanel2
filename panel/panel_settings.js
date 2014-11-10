@@ -650,7 +650,7 @@
         variants = variants || {default: 'По-умолчанию'};
         $('<label for="variant-name">Сейчас используется вариант настроек:</label>').appendTo('#edit-other-wrapper .options-variants');
         var variant_select = $('<select id="variant-name" name="variant"></select>').change(function() {
-          panel.set(panel.getEnv() + '_opts_var_' + panel.currentPlayerID(), $(this).val(), function() {
+          panel.setVariant($(this).val(), function() {
             panel.showFlash('Настройки изменены. Пожалуйста, перезагрузите страницу чтобы увидеть изменения.', 'message', 5000);
           });
         });
@@ -661,6 +661,7 @@
               (current_variant == name? ' selected="selected"': '') + 
               '>' + title + '</option>');
           });
+          variant_select.selectmenu('refresh', true);
         });
         var n = $('<div class="add-options-variant ui-corner-all custom-corners" data-role="collapsible">\
   <h3>Добавить новый вариант</h3>\
@@ -710,7 +711,7 @@
           id += String(index);
           variants[id] = name;
 
-          variant_select.append('<option value="' + id + '">' + name + '</option>');
+          variant_select.append('<option value="' + id + '">' + name + '</option>').selectmenu('refresh', true);
           panel.set(panel.getEnv() + '_variants', variants, function() {
             function saveVariant(new_options) {
               panel.set(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + id, new_options, function() {
@@ -765,7 +766,7 @@
                 if($('#variant-name').val() == id) {
                   $('#variant-name').val('default').change();
                 }
-                variant_select.find('option[value=' + id + ']').remove();
+                variant_select.find('option[value=' + id + ']').remove().selectmenu('refresh', true);
                 $(this).closest('.ui-checkbox').remove();
                 delete_variants.push(id);
                 delete variants[id];
@@ -828,6 +829,7 @@
         .append(
           $('<a class="ui-btn ui-btn-inline ui-mini ui-btn-icon-right ui-icon-delete">очистить кеш</a>')
             .click(function() {
+              window.__clearCache();
               $(this)
                 .html('Кеш скриптов очищен, обновите страницу')
                 .addClass('ui-btn-active ui-focus');
@@ -840,7 +842,8 @@
       var releases = $('<div class="releases" data-role="collapsible"' + 
         (active_section == 'release_notes'? 'data-collapsed="false"': '') + 
         '><h3>Примечания к выпускам</h3></div>')
-        .appendTo('#edit-other-wrapper .versions');
+        .appendTo('#edit-other-wrapper .versions')
+        .trigger('create');
       panel.get('release_notes', function(release_notes) {
         release_notes = release_notes || {};
         var keys = Object.keys(release_notes);
@@ -859,7 +862,7 @@
               '">Выпуск #<span class="release-num">' + keys[i] + 
               '</span>: <span class="notes">' + release_notes[keys[i]].notes + 
               '</span><span class="date">' + formatNotesDate(release_notes[keys[i]].date) + 
-              '</span></p>').appendTo(releases);
+              '</span></p>').appendTo(releases.find('.ui-collapsible-content'));
             if(i > 10) return;
           }
         }

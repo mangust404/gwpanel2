@@ -138,8 +138,7 @@ QUnit.asyncTest("Тест добавления кнопки", function(assert) {
           assert.ok($('.panel-flash').text().indexOf('добавлен') > -1, 
             'Должно выйти сообщение');
 
-          $('#panel-settings-editor .close-settings').click();
-
+          $('#panel-settings-editor').hide();
           $('#pane-bubble-1').click();
 
           waitFor(function() {
@@ -219,7 +218,7 @@ QUnit.asyncTest("Тест добавления виджета", function(assert)
 
           $('.widget-save').click();
 
-          $('#panel-settings-editor .close-settings').click();
+          $('#panel-settings-editor').hide();
           $('#pane-bubble-2').click();
           
           setTimeout(function() {
@@ -438,7 +437,7 @@ QUnit.asyncTest("Тест формы добавления и настройки 
             assert.deepEqual(widget.arguments.text1, 'тест', 'Проверка text1');
             assert.deepEqual(widget.arguments.text2, '', 'Проверка text2');
 
-            $('#panel-settings-editor .close-settings').click();
+            $('#panel-settings-editor, #settings-form-popup').remove();
             assert.equal($('#float-0-panel_foo_widget:visible').length, 1, 'Виджет виден');
             assert.equal($('#float-0-panel_foo_widget').text(), 'Panel foo widgetcheckbox1=truecheckbox2=falsecheckboxes1=test1,test2,test3checkboxes2=checkboxes3=test1,test2,test3checkboxes4=select1=test1select2=select3=test3select4=text1=тестtext2=');
 
@@ -620,21 +619,27 @@ QUnit.asyncTest("Тест изменения видимости плавающи
               //console.log('Шаг 3, тестируем blacklist');
               $('#blacklist-page').attr('checked', 'checked').change().checkboxradio('refresh');
               $('.widget-save').click();
-              __window.location.href = dest + suff + '#blacklist';
-              $widget = false;
+              setTimeout(function(){
+                __window.location.href = dest + suff + '#blacklist';
+                $widget = false;
+              }, 500);
             } else if(__window.location.hash.indexOf('only-page-class') > -1) {
               //console.log('Шаг 2. тестируем выставление only-page-class');
               $('#only-page-class').attr('checked', 'checked').change().checkboxradio('refresh');
               $('.widget-save').click();
-              __window.location.href = dest + suff + '#only-page-class';
-              $widget = false;
+              setTimeout(function(){
+                __window.location.href = dest + suff + '#only-page-class';
+                $widget = false;
+              }, 500);
             } else {
               //console.log('Шаг первый, выставляем "только на этой странице" и переходим на dest');
               /// Шаг первый, выставляем "только на этой странице" и переходим на dest
               $('#only-page').attr('checked', 'checked').change().checkboxradio('refresh');
               $('.widget-save').click();
-              __window.location.href = dest + suff + '#only-page';
-              $widget = false;
+              setTimeout(function(){
+                __window.location.href = dest + suff + '#only-page';
+                $widget = false;
+              }, 500);
             }
           });
         } else if(__window.location.pathname == dest) {
@@ -642,23 +647,153 @@ QUnit.asyncTest("Тест изменения видимости плавающи
           if(__window.location.hash.indexOf('only-page-class') > -1) {
             //console.log('Конец шага 2, должен быть выставлен only_page_class');
             assert.equal(__window.__panel.getOptions().widgets[0].only_page_class, current);
-            assert.equal($('.panel_foo_widget:visible').length, 0, 'Виджета не должно быть на этой странице');
+            assert.equal($('.panel_foo_widget:visible').length, 0, 'Виджета не должно быть на этой странице [указан только для класса страниц, для домашней]');
             __window.location.href = current + suff + '#blacklist';
           } else if(__window.location.hash.indexOf('only-page') > -1) {
             /// конец шага 1, виджета не должно здесь быть, только на главной
             //console.log('конец шага 1, виджета не должно здесь быть, только на главной');
             assert.equal(__window.__panel.getOptions().widgets[0].only_page, current + __window.location.search);
-            assert.equal($('.panel_foo_widget:visible').length, 0, 'Виджета не должно быть на этой странице');
+            assert.equal($('.panel_foo_widget:visible').length, 0, 'Виджета не должно быть на этой странице [указан только для конкретной страницы, для домашней]');
             /// возвращаемся на предыдущую страницу и тестируем класс страниц
             __window.location.href = current + suff + '#only-page-class';
           } else if(__window.location.hash.indexOf('blacklist') > -1) {
             //console.log('Конец шага 3, blacklist должен содержать страницу /me/');
             assert.deepEqual(__window.__panel.getOptions().widgets[0].blacklist, [current]);
-            assert.equal($('.panel_foo_widget:visible').length, 0, 'Виджет не должен быть на этой странице');
+            assert.equal($('.panel_foo_widget:visible').length, 1, 'Виджет должен быть на этой странице [не показывать на этой странице для домашней]');
             /// переходим на основную
             __window.location.href = current + suff + '#test-finish';
           }
         }
+      });
+
+    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+  });
+  //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
+});
+
+QUnit.asyncTest("Тест изменения видимости плавающих виджетов для AJAX", function(assert) {
+  var options = jQuery.extend({}, panelSettingsCollection.empty);
+  /// Создаём конфигурацию с пустыми окнами
+  for(var i = 0; i < 4; i++) {
+    options.panes[i].buttons = options.panes[i].widgets = [];
+  }
+  options.widgets = [];
+  options.widgets.push({
+    type: 'panel_foo_widget',
+    width: 6,
+    height: 1,
+    left: 100,
+    top: 200,
+    arguments: {},
+    module: 'panel'
+  });
+
+  var current = location.pathname;
+  var suff = '?gwpanel_testing&continue&gwpanel_pause';
+  var dest = (current == '/forum.php'? '/me/': '/forum.php');
+
+  var $widget;
+
+  __panel.setOptions(options, undefined, function() {
+    $('<iframe id="goto-href-iframe" src="' + current + suff + '"></iframe>').load(function() {
+      var __window = this.contentWindow;
+      waitFor(function() {
+        return __window.__panel && __window.__panel.__ready && __window.__panel.__load;
+      }, function() {
+        var $ = __window.jQuery;
+        __window.__panel.panel_foo_widget = function(options) {
+          $widget = this;
+          this.append('<p>Panel foo widget</p>');
+          var that = this;
+          $.each(options, function(key, val) {
+            if(key == 'save') return;
+            that.append('<p>' + key + '=' + val + '</p>');
+          });
+        };
+
+        __window.panel_apply.widgets['panel_foo_widget'] = {
+          callback: 'panel_foo_widget',
+          configure: {},
+          title: 'Тестовый виджет',
+          height: 1,
+          width: 2,
+          file: 'panel.js',
+          module: 'panel'
+        };
+
+        __window.__panel.__ready();
+        __window.__panel.__load();
+
+        var currentPage = __window.location.href;
+        var _continue = false;
+        var runFunc = function() {
+          console.log(currentPage);
+          if(currentPage.indexOf(current) > -1) {
+            if (currentPage.indexOf('#test-finish') > -1) {
+              /// это завершение теста, мы отрубили виджет на этой странице
+              assert.equal($('.panel_foo_widget:visible').length, 0, 'Виджета не должно быть на этой странице');
+              QUnit.start();
+              return;
+            }
+            /// на этой странице мы выставляем настройки виджета
+            waitFor(function() {
+              return $('.panel_foo_widget').length > 0;
+            }, function() {
+              $widget.dblclick();
+            });
+            waitFor(function() {
+              return $('#blacklist-page').length > 0;
+            }, function() {
+              if(currentPage.indexOf('#blacklist') > -1) {
+                //console.log('Шаг 3, тестируем blacklist');
+                $('#blacklist-page').attr('checked', 'checked').change().checkboxradio('refresh');
+                $('.widget-save').click();
+                currentPage = dest + suff + '#blacklist';
+                __window.__panel.gotoHref('http://' + document.domain + currentPage, runFunc);
+              } else if(currentPage.indexOf('#only-page-class') > -1) {
+                //console.log('Шаг 2. тестируем выставление only-page-class');
+                $('#only-page-class').attr('checked', 'checked').change().checkboxradio('refresh');
+                $('.widget-save').click();
+                currentPage = dest + suff + '#only-page-class';
+                __window.__panel.gotoHref('http://' + document.domain + currentPage, runFunc);
+              } else {
+                console.log('Шаг первый, выставляем "только на этой странице" и переходим на dest');
+                /// Шаг первый, выставляем "только на этой странице" и переходим на dest
+                $('#only-page').attr('checked', 'checked').change().checkboxradio('refresh');
+                $('.widget-save').click();
+                currentPage = dest + suff + '#only-page';
+                __window.__panel.gotoHref('http://' + document.domain + currentPage, runFunc);
+              }
+            });
+          } else if(currentPage.indexOf(dest) > -1) {
+            /// на этой странице мы проверяем видимость
+            if(currentPage.indexOf('#only-page-class') > -1) {
+              //console.log('Конец шага 2, должен быть выставлен only_page_class');
+              assert.equal(__window.__panel.getOptions().widgets[0].only_page_class, current);
+              assert.equal($('.panel_foo_widget:visible').length, 0, 'Виджета не должно быть на этой странице [указан только для класса страниц, для домашней]');
+              currentPage = current + suff + '#blacklist';
+              __window.__panel.gotoHref('http://' + document.domain + currentPage, runFunc);
+            } else if(currentPage.indexOf('#only-page') > -1) {
+              /// конец шага 1, виджета не должно здесь быть, только на главной
+              //console.log('конец шага 1, виджета не должно здесь быть, только на главной');
+              assert.equal(__window.__panel.getOptions().widgets[0].only_page, current + __window.location.search);
+              assert.equal($('.panel_foo_widget:visible').length, 0, 'Виджета не должно быть на этой странице [указан только для конкретной страницы, для домашней]');
+              /// возвращаемся на предыдущую страницу и тестируем класс страниц
+              currentPage = current + suff + '#only-page-class';
+              __window.__panel.gotoHref('http://' + document.domain + currentPage, runFunc);
+            } else if(currentPage.indexOf('#blacklist') > -1) {
+              //console.log('Конец шага 3, blacklist должен содержать страницу /me/');
+              assert.deepEqual(__window.__panel.getOptions().widgets[0].blacklist, [current]);
+              assert.equal($('.panel_foo_widget:visible').length, 1, 'Виджет должен быть на этой странице [не показывать на этой странице для домашней]');
+              /// переходим на основную
+              currentPage = current + suff + '#test-finish';
+              __window.__panel.gotoHref('http://' + document.domain + currentPage, runFunc);
+            }
+          }
+        }
+        runFunc();
+        //console.log('current location: ', __window.location.pathname + __window.location.search + __window.location.hash);
+        //console.log('__window.location.pathname =', __window.location.pathname , 'current=', current);
       });
 
     }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
@@ -1228,6 +1363,9 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
 
   __panel.set(__panel.getEnv() + '_variants', null, function() {
   __panel.setOptions(options, undefined, function() {
+    var cached_options = JSON.parse(sessionStorage['gwp2_' + __panel.getEnv() + '_' + __panel.currentPlayerID() + '_default']);
+    assert.equal(cached_options.system[test_key], salt, 'опции в кеше изменены');
+
     var frame;
     frame = $('<iframe id="button-options-variants-iframe" src="' + document.location.href.split('?')[0]
        + '?gwpanel_testing&continue"></iframe>').load(function() {
@@ -1247,25 +1385,28 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
               return $('#panel-settings-editor .ui-icon-edit').length > 0;
             }, function() {
               $('#panel-settings-editor .ui-icon-edit').click();
-              $('.add-options-variant .ui-collapsible-heading-toggle:first').click();
-              $('#add-title').val('test2');
-              $('.add-options-variant input[type=submit]').click();
 
-              setTimeout(function() {
-                assert.equal($('#add-title:visible').length, 0, 'Форма добавления должна закрыться');
+              waitFor(function() {
+                return $('.add-options-variant .ui-collapsible-heading-toggle:first').length > 0;
+              }, function() {
+                $('.add-options-variant .ui-collapsible-heading-toggle:first').click();
+                $('#add-title').val('test2');
+                $('.add-options-variant input[type=submit]').click();
 
-                assert.ok($('#variant-name option:contains(test2)').length > 0, 'Вариант добавлен');
-                variantID = $('#variant-name option:contains(test2)').attr('value');
-                $('#variant-name').val(variantID).change();
+                setTimeout(function() {
+                  assert.equal($('#add-title:visible').length, 0, 'Форма добавления должна закрыться');
+                  assert.ok($('#variant-name option:contains(test2)').length > 0, 'Вариант добавлен');
+                  variantID = $('#variant-name option:contains(test2)').attr('value');
+                  $('#variant-name').val(variantID).change();
 
-                that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
-                  assert.equal(data, variantID, 'Вариант должен совпадать');
-                  setTimeout(function() {
-                    that.contentWindow.location.href = that.contentWindow.location.href + '&' + salt;
-                  }, 200);
-                });
-              }, 400);
-              //QUnit.start();
+                  that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
+                    assert.equal(data, variantID, 'Вариант должен совпадать');
+                    setTimeout(function() {
+                      that.contentWindow.location.href = that.contentWindow.location.href + '&' + salt;
+                    }, 200);
+                  });
+                }, 400);
+              });
             });
           } else if(that.contentWindow.location.search.indexOf('finish') == -1) {
             // после обновления страницы с солью, проверяем вариант
@@ -1292,11 +1433,17 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
               }, function() {
                 $('#panel-settings-editor .ui-icon-edit').click();
 
-                $('#variant-name').val('default').change();
-                that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
-                  assert.equal(data, 'default', 'Вариант должен быть default');
+                waitFor(function() {
+                  return $('#variant-name option[value="default"]').length > 0;
+                }, function() {
+                  $('#variant-name').val('default').change();
                   setTimeout(function() {
-                    that.contentWindow.location.href = that.contentWindow.location.href + '&finish';
+                    that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
+                      assert.equal(data, 'default', 'Вариант должен быть default');
+                      setTimeout(function() {
+                        that.contentWindow.location.href = that.contentWindow.location.href + '&finish';
+                      }, 500);
+                    });
                   }, 500);
                 });
               });
@@ -1306,6 +1453,8 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
             that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
               assert.equal(data, 'default', 'Вариант в новой вкладке должен быть default');
               var current_options = that.contentWindow.__panel.getOptions();
+              var cached_options = JSON.parse(sessionStorage['gwp2_' + __panel.getEnv() + '_' + __panel.currentPlayerID() + '_default']);
+              assert.equal(cached_options.system[test_key], salt, 'опции в кеше изменены');
               assert.equal(current_options.system[test_key], salt, 'Первоначальные настройки возвращены');
               QUnit.start();
             });
@@ -1334,6 +1483,9 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
 
   __panel.set(__panel.getEnv() + '_variants', null, function() {
   __panel.setOptions(options, undefined, function() {
+    var cached_options = JSON.parse(sessionStorage['gwp2_' + __panel.getEnv() + '_' + __panel.currentPlayerID() + '_default']);
+    assert.equal(cached_options.system[test_key], salt, 'опции в кеше изменены');
+
     var frame;
 
     frame = $('<iframe id="button-options-variants-iframe" src="' + document.location.href.split('?')[0]
@@ -1354,23 +1506,42 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
               return $('#panel-settings-editor .ui-icon-edit').length > 0;
             }, function() {
               $('#panel-settings-editor .ui-icon-edit').click();
-              $('.add-options-variant .ui-collapsible-heading-toggle:first').click();
-              $('#add-title').val('test2');
-              $('#add-collection').val('default');
-              $('.add-options-variant input[type=submit]').click();
 
-              setTimeout(function() {
-                assert.equal($('#add-title:visible').length, 0, 'Форма добавления должна закрыться');
+              waitFor(function() {
+                return $('.add-options-variant .ui-collapsible-heading-toggle:first').length > 0;
+              }, function() {
+                $('.add-options-variant .ui-collapsible-heading-toggle:first').click();
 
-                assert.ok($('#variant-name option:contains(test2)').length > 0, 'Вариант добавлен');
-                variantID = $('#variant-name option:contains(test2)').attr('value');
-                $('#variant-name').val(variantID).change();
+                waitFor(function() {
+                  return $('#variant-name option[value="default"]').length > 0;
+                }, function() {
+                  $('#add-title').val('test2');
+                  $('#add-collection').val('default');
+                  $('.add-options-variant input[type=submit]').click();
 
-                that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
-                  assert.equal(data, variantID, 'Вариант должен совпадать');
-                  that.contentWindow.location.href = that.contentWindow.location.href + '&' + salt;
+                  $('#add-title').val('test2');
+                  $('#add-collection').val('default');
+                  $('.add-options-variant input[type=submit]').click();
+
+                  setTimeout(function() {
+                    assert.ok($('div:contains("уже существуют")').length > 0, 'Настройки с таким именем уже существуют');
+                    assert.equal($('#add-title:visible').length, 0, 'Форма добавления должна закрыться');
+
+                    assert.ok($('#variant-name option:contains(test2)').length > 0, 'Вариант добавлен');
+                    variantID = $('#variant-name option:contains(test2)').attr('value');
+                    assert.equal(variantID, 'default0');
+                    $('#variant-name').val(variantID).change();
+                    waitFor(function() {
+                      return $('div:contains(Настройки изменены)').length > 0;
+                    }, function() {
+                      that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
+                        assert.equal(data, variantID, 'Вариант должен совпадать');
+                        that.contentWindow.location.href = that.contentWindow.location.href + '&' + salt;
+                      });
+                    });
+                  }, 500);
                 });
-              }, 500);
+              });
               //QUnit.start();
             });
           } else if(that.contentWindow.location.search.indexOf('finish') == -1) {
@@ -1398,12 +1569,21 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
               }, function() {
                 $('#panel-settings-editor .ui-icon-edit').click();
 
-                $('#variant-name').val('default').change();
-                that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
-                  assert.equal(data, 'default', 'Вариант должен быть default');
-                  setTimeout(function() {
-                    that.contentWindow.location.href = that.contentWindow.location.href + '&finish';
-                  }, 500);
+                waitFor(function() {
+                  return $('#variant-name option[value="default"]').length > 0;
+                }, function() {
+                  $('#variant-name').val('default').change();
+
+                  waitFor(function() {
+                    return $('div:contains(Настройки изменены)').length > 0;
+                  }, function() {
+                    that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
+                      assert.equal(data, 'default', 'Вариант должен быть default');
+                      setTimeout(function() {
+                        that.contentWindow.location.href = that.contentWindow.location.href + '&finish';
+                      }, 500);
+                    });
+                  });
                 });
               });
             });
@@ -1412,6 +1592,8 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
             that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
               assert.equal(data, 'default', 'Вариант в новой вкладке должен быть default');
               var current_options = that.contentWindow.__panel.getOptions();
+              var cached_options = JSON.parse(sessionStorage['gwp2_' + __panel.getEnv() + '_' + __panel.currentPlayerID() + '_default']);
+              assert.equal(cached_options.system[test_key], salt, 'опции в кеше возвращены');
               assert.equal(current_options.system[test_key], salt, 'Первоначальные настройки возвращены');
               QUnit.start();
             });

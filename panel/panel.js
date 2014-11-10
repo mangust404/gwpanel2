@@ -39,6 +39,8 @@ window.Panel2 = new function() {
   var windowID;
   /// ID настроек
   var optionsID;
+  /// ID варианта настроек (default, noname, etc...)
+  var variant;
   /// хеш базовых настроек
   var options = {
     /// системные опции
@@ -1018,7 +1020,7 @@ window.Panel2 = new function() {
       //if(window.frameElement && !window.frameElement.panelContainer) return;
     } catch(e) {}
     
-    original_environment = localStorage['gwp2_' + environment] || __env;
+    original_environment = __env;
     if(location.search.indexOf('gwpanel_test') != -1) {
       environment = 'testing';
     } else {
@@ -1222,25 +1224,28 @@ window.Panel2 = new function() {
       var __local_variant = sessionStorage['gwp2_' + variantID];
       /// Опции сперва привязываются к окружению (environment), затем к ID игрока
       /// затем к выбранному варианту, если вариант не найден, то выбираем default
-      if(__local_variant != null && 
-        __local_variant.length > 0) {
+      if(__local_variant && __local_variant.length > 0 && __local_variant != 'undefined') {
         optionsID = environment + '_' + instance.currentPlayerID() + '_' + 
                         JSON.parse(__local_variant);
         var __local_options = sessionStorage['gwp2_' + optionsID];
         if(__local_options != null && 
-           __local_options.length > 0) {
+           __local_options.length > 0 && __local_options != 'undefined') {
           $.extend(options, JSON.parse(__local_options));
+          variant = __local_variant;
           if($.type(options) == 'object') {
             fastInitReady = true;
           }
         }
       }
 
-      if(document.domain != domain && (
-         !instance.getCookies()['gwp2_c'] ||
-         instance.getCookies()['gwp2_c'].split('-').indexOf(document.domain.split('.')[0]) == -1
-        )) {
+      var flushTime = parseInt(instance.getCookies().gwp2_flush);
+      //console.log(sessionStorage['_flush']);
+      var sessFlush = parseInt(sessionStorage['_flush']);
+      /// Если кеш был слит до отметки в sessionStorage['_flush'], то быстрая инициализация из кеша невозможна
+      if(!sessFlush || sessFlush < flushTime) {
         fastInitReady = false;
+        //console.log(sessFlush, flushTime);
+        //console.log('flushing sessionStorage');
         /// мы попали сюда потому что где-то были изменены настройки
         /// очищаем все переменные в sessionStorage начинающиеся с текущего окружения
         for(var key in sessionStorage) {
@@ -1248,8 +1253,16 @@ window.Panel2 = new function() {
             delete sessionStorage[key];
           }
         }
+        sessionStorage['_flush'] = String((new Date).getTime());
       }
 
+      if(isNaN(flushTime)) {
+        var now = new Date();
+        now.setMonth(now.getMonth() + 120);
+        document.cookie = "gwp2_flush=" + (new Date).getTime() + 
+                          ";expires=" + now + ";domain=." + domain + ";path=/";
+
+      }
       if(environment == 'testing') {
         fastInitReady = location.search.indexOf('gwpanel_pause') == -1;
       }
@@ -1267,7 +1280,7 @@ window.Panel2 = new function() {
         $.extend(options, local_options);
       }*/
       /// если быстрая инициализация доступна
-      checkTime('fastInitReady');
+      checkTime('fastInitReady: ' + fastInitReady);
       if(fastInitReady) {
         __initFunc();
         initInterface();
@@ -1311,14 +1324,13 @@ window.Panel2 = new function() {
       checkTime('crossWindow init');
       /// функция полной готовности окна
       instance.get(variantID, function(__variant) {
+        variant = __variant;
         //parent.console.log('variantID: ', variantID);
         checkTime('get variantID ' + variantID);
         if(!__variant) {
           checkTime('set default variant for ' + __variant);
           instance.set(variantID, 'default');
-          if(domain != document.domain) {
-            sessionStorage['gwp2_' + variantID] = JSON.stringify('default');
-          }
+          sessionStorage['gwp2_' + variantID] = JSON.stringify('default');
           __variant = 'default';
         }
         optionsID = environment + '_' + instance.currentPlayerID() + '_' + __variant;
@@ -1328,17 +1340,12 @@ window.Panel2 = new function() {
           if(__options != null && $.type(__options) == 'object') {
             if(!fastInitReady) {
               options = $.extend(options, __options);
-              var domainPrefix = document.domain.split('.')[0];
-              var cachedDomains = instance.getCookies()['gwp2_c'] || '';
-              cachedDomains = cachedDomains.split('-');
-              if(cachedDomains.indexOf(domainPrefix) == -1) {
-                cachedDomains.push(domainPrefix);
-                instance.setCacheDomains(cachedDomains);
-              }
 
-              if(domain != document.domain) {
-                sessionStorage['gwp2_' + optionsID] = JSON.stringify(options);
+              if(!sessionStorage['_flush']) {
+                sessionStorage['_flush'] = String((new Date).getTime());
               }
+              sessionStorage['gwp2_' + variantID] = JSON.stringify(__variant);
+              sessionStorage['gwp2_' + optionsID] = JSON.stringify(options);
             }
           } else {
             /// Вызываем мастер настроек
@@ -1349,6 +1356,7 @@ window.Panel2 = new function() {
             } else {
               /// дефолтные настройки
               options = $.extend(options, window.panelSettingsCollection.default);
+              delete options['master'];
               instance.set(optionsID, options);
             }
           }
@@ -1380,9 +1388,15 @@ window.Panel2 = new function() {
 
       // следим за сменой опций из других окон
       instance.bind('options_change', function(data) {
+        //console.log('options_change', data);
+        variant = data.variant;
         if(data.optionsID == optionsID && data.windowID != windowID && 
            data.playerID == instance.currentPlayerID()) {
-          $.extend(options, data.options);
+          options = data.options;
+          // делаем отметку когда был обновлён кэш в этом окне
+          sessionStorage['_flush'] = String((new Date).getTime());
+          sessionStorage['gwp2_' + data.variantID] = JSON.stringify(data.variant);
+          sessionStorage['gwp2_' + data.optionsID] = JSON.stringify(data.options);
         }
       });
       
@@ -1792,25 +1806,24 @@ window.Panel2 = new function() {
         }
         callback(null);
         return;
-      } else if($.type(sessionStorage['gwp2_' + key]) != 'undefined') {
+      } else if(!initialized && $.type(sessionStorage['gwp2_' + key]) != 'undefined' &&
+          sessionStorage['gwp2_' + key] != 'undefined') {
         try {
           var val = JSON.parse(sessionStorage['gwp2_' + key]);
-          checkTime('get ' + key + ' from local storage');
+          checkTime('get ' + key + ' from session storage');
           callback(val);
           return;
         } catch(e) {
           console.log(e);
-          sessionStorage.removeItem('gwp2_' + key);
+          delete sessionStorage['gwp2_' + key];
         }
       }
       var __callback = function(value) {
-        if(document.domain != 'ganjawars.ru') {
-          sessionStorage['gwp2_' + key] = JSON.stringify(value);
-        }
+        sessionStorage['gwp2_' + key] = JSON.stringify(value);
         if(callback) callback(value);
       }
       /// Если на текущем домене нет, то запрашиваем из основного
-      checkTime('begin to get ' + key + ' from main storage');
+      checkTime('begin to get ' + key + ' from local storage');
       if(initialized) {
         instance.crossWindow.get(key, __callback);
       } else {
@@ -1943,17 +1956,24 @@ window.Panel2 = new function() {
         options = new_options;
         check_settings_button();
 
+        var variantID = environment + '_opts_var_' + instance.currentPlayerID();
         instance.set(optionsID, options, function() {
           instance.triggerEvent('options_change', {options: options, 
                                 optionsID: optionsID, windowID: windowID,
+                                variantID: variantID,
+                                variant: variant,
                                 playerID: instance.currentPlayerID()});
+
+          // делаем отметку когда был обновлён кэш в этом окне
+          sessionStorage['_flush'] = String((new Date).getTime());
+          sessionStorage['gwp2_' + variantID] = JSON.stringify(variant);
+          sessionStorage['gwp2_' + optionsID] = JSON.stringify(options);
+
           if(callback) {
             callback();
           }
         });
       });
-      /// Очищаем кеш быстрой загрузки, чтобы быстрые настройки везде сохранились
-      instance.setCacheDomains([]);
     },
     
     /**
@@ -2001,7 +2021,6 @@ window.Panel2 = new function() {
         try {
           callback();
         } catch(e) {
-          console.log((new Error).stack);
           instance.dispatchException(e);
         }
       } else {
@@ -2022,7 +2041,6 @@ window.Panel2 = new function() {
         try {
           callback();
         } catch(e) {
-          console.log((new Error).stack);
           instance.dispatchException(e);
         }
       } else {
@@ -2131,8 +2149,7 @@ window.Panel2 = new function() {
       myDate.setMonth(myDate.getMonth() + 120);
       document.cookie = "gwp2_e=" + env + ";expires=" + myDate 
                      + ";domain=." + domain + ";path=/";
-      document.cookie = "gwp2_c=;expires=" + (new Date) 
-                     + ";domain=." + domain + ";path=/";
+      window.__clearCache();
       console.log('Reload page to commit environment change. Disable greasemonkey script if you were in dev.');
     },
     /**
@@ -2153,6 +2170,7 @@ window.Panel2 = new function() {
             localStorage.removeItem(key);
           }
         }
+        sessionStorage.clear();
       }
     },
 
@@ -2343,6 +2361,7 @@ window.Panel2 = new function() {
      *   Если указана строка, то кеш будет сброшен после наступления этого события.
      */
     getCached: function(generator, callback, condition) {
+      //console.log('getCached called from: ', (new Error).stack.split("\n")[1]);
       var cid = 'cached_' + generator.toString().replace(/[\n\s\t]/g, '').hashCode();
       instance.get(cid, function(data) {
         instance.get('cacheListeners', function(__listeners) {
@@ -2368,6 +2387,7 @@ window.Panel2 = new function() {
             }
             if(data.type == 'time') {
               data.expiration = (new Date).getTime() + condition * 1000;
+              //console.log('not in cache, new time: ', new Date(data.expiration));
               runFunc();
             } else {
               /// Устанавливаем слежку за событием
@@ -2386,7 +2406,7 @@ window.Panel2 = new function() {
                 runFunc();
               }
             }
-          } else {
+          } else if(isNaN(condition)) {
             /// данные в кеше есть и они не истекли, вызываем обратную функцию, 
             /// однако проверяем массив cacheListeners, вызов должен быть в массиве
             if(!cacheListeners[condition]) cacheListeners[condition] = [];
@@ -2399,6 +2419,9 @@ window.Panel2 = new function() {
             } else {
               callback(data.data);
             }
+          } else {
+            //console.log('in time cache');
+            callback(data.data);
           }
         });
       });
@@ -2562,6 +2585,16 @@ window.Panel2 = new function() {
       return version;
     },
 
+    setVariant: function(newVariant, callback) {
+      variant = newVariant;
+      instance.set(environment + '_opts_var_' + instance.currentPlayerID(), variant, function() {
+        optionsID = environment + '_' + instance.currentPlayerID() + '_' + variant;
+        instance.get(optionsID, function(new_options) {
+          instance.setOptions(new_options, null, callback);
+        });
+      });
+    },
+
     /**
     * Вывод читаемой фразы с количеством
     * @param {int} count - количество
@@ -2713,13 +2746,6 @@ window.Panel2 = new function() {
       return img;
     },
 
-    setCacheDomains: function(domains) {
-      var myDate = new Date();
-      myDate.setMonth(myDate.getMonth() + 120);
-      document.cookie = "gwp2_c=" + domains.join('-') + ";expires=" + myDate 
-               + ";domain=." + domain + ";path=/";
-    },
-
     setInterval: function(func, timeout) {
       var i = setInterval(func, timeout);
       safeIntervals.push(i);
@@ -2744,10 +2770,9 @@ window.Panel2 = new function() {
       }
     },
 
-    ajaxTeardown: function() {
+    ajaxTearDown: function() {
       instance.tearDown();
       instance.clearTimeouts();
-      tearDownFloatWidgets();
     },
 
     ajaxRefresh: function(refresh) {
@@ -2755,6 +2780,11 @@ window.Panel2 = new function() {
       if(!refresh) {
         instance.hideAllPanes();
       }
+      /// виджеты должны скрываться когда уже совершён переход
+      /// иначе им ничего не будет известно на какой мы сейчас странице
+      tearDownFloatWidgets();
+      /// добавляем те виджеты, которые не проинициализированы или 
+      /// отображаем скрытые, которые должны быть на этой странице
       initFloatWidgets();
     },
     /**
@@ -2770,77 +2800,5 @@ window.Panel2 = new function() {
   
   return Panel2;
 };
-
-/**
-* Функция для ajax-отправки формы
-* @param options - массив опций, передаётся в функцию jQuery.ajax
-*/
-$.fn.sendForm = function(options) {
-  this.each(function() {
-    var $form = $(this);
-    options = $.extend({
-      type: String($form.attr('method') || 'post').toLowerCase()
-    }, options || {});
-    if(options.data) {
-      var s_data = options.data;
-    } else {
-      var s_data = $form.serializeArray();
-    }
-
-    //__panel.setTimeout(function() {
-    $(document.body).addClass('ajax-loading');
-    //}, 300);
-
-    /// функция-обход для отправки через браузер
-    function regularSend() {
-      var $new_form = $('<form>', {
-        method: 'POST',
-        action: $form.attr('action') || location.href
-      }).appendTo(document.body);
-      $.each(s_data, function(i, item) {
-        $('<input>', {
-          type: 'hidden',
-          name: item.name,
-          value: item.value
-        }).appendTo($new_form);
-      });
-      $new_form.submit();
-    }
-    /// Обходим функцию jQuery.param, чтобы данные не кодировались повторно
-    var params = [];
-    jQuery.each(s_data, function() {
-      params.push(this.name + '=' + __panel.encodeURIComponent(this.value || options.data[this.name] || ''));
-    });
-    /// отдаём в data строку
-    options.data = params.join('&');
-
-    /// на ауте не работает форма отплытия если она отправляется сперва аяксом 
-    /// а потом обычным способом, надо сразу отправлять обычным
-    if(location.hostname == 'quest.ganjawars.ru' && options.data.indexOf('sectorout') > -1) {
-      regularSend();
-    }
-
-    if(!$form.attr('method') || ($form.attr('method') && $form.attr('method').toLowerCase() == 'get')) {
-      var href = ($form.attr('action') || location.pathname);
-      if(href.indexOf('javascript:') == 0) {
-        return;
-      }
-      if(href.indexOf('http:') == -1) {
-        href = location.protocol + '//' + location.hostname + href;
-      }
-      __panel.gotoHref(href + '?' + options.data)
-      return;
-    }
-
-    options.error = function(t) {
-      /// В случае ошибки, скорее всего это редирект, 
-      /// отправляем форму средствами браузера
-      regularSend();
-    }
-
-    $.ajax($form.attr('action') || location.href, options);
-  });
-  return this;
-}
 
 })(jQuery);

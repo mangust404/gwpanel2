@@ -30,7 +30,7 @@
                       item = item.split('=')[1];
                       var ar = item.split('&');
                       var item_id = ar[0];
-                      missed_items += '<a href="http://www.ganjawars.ru/item.php?item_id=' + 
+                      missed_items += '<a href="http://www.ganjawars.ru/items.php?seek=' + 
                         item + '"><img src="http://images.ganjawars.ru/img/items/' + item_id + '_s.jpg" /></a>';
                     }
                   });
@@ -38,6 +38,14 @@
                   if(missed_items) {
                     panel.showFlash('<p>Cет не полный, не хватает вещей:</p><center>' + 
                       missed_items + '</center>');
+                    if(panel.panel_ajaxify) {
+                      $('.panel-flash a').click(function() {
+                        panel.gotoHref(this.href);
+                        $('.panel-flash').remove();
+                        return false;
+                      });
+                    }
+
                     $(that).addClass('button-error');
                   } else {
                     $(that).addClass('button-ok');
@@ -45,7 +53,7 @@
                 }
                 if($(that).hasClass('button-ok')) {
                   panel.set('items_current_set', options.set_id, function() {}, true);
-                  if($('a.ajax:first').length > 0 && 
+                  if(panel.panel_ajaxify && 
                       (location.pathname == '/me/' || location.pathname == '/items.php')) {
                     panel.gotoHref(location.href, null, true);
                   }

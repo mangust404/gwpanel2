@@ -148,9 +148,37 @@ jQuery.extend(__panel, {
     $(window).off('keydown').on('keydown', keydown)
     .off('keyup').on('keyup', keyup);
 
+    var $input;
+    function unfocus() {
+      $input = $('<input type="text">').css({
+        height: 1,
+        width: 1,
+        position: 'absolute',
+        autocomplete: 'off'
+      }).prependTo(document.body).focus();
+      if(panel.panel_ajaxify) {
+        setTimeout(function() {
+          $input.remove();
+        }, 10);
+      }
+    }
+
+    if(panel.panel_ajaxify) {
+      $(window).on('load', unfocus);
+    } else {
+      unfocus();
+    }
+
+    $('#newline').keydown(function(e) {
+      e.stopPropagation();
+    }).keyup(function(e) {
+      e.stopPropagation();
+    });
     panel.onunload(function() {
       $(window).off('keydown', keydown)
         .off('keyup', keyup);
+      $(window).off('load', unfocus);
+      $input.remove();
     });
   },
 

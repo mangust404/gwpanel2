@@ -73,6 +73,53 @@ QUnit.test("Тест объекта __panel.crossWindow", function(assert) {
   });
 }); 
 
+QUnit.asyncTest("Тест кеширования настроек и переменных", function(assert) {
+  var rand1 = Math.random();
+  var rand2 = Math.random();
+  /// Создаём два фрейма, меняем настройки в одном и проверяем их в другом
+  var $frame1 = $('<iframe id="cache-test-iframe-0" src="http://www.ganjawars.ru/me/' + 
+    '?gwpanel_testing&continue"></iframe>').load(function() {
+    var that = this;
+    waitPanelInitialization(that.contentWindow, function() {
+      if(that.contentWindow.location.href.indexOf('step1') > -1) {
+        that.contentWindow.__panel.crossWindow.get('param', function(data) {
+          assert.equal(data, rand2);
+          QUnit.start();
+        })
+      } else {
+        that.contentWindow.__panel.set('param', rand1, function() {
+          $frame2.appendTo('#qunit-fixture');
+        });
+      }
+    });
+  }).appendTo('#qunit-fixture');
+
+  var $frame2 = $('<iframe id="cache-test-iframe-1" src="http://www.ganjawars.ru/me/' + 
+    '?gwpanel_testing&continue"></iframe>').load(function() {
+    var that = this;
+    waitPanelInitialization(that.contentWindow, function() {
+      if(that.contentWindow.location.href.indexOf('step1') > -1) {
+        that.contentWindow.__panel.crossWindow.get('param', function(data) {
+          assert.equal(data, rand);
+          QUnit.start();
+        })
+      } else {
+        that.contentWindow.__panel.get('param', function(value) {
+          assert.equal(value, rand1);
+          that.contentWindow.__panel.set('param', rand2, function() {
+            $frame1.get(0).contentWindow.__panel.get('param', function(foreign_value) {
+              assert.equal(foreign_value, rand2, 'Значение в первом окне поменялось');
+              $frame1.attr('src', 'http://www.ganjawars.ru/me/?gwpanel_testing&continue&step1');
+            });
+          });
+        });
+      }
+    });
+  })
+
+
+});
+
 QUnit.asyncTest("Тест ready()", function(assert) {
   expect(1);
   __panel.ready(function() {
@@ -548,7 +595,7 @@ QUnit.asyncTest('Установка и считывание опций', functio
         assert.deepEqual('undefined', 
                           String(typeof(new_options['test_module'])).toLowerCase(), 
                           'опции удалены');
-        var local_options = JSON.parse(localStorage['gwp2_' + __panel.getOptionsID()]);
+        var local_options = JSON.parse(sessionStorage['gwp2_' + __panel.getOptionsID()]);
         assert.deepEqual('undefined', 
                           String(typeof(local_options['test_module'])).toLowerCase(), 
                           'опции удалены из localStorage');
@@ -1397,38 +1444,34 @@ QUnit.asyncTest('Тестирование функции getCached с истеч
   var val1 = Math.random() * 10000000;
   var generator = 0;
 
-  __panel.getCached(function(callback) {
+  var runFunc = function(callback) {
     generator++;
     callback(val1);
-  }, function(data) {
-    assert.equal(data, val1);
-  }, 2)
-  __panel.getCached(function(callback) {
-    generator++;
-    callback(val1);
-  }, function(data) {
-    assert.equal(data, val1);
-  }, 2);
+  }
 
-  setTimeout(function() {
-    __panel.getCached(function(callback) {
-      generator++;
-      callback(val1);
-    }, function(data) {
+  __panel.clearCached(runFunc, function() {
+    __panel.getCached(runFunc, function(data) {
       assert.equal(data, val1);
-    }, 2)
-  }, 1000);
 
-  setTimeout(function() {
-    __panel.getCached(function(callback) {
-      generator++;
-      callback(val1);
-    }, function(data) {
-      assert.equal(data, val1);
-      assert.equal(generator, 2, 'Генератор должен быть вызван два раза');
-      QUnit.start();
-    }, 2)
-  }, 3000);
+      __panel.getCached(runFunc, function(data) {
+        assert.equal(data, val1);
+
+        setTimeout(function() {
+          __panel.getCached(runFunc, function(data) {
+            assert.equal(data, val1);
+          }, 2)
+        }, 1000);
+
+        setTimeout(function() {
+          __panel.getCached(runFunc, function(data) {
+            assert.equal(data, val1);
+            assert.equal(generator, 2, 'Генератор должен быть вызван два раза');
+            QUnit.start();
+          }, 2)
+        }, 3000);
+      }, 2);
+    }, 2);
+  });
 });
 
 QUnit.asyncTest('Тестирование функции getCached с истечением по событию', function(assert) {
@@ -1545,7 +1588,7 @@ QUnit.asyncTest('Тест jQuery.fn.sendForm', function(assert) {
     jQuery.ajax('/sms-create.php', {
       success: function(data) {
         jQuery('<div>').hide().appendTo(document.body)
-        .append(data)
+        .html(data)
         .find('form').sendForm({
           data: {
             mailto: name,
@@ -1693,42 +1736,124 @@ href=/ferma.php?x=1&y=0&section=items>Постройки</a></center><form style
 });
 
 QUnit.test('Исправление форм, продвинутый вариант', function(assert) {
-  var html = '<table>\
+  __panel.loadScript('panel/panel_ajax.js', function() {
+    var html = '<table>\
 <tr><td class=greengreenbg>Трава</td>\
 <td>0</td>\
-<form action=object-hdo.php method=POST>\
+<form action=object-hdo.php method=POST name=testform>\
 <input type=hidden name=t value=3>\
 <input type=checkbox checked name="chk1">\
+<input type=hidden checked name="testvalue1">\
 <input type=radio checked value="val1" name="radio1">\
 <input type=radio value="val2" name="radio1">\
 <input type=hidden  name=object_id value=41498>\
 <input type=hidden name=resource value=\'metal\'>\
 <select name=sxy style=\'width:100%\'>\
-<option value=\'150x149\'>[Z] Crystal Sector</option><option value=\'150x150\'>[Z] Cyborg Capital</option>\
+<option value=\'150x149\'>[Z] Crystal Sector</option><option selected="selected" value=\'150x150\'>[Z] Cyborg Capital</option>\
 </select>\
 <td><input type=text name=am_in size=4 value=0></td>\
 <td><input type=text name=am_out size=4 value=0></td>\
 <td><input type=submit name=submit value=\'&raquo;\' class=mainbutton> <input type=submit name=submit value=\'ещё сабмит\' class=mainbutton></td>\
 <td><button>тест</button>\
-<td><textarea name="textarea">тест textarea</textarea></td>\
+<td><textarea name="textarea">тест \
+textarea</textarea></td>\
 </form>\
-</tr><tr><td class=greenbg>Всего:</td><td class=greenbg>500</td><td class=greenbg>66</td><td class=greenbg colspan=3>&nbsp;</td></tr></table></td></tr></table>';
+</tr><tr><td class=greenbg>Всего:</td><td class=greenbg>500</td><td class=greenbg>66</td><td class=greenbg colspan=3>&nbsp;</td></tr></table></td></tr>\
+<tr>\
+<td>\
+<form action=object-hdo.php method=POST id=testformid><input type=hidden name=hidden1 value=1>\
+</td>\
+</tr>\
+<tr>\
+<td>\
+<input type=hidden checked name="testvalue2">\
+<input type=checkbox id="killin0" name="killinn[0]">\
+<input type=checkbox id="killin1">\
+<select name=select_value>\
+<option value=\'test1\'>Тест 1</option><option selected="selected" value=\'test2\'>Тест 2</option>\
+</select>\
+<textarea name="textarea_value">foo \
+value</textarea></td>\
+</tr></table>\
+</form>\
+<script type="text/javascript">\
+document.forms.testform.testvalue1.value="test";\
+document.forms.testformid.testvalue2.value="test2";\
+document.forms.testformid.select_value.value="test2";\
+document.forms.testformid.textarea_value.value="test2";\
+document.forms.testformid.killin0.checked = true;\
+document.forms.testformid.killin1.checked = true;\
+jQuery(document.forms.testformid.testvalue2.textarea_value).focus();\
+</script>';
 
-  var $fixture = $('#qunit-fixture').html(html);
+    var $fixture = $('#qunit-fixture').html(html);
+    //console.log($fixture.find('*').map(function() { return this.outerHTML}));
 
-  assert.equal($fixture.find('form').length, 1);
+    assert.equal($fixture.find('form').length, 2, 'Две формы');
 
-  var className = $fixture.find('form').eq(0).attr('class');
-  assert.ok(className.indexOf('gwp-form-') > -1);
-  var index = $fixture.find('form').eq(0).attr('index');
-  className = '.gwp-form-' + index + '-item';
+    var className = $fixture.find('form').eq(0).attr('class');
+    assert.ok(className.indexOf('gwp-form-') > -1, 'Для формы прописался класс');
+    var index = $fixture.find('form').eq(0).attr('index');
+    className = 'gwp-form-' + index + '-item';
 
-  //console.log($fixture.find(className + '[name=chk1]'));
-  assert.equal($fixture.find(className + '[name=chk1]').attr('checked'), 'checked');
-  assert.equal($fixture.find(className + '[name=radio1][value=val1]').attr('checked'), 'checked');
-  assert.equal($fixture.find(className + '[name=radio1][value=val2]').attr('checked'), undefined);
-  assert.equal($fixture.find('select' + className + '[name=sxy]').length, 1);
-  assert.equal($fixture.find('textarea' + className + '[name=textarea]').length, 1);
+    var index2 = $fixture.find('form').eq(1).attr('index');
+    var className2 = 'gwp-form-' + index2 + '-item';
+
+    assert.equal($fixture.find('.' + className + '[name="chk1"]').attr('checked'), 'checked', 'Проверка чекбокса');
+    assert.equal($fixture.find('.' + className + '[name="radio1"][value="val1"]').attr('checked'), 'checked', 'Проверка radio 1, должен быть нажат');
+    assert.equal($fixture.find('.' + className + '[name="radio1"][value="val2"]').attr('checked'), undefined, 'Проверка radio 2, должен быть отжат');
+    assert.equal($fixture.find('.' + className + '[name="testvalue1"]').val(), 'test', 'проверка скрытого значения изменённого скриптом в первой форме');
+  /*  assert.equal(document.forms.testformid.chk1.checked, true);
+    assert.equal(document.forms.testform.elements.chk1.checked, true);
+    assert.equal(document.forms.testformid.elements.chk1.checked, true);*/
+    assert.equal($fixture.find('select' + '.' + className + '[name=sxy]').val(), '150x150', 'проверка значения селектбокса');
+    assert.equal($fixture.find('textarea' + '.' + className + '[name=textarea]').val(), 'тест \
+textarea', 'проверка значения textarea');
+
+    assert.equal($fixture.find('.' + className2 + '[name="testvalue2"]').val(), 'test2', 'проверка скрытого значения изменённого скриптом во второй форме');
+    assert.equal($fixture.find('select' + '.' + className2 + '[name=select_value]').val(), 'test2', 'проверка значения селектбокса');
+    assert.equal($fixture.find('textarea' + '.' + className2 + '[name=textarea_value]').val(), 'test2', 'проверка значения textarea');
+    assert.equal($fixture.find('#killin0').attr('checked'), 'checked', 'Чекбокс проставился по айдишнику');
+    assert.equal($fixture.find('#killin1').attr('checked'), 'checked', 'Чекбокс проставился по айдишнику без имени');
+
+    var $hidden = $fixture.find('input[name=hidden1]');
+    assert.equal($hidden.val(), '1', 'скрыто поле присутствует');
+    assert.ok($hidden.hasClass(className2), 'класс проставлен');
+
+    //assert.ok(document.forms.testform.elements.length > 0, 'У формы testform есть элементы');
+    //assert.ok(document.forms.testformid.elements.length > 0, 'У формы testformid есть элементы');
+    $.each(document.forms.testform.elements, function(i, element) {
+      if(typeof(element) == 'array') {
+        $.each(element, function(i, _element) {
+          if(_element.name) {
+            assert.ok($(_element).hasClass(className), 'У элемента ' + element.name + ' есть класс');
+          } else if(element.id) {
+            assert.ok($(_element).hasClass(className), 'У элемента ' + element.id + ' есть класс');
+          }
+        });
+      } else if(element.name) {
+        assert.ok($(element).hasClass(className), 'У элемента ' + element.name + ' есть класс');
+      } else if(element.id) {
+        assert.ok($(element).hasClass(className), 'У элемента ' + element.id + ' есть класс');
+      }
+
+    });
+    $.each(document.forms.testformid.elements, function(i, element) {
+      if(typeof(element) == 'array') {
+        $.each(element, function(i, _element) {
+          if(_element.name) {
+            assert.ok($(_element).hasClass(className2), 'У элемента ' + element.name + ' есть класс');
+          } else if(element.id) {
+            assert.ok($(_element).hasClass(className2), 'У элемента ' + element.id + ' есть класс');
+          }
+        });
+      } else if(element.name) {
+        assert.ok($(element).hasClass(className2), 'У элемента ' + element.name + ' есть класс');
+      } else if(element.id) {
+        assert.ok($(element).hasClass(className2), 'У элемента ' + element.id + ' есть класс');
+      }
+    });
+  });
 });
 
 })(jQuery);

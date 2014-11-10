@@ -9,29 +9,30 @@
   
 jQuery.extend(panel, {
   map_mmupdate: function(event) {
-
     if($('table[background*="/i/map"]').length > 0) {
       panel.showFlash('Ошибка! Скорее всего у вас нет GPS-навигатора и ваш транспорт не оборудован им, либо вы в заявке на бой.');
     }
-    //Перезаписываем функцию игры для обновления таймера при передвижении по секторам
-    window.mmupdate = function() {
-      if (window.mmtimer >= 0) {
-        clearTimeout(window.mmtimer);
-        window.mmtimer = 0;
-      }
-      window.mmtimer = setTimeout('mmupdate()', 1000);
-      if (!window.arriveTime) {
+    setTimeout(function() {
+      //Перезаписываем функцию игры для обновления таймера при передвижении по секторам
+      window.mmupdate = function() {
+        if (window.mmtimer >= 0) {
+          clearTimeout(window.mmtimer);
+          window.mmtimer = 0;
+        }
+        window.mmtimer = setTimeout('mmupdate()', 1000);
+        if (!window.arriveTime) {
+          var d = new Date;
+          window.arriveTime = parseInt(d.getTime() / 1000) + window.timeleft - 1;
+        };
         var d = new Date;
-        window.arriveTime = parseInt(d.getTime() / 1000) + window.timeleft - 1;
+        window.timeleft = window.arriveTime - parseInt(d.getTime() / 1000);
+        if (window.timeleft < 0) {
+          window.timeleft = 0;
+          window.arriveTime = 0;
+        }
+        $('#mmdiv').html(formatTime(timeleft));
       };
-      var d = new Date;
-      window.timeleft = window.arriveTime - parseInt(d.getTime() / 1000);
-      if (window.timeleft < 0) {
-        window.timeleft = 0;
-        window.arriveTime = 0;
-      }
-      $('#mmdiv').html(formatTime(timeleft));
-    };
+    }, 500);
 
     panel.get('moveHref', function(moveHref) {
 
