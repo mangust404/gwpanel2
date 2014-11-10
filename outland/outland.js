@@ -149,25 +149,16 @@ jQuery.extend(__panel, {
     .off('keyup').on('keyup', keyup);
 
     var $input;
-    function unfocus() {
-      $input = $('<input type="text">').css({
-        height: 1,
-        width: 1,
-        position: 'absolute',
-        autocomplete: 'off'
-      }).prependTo(document.body).focus();
-      if(panel.panel_ajaxify) {
-        setTimeout(function() {
-          $input.remove();
-        }, 10);
-      }
-    }
+    $input = $('<input type="text">').css({
+      height: 1,
+      width: 1,
+      position: 'absolute',
+      autocomplete: 'off'
+    }).prependTo(document.body);
 
-    if(panel.panel_ajaxify) {
-      $(window).on('load', unfocus);
-    } else {
-      unfocus();
-    }
+    setTimeout(function() {
+      $input.focus();
+    }, 100);
 
     $('#newline').keydown(function(e) {
       e.stopPropagation();
