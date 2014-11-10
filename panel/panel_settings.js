@@ -1271,7 +1271,7 @@
                     current_options.widgets[__data.index] = __data;
                   }
                   panel.showFlash('Виджет ' + (isEdit? 'сохранён': 'добавлен') + 
-                    '.', 'message', 5000);
+                    '.<br />Для открытия настроек или удаления сделайте двойной клик по виджету.', 'message', 10000);
                   panel.redrawFloatWidgets();
                 } else {
                   if(isEdit) {
