@@ -176,7 +176,11 @@
         return;
       } else {
         /// страница не поддаётся аяксификации
-        return;
+        if(document.domain == 'quest.ganjawars.ru') {
+          $all_elements = $('body > *').wrapAll('<div id="gw-content"></div>');
+        } else {
+          return;
+        }
       }
       var $content = $('#gw-content');
 
@@ -823,7 +827,7 @@ $.fn.html = function(html) {
       }
 
       /// при нажатии enter в осиротевших элементах отсылаем форму
-      $('.' + className).keypress(function(event) {
+      $('.' + className + ':not(textarea)').keypress(function(event) {
         if(event.which == 13 && !$(this).closest('form').hasClass('.gwp-form-' + index)) {
           $('form.gwp-form-' + index).submit();
         }
