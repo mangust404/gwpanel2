@@ -160,6 +160,10 @@ jQuery.extend(__panel, {
       $input.focus();
     }, 100);
 
+    $(window).load(function() {
+      $input.focus();
+    });
+
     $('#newline').keydown(function(e) {
       e.stopPropagation();
     }).keyup(function(e) {
