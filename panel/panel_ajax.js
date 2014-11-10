@@ -170,7 +170,8 @@
       if($elem.length > 0) {
         var $all_elements = $elem.nextAll().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
       } else {
-        var $all_elements = $('body').children().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
+        $(panel.panel_ajaxify);
+        return;
       }
       var $content = $('#gw-content');
 
@@ -221,8 +222,10 @@
 
       if(!panel.getCookies().gwp2_n && document.domain.indexOf('gwpanel.org') == -1) {
         panel.loadScript('panel/panel_detect.js', function() {
-          panel.panel_detect_greasemonkey(panel.panel_extension_notify);
-          if(window.chrome) {
+          if($.browser.firefox){
+            panel.panel_detect_greasemonkey(panel.panel_extension_notify);
+          }
+          if($.browser.chrome) {
             panel.panel_detect_tampermonkey(panel.panel_extension_notify);
           }
         });

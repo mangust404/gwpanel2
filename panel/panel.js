@@ -1169,7 +1169,13 @@ window.Panel2 = new function() {
           } catch(e) {
             instance.dispatchException(e);
           }
-          instance[func].apply(instance, [func_options]);
+          if($.browser.opera) {
+            $(function() {
+              instance[func].apply(instance, [func_options]);
+            });
+          } else {
+            instance[func].apply(instance, [func_options]);
+          }
         }
       });
     });
@@ -1401,6 +1407,13 @@ window.Panel2 = new function() {
       });
       
       $(document.body).addClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
+      try {
+        var browser = Object.keys($.browser)[0];
+        $(document.body).addClass(browser + ' ' + browser + '-' + 
+          $.browser.version.split('.')[0] + ' ' + browser + '-' + 
+          $.browser.version.replace(/\./g, '-'));
+      } catch(e) {};
+      
       if(location.hostname != 'www.ganjawars.ru') {
         var href = location.href;
         if(href.charAt(location.href.length - 1) == '?' || href.charAt(location.href.length - 1) == '&')
