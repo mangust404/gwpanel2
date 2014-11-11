@@ -1,15 +1,16 @@
 (function(panel, $) {
-  var bgenerated, rightattack, leftattack, defence, prevRightAttack, prevLeftAttack, prevDefence, bsrcframe, toAllies, battlechat, bgenerator, $bgenchk, walk, bredo;
+  var bgenerated, rightattack, leftattack, defence, prevRightAttack, prevLeftAttack, prevDefence, bsrcframe, bgenerator, $bgenchk, walk, bredo;
   var generator_options;
   var redo_options;
   var battleFixed;
   var allies = {name: []}, enemies = {name: []};
   var enemySelectBox;
-  var jsEnabled;
   var battle_modifyChatWait;
   var __genInitHandler, __redoInitHandler, __redoFillHandler;
   var battleMovesRequest;
   var selectedEnemy, savedMove;
+
+  var jsEnabled;
 
 $.extend(panel, {
   battle_fix: function(options) {
@@ -217,17 +218,19 @@ $.extend(panel, {
   },
   */
   battle_to_allies: function(options) {
-    var battlechat = battlechat = document.forms['battlechat'];
-    toAllies = $('<input type="checkbox" id="to-allies">')
+    var battlechat = document.forms['battlechat'];
+    $toAllies = $('<input type="checkbox" id="to-allies">')
       .change(function(e) {
-        var target = e.currentTarget;
         if(jsEnabled) {
           var msgfield = document.getElementsByName('oldm')[0];
         } else {
           var msgfield = battlechat.elements['newmessage'];
         };
         var ch = msgfield.value.charAt(0);
-        if(target.checked) {
+        options.checked = this.checked;
+        options.save();
+
+        if(this.checked) {
           if(ch == '~' || ch == '%' || ch == '*') return;
           msgfield.focus();
           msgfield.value = '~' + msgfield.value;
@@ -239,11 +242,43 @@ $.extend(panel, {
           };
         };
       });
-    $(battlechat).prepend(toAllies);
+    if(jsEnabled) {
+      var $elem = $('input[name="oldm"]');
+    } else {
+      var $elem = $('input[name="newmessage"]');
+    }
+
+    if(options.checked) {
+      $toAllies.attr('checked', 'checked');
+      var prevVal = $elem.val();
+      var firstChar = prevVal.charAt(0);
+      if(firstChar == '~' || firstChar == '*') {
+        prevVal = prevVal.substr(1);
+      }
+      $elem.val('~' + prevVal);
+    }
+    if(options.prevmsg) {
+      if(!jsEnabled) {
+        $('input[value="Написать"]').click(function() {
+          options.prevmsg = '';
+          var that = this;
+          options.save(function() {
+            /// сабмитим форму после удаления предыдущего сообщения
+            that.form.submit();
+          });
+          return false;
+        });
+        $elem.val($elem.val() + options.prevmsg);
+      }
+      options.prevmsg = '';
+      options.save();
+    }
+    $(battlechat).prepend($toAllies);
     
     panel.bind('clrline', function() {
+      console.log('clrline');
       var oldm = document.getElementsByName('oldm')[0];
-      if(toAllies.attr('checked')) oldm.value = '~';
+      if($toAllies.attr('checked')) oldm.value = '~';
       else oldm.value='';
       savedMove = true;
       if(!enemySelectBox) enemySelectBox = document.getElementsByTagName('select')[0];
@@ -296,9 +331,35 @@ $.extend(panel, {
 
     var r = $('<input type="submit" value="Обновить">')
       .click(function(e) {
-        updatedata();
+        if(jsEnabled) {
+          // в яваскрипт-версии боя просто обновляем данные и всё
+          updatedata();
+          $elem.focus();
+          var val = $elem.val();
+          $elem.val('').val(val);
+        } else {
+
+          // в обычном бою сохраняем предыдущее сообщение
+          options.prevmsg = $elem.val();
+
+          // удаляем первый символ если это тильда
+          var firstChar = options.prevmsg.charAt(0);
+          if(firstChar == '~' || firstChar == '*') {
+            options.prevmsg = options.prevmsg.substr(1);
+          }
+
+          /// записываем опции
+          options.save(function() {
+            /// после записи опций обновляем страницу
+            location.href = location.href;
+          });
+        }
         return false;
       }).appendTo(battlechat);
+
+    $elem.focus();
+    var val = $elem.val();
+    $elem.val('').val(val);
   },
   
   /*
