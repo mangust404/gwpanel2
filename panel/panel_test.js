@@ -1860,4 +1860,50 @@ textarea', 'проверка значения textarea');
   });
 });
 
+QUnit.test('Исправление ссылок', function(assert) {
+  var $div = $('<div>').html('\
+<a href=/page.html>page.html</a>\
+<a href=\'/page.html\'>page.html</a>\
+<a href="/page.html">page.html</a>\
+<a href=http://www.test.com/page.html>page.html</a>\
+<a href="http://www.test.com/page.html">page.html</a>\
+<a href=\'http://www.test.com/page.html\'>page.html</a>\
+<a href=http://www.test.com/page.html/>page.html</a>\
+<a href="http://www.test.com/page.html/">page.html</a>\
+<a href=\'http://www.test.com/page.html/\'>page.html</a>\
+<div id="test_link1">test_link1</div>\
+<div id="test_link2">test_link2</div>\
+<div id="test_link3">test_link3</div>\
+<div id="test_link4">test_link4</div>\
+<div id="test_link5">test_link1</div>\
+<div id="test_link6">test_link2</div>\
+<div id="test_link7">test_link3</div>\
+<div id="test_link8">test_link4</div>')
+    .appendTo('#qunit-fixture');
+
+  var $second = $('<div>').html('\
+<script type"text/javascript">\
+jQuery("#test_link1").get(0).innerHTML = "<a href=/page.html>page.html</a>";\
+jQuery("#test_link2").get(0).innerHTML = \'<a href=/page.html>page.html</a>\';\
+jQuery("#test_link3").get(0).innerHTML = "<a href=\'/page.html\'>page.html</a>";\
+jQuery("#test_link4").get(0).innerHTML = \'<a href="/page.html">page.html</a>\';\
+jQuery("#test_link5").get(0).innerHTML = "<a href=http://test.com/page.html/>page.html</a>";\
+jQuery("#test_link6").get(0).innerHTML = \'<a href=http://test.com/page.html/>page.html</a>\';\
+jQuery("#test_link7").get(0).innerHTML = "<a href=\'http://test.com/page.html/\'>page.html</a>";\
+jQuery("#test_link8").get(0).innerHTML = \'<a href="http://test.com/page.html/">page.html</a>\';\
+</script>\
+')
+    .appendTo('#qunit-fixture');
+
+  assert.ok($div.find('a').length, 16, 'Все ссылки проставились');
+  $div.find('a').each(function() {
+    var href = $(this).attr('href');
+    assert.ok(href.indexOf('/page.html') > -1, 'Ссылка содержит /page.html: ' + href);
+    var ar = href.match(/page\.html/g);
+    assert.equal(ar.length, 1, 'Ссылка содержит page.html только 1 раз: ' + ar.join('; '));
+    assert.equal($(this).text(), 'page.html', 'Текст ссылки должен быть page.html: ' + $(this).text());
+
+  });
+});
+
 })(jQuery);

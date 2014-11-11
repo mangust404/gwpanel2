@@ -324,7 +324,7 @@
           jqs = true;
         }
       }
-      //data = data.replace(/<script.*src=".*\/prototype.js">.*?<\/script>/g, '');
+      data = data.replace(/<script.*src=".*\/prototype.js">.*?<\/script>/g, '');
       //data = panel.fixForms(data);
       var $content = $('#gw-content').html(data);
       if(jqs) {
@@ -538,13 +538,18 @@ function convertParams(params_ar, className) {
 }
 
 $.fn.html = function(html) {
+  panel.checkTime('.html() started');
+
   var forms_fixed = false;
   if(html && $.type(html) == 'string') {
+
+    panel.checkTime('fixing >');
     html = html.replace(/'([>]+)'/g, function(str, p1) {
       return str.replace(/>/g, '&gt;');
     });
     //console.log('preparing html');
     /// вытаскиваем все формы
+    panel.checkTime('fixing forms');
     var form_ex = /<form ([^>]+)>([.\s\S]*?)<\/form>/ig
     var input_ex = /<input[ ]?([^>]+)[\/]?>/ig
     var other_ex = /<(button|textarea|select)([^>]*)>([.\s\S]*?)<\/(button|textarea|select)>/ig
@@ -660,9 +665,22 @@ $.fn.html = function(html) {
     /*if(__panel.responseURL().indexOf('quest.ganjawars.ru') != -1) {
       html = html.replace('document.forms.chatform.newline.focus()', 'jQuery("#newline").focus();');
     }*/
+    panel.checkTime('fixing links');
+    var rFxLinks = /<a(.*?)href=([^>]+\/)>(.*?)<\/a>/g;
+    while(m_l = rFxLinks.exec(html)) {
+      html = html.substr(0, m_l.index) + '<a' + m_l[1] + 
+             'href=' + m_l[2] + ' >' + m_l[3] + '</a>' + 
+             html.substr(m_l.index + m_l[0].length);
+    }
+    panel.checkTime('fixing complete');
   }
 
-  var result = origHtml.apply(this, [html]);
+  try {
+    var result = origHtml.apply(this, [html]);
+  } catch(e) {
+    panel.dispatchException(e);
+  }
+  panel.checkTime('original .html() executed');
 
   if(forms_fixed) {
     if(!forms_fixed) return;
@@ -849,6 +867,9 @@ $.fn.html = function(html) {
       }
     });
   }
+
+  panel.checkTime('.html() completed');
+
   return result;
 }
 
