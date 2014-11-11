@@ -2169,7 +2169,7 @@ window.Panel2 = new function() {
       myDate.setMonth(myDate.getMonth() + 120);
       document.cookie = "gwp2_e=" + env + ";expires=" + myDate 
                      + ";domain=." + domain + ";path=/";
-      window.__clearCache();
+      if(window.__clearCache) window.__clearCache();
       console.log('Reload page to commit environment change. Disable greasemonkey script if you were in dev.');
     },
     /**
@@ -2824,5 +2824,5 @@ window.Panel2 = new function() {
   $.easing.easeOutCubic = function (x, t, b, c, d) {
     return c*((t=t/d-1)*t*t + 1) + b;
   }
-  
+
 })(jQuery);

@@ -96,7 +96,7 @@ jQuery.extend(panel, {
       return true;
 
     }).addClass('fast-move').addClass('ajax').each(function() {
-
+      var targetHref = location.href;
       var matches = $(this).attr('href').match(/sx=([0-9]+)&sy=([0-9]+)$/);
       if(!matches) return;
       var $a = $('<a>[&raquo;]</a>', {
@@ -108,14 +108,19 @@ jQuery.extend(panel, {
       }).click(function() {
         var href = this.href;
         //Запоминаем текущую страницу, чтобы по окончании пути на неё вернуться
-        panel.set('moveHref', location.href, function() {
-          panel.gotoHref(href);
+        panel.set('moveHref', targetHref, function() {
+          panel.set('moveDest', null, function() {
+            panel.gotoHref(href);
+          });
         });
         return false;
       });
 
       if(location.pathname == '/statlist.php') {
-        a.appendTo(this.parentNode);
+        targetHref = $(this).parent().find('a[href*="/object.php"]').attr('href');
+        if(targetHref.indexOf('http:') == -1) 
+          targetHref = 'http://' + document.domain + targetHref;
+        $a.appendTo(this.parentNode);
       } else {
         $(this).after($a);
       }
@@ -139,6 +144,8 @@ jQuery.extend(panel, {
         var mayBuy = parseInt($(this).closest('td').prev().prev().text());
         var maySell = parseInt($(this).closest('td').next().text());
         var min = Math.min(mayBuy, maySell);
+          console.log(min);
+
         if(min > 0) {
           var that = this.amount;
           $({value: 0}).animate({value: min}, {
@@ -162,6 +169,24 @@ jQuery.extend(panel, {
             }
           });
         }
+      } else if(location.pathname == '/object.php' && this.action && this.action.value == 'sell') {
+        /// форма продажи в магазинах
+        var count = $(this).closest('td').prev().prev().text();
+        if(count.search(/([0-9]+)\/([0-9]+)/g) > -1) {
+          var mayBuy = Math.abs(parseInt(RegExp.$2) - parseInt(RegExp.$1));
+          var maySell = parseInt($(this).closest('td').next().text());
+          var min = Math.min(mayBuy, maySell);
+          if(min > 0) {
+            var that = this.amount;
+            $({value: 0}).animate({value: min}, {
+              easing: 'easeOutCubic',
+              step: function(val) {
+                that.value = parseInt(val);
+              //$('#el').text(Math.ceil(this.someValue) + "%");
+              }
+            });
+          }
+        }
       } else if(location.pathname == '/objects-bar.php') {
         var count = $(this).closest('td').prev().prev().text();
         if(count.search(/([0-9]+)\/([0-9]+)/g) > -1) {
@@ -181,25 +206,6 @@ jQuery.extend(panel, {
         }
       }
     });
-    return;
-    for(var key in document.forms) {
-      if(!document.forms[key].getAttribute) continue;
-      var id = document.forms[key].getAttribute('id');
-      if(id && id.indexOf('_sellform') != -1) {
-        var mayBuy = parseInt(document.forms[key].parentNode.previousElementSibling.previousElementSibling.innerText || document.forms[key].parentNode.previousElementSibling.previousElementSibling.textContent);
-        var maySell = parseInt(document.forms[key].parentNode.nextElementSibling.innerText || document.forms[key].parentNode.nextElementSibling.textContent);
-        var min = Math.min(mayBuy, maySell);
-        if(min > 0) {
-          document.forms[key].amount.value = min;
-        }
-      } else if(document.forms[key].action.value == 'buy') {
-        var elem = document.forms[key].parentNode.offsetParent.rows[0].cells[5];
-        var m = (elem.innerText || elem.textContent).match(/Максимум ([0-9]+) шт/);
-        if(m) {
-          document.forms[key].amount.value = m[1];
-        }
-      }
-    }    
   }
   
 });
