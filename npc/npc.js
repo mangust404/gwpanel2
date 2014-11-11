@@ -155,9 +155,11 @@ jQuery.extend(panel, {
               'margin-left': '5px',
               'line-height': '40px'
             }).click(function() {
+              var that = this;
               //Запоминаем текущую страницу, чтобы по окончании пути на неё вернуться
-              __panel.set('moveHref', location.href + '&talk=1');
-              __panel.gotoHref(location.href);
+              __panel.set('moveHref', location.href + '&talk=1', function() {
+                __panel.gotoHref(that.href);
+              });
               return false;
             }).appendTo('center:contains("Вы находитесь в другом секторе"):first');
 
