@@ -174,7 +174,7 @@ jQuery.extend(panel, {
       }
     });
 
-    if(location.search.search(/seek=([^=]+)/)) {
+    if(location.search.search(/seek=([^=]+)/) > -1) {
       var seek = decodeURIComponent(RegExp.$1);
       var $first_tr;
       var trFound;
@@ -193,11 +193,18 @@ jQuery.extend(panel, {
           trFound = true;
         }
       });
+      console.log(seek);
       /// соответствие не найдено, переходим к первому похожему
       if(!trFound && $first_tr) {
         $('html,body').animate({
           scrollTop: $first_tr.offset().top - 40
         }, 1000);
+      } else if(seek && !trFound) {
+        /// Предлагаем "Где купить"
+        var ar = seek.split('&');
+        panel.showFlash('В инвентаре не найден этот предмет. <a href="' + 
+                        'http://www.ganjawars.ru/market.php?buy=1&item_id=' + 
+                        ar[0] + '">Где купить?</a>', 5000);
       }
     }
 
