@@ -118,6 +118,8 @@
     * @param callback - функция, вызываемая после загрузки всех скриптов
     */
     panel_settings_init: function(callback) {
+      panel.clearTimeouts();
+
       /// Убиваем лайвинтернет, иначе он поганит всю страницу, да и все скрипты с document.write
       $.each(document.scripts, function(i, script) {
         if(!script) return;
@@ -257,7 +259,6 @@
               data.paneID = paneID;
               panel.panel_settings_form(_class, type, data, true);
               $('#settings-form-popup').popup('open');
-
               return false;
             })
           );
