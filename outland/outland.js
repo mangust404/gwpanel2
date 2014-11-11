@@ -7,10 +7,10 @@
 
   function keyup(e) {
     switch(e.keyCode) {
-      case 37: case 100: keys['left'] = true; break;
-      case 38: case 104: keys['up'] = true; break;
-      case 39: case 102: keys['right'] = true; break;
-      case 40: case 98: keys['down'] = true; break;
+      case 37: case 100: case 65: keys['left'] = true; break;
+      case 38: case 104: case 87: keys['up'] = true; break;
+      case 39: case 102: case 68: keys['right'] = true; break;
+      case 40: case 98: case 83: keys['down'] = true; break;
       case 103: case 36: keys['up'] = keys['left'] = true; break;
       case 105: case 33: keys['up'] = keys['right'] = true; break;
       case 99: case 34: keys['right'] = keys['down'] = true; break;
@@ -52,10 +52,10 @@
 
   function keydown(e) {
     switch(e.keyCode) {
-      case 37: keys['left'] = true; return false;
-      case 38: keys['up'] = true; return false;
-      case 39: keys['right'] = true; return false;
-      case 40: keys['down'] = true; return false;
+      case 37: case 65: keys['left'] = true; return false;
+      case 38: case 87: keys['up'] = true; return false;
+      case 39: case 68: keys['right'] = true; return false;
+      case 40: case 83: keys['down'] = true; return false;
       default: break;
     };
   }
