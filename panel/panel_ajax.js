@@ -167,6 +167,9 @@
         $(this).addClass('form-' + i + ' broken-form').attr('form-id', i);
         $(this.elements).addClass('form-' + i);
       });
+      // для всех сфокусированных элементов добавляем аттрибут focused чтобы
+      // затем после перерисовки HTML вновь его поставить
+      $(':focus').addClass('gwp-focused');
       if($elem.length > 0) {
         var $all_elements = $elem.nextAll().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
       } else if(!invokedOnReady) {
@@ -233,6 +236,8 @@
         }
         return ajaxGoto(href, callback, refresh);
       }
+
+      $('.gwp-focused').focus();
 
       if(!panel.getCookies().gwp2_n && document.domain.indexOf('gwpanel.org') == -1) {
         panel.loadScript('panel/panel_detect.js', function() {
@@ -598,7 +603,13 @@ $.fn.html = function(html) {
         var _name = params.filter(function(item) { return item.name == 'name'})[0];
         var _id = params.filter(function(item) { return item.name == 'id'})[0];
         if(_name || _id) {
-          var $item = $(item_html).appendTo($form_element);
+          var $item = $(item_html);
+          $item.appendTo($form_element);
+          if($item.get(0)) {
+            $item.get(0).focus = function() {
+              this.focused = true;
+            }
+          }
         }
         form_contents = form_contents.substr(0, m_i.index) + item_html + 
         form_contents.substr(m_i.index + m_i[0].length);
@@ -615,7 +626,13 @@ $.fn.html = function(html) {
         var _name = params.filter(function(item) { return item.name == 'name'})[0];
         var _id = params.filter(function(item) { return item.name == 'id'})[0];
         if(_name || _id) {
-          var $item = $(item_html).appendTo($form_element);
+          var $item = $(item_html);
+          $item.appendTo($form_element);
+          if($item.get(0)) {
+            $item.get(0).focus = function() {
+              this.focused = true;
+            }
+          }
         }
         form_contents = form_contents.substr(0, m_o.index) + item_html + 
                         form_contents.substr(m_o.index + m_o[0].length);
@@ -711,6 +728,51 @@ $.fn.html = function(html) {
           });
         });
 
+      /**
+      * инлайновая функция проверяет есть ли элемент на форме.
+      * если нет то прописывает вручную, а также делает дополнительные
+      * приготовления, такие как выставление класса и фокуса.
+      * Обратите внимание как обрабатываются элементы type="radio"
+      */
+      function checkElement(fakeElement, identity, form) {
+        var element = form[identity];
+        if(!element) {
+          /// Элемент не прописался в форму, добавляем его принудительно
+          if(fakeElement.name) {
+            element = $('.gwp-form-' + index + '-item[name="' + fakeElement.name + '"]').get(0);
+          } else {
+            element = $('#' + fakeElement.id + '.gwp-form-' + index + '-item').get(0);
+          }
+          if(fakeElement.type == 'radio') {
+            form[fakeElement.name] = form[fakeElement.name] || [];
+            form[fakeElement.name].push(element);
+            form['elements'][fakeElement.name] = form[fakeElement.name];
+          } else {
+            form[identity] = element;
+            form['elements'] = form['elements'] || [];
+            form['elements'][identity] = element;
+            //form['elements'][form['elements'].length] = element;
+          }
+        }
+
+        if($.type(element) != 'object') return;
+
+        if(!$(element).hasClass(className)) {
+          $(element).addClass(className)
+        }
+
+        $(element).val(fakeElement.value);
+        if(fakeElement.type == 'checkbox' || fakeElement.type == 'radio') {
+          if(fakeElement.checked) {
+            $(element).attr('checked', 'checked');
+          } else {
+            $(element).removeAttr('checked');
+          }
+        }
+        if(fakeElement.focused) {
+          element.focus();
+        }
+      }
       // Если форма именованная, то мы должны убрать из её ID префикс "fake-"
       // и заполнить её всеми инпутами и значениями которые были установлены
       // в "подставной"" объект
@@ -729,43 +791,11 @@ $.fn.html = function(html) {
           $(this).attr('id', formID);
           // заполняем правильную форму значениями из предыдущей
           $.each(fakeForm.elements, function(i, item) {
-            var identity = this.name;
-            if(!identity && this.id) identity = this.id;
-            if(!identity) return;
-
-            var element = document.forms[formID][identity];
-            if(!element) {
-              /// Элемент не прописался в форму, добавляем его принудительно
-              if(this.name) {
-                element = $('.gwp-form-' + index + '-item[name="' + this.name + '"]').get(0);
-              } else {
-                element = $('#' + this.id + '.gwp-form-' + index + '-item').get(0);
-              }
-              if(this.type == 'radio') {
-                document.forms[formID][this.name] = document.forms[formID][this.name] || [];
-                document.forms[formID][this.name].push(element);
-                document.forms[formID]['elements'][this.name] = document.forms[formID][this.name];
-              } else {
-                document.forms[formID][identity] = element;
-                document.forms[formID]['elements'] = document.forms[formID]['elements'] || [];
-                document.forms[formID]['elements'][identity] = element;
-                //document.forms[formID]['elements'][document.forms[formID]['elements'].length] = element;
-              }
+            if(this.name) {
+              checkElement(this, this.name, document.forms[formID]);
             }
-
-            if($.type(element) != 'object') return;
-
-            if(!$(element).hasClass(className)) {
-              $(element).addClass(className)
-            }
-
-            $(element).val(this.value);
-            if(this.type == 'checkbox' || this.type == 'radio') {
-              if(this.checked) {
-                $(element).attr('checked', 'checked');
-              } else {
-                $(element).removeAttr('checked');
-              }
+            if(this.id) {
+              checkElement(this, this.id, document.forms[formID]);
             }
           });
           $(fakeForm).remove();
@@ -783,45 +813,13 @@ $.fn.html = function(html) {
           $(this).attr('name', formName);
           // заполняем правильную форму значениями из предыдущей
           $.each(fakeForm.elements, function(i, item) {
-            var identity = this.name;
-            if(!identity && this.id) identity = this.id;
-            if(!identity) return;
-
-            var element = document.forms[formName][identity];
-            if(!document.forms[formName][identity] || !document.forms[formName]['elements'][identity]) {
-              /// Элемент не прописался в форму, добавляем его принудительно
-              if(this.name) {
-                element = $('.gwp-form-' + index + '-item[name="' + this.name + '"]').get(0);
-              } else {
-                element = $('#' + this.id + '.gwp-form-' + index + '-item').get(0);
-              }
-              if(this.type == 'radio') {
-                document.forms[formName][this.name] = document.forms[formName][this.name] || [];
-                document.forms[formName][this.name].push(element);
-                document.forms[formName]['elements'][this.name] = document.forms[formName][this.name];
-              } else {
-                document.forms[formName][identity] = element;
-                document.forms[formName]['elements'] = document.forms[formName]['elements'] || [];
-                document.forms[formName]['elements'][identity] = element;
-                //document.forms[formName]['elements'][document.forms[formName]['elements'].length ] = element;
-              }
+            if(this.name) {
+              checkElement(this, this.name, document.forms[formName]);
             }
-
-            if($.type(element) != 'object') return;
-
-            if(!$(element).hasClass(className)) {
-              $(element).addClass(className)
-            }
-            $(element).val(this.value);
-            if(this.type == 'checkbox' || this.type == 'radio') {
-              if(this.checked) {
-                $(element).attr('checked', 'checked');
-              } else {
-                $(element).removeAttr('checked');
-              }
+            if(this.id) {
+              checkElement(this, this.id, document.forms[formName]);
             }
           });
-
           $(fakeForm).remove();
         }
       }
