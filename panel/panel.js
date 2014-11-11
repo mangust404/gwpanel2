@@ -969,9 +969,10 @@ window.Panel2 = new function() {
   }
   
   function checkTime(name) {
+    return;
     var new_timer = (new Date()).getTime();
-    //console.log(name + ': ' + '+' + (prev_timer? (new_timer - prev_timer) + ' ms, ': '') + 
-    //             (new_timer - timer) + ' ms from start');
+    console.log(name + ': ' + '+' + (prev_timer? (new_timer - prev_timer) + ' ms, ': '') + 
+                 (new_timer - timer) + ' ms from start');
     prev_timer = new_timer;
   }
 
@@ -1835,7 +1836,7 @@ window.Panel2 = new function() {
           return;
         } catch(e) {
           delete sessionStorage['gwp2_' + key];
-          console.log(e.toString());
+          instance.dispatchException(e);
         }
       }
       var __callback = function(value) {
@@ -2806,6 +2807,10 @@ window.Panel2 = new function() {
       /// добавляем те виджеты, которые не проинициализированы или 
       /// отображаем скрытые, которые должны быть на этой странице
       initFloatWidgets();
+    },
+
+    checkTime: function(msg) {
+      checkTime(msg);
     },
     /**
     * Публичные аттрибуты
