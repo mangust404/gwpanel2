@@ -9,9 +9,9 @@
     "/map.moving.php": ["map_mmupdate"],
     "/npc.php": ["map_links"],
     "/info.php": ["map_links"],
-    "/object.php": ["map_links"],
+    "/object.php": ["map_links", "map_resources"],
     "/statlist.php": ["map_links"],
-    "/objects-bar.php": ["map_links"]
+    "/objects-bar.php": ["map_links", "map_resources"]
   }, 
 
   "settings": {
@@ -24,6 +24,10 @@
     "map_links": {
       "file": "map.js",
       "description": "Добавлять ссылки быстрого перехода в сектор"
+    },
+    "map_resources": {
+      "file": "map.js",
+      "description": "Проставлять максимально возможное количество ресурсов"
     }
   },
 

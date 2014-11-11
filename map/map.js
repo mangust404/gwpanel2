@@ -129,6 +129,77 @@ jQuery.extend(panel, {
 
   map_current_sector_name: function() {
     
+  },
+
+  map_resources: function() {
+    $('form[action*="object-transfers.php"]').each(function() {
+      var formId = $(this).attr('id');
+      if(formId && formId.indexOf('sellform') > -1 && this.action.value == 'sell') {
+        /// форма закупки ресурсов с объекта
+        var mayBuy = parseInt($(this).closest('td').prev().prev().text());
+        var maySell = parseInt($(this).closest('td').next().text());
+        var min = Math.min(mayBuy, maySell);
+        if(min > 0) {
+          var that = this.amount;
+          $({value: 0}).animate({value: min}, {
+            easing: 'easeOutCubic',
+            step: function(val) {
+              that.value = parseInt(val);
+            //$('#el').text(Math.ceil(this.someValue) + "%");
+            }
+          });
+        }
+      } else if(this.amount && this.action.value == 'buy') {
+        /// форма продажи ресурсов на объект
+        var text = $(this).closest('tr').prev().text();
+        if(text.search(/Максимум ([0-9]+) шт/)) {
+          var that = this.amount;
+          $({value: 0}).animate({value: RegExp.$1}, {
+            easing: 'easeOutCubic',
+            step: function(val) {
+              that.value = parseInt(val);
+            //$('#el').text(Math.ceil(this.someValue) + "%");
+            }
+          });
+        }
+      } else if(location.pathname == '/objects-bar.php') {
+        var count = $(this).closest('td').prev().prev().text();
+        if(count.search(/([0-9]+)\/([0-9]+)/g) > -1) {
+          var mayBuy = parseInt(RegExp.$2) - parseInt(RegExp.$1);
+          var maySell = parseInt($(this).closest('td').next().text());
+          var min = Math.min(mayBuy, maySell);
+          if(min > 0) {
+            var that = this.amount;
+            $({value: 0}).animate({value: min}, {
+              easing: 'easeOutCubic',
+              step: function(val) {
+                that.value = parseInt(val);
+              //$('#el').text(Math.ceil(this.someValue) + "%");
+              }
+            });
+          }
+        }
+      }
+    });
+    return;
+    for(var key in document.forms) {
+      if(!document.forms[key].getAttribute) continue;
+      var id = document.forms[key].getAttribute('id');
+      if(id && id.indexOf('_sellform') != -1) {
+        var mayBuy = parseInt(document.forms[key].parentNode.previousElementSibling.previousElementSibling.innerText || document.forms[key].parentNode.previousElementSibling.previousElementSibling.textContent);
+        var maySell = parseInt(document.forms[key].parentNode.nextElementSibling.innerText || document.forms[key].parentNode.nextElementSibling.textContent);
+        var min = Math.min(mayBuy, maySell);
+        if(min > 0) {
+          document.forms[key].amount.value = min;
+        }
+      } else if(document.forms[key].action.value == 'buy') {
+        var elem = document.forms[key].parentNode.offsetParent.rows[0].cells[5];
+        var m = (elem.innerText || elem.textContent).match(/Максимум ([0-9]+) шт/);
+        if(m) {
+          document.forms[key].amount.value = m[1];
+        }
+      }
+    }    
   }
   
 });

@@ -1834,8 +1834,8 @@ window.Panel2 = new function() {
           callback(val);
           return;
         } catch(e) {
-          console.log(e);
           delete sessionStorage['gwp2_' + key];
+          console.log(e.toString());
         }
       }
       var __callback = function(value) {
@@ -2821,4 +2821,8 @@ window.Panel2 = new function() {
   return Panel2;
 };
 
+  $.easing.easeOutCubic = function (x, t, b, c, d) {
+    return c*((t=t/d-1)*t*t + 1) + b;
+  }
+  
 })(jQuery);
