@@ -679,14 +679,14 @@ $.fn.html = function(html) {
       var index = $(this).attr('index');
 
       function submitClickHandler(event) {
-        if(event.isDefaultPrevented() && event.isPropagationStopped()) {
+        if(event.isDefaultPrevented()) {
           return false;
         }
-        if(this.onclick) {
+        /*if(this.onclick) {
           var result;
           eval('function anon() { ' + this.onclick.replace('javascript:', '') + '}; result = anon();');
           if(result === false) return result;
-        }
+        }*/
         var $form = $('.gwp-form-' + index);
         /// мы должны добавить на форму скрытый элемент с именем и значением нажатого сабмита
         if(this.name) {
