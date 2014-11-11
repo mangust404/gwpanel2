@@ -51,14 +51,15 @@ QUnit.asyncTest("Тест открытия окна настроек", function(
       var that = this;
       waitPanelInitialization(this.contentWindow, function() {
         (function($) {
-          assert.equal($('.pane-bubble:visible').length, 1, 
-            'При пустой концигурации кнопка настроек должна появиться в первом окне');
-          if($('.pane-bubble:visible').length != 1) {
-            window.jQuery('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
-            return;
-          }
-          /// кликаем по бабблу
-          $('.pane-bubble:first').click();
+
+          waitFor(function() {
+            return $('.pane-bubble:visible').length > 0;
+          }, function() {
+            assert.equal($('.pane-bubble:visible').length, 1, 
+              'При пустой концигурации кнопка настроек должна появиться в первом окне');
+            /// кликаем по бабблу
+            $('.pane-bubble:first').click();
+          });
 
           waitFor(function() {
             return $('.pane:visible .button').length > 0;
@@ -85,7 +86,7 @@ QUnit.asyncTest("Тест открытия окна настроек", function(
           });
         }).apply(that.contentWindow, [that.contentWindow.jQuery])
       });
-    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+    }).appendTo('#qunit-fixture');
   });
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 
@@ -105,23 +106,19 @@ QUnit.asyncTest("Тест добавления кнопки", function(assert) {
       var that = this;
       waitPanelInitialization(this.contentWindow, function() {
         (function($) {
-        assert.equal($('.pane-bubble:visible').length, 1, 
-          'При пустой концигурации кнопка настроек должна появиться в первом окне');
-        if($('.pane-bubble:visible').length != 1) {
-          window.jQuery('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
-          return;
-        }
-        /// кликаем по бабблу
-        $('.pane-bubble:first').click();
-        var pane = $('.pane:visible');
-        /// Ждём прорисовки виджета
-        assert.ok(pane.length > 0, 'Открылось окошко');
-        var button = pane.find('.button');
 
-        assert.ok(button.length > 0,
-                  'Кнопка видна');
+        waitFor(function() {
+          return $('.pane-bubble:first:visible').length > 0;
+        }, function() {
+          /// кликаем по бабблу
+          $('.pane-bubble:first').click();
+        });
 
-        button.find('a').click();
+        waitFor(function() {
+          return $('.pane:visible .panel_settings').length > 0;
+        }, function() {
+          $('.pane:visible .panel_settings a').click();
+        });
 
         waitFor(function() {
           return $('a[href=#edit-buttons-wrapper]').length > 0;
@@ -142,7 +139,7 @@ QUnit.asyncTest("Тест добавления кнопки", function(assert) {
           $('#pane-bubble-1').click();
 
           waitFor(function() {
-            return $('#panel-settings-editor:visible').length == 0;
+            return $('#panel-settings-editor:visible').length == 0 && $('#pane-1:visible').length > 0;
           }, function() {
             assert.equal($('#panel-settings-editor:visible').length, 0, 
               'Окно настроек должно закрыться');
@@ -155,11 +152,11 @@ QUnit.asyncTest("Тест добавления кнопки", function(assert) {
             assert.equal(that.contentWindow.__panel.getOptions().panes[1].buttons[0].id,
               'panel_settings_0', 'проверка ID кнопки');
             QUnit.start();
-          }, 1500);
+          });
         });
       }).apply(that.contentWindow, [that.contentWindow.jQuery])
       });
-    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+    }).appendTo('#qunit-fixture');
   });
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 
@@ -191,14 +188,23 @@ QUnit.asyncTest("Тест добавления виджета", function(assert)
           file: 'panel.js',
           module: 'panel'
         };
-        /// кликаем по бабблу
-        $('.pane-bubble:first').click();
-        var pane = $('.pane:visible');
-        /// Ждём прорисовки виджета
-        var button = pane.find('.button');
-        button.find('a').click();
 
-        setTimeout(function() {
+        waitFor(function() {
+          return $('.pane-bubble:first:visible').length > 0;
+        }, function() {
+          /// кликаем по бабблу
+          $('.pane-bubble:first').click();
+        });
+
+        waitFor(function() {
+          return $('.pane:visible .panel_settings').length > 0;
+        }, function() {
+          $('.pane:visible .panel_settings a').click();
+        });
+
+        waitFor(function() {
+          return $('a[href=#edit-widgets-wrapper]').length > 0;
+        }, function() {
           $('a[href=#edit-widgets-wrapper]').click();
 
           assert.equal($('#add-widget-panel_foo_widget').length, 1, 
@@ -221,18 +227,17 @@ QUnit.asyncTest("Тест добавления виджета", function(assert)
           $('#panel-settings-editor').hide();
           $('#pane-bubble-2').click();
           
-          setTimeout(function() {
-            assert.equal($('#pane-2:visible').length, 1, 
-              'Открылось третье окошко');
-
+          waitFor(function() {
+            return $('#pane-2:visible').length > 0;
+          }, function() {
             assert.equal($('#pane-2 #panel_foo_widget_1').length, 1,
               'Добавленный виджет виден');
             QUnit.start();
-          }, 100);
-        }, 1000);
+          });
+        });
       }).apply(that.contentWindow, [that.contentWindow.jQuery])
       });
-    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+    }).appendTo('#qunit-fixture');
   });
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 });
@@ -349,11 +354,17 @@ QUnit.asyncTest("Тест формы добавления и настройки 
           module: 'panel'
         };
         /// кликаем по бабблу
-        $('.pane-bubble:first').click();
-        var pane = $('.pane:visible');
-        /// Ждём прорисовки виджета
-        var button = pane.find('.button');
-        button.find('a').click();
+        waitFor(function() {
+          return $('.pane-bubble:visible').length > 0;
+        }, function() {
+          $('.pane-bubble:visible:first').click();
+        });
+
+        waitFor(function() {
+          return $('.pane:visible').length > 0 && $('.pane:visible').find('.panel_settings').length > 0;
+        }, function() {
+          $('.pane:visible .panel_settings a').click();
+        });
 
         waitFor(function() {
           return $('a[href=#edit-widgets-wrapper]').length > 0;
@@ -539,7 +550,7 @@ QUnit.asyncTest("Тест формы добавления и настройки 
         });
       }).apply(that.contentWindow, [that.contentWindow.jQuery])
       });
-    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+    }).appendTo('#qunit-fixture');
   });
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 });
@@ -666,7 +677,7 @@ QUnit.asyncTest("Тест изменения видимости плавающи
         }
       });
 
-    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+    }).appendTo('#qunit-fixture');
   });
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 });
@@ -796,7 +807,7 @@ QUnit.asyncTest("Тест изменения видимости плавающи
         //console.log('__window.location.pathname =', __window.location.pathname , 'current=', current);
       });
 
-    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show();
+    }).appendTo('#qunit-fixture');
   });
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 });
@@ -903,7 +914,7 @@ QUnit.asyncTest("Тест изменения настроек модулей", f
         });
       }).apply(that.contentWindow, [that.contentWindow.jQuery])
       });
-    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show().get(0);
+    }).appendTo('#qunit-fixture').get(0);
   });
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 });
@@ -981,7 +992,7 @@ QUnit.asyncTest("Тест отключения функций", function(assert)
           QUnit.start();
         });
       });
-    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show().get(0);
+    }).appendTo('#qunit-fixture').get(0);
   });
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 });
@@ -1046,7 +1057,7 @@ QUnit.asyncTest("Тест включения функций, отключенн�
           }
         });
       });
-    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show().get(0);
+    }).appendTo('#qunit-fixture').get(0);
   });
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 });
@@ -1240,7 +1251,7 @@ QUnit.asyncTest('Тест сохранения опций для виджето�
           });
       }).apply(that.contentWindow, [that.contentWindow.jQuery])
       });
-    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show().get(0);
+    }).appendTo('#qunit-fixture').get(0);
   });
 });
 
@@ -1342,7 +1353,7 @@ QUnit.asyncTest('Тест сохранения опций для кнопок в
           }, 5000);
       }).apply(that.contentWindow, [that.contentWindow.jQuery])
       });
-    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000}).show().get(0);
+    }).appendTo('#qunit-fixture').get(0);
   });
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 
@@ -1376,10 +1387,18 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
           if(that.contentWindow.location.search.indexOf(salt) == -1) {
             /// кликаем по бабблу, виджет должен прорисоваться и функция прорисовки 
             /// виджета должна быть вызвана
-            $('.pane-bubble:first').click();
+            waitFor(function() {
+              return $('.pane-bubble:visible:first').length > 0;
+            }, function() {
+              $('.pane-bubble:visible:first').click();
+            });
 
-            /// Кликаем по кнопке
-            $('.button.panel_settings a').click();
+            waitFor(function() {
+              return $('.button.panel_settings a').length > 0;
+            }, function() {
+              /// Кликаем по кнопке
+              $('.button.panel_settings a').click();
+            });
 
             waitFor(function() {
               return $('#panel-settings-editor .ui-icon-edit').length > 0;
@@ -1393,19 +1412,23 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
                 $('#add-title').val('test2');
                 $('.add-options-variant input[type=submit]').click();
 
-                setTimeout(function() {
+                waitFor(function() {
+                  return $('#add-title:visible').length == 0;
+                }, function() {
                   assert.equal($('#add-title:visible').length, 0, 'Форма добавления должна закрыться');
                   assert.ok($('#variant-name option:contains(test2)').length > 0, 'Вариант добавлен');
                   variantID = $('#variant-name option:contains(test2)').attr('value');
                   $('#variant-name').val(variantID).change();
 
-                  that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
-                    assert.equal(data, variantID, 'Вариант должен совпадать');
-                    setTimeout(function() {
+                  waitFor(function() {
+                    return $('div:contains(Настройки изменены)').length > 0;
+                  }, function() {
+                    that.contentWindow.__panel.get(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), function(data) {
+                      assert.equal(data, variantID, 'Вариант должен совпадать');
                       that.contentWindow.location.href = that.contentWindow.location.href + '&' + salt;
-                    }, 200);
+                    });
                   });
-                }, 400);
+                });
               });
             });
           } else if(that.contentWindow.location.search.indexOf('finish') == -1) {
@@ -1423,10 +1446,18 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
               assert.equal(current_options.panes[3].buttons.length, 0);
               assert.equal(current_options.panes[3].widgets.length, 0);
 
-              $('.pane-bubble:first').click();
+              waitFor(function() {
+                return $('.pane-bubble:visible:first').length > 0;
+              }, function() {
+                $('.pane-bubble:visible:first').click();
+              });
 
-              /// Кликаем по кнопке
-              $('.button.panel_settings a').click();
+              waitFor(function() {
+                return $('.button.panel_settings a').length > 0;
+              }, function() {
+                /// Кликаем по кнопке
+                $('.button.panel_settings a').click();
+              });
 
               waitFor(function() {
                 return $('#panel-settings-editor .ui-icon-edit').length > 0;
@@ -1495,12 +1526,19 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
       waitPanelInitialization(this.contentWindow, function() {
         (function($) {
           if(that.contentWindow.location.search.indexOf(salt) == -1) {
-            /// кликаем по бабблу, виджет должен прорисоваться и функция прорисовки 
-            /// виджета должна быть вызвана
-            $('.pane-bubble:first').click();
 
-            /// Кликаем по кнопке
-            $('.button.panel_settings a').click();
+            waitFor(function() {
+              return $('.pane-bubble:visible:first').length > 0;
+            }, function() {
+              $('.pane-bubble:visible:first').click();
+            });
+
+            waitFor(function() {
+              return $('.button.panel_settings a').length > 0;
+            }, function() {
+              /// Кликаем по кнопке
+              $('.button.panel_settings a').click();
+            });
 
             waitFor(function() {
               return $('#panel-settings-editor .ui-icon-edit').length > 0;
@@ -1523,7 +1561,9 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
                   $('#add-collection').val('default');
                   $('.add-options-variant input[type=submit]').click();
 
-                  setTimeout(function() {
+                  waitFor(function() {
+                    return $('#add-title:visible').length == 0;
+                  }, function() {
                     assert.ok($('div:contains("уже существуют")').length > 0, 'Настройки с таким именем уже существуют');
                     assert.equal($('#add-title:visible').length, 0, 'Форма добавления должна закрыться');
 
@@ -1539,7 +1579,7 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
                         that.contentWindow.location.href = that.contentWindow.location.href + '&' + salt;
                       });
                     });
-                  }, 500);
+                  });
                 });
               });
               //QUnit.start();
@@ -1559,10 +1599,18 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
               delete def['settings'];
               assert.deepEqual(opts, def);
 
-              $('.pane-bubble:first').click();
+              waitFor(function() {
+                return $('.pane-bubble:visible:first').length > 0;
+              }, function() {
+                $('.pane-bubble:visible:first').click();
+              });
 
-              /// Кликаем по кнопке
-              $('.button.panel_settings a').click();
+              waitFor(function() {
+                return $('.button.panel_settings a').length > 0;
+              }, function() {
+                /// Кликаем по кнопке
+                $('.button.panel_settings a').click();
+              });
 
               waitFor(function() {
                 return $('#panel-settings-editor .ui-icon-edit').length > 0;

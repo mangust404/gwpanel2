@@ -5,7 +5,7 @@ function waitPanelInitialization(__window, callback) {
   // Ждём появления в документе указанного окна CSS-ки panel.css
   var check = function() {
     if(__window.__panel && __window.__panel.crossWindow) {
-      __window.__panel.ready(callback);
+      __window.__panel.onload(callback);
       return;
     }
     setTimeout(check, 10);
@@ -85,7 +85,7 @@ QUnit.asyncTest("Тест кеширования настроек и перем�
         that.contentWindow.__panel.crossWindow.get('param', function(data) {
           assert.equal(data, rand2);
           QUnit.start();
-        })
+        });
       } else {
         that.contentWindow.__panel.set('param', rand1, function() {
           $frame2.appendTo('#qunit-fixture');
@@ -109,13 +109,13 @@ QUnit.asyncTest("Тест кеширования настроек и перем�
           that.contentWindow.__panel.set('param', rand2, function() {
             $frame1.get(0).contentWindow.__panel.get('param', function(foreign_value) {
               assert.equal(foreign_value, rand2, 'Значение в первом окне поменялось');
-              $frame1.attr('src', 'http://www.ganjawars.ru/me/?gwpanel_testing&continue&step1');
+              $frame1.get(0).contentWindow.location.href = 'http://www.ganjawars.ru/me/?gwpanel_testing&continue&step1';
             });
           });
         });
       }
     });
-  })
+  });
 
 
 });
@@ -1259,7 +1259,11 @@ QUnit.asyncTest('Перетаскивание виджетов в другие �
       waitPanelInitialization(this.contentWindow, function() {
         (function($) {
           /// кликаем по бабблу
-          $('.pane-bubble:first').click();
+          waitFor(function() {
+            return $('.pane-bubble:visible').length > 0;
+          }, function() {
+            $('.pane-bubble:visible:first').click();
+          });
 
           waitFor(function() {
             /// Ждём прорисовки виджета
