@@ -6,6 +6,10 @@
 
   var loaderTO;
 
+  var lastState;
+  var stateId = 0;
+  var stateFormData = {};
+
   function ajaxGoto(href, callback, refresh) {
     if(loaderTO > 0) clearTimeout(loaderTO);
     /// показываем крутилку если запрос длится больше 300 миллисекунд
@@ -213,7 +217,8 @@
           ajaxifyContent();
           history.replaceState({
             data: $('#gw-content').html(), 
-            title: document.title
+            title: document.title,
+            id: ++stateId
           }, document.title, location.href);
         });
         //console.log('setting window.onpopstate');
@@ -263,6 +268,23 @@
                 }
               });
             });
+            
+            // Восстанавливаем значения форм
+            if(event.originalEvent.state.id && 
+               stateFormData[event.originalEvent.state.id]) {
+              function fillForm(formIdentity, formData) {
+                $.each(formData, function(key, value) {
+                  document.forms[formIdentity][key].value = value;
+                });
+              }
+              $.each(stateFormData[event.originalEvent.state.id].id, function(formId, formData) {
+                fillForm(formId, formData);
+              });
+              $.each(stateFormData[event.originalEvent.state.id].name, function(formName, formData) {
+                fillForm(formName, formData);
+              });
+              stateId = event.originalEvent.state.id;
+            }
 
             prevScrollTop = event.originalEvent.state.scrollTop;
 
@@ -344,6 +366,59 @@
         $(window).scrollTop(0);
       }
       panel.ajaxTearDown();
+      if(stateId > 0) {
+        /// запоминаем значения форм
+        stateFormData[stateId] = {id: {}, name: {}};
+
+        $.each(document.forms, function() {
+          var index = parseInt($(this).attr('index'));
+          var formId = parseInt($(this).attr('formid'));
+
+          var __id = $(this).attr('id');
+          var __name = $(this).attr('name');
+          if(__id) {
+            stateFormData[stateId].id[__id] = {};
+          }
+          if(__name) {
+            stateFormData[stateId].name[__name] = {};
+          }
+
+          function fillForm(elem) {
+            var elem_id = $(elem).attr('id');
+            var elem_name = $(elem).attr('name');
+            var elem_val = $(elem).val();
+            if(__id) {
+              if(elem_id) {
+                stateFormData[stateId].id[__id][elem_id] = elem_val;
+              }
+              if(elem_name) {
+                stateFormData[stateId].id[__id][elem_name] = elem_val;
+              }
+            }
+            if(__name) {
+              if(elem_id) {
+                stateFormData[stateId].name[__name][elem_id] = elem_val;
+              }
+              if(elem_name) {
+                stateFormData[stateId].name[__name][elem_name] = elem_val;
+              }
+            }
+          }
+
+          if(!isNaN(index)) {
+            $('.gwp-form-' + index + '-item').each(function() {
+              fillForm(this);
+            });
+          } else if(!isNaN(formId)) {
+            $('input.form-' + formId + ', '+ 
+              'textarea.form-' + formId + ', ' +
+              'select.form-' + formId)
+              .each(function() {
+                fillForm(this);
+              });
+          }
+        });
+      }
       
       $(document.body).addClass('ajax-processed');
       if(href && href.indexOf('/sms.php') > -1) $('img[src$="sms.gif"]').closest('a').remove();
@@ -394,11 +469,16 @@
           }, 1000);
         }
         //console.log('pushing data: ', data.substr(0, 20), ', length: ', data.length);
-        history.pushState({
+        stateId++;
+
+        lastState = {
           data: data, 
           title: document.title,
-          scrollTop: prevScrollTop
-        }, document.title, href);
+          scrollTop: prevScrollTop,
+          id: stateId
+        };
+
+        history.pushState(lastState, document.title, href);
       }
       $(document.body).addClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
       clearTimeout(loaderTO);
