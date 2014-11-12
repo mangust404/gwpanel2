@@ -351,7 +351,10 @@ $.extend(panel, {
           /// записываем опции
           options.save(function() {
             /// после записи опций обновляем страницу
-            if(location.href.indexOf('bid=') > -1) {
+            var $refreshLink = $('a:contains(Обновить страницу)');
+            if($refreshLink.length > 0) {
+              location.href = $refreshLink.attr('href');
+            } else if(location.href.indexOf('bid=') > -1) {
               location.href = location.href;
             } else {
               location.href = location.href + '?bid=' + document.forms.battleform.bid.value;
