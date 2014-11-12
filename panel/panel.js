@@ -105,7 +105,7 @@ window.Panel2 = new function() {
     '+': '%2B',
     '%': '%25',
     '&': '%26',
-    '=': '%3D',
+    '=': '%3D'
   };
 
   /******************************
@@ -2659,9 +2659,9 @@ window.Panel2 = new function() {
           var utfEncode = encodeURIComponent(char);
           if(utfEncode.charAt(0) == '%' && utfEncode.indexOf('%', 1) > -1) {
             /// это двухбайтовый UTF-ный символ, нужно перекодировать
-            var a = document.createElement('a');
-            a.href = "http://www.ganjawars.ru/encoded_str=?" + char;
-            var encodedChar = a.href.split('encoded_str=?')[1];
+            if(!instance.__encode_anchor) instance.__encode_anchor = document.createElement('a');
+            instance.__encode_anchor.href = "http://" + document.domain + "/encoded_str=?" + char;
+            var encodedChar = instance.__encode_anchor.href.split('encoded_str=?')[1];
             charEncodeCache[char] = encodedChar;
             result += encodedChar;
           } else {
