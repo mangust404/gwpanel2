@@ -414,14 +414,15 @@ function make_bootstrap($domain, $path, $libs) {
               if(failover) failover(e);
             }
           } else {
+            var script_path = path[i];
             __checkoutPackage(panel_version, function(package) {
-              if(typeof(package[path[i]]) == "undefined") {
+              if(typeof(package[script_path]) == "undefined") {
                 if(failover) failover();
                 return;
               }
-              sessionStorage["gwp2_f_" + path[i]] = package[path[i]];
+              sessionStorage["gwp2_f_" + script_path] = package[script_path];
               try {
-                eval.apply(window, [package[path[i]]]);
+                eval.apply(window, [package[script_path]]);
                 loaded++;
                 if(callback && loaded >= path.length) callback();
               } catch(e) {
