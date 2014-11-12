@@ -12,9 +12,16 @@
 
   var jsEnabled;
 
+  var initialized;
+
 $.extend(panel, {
   battle_fix: function(options) {
     if(battleFixed) return;
+    if(!window.bf3 && !initialized) {
+      initialized = true;
+      $(panel.battle_fix);
+      return;
+    }
     window.bf3 = window.bf3.replace(/<a/, '<a id="updbutton"');
     bsrcframe = $('#bsrc');
     bsrcframe.load(function() {
@@ -219,6 +226,10 @@ $.extend(panel, {
   */
   battle_to_allies: function(options) {
     var battlechat = document.forms['battlechat'];
+    if(!battlechat) {
+      $(panel.battle_to_allies);
+      return;
+    }
     $toAllies = $('<input type="checkbox" id="to-allies">')
       .change(function(e) {
         if(jsEnabled) {
