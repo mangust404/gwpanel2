@@ -69,7 +69,7 @@
       }
     });
     $('.broken-form:not(.processed)').each(function() {
-      var form_id = $(this).attr('form-id');
+      var form_id = $(this).attr('formid');
       var $form = $(this);
 
       $('input.form-' + form_id + '[type=submit], ' + 
@@ -124,7 +124,18 @@
 
         return false;
       });
-
+      
+      this.submit = function() {
+        var s_data = $('input.form-' + form_id + ', textarea.form-' + form_id + ', select.form-' + form_id).serializeArray();
+        $form.sendForm({
+          data: s_data, success: function(data) {
+            __panel.ajaxUpdateContent(data, __panel.responseURL() || $this.attr('action'));
+            if(location.href.indexOf('messages.php') == -1) {
+              $(window).scrollTop(0);
+            }
+          }
+        });
+      }
     }).addClass('processed');
 
   }
@@ -164,7 +175,7 @@
         /// Если количество элементов на форме сопадает с целевым, то форма рабочая, менять ничего не нужно
         if(this.elements.length == $('form').eq(i).find('input, select, textarea').length) return;
         forms_copy[i] = [];
-        $(this).addClass('form-' + i + ' broken-form').attr('form-id', i);
+        $(this).addClass('form-' + i + ' broken-form').attr('formid', i);
         $(this.elements).addClass('form-' + i);
       });
       // для всех сфокусированных элементов добавляем аттрибут focused чтобы
@@ -198,12 +209,13 @@
       if($all_elements.length > 0 && $content.length > 0) {
         originalTitle = document.title;
 
-        history.replaceState({
-          data: $('#gw-content').html(), 
-          title: document.title
-        }, document.title, location.href);
-
-        $(ajaxifyContent);
+        $(function() {
+          ajaxifyContent();
+          history.replaceState({
+            data: $('#gw-content').html(), 
+            title: document.title
+          }, document.title, location.href);
+        });
         //console.log('setting window.onpopstate');
 
         $(window).bind('popstate', function(event) {
@@ -218,6 +230,39 @@
             try {
               panel.ajaxUpdateContent(event.originalEvent.state.data, null, true);
             } catch(e) {}
+
+            $('form.broken-form.processed').removeClass('processed');
+            $('a.ajax').removeClass('ajax');
+            ajaxifyContent();
+
+            // При навигации обратно, поломанные формы не выставляют
+            // свою структуру в document.forms, мы должны просавить её вручную.
+
+            $('form.broken-form.processed').each(function() {
+              var formId = $(this).attr('formid');
+              var id = $(this).attr('id');
+              var name = $(this).attr('name');
+              $('input.form-' + formId + '[name], ' + 
+                'textarea.form-' + formId + '[name], ' + 
+                'select.form-' + formId + '[name]').each(function() {
+                if(name && document.forms[name]) {
+                  if(this.id && !document.forms[name][this.id]) {
+                    document.forms[name][this.id] = this;
+                  }
+                  if(this.name && !document.forms[name][this.name]) {
+                    document.forms[name][this.name] = this;
+                  }
+                }
+                if(id && document.forms[id]) {
+                  if(this.id && !document.forms[id][this.id]) {
+                    document.forms[id][this.id] = this;
+                  }
+                  if(this.name && !document.forms[id][this.name]) {
+                    document.forms[id][this.name] = this;
+                  }
+                }
+              });
+            });
 
             prevScrollTop = event.originalEvent.state.scrollTop;
 
@@ -399,7 +444,8 @@
         type: String($form.attr('method') || 'post').toLowerCase()
       }, options || {});
 
-      if(options.data && $.type(options.data) == 'array' && options.data[0].name) {
+      if(options.data && $.type(options.data) == 'array' && 
+         options.data[0] && options.data[0].name) {
         var s_data = options.data;
       } else {
         var s_data = $form.serializeArray();
@@ -557,7 +603,9 @@ $.fn.html = function(html) {
     var form_start = html.indexOf('<form');
 
     while(m_f = form_ex.exec(html)) {
-      if(m_f[1].indexOf('gwp-form') > -1 || html.substr(m_f.index - 20, 20).indexOf('innerHTML') > -1) {
+      if(m_f[1].indexOf('gwp-form') > -1 || 
+         m_f[1].indexOf('broken-form') > -1 || 
+         html.substr(m_f.index - 20, 20).indexOf('innerHTML') > -1) {
         continue;
       }
 
