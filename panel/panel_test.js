@@ -1569,12 +1569,12 @@ QUnit.test('Тест функции pluralize', function(assert) {
 QUnit.test('Тест функции encodeURIComponent', function(assert) {
   with(__panel) {
     assert.equal(encodeURIComponent('привет'), '%EF%F0%E8%E2%E5%F2', 'привет');
-    assert.equal(encodeURIComponent('привет +/?'), '%EF%F0%E8%E2%E5%F2+%2B/?', 'привет +/?');
-    assert.equal(encodeURIComponent('привет +/?'), '%EF%F0%E8%E2%E5%F2+%2B/?', 'привет +/?');
-    assert.equal(encodeURIComponent('привет %20 + ?'), '%EF%F0%E8%E2%E5%F2+%2520+%2B+?', 'привет %20 + ?');
-    assert.equal(encodeURIComponent('привет привет'), '%EF%F0%E8%E2%E5%F2+%EF%F0%E8%E2%E5%F2', 'привет привет');
-    assert.equal(encodeURIComponent('привет +/? +/?'), '%EF%F0%E8%E2%E5%F2+%2B/?+%2B/?', 'привет +/? +/?');
-    assert.equal(encodeURIComponent('привет %20 + ? %20 + ?'), '%EF%F0%E8%E2%E5%F2+%2520+%2B+?+%2520+%2B+?', 'привет %20 + ? %20 + ?');
+    assert.equal(encodeURIComponent('привет +/?'), '%EF%F0%E8%E2%E5%F2%20%2B/?', 'привет +/?');
+    assert.equal(encodeURIComponent('привет +/?'), '%EF%F0%E8%E2%E5%F2%20%2B/?', 'привет +/?');
+    assert.equal(encodeURIComponent('привет %20 + ?'), '%EF%F0%E8%E2%E5%F2%20%2520%20%2B%20?', 'привет %20 + ?');
+    assert.equal(encodeURIComponent('привет привет'), '%EF%F0%E8%E2%E5%F2%20%EF%F0%E8%E2%E5%F2', 'привет привет');
+    assert.equal(encodeURIComponent('привет +/? +/?'), '%EF%F0%E8%E2%E5%F2%20%2B/?%20%2B/?', 'привет +/? +/?');
+    assert.equal(encodeURIComponent('привет %20 + ? %20 + ?'), '%EF%F0%E8%E2%E5%F2%20%2520%20%2B%20?%20%2520%20%2B%20?', 'привет %20 + ? %20 + ?');
     assert.equal(encodeURIComponent('ЂЃ‚ѓ„…†‡€‰Љ‹ЊЌЋЏ'), '%80%81%82%83%84%85%86%87%88%89%8A%8B%8C%8D%8E%8F', 'ЂЃ‚ѓ„…†‡€‰Љ‹ЊЌЋЏ');
     assert.equal(encodeURIComponent('°±Ііґµ¶·ё№є»јЅѕї'), '%B0%B1%B2%B3%B4%B5%B6%B7%B8%B9%BA%BB%BC%BD%BE%BF', '°±Ііґµ¶·ё№є»јЅѕї');
     assert.equal(encodeURIComponent('АБВГДЕЖЗИЙКЛМНОП'), '%C0%C1%C2%C3%C4%C5%C6%C7%C8%C9%CA%CB%CC%CD%CE%CF', 'АБВГДЕЖЗИЙКЛМНОП');
@@ -1583,6 +1583,9 @@ QUnit.test('Тест функции encodeURIComponent', function(assert) {
     assert.equal(encodeURIComponent('рстуфхцчшщъыьэюя'), '%F0%F1%F2%F3%F4%F5%F6%F7%F8%F9%FA%FB%FC%FD%FE%FF', 'рстуфхцчшщъыьэюя');
     assert.equal(encodeURIComponent('sx=150&sy=150'), 'sx%3D150%26sy%3D150', 'sx=150&sy=150');
     assert.equal(encodeURIComponent("test\r\nпривет\r\n"), "test\r\n%EF%F0%E8%E2%E5%F2\r\n", "переносы строк");
+    assert.equal(encodeURIComponent('11.11.14 10:44   Передан предмет Стазис-генератор [4/4] на объект #127552, «Банк» (владелец Riki_tiki_tavi)'), 
+      '11.11.14%2010:44%20%20%20%CF%E5%F0%E5%E4%E0%ED%20%EF%F0%E5%E4%EC%E5%F2%20%D1%F2%E0%E7%E8%F1-%E3%E5%ED%E5%F0%E0%F2%EE%F0%20[4/4]%20%ED%E0%20%EE%E1%FA%E5%EA%F2%20#127552,%20%AB%C1%E0%ED%EA%BB%20(%E2%EB%E0%E4%E5%EB%E5%F6%20Riki_tiki_tavi)', 
+      'текст с символом «');
   }
 });
 

@@ -99,6 +99,15 @@ window.Panel2 = new function() {
   var safeIntervals = [];
   var safeTimeouts = [];
 
+  /// кеш для перкодировщика в cp1251
+  var charEncodeCache = {
+    ' ': '%20',
+    '+': '%2B',
+    '%': '%25',
+    '&': '%26',
+    '=': '%3D',
+  };
+
   /******************************
   *******Приватные методы********
   *******************************/
@@ -2639,13 +2648,29 @@ window.Panel2 = new function() {
     */
     encodeURIComponent: function(str) {
       if(!str) return str;
-      str = String(str).replace(/%/g, '%25').replace(/\+/g, '%2B')
-              .replace(/\r/g, '\\r').replace(/\n/g, '\\n');
-      var a = document.createElement('a');
-      a.href = "http://www.ganjawars.ru/encoded_str=?" + str;
-      return a.href.split('encoded_str=?')[1].replace(/%20/g, '+')
-              .replace(/=/g, '%3D').replace(/&/g, '%26')
-              .replace(/\\n/g, "\n").replace(/\\r/g, "\r");
+
+      var result = '';
+
+      for(var i = 0; i < str.length; i++) {
+        var char = str.charAt(i);
+        if(typeof(charEncodeCache[char]) != 'undefined') {
+          result += charEncodeCache[char];
+        } else {
+          var utfEncode = encodeURIComponent(char);
+          if(utfEncode.charAt(0) == '%' && utfEncode.indexOf('%', 1) > -1) {
+            /// это двухбайтовый UTF-ный символ, нужно перекодировать
+            var a = document.createElement('a');
+            a.href = "http://www.ganjawars.ru/encoded_str=?" + char;
+            var encodedChar = a.href.split('encoded_str=?')[1];
+            charEncodeCache[char] = encodedChar;
+            result += encodedChar;
+          } else {
+            /// однобайтовый, добавляем как есть
+            result += char;
+          }
+        }
+      }
+      return result;
     },
 
     /**
