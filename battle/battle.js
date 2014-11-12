@@ -351,7 +351,11 @@ $.extend(panel, {
           /// записываем опции
           options.save(function() {
             /// после записи опций обновляем страницу
-            location.href = location.href;
+            if(location.href.indexOf('bid=') > -1) {
+              location.href = location.href;
+            } else {
+              location.href = location.href + '?bid=' + document.forms.battleform.bid.value;
+            }
           });
         }
         return false;
