@@ -676,7 +676,7 @@ $.fn.html = function(html) {
     //console.log('preparing html');
     /// вытаскиваем все формы
     panel.checkTime('fixing forms');
-    var form_ex = /<form ([^>]+)>([.\s\S]*?)<\/form>/ig
+    var form_ex = /<form ([^>]+)>([.\s\S]*?)(<\/form>|$)/ig
     var input_ex = /<input[ ]?([^>]+)[\/]?>/ig
     var other_ex = /<(button|textarea|select)([^>]*)>([.\s\S]*?)<\/(button|textarea|select)>/ig
 //console.log(html);
