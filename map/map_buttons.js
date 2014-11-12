@@ -42,7 +42,7 @@ jQuery.extend(panel, {
     panel.loadScript('map/map_sectors.js', function() {
       panel.get('map_sector', function(current_sector) {
         var port = options.sector;
-        if(isNaN(port)) {
+        if(!port) {
           port_id = closestPort(current_sector);
           for(var sector in panel.map_ports) {
             if(panel.map_ports[sector].sector == port_id) {
@@ -50,7 +50,7 @@ jQuery.extend(panel, {
               break;
             }
           }
-          if(isNaN(port)) {
+          if(!port) {
             alert('Не удалось найти ближайший порт');
             return;
           }
