@@ -40,7 +40,7 @@
 
   function ajaxifyLinks($links) {
     function ajaxClickFunc(e) {
-      if(e.isDefaultPrevented() && e.isPropagationStopped()) {
+      if(e.isDefaultPrevented()) {
         return false;
       }
       if(e.ctrlKey || e.altKey || e.button != 0) return true;
@@ -69,7 +69,7 @@
       var onclick = $(this).attr('onclick');
       var match = onclick.match(/(document|window)\.location=["\']+([^"']+)["\']+/);
       if(match) {
-        $(this).attr('onclick', onclick.replace(match[0], '__panel.gotoHref("' + match[2] + '")'));
+        $(this).attr('onclick', onclick.replace(match[0], '__panel.gotoHref("' + match[2] + '"); return false;'));
       }
     });
     $('.broken-form:not(.processed)').each(function() {
