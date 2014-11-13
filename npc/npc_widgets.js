@@ -73,6 +73,7 @@ jQuery.extend(panel, {
                           minutes_ago + ' ' + 
                           panel.pluralize(minutes_ago, 'минуту', 'минуты', 'минут')
                           + ' назад'));
+        var added = 0;
         jQuery(panel.npc_list_island[type]).map(function() {
           var id = this.id;
           var name = this.name;
@@ -98,12 +99,15 @@ jQuery.extend(panel, {
                + 'talk=1" title="Начать разговор">\
                <img src="http://images.ganjawars.ru/i/home/friends.gif"></a>')
               .click(npcMoveFunc));
+            added++;
           } else if(options.enemies.indexOf(String(id)) != -1) {
             links.append(jQuery('<a href="http://www.ganjawars.ru/npc.php?id=' + id + 
               '&gwpattack=1" title="Напасть">\
               <img src="http://images.ganjawars.ru/i/home/weapon.gif"></a>')
               .click(npcMoveFunc));
-            
+            added++;
+          } else {
+            return;
           }
 
           var coords = data.npcLocations[id].coords.split('x');
@@ -153,6 +157,9 @@ jQuery.extend(panel, {
             drawTimer(data, $that);
           });
         });
+        if(!added) {
+          $table.append('<tr><td>Укажите в настройках хотя бы одного NPC друга или врага</td></tr>');
+        }
       }, 300);
     });
     panel.bind('npc_update', function(data) {
