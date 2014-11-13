@@ -13,6 +13,8 @@
   function ajaxGoto(href, callback, refresh) {
     if(loaderTO > 0) clearTimeout(loaderTO);
     /// показываем крутилку если запрос длится больше 300 миллисекунд
+    if($(document.body).hasClass('ajax-loading')) return false;
+
     loaderTO = panel.setTimeout(function() {
       $(document.body).addClass('ajax-loading');
     }, 300);
@@ -79,6 +81,7 @@
       $('input.form-' + form_id + '[type=submit], ' + 
         'input.form-' + form_id + '[type=image]').click(function() {
         if($(this).attr('onclick')) return true;
+        if($(document.body).hasClass('ajax-loading')) return false;
 
         var s_data = $('input.form-' + form_id + ', textarea.form-' + form_id + ', select.form-' + form_id).serializeArray();
         var params = [];
@@ -113,6 +116,9 @@
           },
           error: function() {
             regularSend();
+          },
+          complete: function() {
+            $(document.body).removeClass('ajax-loading');
           }
         };
 
@@ -123,6 +129,8 @@
           regularSend();
           return false;
         }
+
+        $(document.body).addClass('ajax-loading');
 
         $.ajax(href, options);
 
@@ -531,6 +539,7 @@
         var s_data = $form.serializeArray();
       }
 
+      if($(document.body).hasClass('ajax-loading')) return false;
       //__panel.setTimeout(function() {
       $(document.body).addClass('ajax-loading');
       //}, 300);
