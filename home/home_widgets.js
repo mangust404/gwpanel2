@@ -52,7 +52,7 @@
       var that = this;
       panel.loadCSS('shake.css', function() {
         that.addClass('shake shake-constant');
-        setTimeout(function() {
+        panel.setTimeout(function() {
           that.removeClass('shake shake-constant');
         }, 1000);
         panel.set('health', health);
