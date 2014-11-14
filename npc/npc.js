@@ -8,7 +8,7 @@ jQuery.extend(panel, {
       succeded: 0,
       failed: 0
     };
-    dtext = jQuery(dtext).text();
+    dtext = $(dtext).text();
     if(dtext.search(/Ваш статус:[^0-9\-]?([0-9\.\-]+)/)) result.status = parseFloat(RegExp.$1);
     if(dtext.search(/Отказов:[^0-9]?([0-9]+)/)) result.rejects = parseInt(RegExp.$1);
     if(dtext.search(/Выполнено:[^0-9]?([0-9]+) заданий/)) result.succeded = parseInt(RegExp.$1);
@@ -16,7 +16,7 @@ jQuery.extend(panel, {
     return result;
   },
   
-  npc_updStatus: function() {
+  npc_upd_status: function() {
     var params = __panel.toQueryParams(window.location.search);
     
     // Считываем текущие показатели квестов на странице
@@ -56,9 +56,9 @@ jQuery.extend(panel, {
     });
     
     if(params['gwpattack'] == 1) {
-      var href = jQuery('a:contains(Напасть!)').attr('href');
+      var href = $('a:contains(Напасть!)').attr('href');
       if(href) {
-        jQuery('a:contains(Напасть!)').html('Нападаем...').attr('href', '');
+        $('a:contains(Напасть!)').html('Нападаем...').attr('href', '');
         location.href = href;
       }
     }
@@ -86,7 +86,7 @@ jQuery.extend(panel, {
         if(Math.round(Math.abs(data.status - npcData.status) * 100) % 6 == 0 && data.status < npcData.status) { // статус уменьшился на 0.06 в результате нападения
           var timeout = 1200;
           if(npcData.timer == 'attack' && (npcData.starttime + timeout * 1000) > (new Date).getTime()) { // если таймер уже запущен, просто сохраняем данные
-            __panel.set('npc' + data.id, jQuery.extend(npcData, data));
+            __panel.set('npc' + data.id, $.extend(npcData, data));
             return;
           };
           data.timer = 'attack';
@@ -100,7 +100,7 @@ jQuery.extend(panel, {
         data.timeout = timeout;
         // Запускаем таймер
         // сохраняем данные
-        __panel.set('npc' + data.id, jQuery.extend(npcData, data));
+        __panel.set('npc' + data.id, $.extend(npcData, data));
         __panel.triggerEvent('npc_update', npcData);
       };
     } else {
@@ -109,11 +109,11 @@ jQuery.extend(panel, {
     }
   },
   
-  ncp_warlogCheck: function() {
+  ncp_warlog_check: function() {
     __panel.loadScript('npc/npc_list.js', function() {
       var list = [];
       var ids = [];
-      jQuery(__panel.npc_list).each(function() {
+      $(__panel.npc_list).each(function() {
         list.push(this.name);
         ids.push(this.id);
       });
@@ -128,13 +128,31 @@ jQuery.extend(panel, {
     
   },
   
-  npc_battleEnd: function(id) {
-    jQuery.ajax('http://www.ganjawars.ru/npc.php?id=' + id, {
-      success: function(data) {
-        var __data = __panel.npc_getStatus(data);
-        __data.id = id;
-        __panel.get('npc' + id, function(npcData) {
-          __panel.npc_questCheck(__data, npcData);
+  npc_battle_end: function(id) {
+    panel.currentPlayerName(function(player_name) {
+      /// ищем в документе имя 
+      var ex = new RegExp('Нападение ' + player_name + ' на ([^\\)]+)\\)');
+      if($(document.body).text().search(ex)) {
+        var npcName = RegExp.$1;
+        panel.loadScript('npc/npc_list.js', function(npcList) {
+          var npcId;
+          for(var i = 0; i < panel.npc_list.length; i++) {
+            if(panel.npc_list[i].name == npcName) {
+              npcId = panel.npc_list[i].id;
+              break;
+            }
+          }
+          if(npcId > 0) {
+            $.ajax('http://www.ganjawars.ru/npc.php?id=' + npcId, {
+              success: function(data) {
+                var __data = __panel.npc_getStatus(data);
+                __data.id = npcId;
+                __panel.get('npc' + npcId, function(npcData) {
+                  __panel.npc_questCheck(__data, npcData);
+                });
+              }
+            });
+          }
         });
       }
     });
