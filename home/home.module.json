@@ -15,6 +15,14 @@
     },
     "home_health": {
       "file": "home_health.js"
+    },
+    "home_header_update": {
+      "file": "home_health.js"
+    }
+  },
+  "event": {
+    "header_update": {
+      "callback": "home_header_update"
     }
   },
   

@@ -4,7 +4,13 @@
   "apply": {
     "/me/": ["panel_homepage"],
     "/login.php": ["panel_login"],
-    "*": ["panel_ajaxify"]
+    "*": ["panel_ajaxify", "panel_header"]
+  },
+
+  "event": {
+    "header_update": {
+      "callback": "panel_update_listener"
+    }
   },
 
   "settings": {
@@ -17,6 +23,28 @@
     "panel_ajaxify": {
       "file": "panel_ajax.js",
       "description": "Использовать AJAX (ускоряет загрузку страниц, ЭКСПЕРИМЕНТАЛЬНАЯ функция. Может вызывать побочные эффекты и конфликтовать с user-скриптами.)"
+    },
+    "panel_header": {
+      "file": "panel_header.js",
+      "description": "&quot;Оживление&quot; шапки",
+      "configure": {
+        "timeout": {
+          "type": "select",
+          "title": "Частота обновления данных",
+          "options": {
+            "10": "10 секунд (Осторожно! Большой траффик!)",
+            "20": "20 секунд",
+            "30": "30 секунд",
+            "60": "1 минута",
+            "120": "2 минуты",
+            "300": "5 минуты"
+          },
+          "default": "30"
+        }
+      }
+    },
+    "panel_update_listener": {
+      "file": "panel_header.js"
     }
   },
 

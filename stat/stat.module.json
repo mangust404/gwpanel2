@@ -42,14 +42,9 @@
     },
     "stat_draw_achievements": {
       "file": "stat.ach.js"
-    }
-  },
-
-  "event": {
+    },
     "stat_ach": {
-      "callback": "stat_get_achievements",
-      "file": "stat.ach.js", 
-      "local": true
+      "file": "stat.personal.js"
     }
   }
 }
