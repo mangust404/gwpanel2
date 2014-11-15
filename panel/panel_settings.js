@@ -119,7 +119,8 @@
     */
     panel_settings_init: function(callback) {
       panel.clearTimeouts();
-
+      panel.tearDown();
+      
       /// Убиваем лайвинтернет, иначе он поганит всю страницу, да и все скрипты с document.write
       $.each(document.scripts, function(i, script) {
         if(!script) return;
