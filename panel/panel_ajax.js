@@ -192,7 +192,7 @@
       // затем после перерисовки HTML вновь его поставить
       $(':focus').addClass('gwp-focused');
       if($elem.length > 0) {
-        var $all_elements = $elem.nextAll(':not(.pane-bubble)').find('script').remove().end().wrapAll('<div id="gw-content"></div>');
+        var $all_elements = $elem.nextAll(':not(.pane-bubble, .widget)').find('script').remove().end().wrapAll('<div id="gw-content"></div>');
       } else if(!invokedOnReady) {
         /// страница не готова, пытаемся аяксифицировать на document ready
         invokedOnReady = true;
@@ -201,7 +201,7 @@
       } else {
         /// страница не поддаётся аяксификации
         if(document.domain == 'quest.ganjawars.ru') {
-          $all_elements = $('body > *').wrapAll('<div id="gw-content"></div>');
+          $all_elements = $('body > *:not(.pane-bubble, .widget)').wrapAll('<div id="gw-content"></div>');
         } else {
           return;
         }
