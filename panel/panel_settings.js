@@ -204,6 +204,7 @@
     */
     panel_settings_editor: function(active_section, filter) {
     var current_options = panel.getOptions();
+    panel.haveServerSync(function(haveServerSync) {
     panel.panel_settings_init(function() {
       if(document.domain.indexOf('gwpanel.org') == -1) {
         /// Мы должны отключить Илюшины стили, иначе они конфликтуют с jQuery mobile-овскими
@@ -370,6 +371,7 @@
 
       $.map(sorted_buttons, function(button_name) {
         var button = panel.getSchema().buttons[button_name];
+        if(button.membersonly && !haveServerSync) return;
         var img = panel.iconURL(button.img || button.icon);
         var id = 'button_' + button_name;
         button.id = id;
@@ -406,6 +408,7 @@
 
       $.map(sorted_widgets, function(widget_name) {
         var widget = panel.getSchema().widgets[widget_name];
+        if(widget.membersonly && !haveServerSync) return;
         var id = 'widget_' + widget_name;
         var __widget;
 
@@ -953,7 +956,8 @@
         $('#panel-settings-editor .ui-navbar.first-view').removeClass('first-view');
       }
       $.mobile.loading("hide");
-    });
+    }); // settings init
+    }); // /haveServerSync
     },
 
     /**
@@ -1006,12 +1010,11 @@
                 } else {
                   var seek_index;
                   var objects_array = current_options.panes[widgetData.paneID][widgetKind + 's'];
-                  for(var i = 0; i < objects_array.length; i++) {
-                    if(objects_array[i].id == widgetData.id) {
+                  $.each(objects_array, function(i, item) {
+                    if(item.id == widgetData.id) {
                       seek_index = i;
-                      break;
                     }
-                  }
+                  });
                   if(jQuery.type(seek_index) == 'undefined') {
                     panel.showFlash(widgetKind == 'button'? 'Не удалось удалить кнопку': 'Не удалось удалить виджет');
                     return;
