@@ -4,7 +4,7 @@
       this.append('<div style="left: 0; top: 0; width: 70px; height: 85px;">' +
                     '<a>' +
                       '<div style="margin-left: auto; margin-right: auto;">' +
-                        '<img src="' + panel.path_to_theme() + '/images/debug.png">' +
+                        '<img src="' + panel.path_to_theme() + '/icons/debug.png">' +
                       '</div>' +
                       '<span style="margin-left: auto; margin-right: auto;">' + options.title + '</span>' +
                     '</a>' +
