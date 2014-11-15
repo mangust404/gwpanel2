@@ -287,7 +287,6 @@ $.extend(panel, {
     $(battlechat).prepend($toAllies);
     
     panel.bind('clrline', function() {
-      console.log('clrline');
       var oldm = document.getElementsByName('oldm')[0];
       if($toAllies.attr('checked')) oldm.value = '~';
       else oldm.value='';
