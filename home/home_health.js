@@ -24,6 +24,7 @@ jQuery.extend(panel, {
     if(data.hp) {
       var new_data = data.hp;
       new_data.date = (new Date).getTime();
+      new_data.hp_start = new_data.hp_current;
       panel.onload(function() {
         panel.triggerEvent('hp_update', new_data);
       });
