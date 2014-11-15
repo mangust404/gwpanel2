@@ -3049,23 +3049,33 @@ window.Panel2 = new function() {
           if((options.panes[i].buttons && options.panes[i].buttons.length) ||
               (options.panes[i].widgets && options.panes[i].widgets.length)) {
             if($.type(options.panes[i].buttons) != 'array') options.panes[i].buttons = [];
-            options.panes[i].buttons.push({ 'type': type, 
-                                            'left': options.panes[i].width - 1,
-                                            'top': options.panes[i].height - 1,
-                                            'id': type + '_0' });
-            have_button = true;
-            break;
+
+            var free_place = instance.checkPanePlaces(i, {height: 1, width: 1});
+            if(free_place) {
+              options.panes[i].buttons.push({ 'type': type, 
+                                              'left': free_place[1],
+                                              'top': free_place[0],
+                                              'id': type + '_0' });
+
+              have_button = true;
+              break;
+            }
           }
         }
       }
       if(!have_button) {
         /// все кнопки были удалены, добавляем дефолтную 
         /// кнопку настроек в первое пустое окошко
-        options.panes[0].buttons = [];
-        options.panes[0].buttons.push({ 'type': type, 
-                                            'left': options.panes[0].width - 1,
-                                            'top': options.panes[0].height - 1,
-                                            'id': 'panel_settings_0' });
+        for(var i = 0; i < 7; i++) {
+          if(!options.panes[0].buttons.length) {
+            options.panes[0].buttons = [];
+            options.panes[0].buttons.push({ 'type': type, 
+                                              'left': options.panes[0].width - 1,
+                                              'top': options.panes[0].height - 1,
+                                              'id': 'panel_settings_0' });
+            break;
+          }
+        }
       }
     },
 

@@ -36,7 +36,7 @@
         selected_variant = value;
         selected_options = window.panelSettingsCollection[value];
         panel.setOptionsID(panel.getEnv() + '_' + panel.currentPlayerID() + '_' + selected_variant);
-        panel.set(panel.getEnv() + '_opts_var_' + panel.currentPlayerID(), selected_variant);
+        panel.setVariant(selected_variant);
       }
     });
 
