@@ -40,6 +40,38 @@ jQuery.extend(panel, {
     } else {
       $(this).find('h3').html('Турбо ВКЛ');
     }
+  },
+
+  panel_staging: function() {
+    var env = panel.getEnv();
+    if(env == 'staging') {
+      panel.setEnv('production');
+      panel.showFlash('Вы вернулись в боевой режим.<br />' + 
+        'Перезагрузите страницу чтобы увидеть изменения.');
+    } else {
+      panel.setEnv('staging');
+      panel.showFlash('Вы включили режим тестирования.<br />' + 
+        (env == 'dev'? 'Отключите Greasemonkey и перезагрузите страницу.': 
+        'Перезагрузите страницу чтобы увидеть изменения.'));
+    }
+  },
+
+  panel_staging_draw: function() {
+    var env = panel.getEnv();
+    if(env == 'staging') {
+      $(this).addClass('button-ok')
+        .find('h3').html('Режим теста включен');
+    } else if(env == 'production') {
+      $(this).find('h3').html('Боевой режим')
+        .end().addClass('disabled');
+    } else if(env == 'dev') {
+      $(this).find('h3').html('Dev режим')
+        .end().addClass('disabled');
+    } else if(env == 'deploy') {
+      $(this).find('h3').html('Deploy режим')
+        .end().addClass('disabled');
+    }
   }
+
 });
 })(window.__panel, jQuery);
