@@ -13,8 +13,6 @@
   function ajaxGoto(href, callback, refresh) {
     if(loaderTO > 0) clearTimeout(loaderTO);
     /// показываем крутилку если запрос длится больше 300 миллисекунд
-    if($(document.body).hasClass('ajax-loading')) return false;
-
     loaderTO = panel.setTimeout(function() {
       $(document.body).addClass('ajax-loading');
     }, 300);
@@ -194,7 +192,7 @@
       // затем после перерисовки HTML вновь его поставить
       $(':focus').addClass('gwp-focused');
       if($elem.length > 0) {
-        var $all_elements = $elem.nextAll().find('script').remove().end().wrapAll('<div id="gw-content"></div>');
+        var $all_elements = $elem.nextAll(':not(.pane-bubble)').find('script').remove().end().wrapAll('<div id="gw-content"></div>');
       } else if(!invokedOnReady) {
         /// страница не готова, пытаемся аяксифицировать на document ready
         invokedOnReady = true;
