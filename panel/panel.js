@@ -676,46 +676,6 @@ window.Panel2 = new function() {
     }
   }
   
-  function check_settings_button() {
-    var have_settings_button;
-    for(var i = 0; i < 7; i++) {
-      if(options.panes[i] && $.type(options.panes[i].buttons) == 'array') {
-        if(!have_settings_button) {
-          for(var j = 0; j < options.panes[i].buttons.length; j++) {
-            if(options.panes[i].buttons[j].type == 'panel_settings') {
-              have_settings_button = true;
-              break;
-            }
-          }
-        }
-      }
-    }
-    if(!have_settings_button) {
-      /// Если пользователь каким-то образом удалил кнопку настроек, то добавляем её
-      for(var i = 6; i >= 0; i--) {
-        if(!options.panes[i]) return;
-        if((options.panes[i].buttons && options.panes[i].buttons.length) ||
-            (options.panes[i].widgets && options.panes[i].widgets.length)) {
-          if($.type(options.panes[i].buttons) != 'array') options.panes[i].buttons = [];
-          options.panes[i].buttons.push({ 'type': 'panel_settings', 
-                                          'left': options.panes[i].width - 1,
-                                          'top': options.panes[i].height - 1,
-                                          'id': 'panel_settings_0' });
-          have_settings_button = true;
-          break;
-        }
-      }
-    }
-    if(!have_settings_button) {
-      /// все кнопки были удалены, добавляем дефолтную 
-      /// кнопку настроек в первое пустое окошко
-      options.panes[0].buttons = [];
-      options.panes[0].buttons.push({ 'type': 'panel_settings', 
-                                          'left': options.panes[0].width - 1,
-                                          'top': options.panes[0].height - 1,
-                                          'id': 'panel_settings_0' });
-    }
-  }  
   /**
   * Вывод плашек активации
   */
@@ -723,7 +683,7 @@ window.Panel2 = new function() {
     if(!options || !options.panes || !options.panes.length) return;
 
     checkTime('draw_pane_bubbles begin');
-    check_settings_button();
+    instance.check_button('panel_settings');
 
     for(var i = 0; i < 4; i++) {
       if($.type(options.panes[i]) == 'object') {
@@ -1815,7 +1775,7 @@ window.Panel2 = new function() {
     *                то событие отработает только в текущем окне
     */
     triggerEvent: function(type, data, local) {
-      if(instance.crossWindow) {
+      if(initialized) {
         return instance.crossWindow.triggerEvent(type, data || {}, local);
       } else {
         instance.onload(function() {
@@ -1907,7 +1867,7 @@ window.Panel2 = new function() {
           }
         }
         options = new_options;
-        check_settings_button();
+        instance.check_button('panel_settings');
 
         var variantID = environment + '_opts_var_' + instance.currentPlayerID();
         instance.set(optionsID, options, function() {
@@ -3067,6 +3027,48 @@ window.Panel2 = new function() {
         instance[name].apply(target, args);
       });
     },
+
+    check_button: function(type) {
+      var have_button = false;
+      for(var i = 0; i < 7; i++) {
+        if(options.panes[i] && $.type(options.panes[i].buttons) == 'array') {
+          if(!have_button) {
+            for(var j = 0; j < options.panes[i].buttons.length; j++) {
+              if(options.panes[i].buttons[j].type == type) {
+                have_button = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+      if(!have_button) {
+        /// Если пользователь каким-то образом удалил кнопку настроек, то добавляем её
+        for(var i = 6; i >= 0; i--) {
+          if(!options.panes[i]) return;
+          if((options.panes[i].buttons && options.panes[i].buttons.length) ||
+              (options.panes[i].widgets && options.panes[i].widgets.length)) {
+            if($.type(options.panes[i].buttons) != 'array') options.panes[i].buttons = [];
+            options.panes[i].buttons.push({ 'type': type, 
+                                            'left': options.panes[i].width - 1,
+                                            'top': options.panes[i].height - 1,
+                                            'id': type + '_0' });
+            have_button = true;
+            break;
+          }
+        }
+      }
+      if(!have_button) {
+        /// все кнопки были удалены, добавляем дефолтную 
+        /// кнопку настроек в первое пустое окошко
+        options.panes[0].buttons = [];
+        options.panes[0].buttons.push({ 'type': type, 
+                                            'left': options.panes[0].width - 1,
+                                            'top': options.panes[0].height - 1,
+                                            'id': 'panel_settings_0' });
+      }
+    },
+
     /**
     * Публичные аттрибуты
     */
