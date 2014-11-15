@@ -162,27 +162,38 @@ jQuery.extend(panel, {
     panel.get('map_sector', function(sector) {
       panel.loadScript('npc/npc_list.js', function() {
         var id = location.search.split('id=')[1].split('&')[0];
-        __panel.get('npc' + id, function(data) {
-          if($.type(data) == 'object' && data.status > -2) {
-            var $link = $('td:contains(Район) > a[href*="map.php?sx="]:first');
-            var matches = $link.attr('href').match(/sx=([0-9]+)&sy=([0-9]+)$/);
-            if(!matches) return;
-            $('<a>Перейти в этот сектор и начать разговор</a>')
-            .attr('href', 'http://www.ganjawars.ru/map.move.php?gps=1&sxy=' + matches[1] + 'x' + matches[2])
-            .css({
-              'margin-left': '5px',
-              'line-height': '40px'
-            }).click(function() {
-              var that = this;
-              //Запоминаем текущую страницу, чтобы по окончании пути на неё вернуться
-              __panel.set('moveHref', location.href + '&talk=1', function() {
-                __panel.gotoHref(that.href);
-              });
-              return false;
-            }).appendTo('center:contains("Вы находитесь в другом секторе"):first');
-
-          }
-        });
+        var $link = $('td:contains(Район) > a[href*="map.php?sx="]:first');
+        var matches = $link.attr('href').match(/sx=([0-9]+)&sy=([0-9]+)$/);
+        if(!matches) return;
+        if(location.href.indexOf('attack=1') > -1) {
+          $('<a>Перейти в этот сектор и напасть</a>')
+          .attr('href', 'http://www.ganjawars.ru/map.move.php?gps=1&sxy=' + matches[1] + 'x' + matches[2])
+          .css({
+            'margin-left': '5px',
+            'line-height': '40px'
+          }).click(function() {
+            var that = this;
+            //Запоминаем текущую страницу, чтобы по окончании пути на неё вернуться
+            __panel.set('moveHref', location.href, function() {
+              __panel.gotoHref(that.href);
+            });
+            return false;
+          }).appendTo('center:contains("Вы находитесь в другом секторе"):first');
+        } else {
+          $('<a>Перейти в этот сектор и начать разговор</a>')
+          .attr('href', 'http://www.ganjawars.ru/map.move.php?gps=1&sxy=' + matches[1] + 'x' + matches[2])
+          .css({
+            'margin-left': '5px',
+            'line-height': '40px'
+          }).click(function() {
+            var that = this;
+            //Запоминаем текущую страницу, чтобы по окончании пути на неё вернуться
+            __panel.set('moveHref', location.href, function() {
+              __panel.gotoHref(that.href);
+            });
+            return false;
+          }).appendTo('center:contains("Вы находитесь в другом секторе"):first');
+        }
       });
     });
   }
