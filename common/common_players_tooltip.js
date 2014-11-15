@@ -1,28 +1,16 @@
 // author   гном убийца
 // id       433067
 (function(panel, $) {
+  var focused;
+
+  function removeAllTooltips() {
+    $('.player-tools').remove();
+  }
+
   $.extend(panel, {
     common_players_tooltip: function(options) {
-      // Интервал, через который имя для передачи (денег, предметов) будет удалено (ms).
-      var clearDataTimeout = 300000;
-
-      var $toolWindow;
-      var showWaitId, hideWaitId;
-
-      $toolWindow = $('<div id="playerToolWindow"></div>')
-        .mouseenter(function() {
-
-          clearTimeout(hideWaitId);
-
-        }).mouseleave(function() {
-
-          hideWaitId = setTimeout(function() {
-            $toolWindow.fadeOut();
-          }, 500);
-
-        });
-
-      if (location.pathname == "/info.php") {
+      if(location.pathname.indexOf('war') > -1) return;
+      /*if (location.pathname == "/info.php") {
 
         var $playerLinkOnInfo = $('img[src*="male.gif"]').closest('td').find('b');
 
@@ -36,37 +24,139 @@
           })
         );
 
-      }
+      }*/
+      $(document.body).on('click', removeAllTooltips);
 
-      $('a[href*="info.php?id="]').mouseenter(function() {
+      $('a[href*="info.php?id="]:not([href$="' + panel.currentPlayerID() + 
+        '"])').mouseenter(function() {
 
-        var $playerLink = $(this);
-        showWaitId = setTimeout(function() {
-          createToolWindow($toolWindow);
-          showToolWindow($playerLink)
-        }, 750);
+        if(this.$hover) return;
+        if(this.$toolWindow && this.$toolWindow.is(':visible')) return;
 
-        if ($playerLink.text().search('info.php?') != -1) clearTimeout(showWaitId);
+        if(this.blurTO > 0) {
+          clearTimeout(this.blurTO);
+          this.blurTO = 0;
+        }
+        var $that = $(this);
+        var that = this;
 
+        if(this.hoverTO > 0) return;
+        this.hoverTO = setTimeout(function() {
+          var position = $that.position();
+          $('.player-hover').remove();
+          that.$hover = $('<div class="player-hover">?</div>')
+            .css({
+              position: 'absolute',
+              left: position.left + $that.width(),
+              top: position.top
+            })
+            .click(function() {
+              var paramButtons, toolHTML, i, length;
+
+              that.$hover.remove();
+              delete that.$hover;
+
+              paramButtons = [
+                "Написать письмо", "send_mail.png",
+                "Передать деньги", "send_money.png",
+                "Добавить в друзья", "friend_list.png",
+                "Список аренды", "list_rents.png",
+                /* вторая строка */
+                "Письма от персонажа ", "mails_from.png",
+                "Передать предмет", "send_item.png",
+                "Добавить в черный список", "black_list.png",
+                "Иски игрока", "claims.png"
+              ];
+
+              $('.player-tools').remove();
+
+              that.$toolWindow = $('<div class="player-tools"></div>')
+                .addClass('pane left');
+              toolHTML = "&nbsp;";
+              for (i = 0, length = paramButtons.length; i < length; i = i + 2) {
+                if (i == 8) that.$toolWindow.append('<br>');
+                that.$toolWindow.append('<a title="' + paramButtons[i] + 
+                  '"><img src="' + panel.iconURL(paramButtons[i + 1]) + 
+                  '"></a>&nbsp;');
+
+              }
+
+              $('body').append(that.$toolWindow);
+
+              showToolWindow($that, that.$toolWindow);
+              return false;
+            })
+            .mouseover(function() {
+              that.focused++;
+            })
+            .mouseleave(function() {
+              that.focused--;
+              if(that.focused <= 0) {
+                that.$hover.remove();
+                delete that.$hover;
+              }
+            })
+            .insertAfter(that);
+          that.hoverTO = 0;
+        }, 100);
+        this.focused++;
       }).mouseleave(function() {
+        if(this.hoverTO > 0) {
+          clearTimeout(this.hoverTO);
+          this.hoverTO = 0;
+        }
+        if(!this.$hover) return;
 
-        clearTimeout(showWaitId);
-        hideWaitId = setTimeout(function() {
-          $toolWindow.fadeOut();
+        var that = this;
+        this.focused--;
+        if(this.blurTO > 0) return;
+        this.blurTO = setTimeout(function() {
+          if(that.focused <= 0 && that.$hover) {
+            that.$hover.remove();
+            delete that.$hover;
+          }
+          that.blurTO = 0;
         }, 500);
-
       }).click(function() {
-        clearTimeout(showWaitId);
+        //clearTimeout(showWaitId);
+      }).each(function() {
+        this.focused = 0;
       });
 
       if (location.pathname == '/send.php' || location.pathname == "/home.senditem.php" || location.pathname == "/items.php") {
-        pasteNameToSend(clearDataTimeout);
+        // Проставление ника на соответствующих формах
+
+        // Интервал, через который имя для передачи (денег, предметов) будет удалено (ms).
+        var clearDataTimeout = 300000;
+        var $input;
+        var time = new Date().getTime();
+        panel.get("nameToSendMoneyItem", function(info) {
+          if (info != null) {
+            time = time - info.time;
+            if (clearDataTimeout > time) {
+              $input = $('tr:contains("Имя получателя:")').find('input');
+              if ($input.length) {
+                $input.eq(0).prop("value", info.name);
+                panel.set("nameToSendMoneyItem", null);
+              } else {
+                panel.showFlash("Выберите предмет для передачи игроку <b>" + info.name + "</b>, и нажмите «Передать».", 'message', 5000);
+              }
+            } else {
+              panel.set("nameToSendMoneyItem", null);
+            }
+          }
+        });
       }
+
+      panel.onunload(function() {
+        $(document.body).off('click', removeAllTooltips);
+        $('.player-hover, .player-tools').remove();
+      });
     }
   });
 
-  function showToolWindow($playerLink) {
-    var $toolWindow, $urlTool;
+  function showToolWindow($playerLink, $toolWindow) {
+    var $urlTool;
     var dimensions, left, top, id, name, login, bodyWidth, info;
 
     id = $playerLink.prop("href").match(/(\d+)/)[0];
@@ -85,13 +175,11 @@
     }
     top = dimensions.top + 22;
 
-    $toolWindow = $('#playerToolWindow')
-      .css({
-        position: 'absolute',
-        left: left,
-        top: top
-      })
-      .fadeIn();
+    $toolWindow.css({
+      position: 'absolute',
+      left: left,
+      top: top
+    });
 
     $urlTool = $toolWindow.find('a');
 
@@ -151,34 +239,6 @@
     $urlTool.eq(7).prop("href", "http://www.ganjawars.ru/isks.php?sid=" + id + "&st=1&period=4");
   }
 
-  function createToolWindow($toolWindow) {
-    var paramButtons, toolHTML, i, length;
-
-    if ($('#playerToolWindow').length) return true;
-
-    paramButtons = [
-      "Написать письмо", "send_mail.png",
-      "Передать деньги", "send_money.png",
-      "Добавить в друзья", "friend_list.png",
-      "Список аренды", "list_rents.png",
-      /* вторая строка */
-      "Письма от персонажа ", "mails_from.png",
-      "Передать предмет", "send_item.png",
-      "Добавить в черный список", "black_list.png",
-      "Иски игрока", "claims.png"
-    ];
-
-    toolHTML = "&nbsp;";
-    for (i = 0, length = paramButtons.length; i < length; i = i + 2) {
-      if (i == 8) toolHTML += "<br>";
-      toolHTML += '<a title="' + paramButtons[i] + '"><img src="' + panel.iconURL(paramButtons[i + 1]) + '"></a>&nbsp;';
-    }
-
-    $('body').append(
-      $toolWindow.html(toolHTML).addClass('pane left').hide()
-    );
-  }
-
   function addToFriendOrEnemy(type, name) {
     var text;
 
@@ -192,27 +252,6 @@
           text = "<b>" + name + "</b> добавлен в ";
           text += !type ? "друзья." : "черный список.";
           panel.showFlash(text, 'message', 2500);
-        }
-      }
-    });
-  }
-
-  function pasteNameToSend(timeout) {
-    var $input;
-    var time = new Date().getTime();
-    panel.get("nameToSendMoneyItem", function(info) {
-      if (info != null) {
-        time = time - info.time;
-        if (timeout > time) {
-          $input = $('tr:contains("Имя получателя:")').find('input');
-          if ($input.length) {
-            $input.eq(0).prop("value", info.name);
-            panel.set("nameToSendMoneyItem", null);
-          } else {
-            panel.showFlash("Выберите предмет для передачи игроку <b>" + info.name + "</b>, и нажмите «Передать».", 'message', 5000);
-          }
-        } else {
-          panel.set("nameToSendMoneyItem", null);
         }
       }
     });
