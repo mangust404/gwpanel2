@@ -3,12 +3,12 @@
   "excludes": "",
   "title": "Модуль для Фермы",
   "weight": 5, 
-  "apply": {
+  "pages": {
     "/ferma.php": ["ferma_hotkeys"]
   },
-  "settings": {
+  "methods": {
     "ferma_hotkeys": {
-      "description": "горячие клавиши и удобные кнопки",
+      "title": "горячие клавиши и удобные кнопки",
       "file": "ferma.js"
     }
   }

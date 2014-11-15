@@ -3,11 +3,11 @@
   "excludes": "",
   "title": "Модуль для NPC",
   "weight":4, 
-  "apply": {
+  "pages": {
     "/npc.php": ["npc_upd_status", "npc_links"],
     "/warlog.php": ["ncp_warlog_check"]
   }, 
-  "settings": {
+  "methods": {
     "npc_upd_status": {
       "file": "npc.js"
     },
@@ -15,18 +15,15 @@
       "file": "npc.js"
     },
     "npc_links": {
-      "description": "Добавлять ссылки на странице NPC",
+      "title": "Добавлять ссылки на странице NPC",
       "file": "npc.js"
     },
     "npc_battle_end": {
       "file": "npc.js"
     }
   },
-  "event": {
-    "battleend": {
-      "callback": "npc_battle_end", 
-      "local": true
-    }
+  "listeners": {
+    "battleend": ["npc_battle_end"]
   },
   "widgets": {
     "npc_z": {

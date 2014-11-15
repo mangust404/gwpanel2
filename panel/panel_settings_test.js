@@ -180,14 +180,14 @@ QUnit.asyncTest("Тест добавления виджета", function(assert)
           this.append('<p>Panel foo widget</p>');
         };
 
-        that.contentWindow.panel_apply.widgets['panel_foo_widget'] = {
+        that.contentWindow.__panel.setSchema({widgets: {panel_foo_widget: {
           callback: 'panel_foo_widget',
           title: 'Тестовый виджет',
           height: 2,
           width: 6,
           file: 'panel.js',
           module: 'panel'
-        };
+        }}});
 
         waitFor(function() {
           return $('.pane-bubble:first:visible').length > 0;
@@ -274,7 +274,7 @@ QUnit.asyncTest("Тест формы добавления и настройки 
           return {'test1': 'Тест1', 'test2': 'Тест2', 'test3': 'Тест3'};
         };
 
-        that.contentWindow.panel_apply.widgets['panel_foo_widget'] = {
+        that.contentWindow.__panel.setSchema({widgets: {panel_foo_widget: {
           callback: 'panel_foo_widget',
           configure: {
             checkbox1: {
@@ -352,7 +352,7 @@ QUnit.asyncTest("Тест формы добавления и настройки 
           width: 2,
           file: 'panel.js',
           module: 'panel'
-        };
+        }}});
         /// кликаем по бабблу
         waitFor(function() {
           return $('.pane-bubble:visible').length > 0;
@@ -595,7 +595,7 @@ QUnit.asyncTest("Тест изменения видимости плавающи
           });
         };
 
-        __window.panel_apply.widgets['panel_foo_widget'] = {
+        __window.__panel.setSchema({widgets: {panel_foo_widget: {
           callback: 'panel_foo_widget',
           configure: {},
           title: 'Тестовый виджет',
@@ -603,7 +603,7 @@ QUnit.asyncTest("Тест изменения видимости плавающи
           width: 2,
           file: 'panel.js',
           module: 'panel'
-        };
+        }}});
 
         __window.__panel.__ready();
         __window.__panel.__load();
@@ -722,7 +722,7 @@ QUnit.asyncTest("Тест изменения видимости плавающи
           });
         };
 
-        __window.panel_apply.widgets['panel_foo_widget'] = {
+        __window.__panel.setSchema({widgets: {panel_foo_widget: {
           callback: 'panel_foo_widget',
           configure: {},
           title: 'Тестовый виджет',
@@ -730,7 +730,7 @@ QUnit.asyncTest("Тест изменения видимости плавающи
           width: 2,
           file: 'panel.js',
           module: 'panel'
-        };
+        }}});
 
         __window.__panel.__ready();
         __window.__panel.__load();
@@ -824,31 +824,34 @@ QUnit.asyncTest("Тест изменения настроек модулей", f
     waitFor(function() {
       return frame && frame.contentWindow && frame.contentWindow.__panel &&
              frame.contentWindow.__panel.__ready &&
-             frame.contentWindow.__panel.__load &&
-             frame.contentWindow.panel_apply;
+             frame.contentWindow.__panel.__load;
     }, function() {
       with(frame.contentWindow) {
-        if(!panel_apply.pages[document.location.pathname]) {
-          panel_apply.pages[document.location.pathname] = [];
-        }
-        panel_apply.pages[document.location.pathname].push('panel_test_func');
-        panel_apply.settings['panel_test_func'] = {
-          file: 'panel.js',
-          module: 'panel',
-          description: 'тестовая функция',
-          configure: {
-            checkbox: {
-              type: 'checkbox',
-              title: 'тестовый checkbox',
-              default: true
-            },
-            checkbox1: {
-              type: 'checkbox',
-              title: 'тестовый checkbox2',
-              default: true
+        var schemaExt = {
+          pages: {},
+          methods: {
+            panel_test_func: {
+              file: 'panel.js',
+              module: 'panel',
+              title: 'тестовая функция',
+              configure: {
+                checkbox: {
+                  type: 'checkbox',
+                  title: 'тестовый checkbox',
+                  default: true
+                },
+                checkbox1: {
+                  type: 'checkbox',
+                  title: 'тестовый checkbox2',
+                  default: true
+                }
+              }
             }
           }
-        }
+        };
+        schemaExt.pages[document.location.pathname] = ['panel_test_func'];
+        __panel.setSchema(schemaExt);
+
         __panel.panel_test_func = function(params) {
         }
 
@@ -914,7 +917,7 @@ QUnit.asyncTest("Тест изменения настроек модулей", f
         });
       }).apply(that.contentWindow, [that.contentWindow.jQuery])
       });
-    }).appendTo('#qunit-fixture').get(0);
+    }).appendTo('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).get(0);
   });
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 });
@@ -935,36 +938,39 @@ QUnit.asyncTest("Тест отключения функций", function(assert)
     }, function() {
 
       with(frame.contentWindow) {
-        if(!panel_apply.pages[document.location.pathname]) {
-          panel_apply.pages[document.location.pathname] = [];
-        }
-        panel_apply.pages[document.location.pathname].push('panel_test_func');
-        panel_apply.pages[document.location.pathname].push('panel_test_func_default_false');
-        panel_apply.settings['panel_test_func'] = {
-          file: 'panel.js',
-          module: 'panel',
-          description: 'тестовая функция',
-          configure: {
-            checkbox: {
-              type: 'checkbox',
-              title: 'тестовый checkbox',
-              default: true
+        var schemaExt = {
+          pages: {},
+          methods: {
+            panel_test_func: {
+              file: 'panel.js',
+              module: 'panel',
+              description: 'тестовая функция',
+              configure: {
+                checkbox: {
+                  type: 'checkbox',
+                  title: 'тестовый checkbox',
+                  default: true
+                }
+              }
+            },
+            panel_test_func_default_false: {
+              file: 'panel.js',
+              module: 'panel',
+              description: 'тестовая функция',
+              configure: {
+                checkbox: {
+                  type: 'checkbox',
+                  title: 'тестовый checkbox',
+                  default: true
+                }
+              },
+              default: false
             }
           }
-        }
-        panel_apply.settings['panel_test_func_default_false'] = {
-          file: 'panel.js',
-          module: 'panel',
-          description: 'тестовая функция',
-          configure: {
-            checkbox: {
-              type: 'checkbox',
-              title: 'тестовый checkbox',
-              default: true
-            }
-          },
-          default: false
-        }
+        };
+        schemaExt.pages[document.location.pathname] = ['panel_test_func', 'panel_test_func_default_false'];
+        __panel.setSchema(schemaExt);
+        
         __panel.panel_test_func = function(params) {
           QUnit.ok(false, 'функция panel_test_func не должна была запуститься');
           QUnit.start();
@@ -1014,23 +1020,28 @@ QUnit.asyncTest("Тест включения функций, отключенн�
     }, function() {
 
       with(frame.contentWindow) {
-        if(!panel_apply.pages[document.location.pathname]) {
-          panel_apply.pages[document.location.pathname] = [];
-        }
-        panel_apply.pages[document.location.pathname].push('panel_test_func');
-        panel_apply.settings['panel_test_func'] = {
-          file: 'panel.js',
-          module: 'panel',
-          description: 'тестовая функция, которая по-дефолту отключена',
-          configure: {
-            checkbox: {
-              type: 'checkbox',
-              title: 'тестовый checkbox',
-              default: true
+        var schemaExt = {
+          pages: {},
+          methods: {
+            panel_test_func: {
+              file: 'panel.js',
+              module: 'panel',
+              description: 'тестовая функция, которая по-дефолту отключена',
+              configure: {
+                checkbox: {
+                  type: 'checkbox',
+                  title: 'тестовый checkbox',
+                  default: true
+                }
+              },
+              default: false
             }
-          },
-          default: false
-        }
+          }
+        };
+
+        schemaExt.pages[document.location.pathname] = ['panel_test_func'];
+        __panel.setSchema(schemaExt);
+
         __panel.panel_test_func = function(params) {
           QUnit.ok(true, 'Эта функция должна была запуститься');
           completed = true;
@@ -1094,24 +1105,28 @@ QUnit.asyncTest('Тест сохранения опций для плавающ�
 
     waitFor(function() {
       return frame && frame.contentWindow && frame.contentWindow.__panel 
-             && frame.contentWindow.panel_apply && frame.contentWindow.__panel.__ready
+             && frame.contentWindow.__panel.__ready
              && frame.contentWindow.__panel.__load;
     }, function() {
       var __window = frame.contentWindow;
-      __window.panel_apply.widgets['panel_foo_widget'] = {
-        callback: 'panel_foo_widget',
-        title: 'Тестовый виджет',
-        height: 2,
-        width: 6,
-        file: 'panel.js',
-        configure: {
-          param1: {
-            type: 'checkbox',
-            title: 'тестовый параметр'
+      __window.__panel.setSchema({
+        widgets: {
+          panel_foo_widget: {
+            callback: 'panel_foo_widget',
+            title: 'Тестовый виджет',
+            height: 2,
+            width: 6,
+            file: 'panel.js',
+            configure: {
+              param1: {
+                type: 'checkbox',
+                title: 'тестовый параметр'
+              }
+            },
+            module: 'panel'
           }
-        },
-        module: 'panel'
-      };
+        }
+      });
 
       __window.__panel.panel_foo_widget = function(options) {
         assert.equal(jQuery.type(options), 'object');
@@ -1190,7 +1205,7 @@ QUnit.asyncTest('Тест сохранения опций для виджето�
 
     waitFor(function() {
       return frame && frame.contentWindow && frame.contentWindow.__panel
-              && frame.contentWindow.panel_apply && frame.contentWindow.__panel.__ready
+              && frame.contentWindow.__panel.__ready
              && frame.contentWindow.__panel.__load;
     }, function() {
       var __window = frame.contentWindow;
@@ -1214,20 +1229,25 @@ QUnit.asyncTest('Тест сохранения опций для виджето�
       };
 
       /// Создаём виртуальный класс виджетов
-      __window.panel_apply.widgets['panel_foo_widget'] = {
-        callback: 'panel_foo_widget',
-        title: 'Тестовый виджет',
-        height: 2,
-        width: 6,
-        file: 'panel.js',
-        configure: {
-          param1: {
-            type: 'checkbox',
-            title: 'тестовый параметр'
+      __window.__panel.setSchema({
+        widgets: {
+          panel_foo_widget: {
+            callback: 'panel_foo_widget',
+            title: 'Тестовый виджет',
+            height: 2,
+            width: 6,
+            file: 'panel.js',
+            configure: {
+              param1: {
+                type: 'checkbox',
+                title: 'тестовый параметр'
+              }
+            },
+            module: 'panel'
           }
-        },
-        module: 'panel'
-      };
+        }
+      });
+
       /// инициализируем панель
       __window.__panel.__ready();
       __window.__panel.__load();
@@ -1291,8 +1311,8 @@ QUnit.asyncTest('Тест сохранения опций для кнопок в
 
     waitFor(function() {
       return frame && frame.contentWindow && frame.contentWindow.__panel &&
-             frame.contentWindow.panel_apply && frame.contentWindow.__panel.__ready
-             && frame.contentWindow.__panel.__load;
+             frame.contentWindow.__panel.__ready && 
+             frame.contentWindow.__panel.__load;
     }, function() {
       var __window = frame.contentWindow;
       __window.__panel.panel_test_button = function(options) {
@@ -1313,19 +1333,25 @@ QUnit.asyncTest('Тест сохранения опций для кнопок в
           }, 200);
         });
       };
+
       /// Создаём виртуальный класс кнопок
-      __window.panel_apply.buttons['panel_test_button'] = {
-        callback: 'panel_test_button',
-        title: 'Test button',
-        file: 'panel.js',
-        configure: {
-          param1: {
-            type: 'checkbox',
-            title: 'тестовый параметр'
+      __window.__panel.setSchema({
+        buttons: {
+          panel_test_button: {
+            callback: 'panel_test_button',
+            title: 'Test button',
+            file: 'panel.js',
+            configure: {
+              param1: {
+                type: 'checkbox',
+                title: 'тестовый параметр'
+              }
+            },
+            module: 'panel'
           }
-        },
-        module: 'panel'
-      };
+        }
+      });
+
       /// инициализируем панель
       __window.__panel.__ready();
       __window.__panel.__load();
@@ -1372,6 +1398,8 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
   options.system[test_key] = salt;
   var variantID;
 
+
+  __panel.set(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), 'default', function() {
   __panel.set(__panel.getEnv() + '_variants', null, function() {
   __panel.setOptions(options, undefined, function() {
     var cached_options = JSON.parse(sessionStorage['gwp2_' + __panel.getEnv() + '_' + __panel.currentPlayerID() + '_default']);
@@ -1404,7 +1432,6 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
               return $('#panel-settings-editor .ui-icon-edit').length > 0;
             }, function() {
               $('#panel-settings-editor .ui-icon-edit').click();
-
               waitFor(function() {
                 return $('.add-options-variant .ui-collapsible-heading-toggle:first').length > 0;
               }, function() {
@@ -1430,7 +1457,7 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
                   });
                 });
               });
-            });
+            }, 15000);
           } else if(that.contentWindow.location.search.indexOf('finish') == -1) {
             // после обновления страницы с солью, проверяем вариант
             var current_options = that.contentWindow.__panel.getOptions();
@@ -1477,7 +1504,7 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
                     });
                   }, 500);
                 });
-              });
+              }, 15000);
             });
           } else {
             /// Окончание теста, проверяем первоначальные настройки
@@ -1493,8 +1520,9 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
         }).apply(that.contentWindow, [that.contentWindow.jQuery])
       });
     }).appendTo('#qunit-fixture').css({height: 500, width: 1000}).show().get(0);
-  });
-  }, true);
+  }); // set options
+  }, true); // set testing_variants
+  }); // set testing_opts_var_ID
   //$('#qunit-fixture').css({height: 500, width: 1000, position: 'static'}).show();
   
 });
@@ -1512,6 +1540,7 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
   options.system[test_key] = salt;
   var variantID;
 
+  __panel.set(__panel.getEnv() + '_opts_var_' + __panel.currentPlayerID(), 'default', function() {
   __panel.set(__panel.getEnv() + '_variants', null, function() {
   __panel.setOptions(options, undefined, function() {
     var cached_options = JSON.parse(sessionStorage['gwp2_' + __panel.getEnv() + '_' + __panel.currentPlayerID() + '_default']);
@@ -1651,6 +1680,7 @@ QUnit.asyncTest('Тестирование менеджера настроек, �
     }).appendTo('#qunit-fixture').css({height: 500, width: 1000}).show().get(0);
   });
   }, true);
+  }); // set testing_opts_var_ID
   //$('#qunit-fixture').css({height: 500, width: 1000, position: 'static'}).show();
   
 });

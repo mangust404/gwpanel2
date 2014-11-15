@@ -6,14 +6,26 @@
   "author": "Вася пупкин",
   "author_link": "http://www.ganjawars.ru/info.php?id=717811",
   "weight": 1, 
-  "apply": {
+  "pages": {
     "/me/": ["example_func1"],
     "*": ["example_func2", "example_highlight_players"]
   }, 
-  "settings": {
+  "events": {
+    "example_event": {
+      "title": "Пример события"
+    },
+    "example_event_local": {
+      "title": "Пример локального события",
+      "local": true
+    }
+  },
+  "listeners": {
+    "example_event": ["example_func1"]
+  },
+  "methods": {
     "example_func1": {
       "file": "example_func1.js",
-      "description": "Функция-пример №1, вынесенная в отдельный файл",
+      "title": "Функция-пример №1, вынесенная в отдельный файл",
       "configure": {
         "checkbox_example": {
           "type": "checkbox",
@@ -63,7 +75,7 @@
     },
     "example_highlight_players": {
       "file": "example.js",
-      "description": "Пример подсветки игроков и аяксовой подгрузки данных"
+      "title": "Пример подсветки игроков и аяксовой подгрузки данных"
     }
   },
   

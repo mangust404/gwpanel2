@@ -3,6 +3,7 @@ release/
 doc/
 gwpanel2.user.js
 apply.js
+schema.js
 bootstrap.js
 bootstrap_pda.js
 bootstrap_container.js

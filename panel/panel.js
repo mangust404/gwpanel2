@@ -27,6 +27,9 @@ window.Panel2 = new function() {
   var domain;
   /// Объект панели
   var instance;
+
+  /// Структура гвпанели: все методы, файлы, события, темы, тесты.
+  var panel_schema;
   /// Окружение
   /// Возможные варианты: dev, production, deploy, testing
   var environment;
@@ -169,7 +172,7 @@ window.Panel2 = new function() {
       if(pane_options.buttons && pane_options.buttons.length > 0) {
         $(buttons).each(function(index) {
         //for(var i = 0; i < buttons.length; i++) {
-          var type = panel_apply.buttons[this.type];
+          var type = panel_schema.buttons[this.type];
           if(!type.callback) type.callback = this.type.substr(type.module.length + 1);
           if(!type) {
             instance.dispatchException('Unknown button type: ' + this.type, 'Pane ' + paneID + ' draw: ');
@@ -497,7 +500,7 @@ window.Panel2 = new function() {
       if(widgets && widgets.length > 0) {
         $(widgets).each(function(index) {
         //for(var i = 0; i < widgets.length; i++) {
-          var type = panel_apply.widgets[this.type];
+          var type = panel_schema.widgets[this.type];
           if(!type) {
             instance.dispatchException('Unknown widget type: ' + this.type, 'Pane ' + paneID + ' draw: ');
             return;
@@ -735,8 +738,8 @@ window.Panel2 = new function() {
     
     var index = 0;
     $.each(options.widgets, function(index) {
-      if(!this.type || !panel_apply.widgets[this.type]) return;
-      this.module = panel_apply.widgets[this.type].module;
+      if(!this.type || !panel_schema.widgets[this.type]) return;
+      this.module = panel_schema.widgets[this.type].module;
       var widget = this;
       widget.index = index;
       widget.float = true;
@@ -753,8 +756,8 @@ window.Panel2 = new function() {
       /// Если виджет уже прорисован, выходим
       if($('#float-' + widget.index + '-' + widget.type).length > 0) return;
 
-      instance.loadScript(getFiles(panel_apply.widgets[this.type].file, this.module), function() {
-        var type = panel_apply.widgets[widget.type];
+      instance.loadScript(getFiles(panel_schema.widgets[this.type].file, this.module), function() {
+        var type = panel_schema.widgets[widget.type];
         if($.type(instance[type.callback]) == 'undefined') {
           throw('Function ' + type.callback + ' for widget ' + widget.type + ' not found');
         } else {
@@ -771,7 +774,7 @@ window.Panel2 = new function() {
             .dblclick(function() {
               instance.loadScript('panel/panel_settings.js', function() {
                 instance.panel_settings_init(function() {
-                  instance.panel_settings_form.apply($widget, [panel_apply.widgets[widget.type], 
+                  instance.panel_settings_form.apply($widget, [panel_schema.widgets[widget.type], 
                     'float', widget, true]);
                 });
 
@@ -880,7 +883,7 @@ window.Panel2 = new function() {
   */
   function tearDownFloatWidgets() {
     $.each(options.widgets, function(index) {
-      if(!this.type || !panel_apply.widgets[this.type]) return;
+      if(!this.type || !panel_schema.widgets[this.type]) return;
       var widget = this;
       widget.index = index;
       widget.float = true;
@@ -1017,11 +1020,9 @@ window.Panel2 = new function() {
   /**
   * Конструктор
   * @param __options - дефолтные настройки панели, хеш
-  * @param __panel_apply.buttons - список доступных кнопок
-  * @param __panel_apply.widgets - список доступных виджетов
   * @param __baseURL - адрес, откуда запустилась панель
   */
-  function Panel2(__env, __baseURL) {
+  function Panel2(__env, __baseURL, __schema) {
     timer = (new Date()).getTime();
     if(!instance )
        instance = this;
@@ -1037,6 +1038,9 @@ window.Panel2 = new function() {
       environment = original_environment;
     }
     baseURL = __baseURL;
+    panel_schema = $.extend(true, {}, __schema);
+    delete __schema;
+    delete window.panel_schema;
     
     var ar = document.domain.split('.');
    // if(ar[ar.length - 2] != 'www') document.domain = ar.slice(ar.length - 2).join('.');
@@ -1053,150 +1057,45 @@ window.Panel2 = new function() {
   function __initFunc(ajax) {
     // Инициализация слушателей событий
     if(!ajax) {
-      for(var key in panel_apply.events) {
-        $(panel_apply.events[key]).each(function(index, type) {
-          if(type.condition) {
-            try {
-              if(!eval(type.condition)) return;
-            } catch(e) {
-              instance.dispatchException(e, 'condition for loaded script error: ');
-              return;
-            }
-          }
-          instance.bind(type.event, function() {
-            var that = this;
-            var _args = arguments;
-            if(options.blacklist && options.blacklist.indexOf(type.callback) > -1) return;
-            instance.loadScript(panel_apply.scripts[type.callback], function() {
-              if($.type(instance[type.callback]) == 'undefined') {
-                throw('Function ' + type + ' in module ' + panel_apply.scripts[type] + ' not found');
-              } else {
-                var func_options = {};
-                try {
-                  if(!options.settings) {
-                    options.settings = {};
-                  }
-                  if(!options.settings[type.module]) {
-                    options.settings[type.module] = {};
-                  }
-                  if(!options.settings[type.module][type.callback]) {
-                    options.settings[type.module][type.callback] = {};
-                  }
-                  $.extend(func_options, options.settings[type.module][type.callback]);
-                  if($.isEmptyObject(func_options) && panel_apply.settings[type.callback].configure) {
-                    /// инициализируем опции с дефолтными значениями
-                    $.each(panel_apply.settings[type.callback].configure, function(option, configure) {
-                      if($.type(configure.default) != 'undefined') {
-                        func_options[option] = configure.default;
-                      }
-                    });
-                  }
-                  $.extend(func_options, {
-                    save: function(callback) {
-                      for(var key in func_options) {
-                        if(key == 'save') continue;
-                        options.settings[type.module][type.callback][key] = func_options[key];
-                      }
-                      instance.setOptions(options, undefined, function() {
-                        if(callback) callback();
-                        /*instance.triggerEvent('options_change_' + func, 
-                          {options: func_options, playerID: instance.currentPlayerID()});*/
-                      });
-                    }
-                  });
-                } catch(e) {
-                  instance.dispatchException(e);
-                }
-                var args = [func_options];
-                for(var key in _args) {
-                  args.push(_args[key]);
-                }
-                instance[type.callback].apply(that, args);
-              }
-            });
-          }, type.local);
+      for(var event_name in panel_schema.listeners) {
+        $.each(panel_schema.listeners[event_name], function(index, func_name) {
+          instance.bind(event_name, function() {
+            instance.callMethod(func_name, arguments, this);
+          });
         });
       }
     }
     // Инициализация подгружаемых скриптов
     var pages = [];
-    if($.type(panel_apply.pages[location.pathname]) == 'array') {
-      pages = panel_apply.pages[location.pathname];
+    if($.type(panel_schema.pages[location.pathname]) == 'array') {
+      pages = panel_schema.pages[location.pathname];
     }
-    if($.type(panel_apply.pages['*']) == 'array') {
-      for(var i = 0; i < panel_apply.pages['*'].length; i++) {
-        if(pages.indexOf(panel_apply.pages['*'][i]) == -1) {
-          pages.push(panel_apply.pages['*'][i]);
+    if($.type(panel_schema.pages['*']) == 'array') {
+      for(var i = 0; i < panel_schema.pages['*'].length; i++) {
+        if(pages.indexOf(panel_schema.pages['*'][i]) == -1) {
+          pages.push(panel_schema.pages['*'][i]);
         }
       }
     }
     pages.sort(function(a, b) {
-      var a_weight = panel_apply.modules[panel_apply.settings[a].module].weight;
-      var b_weight = panel_apply.modules[panel_apply.settings[b].module].weight;
+      var a_weight = panel_schema.modules[panel_schema.methods[a].module].weight;
+      var b_weight = panel_schema.modules[panel_schema.methods[b].module].weight;
       if(a_weight > b_weight) return 1;
       if(a_weight < b_weight) return -1; 
       return 0;
     });
-    $(pages).each(function(index, func) {
-      if(
-          /// если функция в чёрном списке
-          (options.blacklist && options.blacklist.indexOf(func) > -1) ||
-          /// или функция по-дефолту отключена и не в белом списке, либо белого списка нет
-          (panel_apply.settings[func].default === false 
-            && (!options.whitelist || options.whitelist.indexOf(func) == -1))
-        ) return;
-      var module = panel_apply.settings[func].module;
-      instance.loadScript(getFiles(panel_apply.settings[func].file, module), function() {
-        if($.type(instance[func]) == 'undefined') {
-          throw('Function ' + func + ' in module ' + panel_apply.settings[func].module + ' not found');
-        } else {
-          var func_options = {};
-          try {
-            if(!options.settings) {
-              options.settings = {};
-            }
-            if(!options.settings[module]) {
-              options.settings[module] = {};
-            }
-            if(!options.settings[module][func]) {
-              options.settings[module][func] = {};
-            }
-            $.extend(func_options, options.settings[module][func]);
-            if($.isEmptyObject(func_options) && panel_apply.settings[func].configure) {
-              /// инициализируем опции с дефолтными значениями
-              $.each(panel_apply.settings[func].configure, function(option, configure) {
-                if($.type(configure.default) != 'undefined') {
-                  func_options[option] = configure.default;
-                }
-              });
-            }
-            $.extend(func_options, {
-              save: function(callback) {
-                for(var key in func_options) {
-                  if(key == 'save') continue;
-                  options.settings[module][func][key] = func_options[key];
-                }
-                instance.setOptions(options, undefined, function() {
-                  if(callback) callback();
-                  /*instance.triggerEvent('options_change_' + func, 
-                    {options: func_options, playerID: instance.currentPlayerID()});*/
-                });
-              }
-            });
-          } catch(e) {
-            instance.dispatchException(e);
-          }
-          if($.browser.opera) {
-            $(function() {
-              instance[func].apply(instance, [func_options]);
-            });
-          } else {
-            instance[func].apply(instance, [func_options]);
-          }
-        }
-      });
-    });
 
+    if(($.browser.opera && $.browser.version < 13) || !documentIsWriteable()) {
+      $(function() {
+        $(pages).each(function(index, func) {
+          instance.callMethod(func, arguments, instance);
+        });
+      });
+    } else {
+      $(pages).each(function(index, func) {
+        instance.callMethod(func, arguments, instance);
+      });
+    }
     if(window.vote_for_post) {
       window.vote_for_post = function(fid, tid, mid, vote, sign) {
         $('#vote' + mid).load('/messages.php?do_vote=1&fid=' + fid + '&tid=' + 
@@ -1229,7 +1128,7 @@ window.Panel2 = new function() {
         //alert('test');
         var initTestFunc = function() {
           instance.loadCSS('../../lib/qunit-1.15.0.css');
-          var tests = window.panel_tests || [];
+          var tests = panel_schema.tests || [];
           instance.loadScript(tests);
         }
         if(window.opera || 
@@ -1290,18 +1189,6 @@ window.Panel2 = new function() {
         fastInitReady = location.search.indexOf('gwpanel_pause') == -1;
       }
 
-      //if($.type(__options) == 'object') $.extend(options, __options);
-      //if($.type__panel_apply.buttons) == 'object') panel_apply.buttons = __panel_apply.buttons;
-      //if($.type__panel_apply.widgets) == 'object') panel_apply.widgets = __panel_apply.widgets;
-  /*    if(!localStorage.options) {
-        localStorage.options = JSON.stringify(panelSettingsCollection.default);
-        localStorage.options_upd = (new Date).getTime();
-      } else if(localStorage.options) {
-        try {
-          var local_options = JSON.parse(localStorage.options);
-        } catch(e) {}
-        $.extend(options, local_options);
-      }*/
       /// если быстрая инициализация доступна
       checkTime('fastInitReady: ' + fastInitReady);
       if(fastInitReady) {
@@ -1325,7 +1212,7 @@ window.Panel2 = new function() {
                                     '/tmp/panelcontainer.html':
                                     '/tmp/panel2container.html', function() {
         initialized = true;
-        windowID = instance.crossWindow.windowID;
+        sessionStorage['gwp2_windowID'] = windowID = instance.crossWindow.windowID;
         instance.__load = function() {
           checkTime('initialization Begin');
           $(initializeStack).each(function() {
@@ -1469,6 +1356,7 @@ window.Panel2 = new function() {
         }, 1800);
       });
 
+      $(window).bind('beforeunload', instance.tearDown);
     },
     /**
     * Обработка исключений. Если есть консоль, то выводим в консоль.
@@ -1832,7 +1720,7 @@ window.Panel2 = new function() {
           var val = JSON.parse(localStorage['gwp2_' + key]);
           return callback(val);
         } catch(e) {
-          instance.dispatchException(e);
+          //instance.dispatchException(e);
         }
         callback(null);
         return;
@@ -1895,7 +1783,7 @@ window.Panel2 = new function() {
       if(instance.crossWindow) {
         return instance.crossWindow.triggerEvent(type, data || {}, local);
       } else {
-        instance.ready(function() {
+        instance.onload(function() {
           instance.crossWindow.triggerEvent(type, data || {}, local);
         });
       }
@@ -1913,15 +1801,15 @@ window.Panel2 = new function() {
         return instance.crossWindow.bind(type, callback);
       } else {
         /// Генерируем ID привязки самостоятельно
-        var callerFunc = ((new Error).stack || arguments.callee.toString()).split("\n")[1] || 'anonymous';
-        var listenerID = (callerFunc.substring(0, callerFunc.indexOf("@")).replace(/[<>]+/g, '') 
-                          || "anoynmous") + '_' + (new Date).getTime() + '_preinit';
+        var callerFunc = callback.toString().hashCode();
+        var listenerID = callerFunc + '_' + (new Date).getTime() + '_preinit';
         if(!listenersStack[type]) listenersStack[type] = {};
         var index = 0;
         while(listenersStack[type][listenerID]) {
           listenerID += index++;
         }
-
+        listenersStack[type][listenerID] = true;
+        
         instance.ready(function() {
           return instance.crossWindow.bind(type, callback, listenerID);
         })
@@ -2278,9 +2166,9 @@ window.Panel2 = new function() {
       }
       for(var i = 0; i < p_options.widgets.length; i++) {
         var _w_height = p_options.widgets[i].height || 
-                        panel_apply.widgets[p_options.widgets[i].type].height;
+                        panel_schema.widgets[p_options.widgets[i].type].height;
         var _w_width = p_options.widgets[i].width || 
-                       panel_apply.widgets[p_options.widgets[i].type].width;
+                       panel_schema.widgets[p_options.widgets[i].type].width;
 
         for(var __top = p_options.widgets[i].top; __top < p_options.widgets[i].top + _w_height; __top++) {
           if(!hold[__top]) 
@@ -2756,15 +2644,24 @@ window.Panel2 = new function() {
       $(document.body).off('click', instance.hideAllPanes);
     },
 
+    /**
+    * Функция проверки есть ли у игрока доступ к серверным функциям
+    */
     haveServerSync: function(callback) {
       instance.get('haveServerSync', callback);
     },
 
+    /**
+    * Этот метод вызывается при процессе авторизации, запоминает ключ авторизации
+    */
     setAuthKey: function(key) {
       instance.authKey = key;
       instance.triggerEvent('auth');
     },
 
+    /**
+    * Функция авторизации на сервере gwpanel.org для доступа к серверным функциям
+    */
     auth: function(callback) {
       var listenerID;
       if(!listenerID) {
@@ -2781,6 +2678,11 @@ window.Panel2 = new function() {
         }).appendTo(document.body);
     },
 
+    /**
+    * Функция-хелпер, возвращает полный путь к иконке
+    * @param _img - иконка (как она указана в настройках кнопки/виджета)
+    * @return string - полный путь для подстановки в <img src='...'>
+    */
     iconURL: function(_img) {
       var img;
       if(!_img) _img = 'no-icon.png';
@@ -2792,22 +2694,152 @@ window.Panel2 = new function() {
       return img;
     },
 
+    /**
+    * Функция для безопасного запуска интервала
+    * Обязательно используйте её заместо стандартной, иначе в AJAX-режиме
+    * ваши интервалы умрут после перезагрузки, т.к. они затираются
+    */
     setInterval: function(func, timeout) {
       var i = setInterval(func, timeout);
       safeIntervals.push(i);
       return i;
     },
 
+    /**
+    * Функция для безопасного запуска таймаута
+    * Обязательно используйте её заместо стандартной, иначе в AJAX-режиме
+    * ваши таймауты никогда не выполнятся, т.к. они затираются
+    */
     setTimeout: function(func, timeout) {
       var i = setTimeout(func, timeout);
       safeTimeouts.push(i);
       return i;
     },
 
+    /**
+    * Интервал, который сработает через указанный промежуток
+    * даже после перезагрузки страницы (после перезагрузки вы должны 
+    * вызвать этот метод ещё раз чтобы он продолжал работу)
+    * Он должен быть использован для выполнения периодических действий
+    * в текущем окне независимо от того, были ли произведены переходы
+    * 
+    * @param callback - функция вызова
+    * @param timeout - таймаут выполнения, в миллисекундах
+    */
+    persistInterval: function(callback, timeout) {
+      var hash = callback.toString().hashCode();
+
+      var info = sessionStorage['persist_intrvl_' + hash];
+      if(info) {
+        try {
+          info = JSON.parse(info);
+        } catch(e) {}
+      }
+
+      if($.type(info) != 'object' || !info) {
+        info = {
+          start: (new Date).getTime(),
+          timeout: timeout,
+          lastrun: 0
+        }
+      } else {
+        info.timeout = timeout;
+      }
+
+      function start() {
+        return instance.setInterval(function() {
+          instance.get('persist_intrvl_' + hash, function(_info) {
+            if(!_info) _info = info;
+            var now = new Date;
+            now.setMilliseconds(0);
+            now = now.getTime();
+            if(!_info.lastrun || now >= _info.lastrun + timeout) {
+              _info.lastrun = now;
+              instance.set('persist_intrvl_' + hash, _info, function() {
+                callback();
+              });
+            }
+          });
+        }, timeout);
+      }
+
+      sessionStorage['persist_intrvl_' + hash] = JSON.stringify(info);
+
+      if(info.lastrun > 0) {
+        // определяем когда следующий запуск
+        var nextRun = info.start + timeout;
+        var now = (new Date).getTime();
+        if(nextRun > now) {
+          // откладываем запуск
+          console.log('start in ' + Math.ceil((now - nextRun) / 1000) + ' seconds');
+          instance.setTimeout(function() {
+            callback();
+            start();
+          }, now - nextRun);
+        } else {
+          // время запуска в прошлом, стартуем задачу сразу
+          callback();
+          start();
+        }
+      } else {
+        // первый запуск, стартуем сразу
+        start();
+      }
+    },
+
+    /**
+    * Таймаут, который сработает через указанный промежуток
+    * даже после перезагрузки страницы (после перезагрузки вы должны 
+    * вызвать этот метод ещё раз чтобы он отработал в указанное время)
+    *
+    * @param callback - функция вызова
+    * @param timeout - таймаут выполнения, в миллисекундах
+    */
+    persistTimeout: function(func, timeout) {
+      
+    },
+
+    /**
+    * Функция определения точного времени по серверу (до секунды). Асинхронная.
+    * @param callback - этот метод вызывается с точным объектом временем 
+    *   в качестве первого аргумента
+    */
+    getTime: function(callback, failover) {
+      instance.getCached(function(clbk) {
+        $.ajax('http://www.ganjawars.ru/roulette.php', {
+          success: function(data) {
+            if(data.search(/Время: ([0-9]+):([0-9]+):([0-9]+)/)) {
+              var now = new Date;
+              var d = new Date;
+              d.setHours(RegExp.$1);
+              d.setMinutes(RegExp.$2);
+              d.setSeconds(RegExp.$3);
+              d.setDate(now.getDate());
+              d.setMonth(now.getMonth());
+              d.setFullYear(now.getFullYear());
+              clbk(d.getTime() - now.getTime());
+            } else {
+              if(failover) failover();
+            }
+          }
+        });
+      }, function(delta) {
+        var now = new Date;
+        now.setTime(now.getTime() + delta);
+        callback(now);
+      }, 1800); /// сверка часов раз в пол часа
+    },
+    /**
+    * Функция возвращает последний открытый URL. 
+    * Без аякса это просто location.href
+    */
     responseURL: function() {
       return location.href;
     },
 
+    /**
+    * Функция вызова всех слушателей onunload, подчищаем хвосты
+    */
     tearDown: function() {
       while(callback = tearDownStack.pop()) {
         try {
@@ -2834,8 +2866,146 @@ window.Panel2 = new function() {
       initFloatWidgets();
     },
 
+    /**
+    * функция-враппер для доступа к функции вывода таймингов checkTime
+    */
     checkTime: function(msg) {
       checkTime(msg);
+    },
+
+    /**
+    * Функция получения именованной блокировки
+    *
+    * @param lockId - имя блокировки
+    * @param callback - функция, вызываемая при получении блокировки
+    * @param failover - функция, вызываемая если блокировку не удалось получить
+    * @param timeout - таймут истечения, в секундах, не обязательный параметр
+    */
+    lockAcquire: function(lockId, callback, failover, timeout) {
+      instance.get('lock_' + lockId, function(data) {
+        if(!data || data.windowID == windowID || 
+            data.expiration < (new Date()).getTime()) {
+          /// блокировка получена
+          data = data || {};
+          data.time = (new Date()).getTime();
+          // истечение блокировки - либо указанный таймаут, либо сутки
+          data.expiration = data.time + (timeout > 0? timeout * 1000: 86400000);
+          data.windowID = windowID;
+          instance.set('lock_' + lockId, data, function() {
+            instance.onunload(function() {
+              instance.lockRelease(lockId);
+            });
+            callback();
+          });
+        } else {
+          if(failover) failover();
+        }
+      });
+    },
+
+    /**
+    * Функция освобождения именованной блокировки
+    *
+    * @param lockId - имя блокировки
+    * @param callback - функция, вызываемая после освобождения блокировки
+    */
+    lockRelease: function(lockId, callback) {
+      instance.del('lock_' + lockId, function() {
+        if(callback) callback();
+      });
+    },
+
+    getSchema: function() {
+      /// Не даём ссылку на текущую схему. Нельзя править схему.
+      return jQuery.extend(true, {}, panel_schema);
+    },
+
+    /// добавление данных в схему, только для тестов
+    setSchema: function(data) {
+      if(environment == 'testing') {
+        $.extend(true, panel_schema, data);
+      } else {
+        throw 'Нельзя изменять схему на лету';
+      }
+    },
+
+    /**
+    * Вызов метода
+    * Вызывается метод со специальным объектом содержащим настройки метода
+    * с функцией save() в качестве первого аргумента. После первого аргумента 
+    * добавляются аргументы из массива arguments, если они указаны
+    * Все методы объявляются в файлах .module.json и могут иметь настраиваемые 
+    * пользователем настройки, а также свои собственные, которые они обозначат
+    * во время вызова.
+    * @param name - имя метода.
+    * @param __arguments - дополнительные аргументы
+    **/
+    callMethod: function(name, __arguments, target) {
+      if((options.blacklist && options.blacklist.indexOf(name) > -1) ||
+          /// или функция по-дефолту отключена и не в белом списке, либо белого списка нет
+          (panel_schema.methods[name].default === false 
+            && (!options.whitelist || options.whitelist.indexOf(name) == -1))
+        ) return;
+
+      var module = panel_schema.methods[name].module;
+      var files = getFiles(panel_schema.methods[name].file, module);
+      if(!files.length) {
+        throw 'Не указан файл для метода ' + name;
+      }
+      instance.loadScript(files, function() {
+        if($.type(instance[name]) == 'undefined') {
+          throw('Метод ' + name + ' в модуле ' + module + ' не найден');
+        }
+
+        var func_options = {};
+        try {
+          if(!options.settings) {
+            options.settings = {};
+          }
+          if(!options.settings[module]) {
+            options.settings[module] = {};
+          }
+          if(!options.settings[module][name]) {
+            options.settings[module][name] = {};
+          }
+          $.extend(func_options, options.settings[module][name]);
+          if($.isEmptyObject(func_options) && panel_schema.methods[name].configure) {
+            /// инициализируем опции с дефолтными значениями
+            $.each(panel_schema.methods[name].configure, function(option, configure) {
+              if($.type(configure.default) != 'undefined') {
+                func_options[option] = configure.default;
+              }
+            });
+          }
+          $.extend(func_options, {
+            save: function(callback) {
+              for(var key in func_options) {
+                if(key == 'save') continue;
+                options.settings[module][name][key] = func_options[key];
+              }
+              instance.setOptions(options, undefined, function() {
+                if(callback) callback();
+                /*instance.triggerEvent('options_change_' + func, 
+                  {options: func_options, playerID: instance.currentPlayerID()});*/
+              });
+            }
+          });
+        } catch(e) {
+          instance.dispatchException(e);
+        }
+
+        var args = [];
+
+        if(__arguments && __arguments.length > 0) {
+          for(var i = 0; i < __arguments.length; i++) {
+            args.push(__arguments[i]);
+          }
+        }
+
+        args.unshift(func_options);
+
+        instance[name].apply(target, args);
+      });
     },
     /**
     * Публичные аттрибуты

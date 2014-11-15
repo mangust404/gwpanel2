@@ -4,14 +4,14 @@
   "access": "", 
   "title": "Дополнения для домашней странички",
   "weight": 1, 
-  "apply": {
+  "pages": {
     "/me/": ["home_durability"],
     "*": ["home_health"]
   }, 
-  "settings": {
+  "methods": {
     "home_durability": {
       "file": "home.js",
-      "description": "Отображение прочности предметов"
+      "title": "Отображение прочности предметов"
     },
     "home_health": {
       "file": "home_health.js"
@@ -20,10 +20,8 @@
       "file": "home_health.js"
     }
   },
-  "event": {
-    "header_update": {
-      "callback": "home_header_update"
-    }
+  "listeners": {
+    "header_update": ["home_header_update"]
   },
   
   "widgets": {

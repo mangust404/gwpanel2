@@ -1,4 +1,39 @@
+(function(panel, $) {
+
 QUnit.module('example');
+// пара функций-хелперов для проведения асинхронных тестов
+
+function waitPanelInitialization(__window, callback) {
+  // Ждём появления в документе указанного окна CSS-ки panel.css
+  var check = function() {
+    if(__window.__panel && __window.__panel.crossWindow) {
+      __window.__panel.ready(callback);
+      return;
+    }
+    setTimeout(check, 10);
+  };
+  check();
+}
+
+function waitFor(condition_func, success_func, timeout) {
+  timeout = timeout || 10000; // Максимальный таймаут ожидания - 10 секунд
+
+  var count = 0;
+  var f = function() {
+    if(condition_func()) {
+      success_func();
+      return;
+    }
+    count++;
+    if(count * 10 > timeout) {
+      QUnit.ok(false, 'Превышен интервал ожидания waitFor: ' + condition_func.toString());
+      QUnit.start();
+      return;
+    }
+    setTimeout(f, 10);
+  }
+  f();
+}
 
 /**
 * Тестирование - очень важный момент при разработке модулей.
@@ -70,3 +105,5 @@ QUnit.asyncTest('Проверка при наведении на ссылки', 
   // Если нужно посмотреть, что происходит во фрейме, можно использовать такой код
   //$('#qunit-fixture').css({height: 1000, width: 1000, position: 'static'}).show();
 });
+
+})(__panel, jQuery);

@@ -6,23 +6,20 @@
   "author": "Riki_tiki_tavi",
   "author_link": "http://www.ganjawars.ru/info.php?id=158249",
   "weight": 1, 
-  "apply": {
+  "pages": {
     "/items.php": ["items_sets"],
     "*": ["items_dress"]
   },
-  "event": {
-    "battleend": {
-      "callback": "items_set_check",
-      "local": true
-    }
+  "listeners": {
+    "battleend": ["items_set_check"]
   },
-  "settings": {
+  "methods": {
     "items_sets": {
-      "description": "Улучшенное редактирование комплектов",
+      "title": "Улучшенное редактирование комплектов",
       "file": "items.js"
     },
     "items_set_check": {
-      "description": "Проверять текущий надетый комплект после боя",
+      "title": "Проверять текущий надетый комплект после боя",
       "file": "items.js",
       "configure": {
         "nocheck_grenade": {

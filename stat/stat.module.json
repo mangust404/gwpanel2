@@ -4,7 +4,7 @@
   "access": "", 
   "title": "Статистика по опыту и умениям",
   "weight": 6, 
-  "apply": {
+  "pages": {
     "/me/": [
       "stat_update_personal", 
       "stat_draw_main_counters", 
@@ -20,10 +20,10 @@
     ]
   }, 
 
-  "settings": {
+  "methods": {
     "stat_update_personal": {
       "file": "stat.personal.js",
-      "description": "Счетчики на домашней странице"
+      "title": "Счетчики на домашней странице"
     },
     "stat_draw_main_counters": {
       "file": "stat.personal.js"

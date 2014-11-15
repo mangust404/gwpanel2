@@ -207,7 +207,7 @@
               /// Добавляем кнопку
               var button = panel.addButton(first_pane_with_buttons, 
                 'items_putset_button', 
-                $.extend(panel_apply.buttons.items_putset_button, {
+                $.extend(panel.getSchema().buttons.items_putset_button, {
                   title: sets_data[set_id],
                   arguments: {set_id: set_id},
                   img: image

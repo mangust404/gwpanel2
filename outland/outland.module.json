@@ -3,7 +3,7 @@
   "excludes": "",
   "title": "Модуль для Outland",
   "weight": 5, 
-  "apply": {
+  "pages": {
     "/walk.php": [
       "outland_check_set",
       "outland_auto_sail",
@@ -50,7 +50,7 @@
       "outland_pokemon_title"
     ]
   },
-  "settings": {
+  "methods": {
     "outland_check_set": {
       "configure": {
         "set": {
@@ -66,7 +66,7 @@
     },
 
     "outland_auto_sail": {
-      "description": "Автоматически отплывать, ага",
+      "title": "Автоматически отплывать, ага",
       "configure": {
         "port": {
           "type": "select",
@@ -80,12 +80,12 @@
     },
 
     "outland_auto_close": {
-      "description": "Автоматически закрывать заявку",
+      "title": "Автоматически закрывать заявку",
       "file": "outland.js"
     },
 
     "outland_auto_pick": {
-      "description": "Автоматически подбирать вещи",
+      "title": "Автоматически подбирать вещи",
       "file": "outland.js",
       "configure": {
         "type_loot": {
@@ -101,17 +101,17 @@
     },
 
     "outland_highlight": {
-      "description": "Подкрашивать клетки, на которые можно перейти",
+      "title": "Подкрашивать клетки, на которые можно перейти",
       "file": "outland.js"
     },
 
     "outland_hotkeys": {
-      "description": "Быстрое передвижение стрелками на клавиатуре",
+      "title": "Быстрое передвижение стрелками на клавиатуре",
       "file": "outland.js"
     },
 
     "outland_pokemon_title": {
-      "description": "Окно-подсказка с параметрами покемонов",
+      "title": "Окно-подсказка с параметрами покемонов",
       "file": "outland_pokemon_title.js",
       "configure": {
         "quantity": {

@@ -32,8 +32,13 @@
     this.progressBarText.html(text);
     
     this.hp_current += health.hp_speed;
-    if($('#hpheader').length > 0 && !isNaN(this.hp_current) && this.hp_current <= health.hp_max) {
-      $('#hpheader font').html(parseInt(this.hp_current));
+    var $hpheader = $('#hpheader');
+    if($hpheader.length > 0 && !isNaN(this.hp_current) && this.hp_current <= health.hp_max) {
+      if($hpheader.find('font').length > 0) {
+        $hpheader.find('font').html(parseInt(this.hp_current));
+      } else {
+        $hpheader.html(parseInt(this.hp_current));
+      }
     }
     if(this.hp_current >= health.hp_max) {
       this.progressBar.css({width: '100%'});
@@ -153,6 +158,12 @@ $.extend(panel, {
     panel.get('health', function(health) {
       home_health_progress.apply($widget, [false, health]);
       panel.bind('hp_update', function(new_health) {
+        var $hpheader = $('#hpheader');
+        if($hpheader.find('font').length > 0) {
+          $hpheader.find('font').html(new_health.hp_current);
+        } else {
+          $hpheader.html(new_health.hp_current);
+        }
         if(!health || health.hp_current != new_health.hp_start) {
           panel.set('health', new_health, function() {
             home_health_progress.apply($widget, [true, new_health]);

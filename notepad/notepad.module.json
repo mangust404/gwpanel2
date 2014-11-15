@@ -4,11 +4,9 @@
   "title": "Блокнот",
   "description": "Модуль для хранения записей, вы можете добавлять стикеры к страницам",
   "weight":4, 
-  "apply": {
+  "pages": {
   }, 
-  "settings": {
-  },
-  "event": {
+  "methods": {
   },
   "widgets": {
     "notepad_sticker": {

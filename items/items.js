@@ -145,7 +145,7 @@ jQuery.extend(panel, {
               } else if($('#add-button:checked').length) {
                 panel.addButton(first_pane_with_buttons, 
                   'items_putset_button', 
-                  $.extend(panel_apply.buttons.items_putset_button, {
+                  $.extend(panel.getSchema().buttons.items_putset_button, {
                     title: $set_name.val(),
                     arguments: {set_id: $set_id.val()},
                     img: current_icon

@@ -6,15 +6,15 @@
   "author": "гном убийца",
   "author_link": "http://www.ganjawars.ru/info.php?id=433067",
   "weight": 1, 
-  "apply": {
+  "pages": {
     "*": [
       "common_players_tooltip"
     ]
   }, 
-  "settings": {
+  "methods": {
     "common_players_tooltip": {
       "file": "common_players_tooltip.js",
-      "description": "Окно с дополнительным набором быстрых действий, на ссылках у персонажей в игре",
+      "title": "Окно с дополнительным набором быстрых действий, на ссылках у персонажей в игре",
       "default": true
     }
   }

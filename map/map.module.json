@@ -3,7 +3,7 @@
   "excludes": "",
   "title": "Модуль для карты и передвижений",
   "weight": 3, 
-  "apply": {
+  "pages": {
     "/me/": ["map_sector"],
     "/map.move.php": ["map_mmupdate"],
     "/map.moving.php": ["map_mmupdate"],
@@ -14,7 +14,7 @@
     "/objects-bar.php": ["map_links", "map_resources"]
   }, 
 
-  "settings": {
+  "methods": {
     "map_sector": {
       "file": "map.js"
     },
@@ -23,11 +23,11 @@
     },
     "map_links": {
       "file": "map.js",
-      "description": "Добавлять ссылки быстрого перехода в сектор"
+      "title": "Добавлять ссылки быстрого перехода в сектор"
     },
     "map_resources": {
       "file": "map.js",
-      "description": "Проставлять максимально возможное количество ресурсов"
+      "title": "Проставлять максимально возможное количество ресурсов"
     }
   },
 

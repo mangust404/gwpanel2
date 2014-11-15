@@ -6,15 +6,15 @@
   "author": "гном убийца",
   "author_link": "http://www.ganjawars.ru/info.php?id=433067",
   "weight": 1, 
-  "apply": {
+  "pages": {
     "*": [
       "object_viewer"
     ]
   }, 
-  "settings": {
+  "methods": {
     "object_viewer": {
       "file": "object_viewer.js",
-      "description": "Модуль отладки"
+      "title": "Модуль отладки"
     }
   },
 

@@ -164,33 +164,38 @@
         });
       }
 
-      for(var key in panel_apply.settings) {
-        add_files(panel_apply.settings[key].file, 
-                  panel_apply.settings[key].module);
+      for(var key in panel.getSchema().methods) {
+        //add_files(panel.getSchema().methods[key].file, 
+        //          panel.getSchema().methods[key].module);
 
-        if(panel_apply.settings[key].configure) {
-          for(var config_key in panel_apply.settings[key].configure) {
-            add_files(panel_apply.settings[key].configure[config_key].file, 
-              panel_apply.settings[key].module);
+        if(panel.getSchema().methods[key].configure) {
+          for(var config_key in panel.getSchema().methods[key].configure) {
+            add_files(panel.getSchema().methods[key].configure[config_key].file, 
+              panel.getSchema().methods[key].module);
           }
         }
       }
-      for(var key in panel_apply.buttons) {
-        var button = panel_apply.buttons[key];
+      for(var key in panel.getSchema().buttons) {
+        var button = panel.getSchema().buttons[key];
         add_files(button.file, 
           button.module);
         $.each(button.configure || {}, function(i) {
           add_files(this.file, button.module);
         });
       }
-      for(var key in panel_apply.widgets) {
-        var widget = panel_apply.widgets[key];
+      for(var key in panel.getSchema().widgets) {
+        var widget = panel.getSchema().widgets[key];
         add_files(widget.file, widget.module);
         $.each(widget.configure || {}, function(i) {
           add_files(this.file, widget.module);
         });
       }
-      panel.loadScript(scripts, callback);
+      //console.log(scripts);
+      $(document.body).addClass('ajax-loading');
+      panel.loadScript(scripts, function() {
+        $(document.body).removeClass('ajax-loading');
+        callback();
+      });
     },
 
     /**
@@ -255,7 +260,7 @@
                 var type = 'widget';
               }
               var data = current_options.panes[paneID][type + 's'][parent.attr('index')];
-              var _class = panel_apply[type + 's'][data.type];
+              var _class = panel.getSchema()[type + 's'][data.type];
               data.paneID = paneID;
               panel.panel_settings_form(_class, type, data, true);
               $('#settings-form-popup').popup('open');
@@ -271,7 +276,7 @@
         return;
       }
 
-      var apply = panel_apply;
+      var apply = panel.getSchema();
 
       editor = $('<div id="panel-settings-editor" class="ui-page-theme-a ui-popup ui-overlay-shadow ui-corner-all" data-role="tabs">\
   <div class="container">\
@@ -315,7 +320,7 @@
         }).appendTo(editor.find('.close-button-wrapper'));
       /// готовим галерею иконок
       var added = [];
-      $.each(panel_apply.themes[current_options.system.theme].icons, function(index, item) {
+      $.each(panel.getSchema().themes[current_options.system.theme].icons, function(index, item) {
         var img = panel.iconURL(item);
         added.push(img);
         $('<div class="icon-select"></div>').append(
@@ -349,12 +354,12 @@
       });
 
       var sorted_buttons = [];
-      $.each(panel_apply.buttons, function(name) {
+      $.each(panel.getSchema().buttons, function(name) {
         sorted_buttons.push(name);
       });
       sorted_buttons = sorted_buttons.sort(function(a, b) {
-        if(panel_apply.buttons[a].weight > panel_apply.buttons[b].weight) return 1;
-        else if (panel_apply.buttons[a].weight < panel_apply.buttons[b].weight) return -1;
+        if(panel.getSchema().buttons[a].weight > panel.getSchema().buttons[b].weight) return 1;
+        else if (panel.getSchema().buttons[a].weight < panel.getSchema().buttons[b].weight) return -1;
         else {
           if(a > b) return 1
           else if(a < b) return -1;
@@ -363,7 +368,7 @@
       });
 
       $.map(sorted_buttons, function(button_name) {
-        var button = panel_apply.buttons[button_name];
+        var button = panel.getSchema().buttons[button_name];
         var img = panel.iconURL(button.img || button.icon);
         var id = 'button_' + button_name;
         button.id = id;
@@ -385,12 +390,12 @@
       });
 
       var sorted_widgets = [];
-      $.each(panel_apply.widgets, function(name) {
+      $.each(panel.getSchema().widgets, function(name) {
         sorted_widgets.push(name);
       });
       sorted_widgets = sorted_widgets.sort(function(a, b) {
-        if(panel_apply.widgets[a].weight > panel_apply.widgets[b].weight) return 1;
-        else if (panel_apply.widgets[a].weight < panel_apply.widgets[b].weight) return -1;
+        if(panel.getSchema().widgets[a].weight > panel.getSchema().widgets[b].weight) return 1;
+        else if (panel.getSchema().widgets[a].weight < panel.getSchema().widgets[b].weight) return -1;
         else {
           if(a > b) return 1
           else if(a < b) return -1;
@@ -399,7 +404,7 @@
       });
 
       $.map(sorted_widgets, function(widget_name) {
-        var widget = panel_apply.widgets[widget_name];
+        var widget = panel.getSchema().widgets[widget_name];
         var id = 'widget_' + widget_name;
         var __widget;
 
@@ -442,12 +447,12 @@
       /// Модули
       var modules_ul = $('<ul data-role="collapsibleset" data-filter="true" data-filter-placeholder="Поиск настроек"></ul>');
       var sorted_modules = [];
-      $.each(panel_apply.modules, function(name) {
+      $.each(panel.getSchema().modules, function(name) {
         sorted_modules.push(name);
       });
       sorted_modules = sorted_modules.sort(function(a, b) {
-        if(panel_apply.modules[a].weight > panel_apply.modules[b].weight) return 1;
-        else if (panel_apply.modules[a].weight < panel_apply.modules[b].weight) return -1;
+        if(panel.getSchema().modules[a].weight > panel.getSchema().modules[b].weight) return 1;
+        else if (panel.getSchema().modules[a].weight < panel.getSchema().modules[b].weight) return -1;
         else {
           if(a > b) return 1
           else if(a < b) return -1;
@@ -457,16 +462,16 @@
 
       $.map(sorted_modules, function(module_name, i) {
         //if(module_name == 'panel') return;
-        var module = panel_apply.modules[module_name];
+        var module = panel.getSchema().modules[module_name];
         
         var configurable_funcs = [];
         var configurable_desc = [];
 
-        for(var func_name in panel_apply.settings) {
-          if(panel_apply.settings[func_name].module == module_name) {
-            if(panel_apply.settings[func_name].description) {
+        for(var func_name in panel.getSchema().methods) {
+          if(panel.getSchema().methods[func_name].module == module_name) {
+            if(panel.getSchema().methods[func_name].title) {
               configurable_funcs.push(func_name);
-              configurable_desc.push(panel_apply.settings[func_name].description);
+              configurable_desc.push(panel.getSchema().methods[func_name].title);
             }
           }
         }
@@ -480,14 +485,14 @@
           li.attr('data-role', 'collapsible');
           $.each(configurable_funcs, function(i, func_name) {
             var current_options = panel.getOptions();
-            if(panel_apply.settings[func_name].default === false) 
+            if(panel.getSchema().methods[func_name].default === false) 
               var is_blacklisted = !(current_options.whitelist && current_options.whitelist.indexOf(func_name) > -1);
             else
               var is_blacklisted = current_options.blacklist && current_options.blacklist.indexOf(func_name) > -1;
             var pages = [];
-            $.each(panel_apply.pages, function(page) {
+            $.each(panel.getSchema().pages, function(page) {
               if(page != '*' && this.indexOf(func_name) > -1 && 
-                 panel_apply.pages['*'].indexOf(func_name) == -1) {
+                 panel.getSchema().pages['*'].indexOf(func_name) == -1) {
                 pages.push('page:' + page);
               }
             });
@@ -496,7 +501,7 @@
                 ' checked="checked"') + '>' + configurable_desc[i] + '</label>' + '<div style="display: none;">' + pages.join(' ') + '</div>' + '</li>')
               .appendTo(settings_ul).find('input').change(function() {
               if(this.checked) {
-                if(panel_apply.settings[func_name].default === false) {
+                if(panel.getSchema().methods[func_name].default === false) {
                   /// добавляем в белый список
                   current_options.whitelist = current_options.whitelist || [];
                   if(current_options.whitelist.indexOf(this.name) == -1)
@@ -512,7 +517,7 @@
                 }
                 $(this).closest('li').find('.add-settings').removeClass('ui-disabled');
               } else {
-                if(panel_apply.settings[func_name].default === false) {
+                if(panel.getSchema().methods[func_name].default === false) {
                   /// Удаляем из белого списка
                   var index = current_options.whitelist.indexOf(this.name);
                   if(index > -1) {
@@ -529,7 +534,7 @@
                 $(this).closest('li').find('.add-settings').addClass('ui-disabled');
               }
             }).end();
-            if(panel_apply.settings[func_name].configure) {
+            if(panel.getSchema().methods[func_name].configure) {
               /// Дополнительные настройки
               var add_fieldset = $('<div data-role="collapsible" class="' + 
                 (is_blacklisted? 'ui-disabled': '') + 
@@ -542,8 +547,8 @@
               var current_options = panel.getOptions();
               var __settings = {};
               /// дефолтные настройки
-              for(var key in panel_apply.settings[func_name].configure) {
-                __settings[key] = panel_apply.settings[func_name].configure[key].default;
+              for(var key in panel.getSchema().methods[func_name].configure) {
+                __settings[key] = panel.getSchema().methods[func_name].configure[key].default;
               }
               if(current_options.settings && 
                  current_options.settings[module_name] && 
@@ -557,7 +562,7 @@
                 }
                 __settings = $.extend(__settings, current_options.settings[module_name][func_name]);
               }
-              panel.panel_configure_form(panel_apply.settings[func_name].configure, 
+              panel.panel_configure_form(panel.getSchema().methods[func_name].configure, 
                 {arguments: __settings, id: func_name}, add_fieldset, function(param, value) {
                   var new_options = panel.getOptions();
                   if(!new_options.settings) new_options.settings = {};
@@ -588,7 +593,6 @@
         });
 
       panel.get(panel.getEnv() + '_variants', function(variants) {
-
         var $upload_button = $('<a class="ui-btn ui-btn-inline ui-icon-arrow-u ui-btn-icon-right">Закачать</a>').click(function() {
           var upload_data = {
             variants: {}
@@ -662,7 +666,9 @@
               (current_variant == name? ' selected="selected"': '') + 
               '>' + title + '</option>');
           });
-          variant_select.selectmenu('refresh', true);
+          try {
+            variant_select.selectmenu('refresh', true);
+          } catch(e) {}
         });
         var n = $('<div class="add-options-variant ui-corner-all custom-corners" data-role="collapsible">\
   <h3>Добавить новый вариант</h3>\
@@ -686,7 +692,6 @@
         $.each(variants, function(key) {
           $clone_collection.append('<option value="clone_' + key + '">' + variants[key] + '</option>');
         });
-
         $('<div style="margin: 30px 0;" />').appendTo(fieldset);
         $('<input type="submit" value="Добавить">').click(function() {
           var name = $('#add-title').val();
@@ -960,7 +965,7 @@
 
     /**
     * Функция вывода формы настроек виджета или кнопки
-    * @param widgetClass - хеш, класс виджета из panel_apply.widgets
+    * @param widgetClass - хеш, класс виджета из panel.getSchema().widgets
     * @param widgetKind - строка, тип виджета. Возможные значения: button, widget, float
     * @param widgetData - данные виджета
     * @param isEdit - флаг, если = true, то это редактирование
@@ -1362,7 +1367,7 @@
     updateButton: function(paneID, id, data) {
       var current_options = panel.getOptions();
       /// Меняем заголовок кнопки сразу
-      $('#pane-' + paneID + ' #' + data.id + ' a h3').html(data.title || panel_apply.buttons[data.type].title);
+      $('#pane-' + paneID + ' #' + data.id + ' a h3').html(data.title || panel.getSchema().buttons[data.type].title);
       $('#pane-' + paneID + ' #' + data.id + ' .img img').attr('src',
          panel.iconURL(data.img)
       );

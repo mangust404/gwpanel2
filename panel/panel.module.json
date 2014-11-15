@@ -1,19 +1,23 @@
 {
   "title": "Базовый модуль GWPanel 2",
   "weight": -100,
-  "apply": {
+  "pages": {
     "/me/": ["panel_homepage"],
     "/login.php": ["panel_login"],
     "*": ["panel_ajaxify", "panel_header"]
   },
 
-  "event": {
+  "events": {
     "header_update": {
-      "callback": "panel_update_listener"
+      "title": "Обновление информации в шапке"
     }
   },
 
-  "settings": {
+  "listeners": {
+    "header_update": ["panel_update_listener"]
+  },
+
+  "methods": {
     "panel_homepage": {
       "file": "panel.js"
     },
@@ -22,11 +26,11 @@
     },
     "panel_ajaxify": {
       "file": "panel_ajax.js",
-      "description": "Использовать AJAX (ускоряет загрузку страниц, ЭКСПЕРИМЕНТАЛЬНАЯ функция. Может вызывать побочные эффекты и конфликтовать с user-скриптами.)"
+      "title": "Использовать AJAX (ускоряет загрузку страниц, ЭКСПЕРИМЕНТАЛЬНАЯ функция. Может вызывать побочные эффекты и конфликтовать с user-скриптами.)"
     },
     "panel_header": {
       "file": "panel_header.js",
-      "description": "&quot;Оживление&quot; шапки",
+      "title": "&quot;Оживление&quot; шапки",
       "configure": {
         "timeout": {
           "type": "select",

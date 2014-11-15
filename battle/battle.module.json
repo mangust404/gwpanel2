@@ -3,12 +3,24 @@
   "excludes": [],
   "weight": -1, 
   "title": "Дополнения для боев",
-  "apply": {
+  "pages": {
     "/b0/btl.php": ["battle_fix", "battle_js_init", "battle_generator", "battle_redo", "battle_to_allies"],
     "/b0/b.php": ["battle_std_init", "battle_generator", "battle_redo", "battle_to_allies"],
     "/warlog.php": ["battle_end"]
   },
-  "settings": {
+  "events": {
+    "battleend": {
+      "title": "Окончание боя",
+      "description": "В качестве параметра передаётся объект с bid",
+      "local": true
+    },
+    "battlebegin": {
+      "title": "Начало боя",
+      "description": "В качестве параметра передаётся объект с bid",
+      "local": true
+    }
+  },
+  "methods": {
     "battle_fix": {
       "file": "battle.js"
     },
@@ -19,7 +31,7 @@
       "file": "battle.js"
     },
     "battle_generator": {
-      "description": "Генератор ходов",
+      "title": "Генератор ходов",
       "configure": {
         "genuniq": {
           "type": "checkbox", 
@@ -37,7 +49,7 @@
       "file": "battle.js"
     },
     "battle_redo": {
-      "description": "Галочка &quot;Повторить ход&quot;",
+      "title": "Галочка &quot;Повторить ход&quot;",
       "configure": {
         "autoredo": {
           "type": "checkbox", 
@@ -52,7 +64,7 @@
       "file": "battle.js"
     },
     "battle_to_allies": {
-      "description": "Галочка &quot;своим&quot;",
+      "title": "Галочка &quot;своим&quot;",
       "file": "battle.js"
     }
   }

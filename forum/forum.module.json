@@ -6,15 +6,15 @@
   "author": "гном убийца",
   "author_link": "http://www.ganjawars.ru/info.php?id=433067",
   "weight": 1, 
-  "apply": {
+  "pages": {
     "/forum.php": [
       "forum_hide"
     ]
   }, 
-  "settings": {
+  "methods": {
     "forum_hide": {
       "file": "forum_hide.js",
-      "description": "Скрыть ненужные разделы форума",
+      "title": "Скрыть ненужные разделы форума",
       "configure":{
         "main_forums": {
           "type": "checkboxes",

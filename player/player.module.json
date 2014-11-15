@@ -6,7 +6,7 @@
   "author": "гном убийца",
   "author_link": "http://www.ganjawars.ru/info.php?id=433067",
   "weight": 1, 
-  "apply": {
+  "pages": {
     "/info.php": [
       "player_casino",
       "player_family",
@@ -14,10 +14,10 @@
       "player_hide_sinds"
     ]
   }, 
-  "settings": {
+  "methods": {
     "player_casino": {
       "file": "player_casino.js",
-      "description": "Отображение разницы азартных игр",
+      "title": "Отображение разницы азартных игр",
       "configure": {
         "roulette": {
           "type": "checkbox",
@@ -38,16 +38,16 @@
     },
     "player_family": {
       "file": "player_family.js",
-      "description": "Ссылки на персонажей семьи игрока"
+      "title": "Ссылки на персонажей семьи игрока"
     },
     "player_carma": {
       "file": "player_carma.js",
-      "description": "Скрывать карму игроков",
+      "title": "Скрывать карму игроков",
       "default": false
     },
     "player_hide_sinds": {
       "file": "player_hide_sinds.js",
-      "description": "Скрывать список не основных синдикатов",
+      "title": "Скрывать список не основных синдикатов",
       "default": false,
       "configure": {
         "type_hide": {

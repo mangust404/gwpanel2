@@ -290,15 +290,15 @@ QUnit.asyncTest("Тест событий из чужого окна (iframe)", f
   __panel.bind("foreign-event-test", function(data) {
     assert.deepEqual(eventdata, data, "значение должно совпадать");
     QUnit.start();
+    popup.close();
   });
 
-  $('<iframe id="foreign-event-iframe" src="' + document.location.href.split('?')[0]
-     + '?gwpanel_testing&continue"></iframe>').load(function() {
-    var that = this;
-    waitPanelInitialization(this.contentWindow, function() {
-      that.contentWindow.__panel.triggerEvent('foreign-event-test', eventdata);
-    });
-  }).appendTo('#qunit-fixture');
+  var popup = window.open(location.pathname + '?gwpanel_testing&continue', 'testPopup',
+    'width=600, height=400, menubar=0, location=1, resizable=1, left=200, top=200');
+
+  waitPanelInitialization(popup.window, function() {
+    popup.window.__panel.triggerEvent('foreign-event-test', eventdata);
+  });
 });
 
 if(!jQuery.browser.safari) {
@@ -324,6 +324,7 @@ QUnit.asyncTest("Массовый тест событий", function(assert) {
       assert.deepEqual(thread_counter, [50, 50, 50, 50], 
           'Все потоки выполнены успешно');
       QUnit.start();
+      popup.close();
     });
 
     var thread = 0;
@@ -338,23 +339,21 @@ QUnit.asyncTest("Массовый тест событий", function(assert) {
       }, 1);
     }
 
-    $('<iframe id="foreign-event-iframe" src="' + document.location.href.split('?')[0]
-       + '?gwpanel_testing&continue"></iframe>').load(function() {
-      var that = this;
-      waitPanelInitialization(this.contentWindow, function() {
-        /// Запускаем ещё 2 потока из соседнего окна
-        for(var t = 0; t < 2; t++) {
-          setTimeout(function() {
-            for(var i = 0; i < 50; i++) {
-              that.contentWindow.__panel.triggerEvent('mass-event-test', 
-                {'test': 'mass event test', 'salt': rand, 'index': i, 
-                 'thread': thread});
-            }
-            thread++;
-          }, 1);
-        }
-      });
-    }).appendTo('#qunit-fixture');
+    var popup = window.open(location.pathname + '?gwpanel_testing&continue', 'testPopup',
+      'width=600, height=400, menubar=0, location=1, resizable=1, left=200, top=200');
+    waitPanelInitialization(popup.window, function() {
+      /// Запускаем ещё 2 потока из соседнего окна
+      for(var t = 0; t < 2; t++) {
+        setTimeout(function() {
+          for(var i = 0; i < 50; i++) {
+            popup.window.__panel.triggerEvent('mass-event-test', 
+              {'test': 'mass event test', 'salt': rand, 'index': i, 
+               'thread': thread});
+          }
+          thread++;
+        }, 1);
+      }
+    });
   });
 });
 }
@@ -538,7 +537,8 @@ QUnit.asyncTest('Подгрузка стилей', function(assert) {
 //  });
 //});
 
-QUnit.asyncTest('Проверка фокусировки другого окна', function(assert) {
+/// этот тест невозможно совершить посколькуо все iframe для текущего окна будут иметь один и тот же windowID
+/*QUnit.asyncTest('Проверка фокусировки другого окна', function(assert) {
   expect(1);
 
   $('<iframe id="foreign-event-iframe" src="' + document.location.href.split('?')[0]
@@ -561,7 +561,7 @@ QUnit.asyncTest('Проверка фокусировки другого окна
   }).appendTo('#qunit-fixture');
 
 
-});
+});*/
 
 QUnit.asyncTest('Установка и считывание опций', function(assert) {
   expect(7);
@@ -673,8 +673,12 @@ QUnit.asyncTest('Тестирование открытия и закрытия �
     var that = this;
     waitPanelInitialization(this.contentWindow, function() {
       (function($) {
-      /// кликаем по бабблу
-      $('.pane-bubble:first').click();
+      waitFor(function() {
+        return $('.pane-bubble:visible').length > 0;
+      }, function() {
+        /// кликаем по бабблу
+        $('.pane-bubble:visible:first').click();
+      });
       setTimeout(function() {
         assert.ok($('.pane').length > 0, 'Открылось окошко');
       }, 20);
@@ -746,8 +750,12 @@ QUnit.asyncTest('Тест drag-n-drop для перетаскивании кно
     waitPanelInitialization(this.contentWindow, function() {
       (function($) {
       var that = this;
-      /// кликаем по бабблу
-      $('.pane-bubble:first').click();
+      waitFor(function() {
+        return $('.pane-bubble:visible').length > 0;
+      }, function() {
+        /// кликаем по бабблу
+        $('.pane-bubble:visible:first').click();
+      });
       waitFor(function() {
         return $('.pane:visible .button').length > 0;
       }, function() {
@@ -837,8 +845,12 @@ QUnit.asyncTest('Перетаскивание кнопок за недопуст
     var that = this;
     waitPanelInitialization(this.contentWindow, function() {
       (function($) {
-      /// кликаем по бабблу
-      $('.pane-bubble:first').click();
+      waitFor(function() {
+        return $('.pane-bubble:visible').length > 0;
+      }, function() {
+        /// кликаем по бабблу
+        $('.pane-bubble:visible:first').click();
+      });
       waitFor(function() {
         return $('.pane:visible .button').length > 0;
       }, function() {
@@ -928,8 +940,13 @@ QUnit.asyncTest('Перетаскивание кнопок в другие ок�
     var __window = this.contentWindow;
     waitPanelInitialization(this.contentWindow, function() {
       (function($) {
-      /// кликаем по бабблу
-      $('.pane-bubble:first').click();
+      waitFor(function() {
+        return $('.pane-bubble:visible').length > 0;
+      }, function() {
+        /// кликаем по бабблу
+        $('.pane-bubble:visible:first').click();
+      });
+
       waitFor(function() {
         return $('.pane:visible .button').length;
       }, function() {
@@ -1057,8 +1074,12 @@ QUnit.asyncTest('Тест drag-n-drop для перетаскивании вид
       var __window = this.contentWindow;
       waitPanelInitialization(__window, function() {
         (function($) {
-          /// кликаем по бабблу
-          $('.pane-bubble:first').click();
+          waitFor(function() {
+            return $('.pane-bubble:visible').length > 0;
+          }, function() {
+            /// кликаем по бабблу
+            $('.pane-bubble:visible:first').click();
+          });
 
           waitFor(function() {
             /// Ждём прорисовки окна и виджета
@@ -1163,8 +1184,12 @@ QUnit.asyncTest('Перетаскивание виджетов за недопу
       var that = this;
       waitPanelInitialization(this.contentWindow, function() {
         (function($) {
-          /// кликаем по бабблу
-          $('.pane-bubble:first').click();
+          waitFor(function() {
+            return $('.pane-bubble:visible').length > 0;
+          }, function() {
+            /// кликаем по бабблу
+            $('.pane-bubble:visible:first').click();
+          });
 
           waitFor(function() {
             /// Ждём прорисовки виджета
@@ -1909,4 +1934,59 @@ jQuery("#test_link8").get(0).innerHTML = \'<a href="http://test.com/page.html/">
   });
 });
 
+QUnit.asyncTest('Базовый тест блокировок', function(assert) {
+  var lock = 'test_lock_' + parseInt(Math.random() * 100000);
+  not_runned = true;
+
+  __panel.lockAcquire(lock, function() {
+    assert.ok(not_runned, 'Блокировка должна быть получена');
+    openSecondWindow();
+  });
+
+  function openSecondWindow() {
+    var popup = window.open(location.pathname + '?gwpanel_testing&continue', 'testPopup',
+      'width=600, height=400, menubar=0, location=1, resizable=1, left=200, top=200');
+
+    waitPanelInitialization(popup.window, function() {
+      popup.window.__panel.lockAcquire(lock, function() {
+        assert.ok(false, 'Блокировка не должна быть получена');
+        popup.close();
+      }, function() {
+        assert.ok(true, 'Блокировка не получена в другом окне');
+        QUnit.start();
+        popup.close();
+      });
+    });
+  }
+});
+
+QUnit.asyncTest('Тест очистки блокировки при закрытии окна', function(assert) {
+  var lock = 'test_lock_' + parseInt(Math.random() * 100000);
+  not_runned = true;
+
+  function tryLockAcquire() {
+    __panel.lockAcquire(lock, function() {
+      assert.ok(true, 'Блокировка должна быть получена');
+      QUnit.start();
+    }, function() {
+      assert.ok(false, 'Блокировка не была получена. Закрывшееся окно её не освобдило :-(');
+    });
+  }
+
+  var popup = window.open(location.pathname + '?gwpanel_testing&continue', 'testPopup',
+    'width=600, height=400, menubar=0, location=1, resizable=1, left=200, top=200');
+
+  waitPanelInitialization(popup.window, function() {
+    popup.window.__panel.lockAcquire(lock, function() {
+      assert.ok(true, 'Блокировка должна быть получена');
+      popup.close();
+      setTimeout(tryLockAcquire, 500);
+    }, function() {
+      assert.ok(false, 'Блокировка не получена в другом окне, тест продолжать бессмысленно');
+      QUnit.start();
+      popup.close();
+    });
+  });
+
+});
 })(jQuery);
