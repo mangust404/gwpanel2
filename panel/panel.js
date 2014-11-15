@@ -102,6 +102,10 @@ window.Panel2 = new function() {
   var safeIntervals = [];
   var safeTimeouts = [];
 
+  /// последние запомненные таймауты и интервалы
+  var lastTimeout = 0;
+  var lastInterval = 0;
+
   /// кеш для перкодировщика в cp1251
   var charEncodeCache = {
     ' ': '%20',
@@ -1809,7 +1813,7 @@ window.Panel2 = new function() {
           listenerID += index++;
         }
         listenersStack[type][listenerID] = true;
-        
+
         instance.ready(function() {
           return instance.crossWindow.bind(type, callback, listenerID);
         })
@@ -2128,17 +2132,19 @@ window.Panel2 = new function() {
     clearTimeouts: function (w) {
       if(!w) w = window;
       var s = w.setTimeout('void 0;', 1000);
-      for(var i = s; i > s - 100; i--) {
+      for(var i = lastTimeout; i <= s; i++) {
         if(safeIntervals.indexOf(i) == -1) {
           w.clearTimeout(i);
         }
       };
+      lastTimeout = s;
       var s = w.setInterval('void 0;', 1000);
-      for(var i = s; i > s - 100; i--) {
+      for(var i = lastInterval; i <= s; i++) {
         if(safeIntervals.indexOf(i) == -1) {
           w.clearInterval(i);
         }
       };
+      lastInterval = s;
     },
 
     /**
@@ -2799,25 +2805,48 @@ window.Panel2 = new function() {
       
     },
 
+    /// ручной "подвод" часов
+    syncTime: function(data) {
+      var lines = data.split("\n");
+      if(lines[7]) {
+        var timestamp = parseInt(lines[7].split("\t")[1]);
+        var nowLocal = new Date;
+
+        var delta = timestamp * 1000 - nowLocal.getTime() + 
+          (nowLocal.getTimezoneOffset() + 180) * 60 * 1000;
+
+        sessionStorage['time_delta'] = delta;
+      }
+    },
     /**
     * Функция определения точного времени по серверу (до секунды). Асинхронная.
     * @param callback - этот метод вызывается с точным объектом временем 
     *   в качестве первого аргумента
     */
     getTime: function(callback, failover) {
+      if(sessionStorage['time_delta']) {
+        var now = new Date;
+        now.setTime(now.getTime() + parseInt(sessionStorage['time_delta']));
+        callback(now);
+        return;
+      }
       instance.getCached(function(clbk) {
-        $.ajax('http://www.ganjawars.ru/roulette.php', {
+        $.ajax('http://www.ganjawars.ru/getstate.php?state_uid=' + 
+        instance.currentPlayerID() + '&bpvalue=' + instance.getCookies().bp + 
+        '&extras=1&bonuses=1', {
           success: function(data) {
-            if(data.search(/Время: ([0-9]+):([0-9]+):([0-9]+)/)) {
-              var now = new Date;
-              var d = new Date;
-              d.setHours(RegExp.$1);
-              d.setMinutes(RegExp.$2);
-              d.setSeconds(RegExp.$3);
-              d.setDate(now.getDate());
-              d.setMonth(now.getMonth());
-              d.setFullYear(now.getFullYear());
-              clbk(d.getTime() - now.getTime());
+            if(sessionStorage['time_delta']) {
+              return sessionStorage['time_delta'];
+            }
+            var lines = data.split("\n");
+            if(lines[7]) {
+              var timestamp = parseInt(lines[7].split("\t")[1]); 
+              var nowLocal = new Date;
+              var delta = timestamp * 1000 - nowLocal.getTime() + 
+                (nowLocal.getTimezoneOffset() + 180) * 60 * 1000;
+
+              sessionStorage['time_delta'] = delta;
+              clbk(delta);
             } else {
               if(failover) failover();
             }
