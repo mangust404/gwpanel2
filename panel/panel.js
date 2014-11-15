@@ -195,58 +195,89 @@ window.Panel2 = new function() {
           var $button = $('<div class="button ' + that.type + '" id="' + id + '"></div>').append(
             $('<a><div class="img"><img src="' + img + '" /></div><h3>' + 
               (that.title? that.title: type.title) + 
-              '</h3></a>').click(function(e) {
-              if(this.parentNode.dragging) {
-                this.parentNode.dragging = false;
-                return false;
-              }
-              var __that = this;
-
-              instance.loadScript(getFiles(type.file, type.module), function() {
-                if(!instance[type['callback']]) {
-                  try{
-                    throw('"' + type['callback'] + '" for button ' + that.type + ', Pane ' + paneID + ' draw: ');
-                  } catch(e) {
-                    instance.dispatchException(e, 'Unknown callback function');
-                  }
-                  return;
+              '</h3></a>')
+              .click(function(e) {
+                if(this.parentNode.dragging) {
+                  this.parentNode.dragging = false;
+                  return false;
                 }
-                var callback = instance[type.callback];
-                var __options = {};
-                if(that.arguments) {
-                  $.extend(__options, that.arguments);
-                }
+                var __that = this;
 
-                $.extend(__options, {
-                  save: function(callback) {
-                    for(var key in __options) {
-                      if(key == 'save') continue;
-                      options.panes[paneID].buttons[index].arguments[key] = __options[key];
+                instance.loadScript(getFiles(type.file, type.module), function() {
+                  if(!instance[type['callback']]) {
+                    try{
+                      throw('"' + type['callback'] + '" for button ' + that.type + ', Pane ' + paneID + ' draw: ');
+                    } catch(e) {
+                      instance.dispatchException(e, 'Unknown callback function');
                     }
-                    instance.setOptions(options, undefined, function() {
-                      if(callback) callback();
-                      /*instance.triggerEvent('options_change_' + that.type, 
-                        {options: __options, playerID: instance,currentPlayerID()});*/
-                    });
+                    return;
+                  }
+                  var callback = instance[type.callback];
+                  var __options = {};
+                  if(that.arguments) {
+                    $.extend(__options, that.arguments);
+                  }
+
+                  $.extend(__options, {
+                    save: function(callback) {
+                      for(var key in __options) {
+                        if(key == 'save') continue;
+                        options.panes[paneID].buttons[index].arguments[key] = __options[key];
+                      }
+                      instance.setOptions(options, undefined, function() {
+                        if(callback) callback();
+                        /*instance.triggerEvent('options_change_' + that.type, 
+                          {options: __options, playerID: instance,currentPlayerID()});*/
+                      });
+                    }
+                  });
+                  __that.parentNode.clicked = true;
+                  try {
+                    callback.apply($button.get(0), [__options]);
+                  } catch(e) {
+                    instance.dispatchException(e);
                   }
                 });
-                __that.parentNode.clicked = true;
-                try {
-                  callback.apply($button.get(0), [__options]);
-                } catch(e) {
-                  instance.dispatchException(e);
+                return false;
+              })
+            ).css({
+              left: that.left * options.system.btnwidth,
+              top: that.top * options.system.btnheight,
+              width: options.system.btnwidth,
+              height: options.system.btnheight
+            })
+            .attr('left', that.left).attr('top', that.top).attr('index', index);
+
+          if(type.draw) {
+            instance.loadScript(getFiles(type.file, type.module), function() {
+              var __options = {};
+              if(that.arguments) {
+                $.extend(__options, that.arguments);
+              }
+
+              $.extend(__options, {
+                save: function(callback) {
+                  for(var key in __options) {
+                    if(key == 'save') continue;
+                    options.panes[paneID].buttons[index].arguments[key] = __options[key];
+                  }
+                  instance.setOptions(options, undefined, function() {
+                    if(callback) callback();
+                    /*instance.triggerEvent('options_change_' + that.type, 
+                      {options: __options, playerID: instance,currentPlayerID()});*/
+                  });
                 }
               });
-              return false;
-            })
-          ).css({
-            left: that.left * options.system.btnwidth,
-            top: that.top * options.system.btnheight,
-            width: options.system.btnwidth,
-            height: options.system.btnheight
-          })
-          .attr('left', that.left).attr('top', that.top).attr('index', index)
-          .appendTo(paneContainer);
+              try {
+                instance[type.draw].apply($button.get(0), [__options]);
+              } catch(e) {
+                instance.dispatchException(e);
+              }
+              $button.appendTo(paneContainer);
+            });
+          } else {
+            $button.appendTo(paneContainer);
+          }
           instance.setTimeout(function() {
             if($button.find('h3').get(0).clientHeight > 30) {
               $button.find('h3').addClass('big');

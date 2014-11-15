@@ -278,7 +278,9 @@
   box-shadow: 1px 1px 3px #003300;
 }
 
-
+.pane .disabled {
+  opacity: 0.5;
+}
 /** 
 * Иконки
 */
