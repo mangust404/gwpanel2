@@ -186,20 +186,44 @@ $.extend(panel, {
         };   
       }
     }, true);
-    $('<a class="stat-reset">сбросить счётчики</a>').css({
-      position: 'absolute',
-      'font-size': '8px',
-      'margin-left': '44px',
-      'margin-top': '3px',
-      'text-decoration': 'underline'
-    }).click(function() {
-      if(confirm('Вы уверены что хотите обнулить все счётчики?')) {
-        panel.del('stat_exp', function(){}, true);
-        panel.del('stat_skills', function(){}, true);
-        panel.del('stat_syndexp', function(){}, true);
-        alert('Счетчики обнулены, обновите страницу');
+    
+    var $resetDate = $('<span></span>');
+
+    $('<span></span>')
+      .css({
+        position: 'absolute',
+        'font-size': '8px',
+        'margin-left': '44px',
+        'margin-top': '3px',
+      }).append(
+        $('<a class="stat-reset">сбросить счётчики</a>')
+          .css({
+           'font-size': '8px',
+           'text-decoration': 'underline'
+          })
+          .click(function() {
+            if(confirm('Вы уверены что хотите обнулить все счётчики?')) {
+              panel.del('stat_exp', function(){}, true);
+              panel.del('stat_skills', function(){}, true);
+              panel.del('stat_syndexp', function(){}, true);
+              panel.set('stat_reset_date', (new Date).getTime(), function() {}, true);
+              alert('Счетчики обнулены, обновите страницу');
+            }
+          })
+        )
+      .append(
+        $resetDate
+        )
+      .appendTo($skillsTable);
+    panel.get('stat_reset_date', function(time) {
+      time = parseInt(time);
+      if(time > 0) {
+        var d = new Date;
+        d.setTime(time);
+        $resetDate.html(' (' + d.getDate() + '.' + (d.getMonth() + 1) + 
+          ' ' + d.getHours() + ':' + d.getMinutes() + ')');
       }
-    }).appendTo($skillsTable);
+    }, true);
   },
   
   stat_update_info_personal: function() {
