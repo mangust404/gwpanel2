@@ -176,11 +176,11 @@ window.Panel2 = new function() {
         $(buttons).each(function(index) {
         //for(var i = 0; i < buttons.length; i++) {
           var type = panel_schema.buttons[this.type];
-          if(!type.callback) type.callback = this.type.substr(type.module.length + 1);
           if(!type) {
             instance.dispatchException('Unknown button type: ' + this.type, 'Pane ' + paneID + ' draw: ');
             return;
           }
+          if(!type.callback) type.callback = this.type.substr(type.module.length + 1);
           var that = this;
           img = instance.iconURL(that.img || type.img);
 
