@@ -162,7 +162,7 @@
         data.syndwar = data.syndwar.replace('</a><a', '</a> <a');
         $syndwar.html(data.syndwar);
       } else {
-        $syndwar.html('<a href="/war/">Бой</a>');
+        $syndwar.html('<a href="/war/" style="text-decoration: none;">Бой</a>');
       }
       /// Пришла почта
       if(data.mail && $mail.is(':hidden')) {
@@ -261,6 +261,7 @@
     panel_header_parse: function($header) {
       var hp = {};
       hp.hp_start = window.hp_start;
+      hp.hp_current = window.hp_start;
       hp.hp_max = window.hp_max;
       hp.hp_speed = window.hp_speed;
 

@@ -276,7 +276,7 @@ var __initPanel = "\
 
   $output .= 'var __initClient = "var cls = document.createElement(\"script\");\
 cls.type = \"text/javascript\";\
-cls.src = \"' . $localURL . '/lib/crossclient.js\";\
+cls.src = \"' . $localURL . '/lib/crossclient.1.js\";\
 cls.charset=\"UTF-8\";\
 document.getElementsByTagName(\"head\")[0].appendChild(cls);";
 ';

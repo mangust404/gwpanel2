@@ -8,6 +8,8 @@ function make_bootstrap($domain, $path, $libs) {
 
   var environment = document.cookie.match(/gwp2_e=([a-z]+)/)? RegExp.$1: null;
 
+  if(document.cookie.indexOf("gwp2_off") > -1) return;
+
   if(environment == "dev") return;
 
   if(environment == "staging" || environment == "deploy") {
@@ -54,7 +56,7 @@ function make_bootstrap($domain, $path, $libs) {
     var initialize = function() {
       var s = document.createElement("script");
       s.type = "text/javascript";
-      s.src = panelURL + "/lib/crossclient.js";
+      s.src = panelURL + "/lib/crossclient.1.js";
       document.getElementsByTagName("head")[0].appendChild(s);
     }
     return;
@@ -479,9 +481,11 @@ function make_bootstrap($domain, $path, $libs) {
       /// определяем, нужно ли очистить кеш для этого домена
       var filesFlush = parseInt(__getCookies().gwp2_fflush) || 0;
       var sessFFlush = parseInt(sessionStorage["_fflush"]);
-      if(!filesFlush) {
+      if(!sessFFlush) {
+        sessionStorage["_fflush"] = (new Date).getTime();
+      } else if(!filesFlush) {
         __clearCache();
-      } else if(filesFlush > sessFFlush || !sessFFlush) {
+      } else if(filesFlush > sessFFlush) {
         __clearCache(true);
       }
 
@@ -489,16 +493,18 @@ function make_bootstrap($domain, $path, $libs) {
         window.__loadScript(["lib/settings.js", 
                               "panel/panel.js", 
                               "lib/crosswindow.js", 
-                              "apply.js"], function() {
-          window.__panel = new window.Panel2(environment, panelURL);
+                              "schema.js"], function() {
+          window.__panel = new window.Panel2(environment, panelURL, window.panel_schema);
           window.__panel.init();
         }, function(e) {
           if(window.console) console.log(e);
-          if(confirm("' . iconv('UTF-8', 'CP1251', 'Упс. Кажется в версии GWPanel, которая у вас сейчас сохранена, произошла какая-то ошибка.\n Скорее всего она уже исправлена, надо просто обновиться. Текст ошибки:\n" + e.toString() + "\nПроверить новую версию?') . '")) {
+          if(confirm("' . iconv('UTF-8', 'CP1251', 'Упс. Кажется в версии GWPanel, которая у вас сейчас сохранена, произошла какая-то ошибка.\n Скорее всего она уже исправлена, надо просто обновиться (нажмите F5 или Ctrl + R). " + (e? "Текст ошибки:\n" + e.toString(): "") + "\nПопробовать ещё раз?') . '")) {
             var myDate = new Date();
             document.cookie = "gwp2_v=0;expires=" + myDate
                        + ";domain=.ganjawars.ru;path=/";
  
+          } else {
+            document.cookie = "gwp2_off=1;domain=.ganjawars.ru;path=/";
           }
         });
       });

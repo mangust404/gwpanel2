@@ -2124,7 +2124,7 @@ window.Panel2 = new function() {
       if(!w) w = window;
       var s = w.setTimeout('void 0;', 1000);
       for(var i = lastTimeout; i <= s; i++) {
-        if(safeIntervals.indexOf(i) == -1) {
+        if(safeTimeouts.indexOf(i) == -1) {
           w.clearTimeout(i);
         }
       };
@@ -2391,7 +2391,7 @@ window.Panel2 = new function() {
         s.src = baseURL + '/release/stage.js?' + (new Date).getTime();
         s.addEventListener('load', function() {
           if(instance.getCookies().gwp2_st != window.current_panel_stage) {
-            instance.showFlash('В скриптах что-то поменялось, сейчас будут загружены изменения');
+            instance.showFlash('В скриптах что-то поменялось, сейчас будут загружены изменения. Сообщение: <br /><strong>' + window.stage_descr + '</strong>');
             window.__clearCache();
           }
         }, false);

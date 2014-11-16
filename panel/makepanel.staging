@@ -63,7 +63,7 @@ function package_path($version) {
 }
 /// Определяем последнюю версию
 if(file_exists($gwpanel_path . '/release/version')) {
-  $version = intval(file_get_contents($gwpanel_path . '/release/version')) + 1;
+  $version = intval(file_get_contents($gwpanel_path . '/release/version'));
   $current_package = package_path($version, get_env());
 } else {
   $version = 0;
@@ -234,14 +234,15 @@ foreach(glob($gwpanel_path . '/release/migration/*.js') as $migration_file) {
 }
 file_put_contents($gwpanel_path . '/migrate', strval($new_migrate));
 
-file_put_contents($notes_path, 'window.panel_release_notes = window.panel_release_notes || {};
+/*file_put_contents($notes_path, 'window.panel_release_notes = window.panel_release_notes || {};
 window.panel_release_date = window.panel_release_date || {};
-window.panel_release_notes[' . $version . '] = ' . json_encode($message) . '; window.panel_release_date[' . $version . '] = "' . date('c') . '";' . $migrate_str);
+window.panel_release_notes[' . $version . '] = ' . json_encode($message) . '; window.panel_release_date[' . $version . '] = "' . date('c') . '";' . $migrate_str);*/
 print "Записан файл заметок к версии $notes_path\n";
 
 file_put_contents($gwpanel_path . '/release/stage', $stage);
 print "Записан файл версии stage {$gwpanel_path}/release/stage\n";
-file_put_contents($gwpanel_path . '/release/stage.js', 'window.current_panel_stage = ' . $stage);
+file_put_contents($gwpanel_path . '/release/stage.js', 'window.current_panel_stage = ' . $stage . ';
+stage_descr = ' . json_encode($message) . ';');
 
 file_put_contents($gwpanel_path . '/release/version_staging.js', 'window.current_panel_version = ' . $version);
 print "Записан файл версии для клиентов $gwpanel_path/release/version_" . get_env() . ".js\n";
