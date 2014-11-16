@@ -1079,17 +1079,12 @@ window.Panel2 = new function() {
       return 0;
     });
 
-    if(($.browser.opera && $.browser.version < 13) || !documentIsWriteable()) {
-      $(function() {
-        $(pages).each(function(index, func) {
-          instance.callMethod(func, arguments, instance);
-        });
-      });
-    } else {
+    $(function() {
       $(pages).each(function(index, func) {
         instance.callMethod(func, arguments, instance);
       });
-    }
+    });
+    
     if(window.vote_for_post) {
       window.vote_for_post = function(fid, tid, mid, vote, sign) {
         $('#vote' + mid).load('/messages.php?do_vote=1&fid=' + fid + '&tid=' + 

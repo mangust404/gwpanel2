@@ -17,11 +17,6 @@
 $.extend(panel, {
   battle_fix: function(options) {
     if(battleFixed) return;
-    if(!window.bf3 && !initialized) {
-      initialized = true;
-      $(panel.battle_fix);
-      return;
-    }
     window.bf3 = window.bf3.replace(/<a/, '<a id="updbutton"');
     bsrcframe = $('#bsrc');
     bsrcframe.load(function() {
