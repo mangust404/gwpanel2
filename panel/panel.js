@@ -104,7 +104,6 @@ window.Panel2 = new function() {
 
   /// последние запомненные таймауты и интервалы
   var lastTimeout = 0;
-  var lastInterval = 0;
 
   /// кеш для перкодировщика в cp1251
   var charEncodeCache = {
@@ -934,7 +933,7 @@ window.Panel2 = new function() {
         mouseSpeedX = (instance.__mouseprevx - e.clientX) / (instance.__mousestartTime - (new Date()).getTime());
         mouseSpeedY = (instance.__mouseprevy - e.clientY) / (instance.__mousestartTime - (new Date()).getTime());
         if(instance.__mousestartTO > 0) clearTimeout(instance.__mousestartTO);
-        instance.__mousestartTO = instance.setTimeout(function() {
+        instance.__mousestartTO = setTimeout(function() {
           instance.__mousestart = false;
           mouseDeltaX = 0;
           mouseDeltaY = 0;
@@ -2124,18 +2123,12 @@ window.Panel2 = new function() {
       if(!w) w = window;
       var s = w.setTimeout('void 0;', 1000);
       for(var i = lastTimeout; i <= s; i++) {
-        if(safeTimeouts.indexOf(i) == -1) {
+        if(safeTimeouts.indexOf(i) == -1 && safeIntervals.indexOf(i) == -1) {
           w.clearTimeout(i);
-        }
-      };
-      lastTimeout = s;
-      var s = w.setInterval('void 0;', 1000);
-      for(var i = lastInterval; i <= s; i++) {
-        if(safeIntervals.indexOf(i) == -1) {
           w.clearInterval(i);
         }
       };
-      lastInterval = s;
+      lastTimeout = s;
     },
 
     /**
@@ -2697,7 +2690,11 @@ window.Panel2 = new function() {
     * ваши интервалы умрут после перезагрузки, т.к. они затираются
     */
     setInterval: function(func, timeout) {
-      var i = setInterval(func, timeout);
+      var i = setInterval(function() {
+        func();
+        var index = safeIntervals.indexOf(i);
+        safeTimeouts.splice(index, 1);
+      }, timeout);
       safeIntervals.push(i);
       return i;
     },
@@ -2708,7 +2705,11 @@ window.Panel2 = new function() {
     * ваши таймауты никогда не выполнятся, т.к. они затираются
     */
     setTimeout: function(func, timeout) {
-      var i = setTimeout(func, timeout);
+      var i = setTimeout(function() {
+        func();
+        var index = safeTimeouts.indexOf(i);
+        safeTimeouts.splice(index, 1);
+      }, timeout);
       safeTimeouts.push(i);
       return i;
     },
@@ -2768,7 +2769,6 @@ window.Panel2 = new function() {
         var now = (new Date).getTime();
         if(nextRun > now) {
           // откладываем запуск
-          console.log('start in ' + Math.ceil((now - nextRun) / 1000) + ' seconds');
           instance.setTimeout(function() {
             callback();
             start();
