@@ -208,6 +208,32 @@ jQuery.extend(__panel, {
 
   outland_check_set: function(options) {
 
+  },
+
+  outland_seconds: function(options) {
+    var $clock = $('a:contains(Форум)').parent().contents().last()
+      .wrapAll('<span class="clock"></span>').parent()
+      .css({
+        'margin-left': 10
+      });
+
+    function format_time(time) {
+      if(time < 10) {
+        return '0' + time;
+      } else {
+        return time;
+      }
+    }
+    
+    var tickFunc = function() {
+      panel.getTime(function(time) {
+       $clock.html(format_time(time.getHours()) + ':' + 
+              format_time(time.getMinutes()) + ':' + 
+              format_time(time.getSeconds()));
+      });
+    }
+    tickFunc();
+    setInterval(tickFunc, 1000);
   }
 
 })})(window.__panel, jQuery);

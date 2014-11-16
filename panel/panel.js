@@ -2806,7 +2806,7 @@ window.Panel2 = new function() {
         var delta = timestamp * 1000 - nowLocal.getTime() + 
           (nowLocal.getTimezoneOffset() + 180) * 60 * 1000;
 
-        sessionStorage['time_delta'] = delta;
+        localStorage['time_delta'] = delta;
       }
     },
     /**
@@ -2815,39 +2815,37 @@ window.Panel2 = new function() {
     *   в качестве первого аргумента
     */
     getTime: function(callback, failover) {
-      if(sessionStorage['time_delta']) {
-        var now = new Date;
-        now.setTime(now.getTime() + parseInt(sessionStorage['time_delta']));
-        callback(now);
-        return;
-      }
-      instance.getCached(function(clbk) {
-        $.ajax('http://www.ganjawars.ru/getstate.php?state_uid=' + 
-        instance.currentPlayerID() + '&bpvalue=' + instance.getCookies().bp + 
-        '&extras=1&bonuses=1', {
-          success: function(data) {
-            if(sessionStorage['time_delta']) {
-              return sessionStorage['time_delta'];
+      instance.get('time_delta', function(delta) {
+        if(delta) {
+          var now = new Date;
+          now.setTime(now.getTime() + parseInt(delta));
+          callback(now);
+          return;
+        } else if(document.domain == 'www.ganjawars.ru') {
+          $.ajax('http://www.ganjawars.ru/getstate.php?state_uid=' + 
+          instance.currentPlayerID() + '&bpvalue=' + instance.getCookies().bp + 
+          '&extras=1&bonuses=1', {
+            success: function(data) {
+              var lines = data.split("\n");
+              if(lines[7]) {
+                var timestamp = parseInt(lines[7].split("\t")[1]); 
+                var nowLocal = new Date;
+                var delta = timestamp * 1000 - nowLocal.getTime() + 
+                  (nowLocal.getTimezoneOffset() + 180) * 60 * 1000;
+                if(delta != 0) {
+                  instance.set('time_delta', delta, function() {
+                    instance.getTime(callback);
+                  });
+                }
+              } else {
+                if(failover) failover();
+              }
             }
-            var lines = data.split("\n");
-            if(lines[7]) {
-              var timestamp = parseInt(lines[7].split("\t")[1]); 
-              var nowLocal = new Date;
-              var delta = timestamp * 1000 - nowLocal.getTime() + 
-                (nowLocal.getTimezoneOffset() + 180) * 60 * 1000;
-
-              sessionStorage['time_delta'] = delta;
-              clbk(delta);
-            } else {
-              if(failover) failover();
-            }
-          }
-        });
-      }, function(delta) {
-        var now = new Date;
-        now.setTime(now.getTime() + delta);
-        callback(now);
-      }, 1800); /// сверка часов раз в пол часа
+          });
+          return;
+        }
+        if(failover) failover();
+      });
     },
     /**
     * Функция возвращает последний открытый URL. 

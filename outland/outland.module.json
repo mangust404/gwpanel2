@@ -11,7 +11,8 @@
       "outland_auto_pick",
       "outland_highlight",
       "outland_hotkeys",
-      "outland_pokemon_title"
+      "outland_pokemon_title",
+      "outland_seconds"
     ],
     "/walk.op.php": [
       "outland_check_set",
@@ -20,7 +21,8 @@
       "outland_auto_pick",
       "outland_highlight",
       "outland_hotkeys",
-      "outland_pokemon_title"
+      "outland_pokemon_title",
+      "outland_seconds"
     ],
     "/walk.ep.php": [
       "outland_check_set",
@@ -29,7 +31,8 @@
       "outland_auto_pick",
       "outland_highlight",
       "outland_hotkeys",
-      "outland_pokemon_title"
+      "outland_pokemon_title",
+      "outland_seconds"
     ],
     "/walk.p.php": [
       "outland_check_set",
@@ -38,7 +41,8 @@
       "outland_auto_pick",
       "outland_highlight",
       "outland_hotkeys",
-      "outland_pokemon_title"
+      "outland_pokemon_title",
+      "outland_seconds"
     ],
     "/walk.bp.php": [
       "outland_check_set",
@@ -47,7 +51,8 @@
       "outland_auto_pick",
       "outland_highlight",
       "outland_hotkeys",
-      "outland_pokemon_title"
+      "outland_pokemon_title",
+      "outland_seconds"
     ]
   },
   "methods": {
@@ -130,6 +135,11 @@
           "default": true
         }
       }
+    },
+
+    "outland_seconds": {
+      "title": "Часы с секундами на ауте",
+      "file": "outland.js"
     }
   }
 }
