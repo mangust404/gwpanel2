@@ -212,14 +212,18 @@ jQuery.extend(panel, {
       var originalPostdo = window.postdo;
       if(originalPostdo.toString().indexOf('originalPostdo') == -1) {
         window.postdo = function(href) {
+          var $js_window = $('#js_window').clone();
           $.ajax(href, {
             success: function(data) {
+              console.log($js_window);
               if(panel.panel_ajaxify) {
                 panel.ajaxUpdateContent(data);
+                $js_window.appendTo('#gw-content');
                 panel.ajaxTearDown();
                 panel.ajaxRefresh();
               } else {
                 $('#itemsbody').html(data);
+                $js_window.insertBefore('#itemsbody');
               }
             }
           });
