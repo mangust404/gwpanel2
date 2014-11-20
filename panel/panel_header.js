@@ -304,15 +304,19 @@
 
           if(lines[3] != 'no_attacks') {
             var ar = lines[3].split("\t");
-            var time = ar[0].split('[')[1].split(']')[0];
+            var time = '[' + ar[0].split('[')[1].split(']')[0] + ']';
             var levels = ar[0].match(/([0-9]+)\-([0-9]+) lvl/);
             var color = 'red';
-            if(levels[2] != '50') {
+            if(levels && levels[2] != '50') {
               color = '#009';
+            }
+            var time_count = ar[0].match(/\[[0-9]+:[0-9]+\](\[[0-9]+\])?/);
+            if(time_count && time_count[1]) {
+              time += time_count[1];
             }
             data['syndwar'] = '<a class="ajax" href="/war/" title="' + ar[0] + 
               '" style="color:' + color + ';font-weight:bold;text-decoration:none">' + 
-              'Бой [' + time + ']</a>';
+              'Бой ' + time + '</a>';
           }
           
           if(lines[2].indexOf('in_battle') != -1) {
