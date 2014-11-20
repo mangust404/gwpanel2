@@ -88,15 +88,15 @@ function make_bootstrap($domain, $path, $libs) {
     }
     s.src = panelURL + "/lib/" + libs[i];
     s.addEventListener("load", function() {
-      loadedLibs++;
-      if(loadedLibs >= libs.length) {
-        initDB();
-      }
       if(testing && window.jQuery && !jQuery("#qunit-fixture").length) {
         try {
           jQuery(\'<div id="qunit-fixture"></div>\').prependTo(document.body);
           jQuery(\'<div id="qunit"></div>\').prependTo(document.body);
         } catch(e) {}
+      }
+      loadedLibs++;
+      if(loadedLibs >= libs.length) {
+        initDB();
       }
     })
     document.getElementsByTagName("head")[0].appendChild(s);
@@ -112,7 +112,9 @@ function make_bootstrap($domain, $path, $libs) {
       s.src = panelURL + "/lib/jquery.db" + 
       (environment == "production"? ".min": "") + ".js";
     } else {
-      alert("' . iconv('UTF-8', 'CP1251', 'Извините, ваш браузер не поддерживается, т.к. в нём отсутствует поддержка базы данных.\nРекомендуемые браузеры: Firefox, Chrome, Opera, Safari последних версий.') . '");
+      initialize();
+      return;
+      //alert("' . iconv('UTF-8', 'CP1251', 'Извините, ваш браузер не поддерживается, т.к. в нём отсутствует поддержка базы данных.\nРекомендуемые браузеры: Firefox, Chrome, Opera, Safari последних версий.') . '");
     }
     s.addEventListener("load", function() {
       if(window.indexedDB) {
@@ -132,7 +134,10 @@ function make_bootstrap($domain, $path, $libs) {
                 columns: ["version INTEGER PRIMARY KEY", "value TEXT"],
                 done: function () {},
                 fail: function () {
-                  console.log("error while creating table");
+                  if(window.console) {
+                    console.log("error while creating table");
+                  }
+                  initialize();
                 }
             });
           }
@@ -176,6 +181,8 @@ function make_bootstrap($domain, $path, $libs) {
           failover();
         }
       );
+    } else {
+      failover();
     }
   }
 
@@ -197,6 +204,8 @@ function make_bootstrap($domain, $path, $libs) {
           callback();
         }
       });
+    } else {
+      callback();
     }
   }
   
@@ -252,7 +261,7 @@ function make_bootstrap($domain, $path, $libs) {
         s.addEventListener("load", function() {
           if(!window.__package) {
             /// TODO отработать отправку ошибки и возврат на предыдущую версию
-            throw("Повреждён файл пакета " + path);
+            throw("' . iconv('UTF-8', 'CP1251', 'Повреждён файл пакета') . ' " + path);
           }
           package = window.__package;
 
@@ -419,7 +428,7 @@ function make_bootstrap($domain, $path, $libs) {
             var script_path = path[i];
             __checkoutPackage(panel_version, function(package) {
               if(typeof(package[script_path]) == "undefined") {
-                if(failover) failover();
+                if(failover) failover("' . iconv('UTF-8', 'CP1251', 'Скрипт " + script_path + " не найден в пакете') . '");
                 return;
               }
               sessionStorage["gwp2_f_" + script_path] = package[script_path];

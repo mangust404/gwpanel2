@@ -1059,6 +1059,7 @@ window.Panel2 = new function() {
         });
       }
     }
+
     // Инициализация подгружаемых скриптов
     var pages = [];
     if($.type(panel_schema.pages[location.pathname]) == 'array') {
@@ -1084,6 +1085,7 @@ window.Panel2 = new function() {
         instance.callMethod(func, arguments, instance);
       });
     });
+
     
     if(window.vote_for_post) {
       window.vote_for_post = function(fid, tid, mid, vote, sign) {
@@ -1538,9 +1540,9 @@ window.Panel2 = new function() {
           instance.isLoading--;
           /// отработал одиночный вызов
           instance.loadScriptFail(name, arguments);
-          if(name.length > 1) {
+          /*if(name.length > 1) {
             if(failover) failover();
-          }
+          }*/
         }
       );
     },
@@ -3018,6 +3020,7 @@ window.Panel2 = new function() {
         args.unshift(func_options);
 
         instance[name].apply(target, args);
+
       });
     },
 

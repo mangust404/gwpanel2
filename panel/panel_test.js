@@ -65,11 +65,14 @@ QUnit.test("Тест объекта __panel", function(assert) {
   });
 });
 
-QUnit.test("Тест объекта __panel.crossWindow", function(assert) {
-  assert.equal('object', String(typeof(__panel.crossWindow)).toLowerCase(), 
-    'объект crossWindow был создан');
-  $(['bind', 'get', 'set', 'triggerEvent', 'unbind']).each(function() {
-    assert.function_exists('__panel.' + this, __panel[this]);
+QUnit.asyncTest("Тест объекта __panel.crossWindow", function(assert) {
+  __panel.onload(function() {
+    assert.equal('object', String(typeof(__panel.crossWindow)).toLowerCase(), 
+      'объект crossWindow был создан');
+    $(['bind', 'get', 'set', 'triggerEvent', 'unbind']).each(function() {
+      assert.function_exists('__panel.' + this, __panel[this]);
+    });
+    QUnit.start();
   });
 }); 
 
@@ -1944,10 +1947,26 @@ QUnit.asyncTest('Базовый тест блокировок', function(assert)
   });
 
   function openSecondWindow() {
+    /*var $frame1 = $('<iframe id="cache-test-iframe-0" src="http://www.ganjawars.ru/me/' + 
+      '?gwpanel_testing&continue"></iframe>').load(function() {
+      var that = this;
+      waitPanelInitialization(that.contentWindow, function() {
+        assert.notEqual($frame1.get(0).contentWindow.__panel.crossWindow.windowID, 
+          __panel.crossWindow.windowID, 'WindowID отличаются');
+        $frame1.get(0).contentWindow.__panel.lockAcquire(lock, function() {
+          assert.ok(false, 'Блокировка не должна быть получена');
+        }, function() {
+          assert.ok(true, 'Блокировка не получена в другом окне');
+          QUnit.start();
+        });
+      });
+    }).appendTo('#qunit-fixture');*/
     var popup = window.open(location.pathname + '?gwpanel_testing&continue', 'testPopup',
       'width=600, height=400, menubar=0, location=1, resizable=1, left=200, top=200');
 
     waitPanelInitialization(popup.window, function() {
+      assert.notEqual(popup.window.__panel.crossWindow.windowID, 
+        __panel.crossWindow.windowID, 'WindowID отличаются');
       popup.window.__panel.lockAcquire(lock, function() {
         assert.ok(false, 'Блокировка не должна быть получена');
         popup.close();

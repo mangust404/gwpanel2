@@ -2,7 +2,6 @@
   var bgenerated, rightattack, leftattack, defence, prevRightAttack, prevLeftAttack, prevDefence, bsrcframe, bgenerator, $bgenchk, walk, bredo;
   var generator_options;
   var redo_options;
-  var battleFixed;
   var allies = {name: []}, enemies = {name: []};
   var enemySelectBox;
   var battle_modifyChatWait;
@@ -16,7 +15,7 @@
 
 $.extend(panel, {
   battle_fix: function(options) {
-    if(battleFixed) return;
+    if(!window.bf3) return;
     window.bf3 = window.bf3.replace(/<a/, '<a id="updbutton"');
     bsrcframe = $('#bsrc');
     bsrcframe.load(function() {
@@ -81,7 +80,6 @@ $.extend(panel, {
       window.__clrline();
       panel.triggerEvent('clrline', {}, true);
     };
-    battleFixed = true;
     
   },
   

@@ -27,6 +27,11 @@
       success: function(data) {
         var final_url = xhr.responseURL || href;
         final_url = final_url.replace('&ajax', '').replace('?ajax', '');
+        if(data.indexOf('JQS loaded.') == -1) {
+          /// произошёл 302 редирект, перенаправляем на указанную страницу
+          window.location = final_url;
+          return;
+        }
         panel.ajaxUpdateContent(data, final_url, false, refresh);
         if(callback) callback();
       },
@@ -110,7 +115,15 @@
             if(href == 'object-hdo.php') {
               href = location.href;
             }
-            panel.ajaxUpdateContent(data, xhr.responseURL || href);
+            var final_url = xhr.responseURL || href;
+
+            if(data.indexOf('JQS loaded.') == -1) {
+              /// произошёл 302 редирект, перенаправляем на указанную страницу
+              window.location = final_url;
+              return;
+            }
+
+            panel.ajaxUpdateContent(data, final_url);
           },
           error: function() {
             regularSend();
@@ -139,7 +152,15 @@
         var s_data = $('input.form-' + form_id + ', textarea.form-' + form_id + ', select.form-' + form_id).serializeArray();
         $form.sendForm({
           data: s_data, success: function(data) {
-            __panel.ajaxUpdateContent(data, __panel.responseURL() || $this.attr('action'));
+            var final_url = __panel.responseURL() || $this.attr('action');
+
+            if(data.indexOf('JQS loaded.') == -1) {
+              /// произошёл 302 редирект, перенаправляем на указанную страницу
+              window.location = final_url;
+              return;
+            }
+
+            __panel.ajaxUpdateContent(data, final_url);
             if(location.href.indexOf('messages.php') == -1) {
               $(window).scrollTop(0);
             }
@@ -492,7 +513,9 @@
       $(document.body).removeClass('ajax-loading');
 
       ajaxifyContent();
-      panel.ajaxRefresh(refresh);
+      setTimeout(function() {
+        panel.ajaxRefresh(refresh);
+      }, 1);
     },
 
     /**
@@ -838,7 +861,15 @@ $.fn.html = function(html) {
       $(this).sendForm({
         data: $('.gwp-form-' + index + '-item:not([type=submit]):not([type=image])').serializeArray(),
         success: function(data) {
-          __panel.ajaxUpdateContent(data, __panel.responseURL() || $this.attr('action'));
+          var final_url = __panel.responseURL() || $this.attr('action');
+          
+          if(data.indexOf('JQS loaded.') == -1) {
+            /// произошёл 302 редирект, перенаправляем на указанную страницу
+            window.location = final_url;
+            return;
+          }
+
+          __panel.ajaxUpdateContent(data, final_url);
           if(location.href.indexOf('messages.php') == -1) {
             $(window).scrollTop(0);
           }
