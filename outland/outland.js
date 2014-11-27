@@ -211,7 +211,7 @@ jQuery.extend(__panel, {
   },
 
   outland_seconds: function(options) {
-    var $clock = $('a:contains(Форум)').parent().contents().last()
+    var $clock = $('nobr > a:contains(Форум)').parent().contents().last()
       .wrapAll('<span class="clock"></span>').parent()
       .css({
         'margin-left': 10
