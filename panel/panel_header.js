@@ -152,7 +152,7 @@
 
       /// если это было не аяксовое открытие, то код дойдёт до этого места и 
       /// спарсит текущую шапку, и направит данные в другие окна
-      panel.panel_header_parse($header);
+      //panel.panel_header_parse($header);
     },
 
     panel_update_listener: function(options, data) {

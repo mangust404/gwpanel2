@@ -1770,7 +1770,7 @@ href=/ferma.php?x=1&y=0&section=items>Постройки</a></center><form style
   assert.ok(result.indexOf('</form>') > result.indexOf('</table>'), '</form> перед </table>');
 });
 
-QUnit.test('Исправление форм, продвинутый вариант', function(assert) {
+QUnit.asyncTest('Исправление форм, продвинутый вариант', function(assert) {
   __panel.loadScript('panel/panel_ajax.js', function() {
     var html = '<table>\
 <tr><td class=greengreenbg>Трава</td>\
@@ -1783,6 +1783,7 @@ QUnit.test('Исправление форм, продвинутый вариан
 <input type=radio value="val2" name="radio1">\
 <input type=hidden  name=object_id value=41498>\
 <input type=hidden name=resource value=\'metal\'>\
+<input type=radio id=extraspacesinput   name=input_with_extraspaces  value=test  >\
 <select name=sxy style=\'width:100%\'>\
 <option value=\'150x149\'>[Z] Crystal Sector</option><option selected="selected" value=\'150x150\'>[Z] Cyborg Capital</option>\
 </select>\
@@ -1838,6 +1839,9 @@ jQuery(document.forms.testformid.testvalue2.textarea_value).focus();\
     assert.equal($fixture.find('.' + className + '[name="radio1"][value="val1"]').attr('checked'), 'checked', 'Проверка radio 1, должен быть нажат');
     assert.equal($fixture.find('.' + className + '[name="radio1"][value="val2"]').attr('checked'), undefined, 'Проверка radio 2, должен быть отжат');
     assert.equal($fixture.find('.' + className + '[name="testvalue1"]').val(), 'test', 'проверка скрытого значения изменённого скриптом в первой форме');
+    assert.equal($fixture.find('#extraspacesinput').length, 1, 'найден #extraspacesinput');
+    assert.equal($fixture.find('#extraspacesinput').attr('name'), 'input_with_extraspaces', 'Имя у #extraspacesinput совпадает');
+    assert.equal($fixture.find('#extraspacesinput').val(), 'test', 'Значение у #extraspacesinput совпадает');
   /*  assert.equal(document.forms.testformid.chk1.checked, true);
     assert.equal(document.forms.testform.elements.chk1.checked, true);
     assert.equal(document.forms.testformid.elements.chk1.checked, true);*/
@@ -1888,6 +1892,8 @@ textarea', 'проверка значения textarea');
         assert.ok($(element).hasClass(className2), 'У элемента ' + element.id + ' есть класс');
       }
     });
+
+    QUnit.start();
   });
 });
 

@@ -37,7 +37,13 @@ function make_bootstrap($domain, $path, $libs) {
 
   if(location.pathname == "/tmp/panel2container.html") {
     /// initialize container
-    var libs = ["jquery.min.js"];
+    if(window.jQuery) {
+      var libs = [];
+    } else if(environment == "deploy") {
+      var libs = ["jquery.js"];
+    } else {
+      var libs = ["jquery.min.js"];
+    }
     var loadedLibs = 0;
 
     for(var i = 0; i < libs.length; i++) {

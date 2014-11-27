@@ -36,6 +36,8 @@ window.Panel2 = new function() {
   var original_environment;
   /// слушатели сброса кеша
   var cacheListeners;
+  /// стек вызова функции getCached
+  var cacheCallStack = {};
   /// текущая версия
   var version;
   /// уникальный идентификатор открытого окна
@@ -140,7 +142,8 @@ window.Panel2 = new function() {
   */
   function activatePane(e) {
     var $this = $(this);
-    if($this.hasClass('right') && !$this.hasClass('footer') && (!e || e.type != 'click') && !$('.pane:visible').length) {
+    if($this.hasClass('right') && !$this.hasClass('footer') && 
+       (!e || e.type != 'click') && !$('.pane:visible:not(.inline)').length) {
       /// Правые панели не активируем при наведении, потому что там из-за скроллбара ложные срабатывания
       return false;
     }
@@ -616,7 +619,7 @@ window.Panel2 = new function() {
           }
         });
       }
-      $('.pane:visible').hide();
+      $('.pane:visible:not(.inline)').hide();
       $('.pane-bubble.active').removeClass('active');
       $('#pane-bubble-' + paneID).addClass('active');
       pane.appendTo(document.body);
@@ -1910,7 +1913,7 @@ window.Panel2 = new function() {
       if(callback) callback();
       if(contentFrame) {
         contentFrame.contentWindow.postMessage(JSON.stringify({'type': 'location', 'href': href}), '*');
-        $('.pane:visible').hide();
+        $('.pane:visible:not(.inline)').hide();
         $('.pane-bubble.active').removeClass('active');
       } else {
         location.href = href;
@@ -2099,18 +2102,19 @@ window.Panel2 = new function() {
         $(this).animate({bottom: parseInt($(this).css('bottom')) + 50});
       });
 
-      var flash = $('<div class="panel-flash"></div>').css({bottom: -40}).addClass(type).html(text)
-        .appendTo(document.body).animate({bottom: 20}).click(function() {
+      var $flash = $('<div class="panel-flash"></div>').css({bottom: -40}).addClass(type).html(text)
+        .appendTo(document.body).click(function() {
+          $(this).clearQueue();
           $(this).fadeOut(function() {
             $(this).remove();
           });
-        });
+        }).animate({bottom: 20});
       /// таймаут скрытия по-умолчанию
       if(!timeout) timeout = 20000;
       instance.setTimeout(function() {
-        flash.animate({bottom: parseInt(flash.css('bottom')) + 300},
+        $flash.animate({bottom: parseInt($flash.css('bottom')) + 300},
           { duration: 200, queue: false });
-        flash.fadeOut(100, function() {
+        $flash.fadeOut(100, function() {
           $(this).remove();
         });
       }, timeout);
@@ -2125,6 +2129,10 @@ window.Panel2 = new function() {
           w.clearInterval(i);
         }
       };
+      /// Останавливаем выполнение всех эффектов
+      $.fx.stop();
+      /// Запускаем выполнение эффектов запуском фейкового события
+      $('<div>').animate({top: 1});
       lastTimeout = s;
     },
 
@@ -2268,6 +2276,24 @@ window.Panel2 = new function() {
     getCached: function(generator, callback, condition) {
       //console.log('getCached called from: ', (new Error).stack.split("\n")[1]);
       var cid = 'cached_' + generator.toString().replace(/[\n\s\t]/g, '').hashCode();
+      if(!cacheCallStack[cid]) {
+        cacheCallStack[cid] = [];
+      }
+      cacheCallStack[cid].push(callback);
+
+      if(cacheCallStack[cid].length > 1) {
+        /// Этот же самый вызов уже был совершён, когда первый вызов отработает, он 
+        /// запустит все callback-и
+        return;
+      }
+
+      var runCallback = function(result) {
+        /// вызываем всех слушателей
+        while(clbck = cacheCallStack[cid].shift()) {
+          clbck(result);
+        }
+      }
+
       instance.get(cid, function(data) {
         instance.get('cacheListeners', function(__listeners) {
           cacheListeners = __listeners || {};
@@ -2286,7 +2312,7 @@ window.Panel2 = new function() {
                 /// Записываем данные
                 //console.log('setCached, cid=', cid, 'data=', data);
                 instance.set(cid, data, function() {
-                  callback(data.data);
+                  runCallback(data.data);
                 });
               });
             }
@@ -2319,14 +2345,14 @@ window.Panel2 = new function() {
               cacheListeners[condition].push(cid);
               instance.set('cacheListeners', cacheListeners, function() {
                 //console.log('listeners changed: ', JSON.stringify(cacheListeners));
-                callback(data.data);
+                runCallback(data.data);
               });
             } else {
-              callback(data.data);
+              runCallback(data.data);
             }
           } else {
             //console.log('in time cache');
-            callback(data.data);
+            runCallback(data.data);
           }
         });
       });
@@ -2626,7 +2652,7 @@ window.Panel2 = new function() {
     */
     hideAllPanes: function(e) {
       if(e && e.type == 'click' && $('.pane:visible').hasClass('configuring')) return true;
-      $('.pane:visible').hide();
+      $('.pane:visible:not(.inline)').hide();
       $('.pane-bubble.active').removeClass('active');
       $(document.body).off('click', instance.hideAllPanes);
     },
@@ -2643,26 +2669,27 @@ window.Panel2 = new function() {
     */
     setAuthKey: function(key) {
       instance.authKey = key;
-      instance.triggerEvent('auth');
+      instance.triggerEvent('auth', {}, true);
     },
 
     /**
     * Функция авторизации на сервере gwpanel.org для доступа к серверным функциям
     */
     auth: function(callback) {
-      var listenerID;
-      if(!listenerID) {
-        listenerID = instance.bind('auth', function() {
+      var listenerID = instance.bind('auth', function() {
           callback();
           instance.unbind('auth', listenerID);
           listenerID = false;
         });
-      }
-      $('<iframe src="http://new.gwpanel.org/csauth.php"></iframe>')
-        .hide().load(function() {
-          $('<script src="http://new.gwpanel.org/settings.php"></script>')
-            .appendTo(document.body);
-        }).appendTo(document.body);
+      setTimeout(function() {
+        $('<iframe src="http://new.gwpanel.org/csauth.php"></iframe>')
+          .hide().load(function() {
+            var s = document.createElement('script');
+            s.type = 'text/javascript';
+            s.src = 'http://new.gwpanel.org/settings.php';
+            document.getElementsByTagName('head')[0].appendChild(s);
+          }).appendTo(document.body);
+      }, 10);
     },
 
     /**
@@ -3076,6 +3103,119 @@ window.Panel2 = new function() {
     },
 
     /**
+    * Функция парсит урл и возвращает структурированный объект
+    * @param url - строка, урл. Абсолютный или относительный.
+    * @return uri - объект вида:
+    * {
+    *   protocol: "протокол, http или https",
+    *   hostname: "имя домена",
+    *   port: "номер порта",
+    *   pathname: "путь к скрипту, например /b0/b.php",
+    *   search: "GET-запрос, например ?bid=123456",
+    *   hash: "HASH-строка, например #myhash",
+    *   origin: "протокол + домен, например - http://www.ganjawars.ru"
+    * }
+    */
+    parseUrl: function(url) {
+      if(url.indexOf('http://') == -1) {
+        url = 'http://' + location.hostname + url;
+      }
+      var parse_url = /^(?:([A-Za-z]+):)?(\/{0,3})([0-9.\-A-Za-z]+)(?::(\d+))?(?:\/([^?#]*))?(?:\?([^#]*))?(?:#(.*))?$/;
+
+      var ar = parse_url.exec(url);
+
+      var uri = {
+        protocol: ar[1],
+        hostname: ar[3],
+        port: ar[4] || '',
+        pathname: ar[5]? '/' + ar[5]: '',
+        search: ar[6]? '?' + ar[6]: '',
+        hash: ar[7]? '#' + ar[7]: '',
+        origin: ar[1] + '://' + ar[3]
+      };
+
+      return uri;
+    },
+
+    /**
+    * Функция поиска всех кнопок указанного класса
+    * @param className - строка, тип кнопки
+    * @return array - результат, массив из объектов вида:
+    * [
+    *   {
+    *     paneID: 0, // ID окна
+    *     button: { ... } // объект кнопки,
+    *     index: 0 // порядковый индекс кнопки в массиве options.panes[N].buttons
+    *   }, 
+    *   {...}, 
+    *   ...
+    * ]
+    */
+    getAllButtons: function(className) {
+      var result = [];
+      for(var i = 0; i < options.panes.length; i++) {
+        if($.type(options.panes[i]) != 'object') continue;
+        if($.type(options.panes[i].buttons) != 'array') continue;
+        for(var b = 0; b < options.panes[i].buttons.length; b++) {
+          if(options.panes[i].buttons[b].type == className || !className) {
+            result.push({
+              paneID: i,
+              button: options.panes[i].buttons[b],
+              index: b
+            });
+          }
+        }
+      }
+      return result;
+    },
+
+    /**
+    * Программный клик по кнопке
+    * @param btnID - идентификатор кнопки, будет произведён поиск во всех окнах
+    * @param callback - если функция клика по кнопке поддерживает обратный вызов,
+    *                   то будет вызван callback если он указан
+    */
+    clickButton: function(btnID, callback, failover) {
+      $.each(instance.getAllButtons(), function(i, btn) {
+        if(btn.button.id == btnID) {
+          var type = instance.getSchema().buttons[btn.button.type];
+
+          instance.loadScript(getFiles(type.file, type.module), function() {
+            if(!instance[type['callback']]) {
+              try{
+                throw('"' + type['callback'] + '" for button ' + that.type + ', Pane ' + paneID + ' draw: ');
+              } catch(e) {
+                instance.dispatchException(e, 'Unknown callback function');
+              }
+              return;
+            }
+            var btn_callback = instance[type.callback];
+            var __options = {};
+            if(btn.button.arguments) {
+              $.extend(__options, btn.button.arguments);
+            }
+
+            $.extend(__options, {
+              save: function(__callback) {
+                for(var key in __options) {
+                  if(key == 'save') continue;
+                  options.panes[paneID].buttons[index].arguments[key] = __options[key];
+                }
+                instance.setOptions(options, undefined, function() {
+                  if(__callback) __callback();
+                });
+              }
+            });
+            try {
+              btn_callback.apply($('<div>'), [__options, callback, failover]);
+            } catch(e) {
+              instance.dispatchException(e);
+            }
+          });
+        }
+      });
+    },
+    /**
     * Публичные аттрибуты
     */
     /// Скрипты с ошибками
@@ -3091,6 +3231,35 @@ window.Panel2 = new function() {
 
   $.easing.easeOutCubic = function (x, t, b, c, d) {
     return c*((t=t/d-1)*t*t + 1) + b;
+  }
+
+  // Перезаписываем функцию $.ajax чтобы аякс работал на других доменах через ganjawars.ru
+  var originalAjax = $.ajax;
+  $.ajax = function() {
+    if($.type(arguments[0]) == 'object') {
+      var options = arguments[0];
+    } else if($.type(arguments[1]) == 'object') {
+      var options = arguments[1];
+      options.url = arguments[0];
+    }
+
+    if(options.url.indexOf('http:') == -1) {
+      var url = {
+        origin: location.origin,
+        pathname: options.url
+      };
+    } else {
+      var url = __panel.parseUrl(options.url);
+    }
+
+    if(url.origin == location.origin || options['__panel_ajax'] || url.origin == 'http://new.gwpanel.org') {
+      originalAjax.apply(this, [options]);
+    } else if(url.hostname == 'www.ganjawars.ru' || url.hostname == 'ganjawars.ru') {
+      options.url = 'http://ganjawars.ru' + url.pathname + (url.search || '');
+      __panel.loadScript('panel/panel_ajax.js', function() {
+        __panel.crossWindow.ajax(options);
+      });
+    }
   }
 
 })(jQuery);

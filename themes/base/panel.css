@@ -199,21 +199,44 @@
   width: 17px;
   position: absolute;
   bottom: 36px;
-  left: 31px;
+  left: 23px;
+  padding: 3px;
+  border-radius: 20px;
+  box-shadow: 0px 0px 3px #fff;
 }
 
 .pane .button.button-ok .img:after {
-  background: url(images/ok.png);
+  background: rgba(208, 245, 208, 0.9) url(images/ok.png) no-repeat 3px 3px;
 }
 
 .pane .button.button-error .img:after {
-  background: url(images/error.png);
+  background: rgba(255, 224, 224, 0.9) url(images/error.png) no-repeat 3px 3px;
 }
 
 .pane .widget {
   overflow: hidden;
   position: absolute;
   z-index: 1;
+}
+
+.pane.inline {
+  position: static;
+}
+
+.pane.inline .button, .pane.inline .widget {
+  position: relative;
+  vertical-align: top;
+}
+
+.pane.inline .button {
+  width: 65px;
+}
+
+.pane.inline .button h3 {
+  position: static;
+  transform: none;
+  -moz-transform: none;
+  -webkit-transform: none;
 }
 
 .pane-placeholder {

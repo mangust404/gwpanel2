@@ -10,7 +10,12 @@
   var stateId = 0;
   var stateFormData = {};
 
+  var $frame;
+
   function ajaxGoto(href, callback, refresh) {
+    // отменяем предыдущий запрос
+    if(xhr) xhr.abort();
+
     if(loaderTO > 0) clearTimeout(loaderTO);
     /// показываем крутилку если запрос длится больше 300 миллисекунд
     loaderTO = panel.setTimeout(function() {
@@ -27,7 +32,9 @@
       success: function(data) {
         var final_url = xhr.responseURL || href;
         final_url = final_url.replace('&ajax', '').replace('?ajax', '');
-        if(data.indexOf('JQS loaded.') == -1) {
+        /// отметка "JQS loaded" появляется только на домене www
+        if(final_url.indexOf('www.ganjawars.ru') > -1  && 
+           data.indexOf('JQS loaded.') == -1) {
           /// произошёл 302 редирект, перенаправляем на указанную страницу
           window.location = final_url;
           return;
@@ -37,7 +44,8 @@
       },
       error: function() {
         window.location = href;
-      }
+      },
+      __panel_ajax: true
     });
   }
 
@@ -117,7 +125,8 @@
             }
             var final_url = xhr.responseURL || href;
 
-            if(data.indexOf('JQS loaded.') == -1) {
+            if(final_url.indexOf('www.ganjawars.ru') > -1  &&
+               data.indexOf('JQS loaded.') == -1) {
               /// произошёл 302 редирект, перенаправляем на указанную страницу
               window.location = final_url;
               return;
@@ -154,7 +163,8 @@
           data: s_data, success: function(data) {
             var final_url = __panel.responseURL() || $this.attr('action');
 
-            if(data.indexOf('JQS loaded.') == -1) {
+            if(final_url.indexOf('www.ganjawars.ru') > -1  &&
+               data.indexOf('JQS loaded.') == -1) {
               /// произошёл 302 редирект, перенаправляем на указанную страницу
               window.location = final_url;
               return;
@@ -181,6 +191,7 @@
       if($('#gw-content').length > 0) return;
       if(!history.pushState) return;
       if(document.domain.indexOf('gwpanel.org') > -1) return;
+
       var $elem;
       if($('table.topill').length > 0) {
         ///новое оформление
@@ -250,8 +261,12 @@
         });
         //console.log('setting window.onpopstate');
 
+        if(!$frame) {
+          $frame = $('<iframe>').hide().appendTo(document.body);
+        }
+        Array.prototype.shift = $frame.get(0).contentWindow.Array.prototype.shift;
+
         $(window).bind('popstate', function(event) {
-          //console.log(event.originalEvent.state);
           if(event.originalEvent.state && event.originalEvent.state.data && 
              event.originalEvent.state.title) {
             /*var $div = $('<div>').hide().html(event.state.data).appendTo(document.body);
@@ -476,10 +491,16 @@
       var $content = $('#gw-content').html(data);
       if(jqs) {
         document.title = ($content.find('#doc-title').text() || 'Онлайн игра')
-                          + ' GanjaWars.Ru :: Ганджубасовые войны';
-      } else {
+                          + ' GanjaWars.Ru :: Ганджубасовые Войны';
+      } else if(__title) {
         document.title = __title;
       }
+      // Возвращаем все native-методы в Array.prototype
+      if(!$frame) {
+        $frame = $('<iframe>').hide().appendTo(document.body);
+      }
+      Array.prototype.shift = $frame.get(0).contentWindow.Array.prototype.shift;
+
       //if(title) document.title = title + ' :: Ganjawars.ru :: Ганджубасовые войны';
       $(document.body).removeClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
       if(noHistory && !refresh) {
@@ -559,6 +580,7 @@
       } else {
         var s_data = $form.serializeArray();
       }
+      if(!options.data) options.data = {};
 
       if($(document.body).hasClass('ajax-loading')) return false;
       //__panel.setTimeout(function() {
@@ -591,6 +613,8 @@
       });
       /// отдаём в data строку
       options.data = params.join('&');
+
+      var uri = panel.parseUrl(action);
 
       /// на ауте не работает форма отплытия если она отправляется сперва аяксом 
       /// а потом обычным способом, надо сразу отправлять обычным
@@ -863,7 +887,8 @@ $.fn.html = function(html) {
         success: function(data) {
           var final_url = __panel.responseURL() || $this.attr('action');
           
-          if(data.indexOf('JQS loaded.') == -1) {
+          if(final_url.indexOf('www.ganjawars.ru') > -1  &&
+             data.indexOf('JQS loaded.') == -1) {
             /// произошёл 302 редирект, перенаправляем на указанную страницу
             window.location = final_url;
             return;

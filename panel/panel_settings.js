@@ -112,6 +112,34 @@
     return d.replace('T', ' ').replace('+03:00', '');
   }
 
+  /// функция для генерации параметров, которые указываются в .module.json
+  function evaluate_options(option, callback) {
+    if($.type(option) == 'string' && 
+       (option.indexOf('__panel.') == 0 || option.indexOf('__panel[') == 0)) {
+      if(option.indexOf('_async') == -1) {
+        option = eval(option);
+        callback(option);
+      } else {
+        /// Асинхронная подгрузка опций
+        var start = option.indexOf('(');
+        var end = option.lastIndexOf(')');
+        var func_name = option.substr(0, start);
+        var args = option.substr(start + 1, end - start - 1).split(',');
+        if(!args[0]) args.pop();
+        args.push('function(o) { callback(o); }');
+
+        try {
+          eval(func_name + '(' + args.join(',') + ')');
+        } catch(e) {
+          console.log(e, 'error in evaluating "' + func_name + '(' + args.join(',') + ')' + '"');
+        }
+      }
+    } else {
+      callback(option);
+    }
+
+  }
+
   $.extend(panel, {
     /**
     * Инициализация настроек
@@ -1057,10 +1085,10 @@
         }
 
         /// проходим по всем опциям и собираем дефолтные значения
-        $.each(widgetClass.configure || [], function(param) {
+        /*$.each(widgetClass.configure || [], function(param) {
           widget_data[param] = widgetData.arguments[param] == undefined? this.default:
                                widgetData.arguments[param];
-        });
+        });*/
         if(!widgetData.id) {
           widgetData.id = widgetData.type;
         }
@@ -1352,12 +1380,18 @@
 
       paneID = parseInt(paneID);
       var index = 0;
-      /// Создаём идентификатор
-      for(var i = 0; i < current_options.panes[paneID].buttons.length; i++) {
-        if(current_options.panes[paneID].buttons[i].type == buttonClass) {
-          index++;
+      /// Создаём идентификатор, уникальный для всех окон
+      $.each(panel.getAllButtons(), function(i, btn) {
+        if(btn.button.type == buttonClass) {
+          var ar = btn.button.id.split('_');
+          var idx = parseInt(ar[ar.length - 1]);
+          if(idx > index) {
+            index = idx;
+          }
         }
-      }
+      });
+      /// мы нашли максимальный индекс, увеличиваем его на единицу
+      index++;
 
       data.id = buttonClass + '_' + index;
       var places = panel.checkPanePlaces(paneID, data);
@@ -1393,9 +1427,11 @@
     */
     panel_configure_form: function(params, widget, append_to, change_callback) {
       $.each(params || [], function(param) {
+        var isDefault = false;
         if(widget.arguments && widget.arguments[param] != undefined) {
           var current_value = widget.arguments[param];
         } else {
+          isDefault = true;
           var current_value = this.default;
         }
 
@@ -1522,21 +1558,34 @@
               //default_data[widget.config_params[i]] = '';
             break;
           }
-        }
-        /// Если в значении было выражение, то преобразуем его
-        if($.type(that.options) == 'string' && 
-           (that.options.indexOf('__panel.') == 0 || that.options.indexOf('__panel[') == 0)) {
-          if(that.options.indexOf('_async') == -1) {
-            this.options = eval(that.options);
-            drawFunc();
-          } else {
-            /// Асинхронная подгрузка опций
-            eval(that.options.replace('()', '(') + ' function(o) { that.options = o; drawFunc(); append_to.trigger(\'create\'); } )');
-          }
-        } else {
-          drawFunc();
+          append_to.trigger('create');
         }
 
+        var have_options = false;
+        var have_default = false;
+
+        evaluate_options(that.options, function(options) {
+          have_options = true;
+          that.options = options;
+          if(have_options && have_default) {
+            drawFunc();
+          }
+        });
+        if(isDefault) {
+          evaluate_options(this.default, function(val) {
+            have_default = true;
+            change_callback(param, val);
+            current_value = val;
+            if(have_options && have_default) {
+              drawFunc();
+            }
+          });
+        } else {
+          have_default = true;
+          if(have_options && have_default) {
+            drawFunc();
+          }
+        }
       });
     },
 
