@@ -8,7 +8,8 @@
   "weight": 1, 
   "pages": {
     "/items.php": ["items_sets"],
-    "*": ["items_dress"]
+    "*": ["items_dress"],
+    "/sshop.php": ["items_shop_seek"]
   },
   "listeners": {
     "battleend": ["items_set_check"]
@@ -30,6 +31,9 @@
     },
     "items_dress": {
       "file": "items_dress.js"
+    },
+    "items_shop_seek": {
+      "file": "items.js"
     }
   },
   
@@ -43,6 +47,13 @@
           "options": "__panel.items_get_sets_async()",
           "file": "items_data.js",
           "description": "Укажите комплект"
+        },
+        "skill_button": {
+          "type": "select",
+          "title": "Набор навыков",
+          "options": "__panel.items_skills_buttons()",
+          "file": "items_data.js",
+          "description": "вы можете привязать этот комплект к набору навыков"
         }
       },
       "description": "быстрое надевание комплекта",
@@ -56,6 +67,113 @@
       "callback": "items_undress",
       "file": "items_buttons.js",
       "img": "http://images.ganjawars.ru/img/forum/f18.gif"
+    },
+    "skills_button": {
+      "title": "Набор навыков",
+      "configure": {
+        "set_active_general": {
+          "type": "radios",
+          "title": "Общие активные навыки",
+          "options": "__panel.items_all_skills_async('set_active_general')",
+          "file": "items_data.js",
+          "default": "__panel.items_current_skills_async('set_active_general')"
+        },
+        "set_passive_general": {
+          "type": "radios",
+          "title": "Общие пассивные навыки",
+          "options": "__panel.items_all_skills_async('set_passive_general')",
+          "file": "items_data.js",
+          "default": "__panel.items_current_skills_async('set_passive_general')"
+        },
+        "set_active_skill_combat_snipe": {
+          "type": "radios",
+          "title": "Снайперские винтовки (активные)",
+          "options": "__panel.items_all_skills_async('set_active_skill_combat_snipe')",
+          "file": "items_data.js",
+          "default": "__panel.items_current_skills_async('set_active_skill_combat_snipe')"
+        },
+        "set_passive_skill_combat_snipe": {
+          "type": "radios",
+          "title": "Снайперские винтовки (пассивные)",
+          "options": "__panel.items_all_skills_async('set_passive_skill_combat_snipe')",
+          "file": "items_data.js",
+          "default": "__panel.items_current_skills_async('set_passive_skill_combat_snipe')"
+        },
+        "set_active_skill_combat_heavy": {
+          "type": "radios",
+          "title": "Пулемёты (активные)",
+          "options": "__panel.items_all_skills_async('set_active_skill_combat_heavy')",
+          "file": "items_data.js",
+          "default": "__panel.items_current_skills_async('set_active_skill_combat_heavy')"
+        },
+        "set_passive_skill_combat_heavy": {
+          "type": "radios",
+          "title": "Пулемёты (пассивные)",
+          "options": "__panel.items_all_skills_async('set_passive_skill_combat_heavy')",
+          "file": "items_data.js",
+          "default": "__panel.items_current_skills_async('set_passive_skill_combat_heavy')"
+        },
+        "set_active_skill_combat_auto": {
+          "type": "radios",
+          "title": "Автоматы и штурмовые винтовки (активные)",
+          "options": "__panel.items_all_skills_async('set_active_skill_combat_auto')",
+          "file": "items_data.js",
+          "default": "__panel.items_current_skills_async('set_active_skill_combat_auto')"
+        },
+        "set_passive_skill_combat_auto": {
+          "type": "radios",
+          "title": "Автоматы и штурмовые винтовки (пассивные)",
+          "options": "__panel.items_all_skills_async('set_passive_skill_combat_auto')",
+          "file": "items_data.js",
+          "default": "__panel.items_current_skills_async('set_passive_skill_combat_auto')"
+        },
+        "set_active_skill_combat_sgun": {
+          "type": "radios",
+          "title": "Дробовики (активные)",
+          "options": "__panel.items_all_skills_async('set_active_skill_combat_sgun')",
+          "file": "items_data.js",
+          "default": "__panel.items_current_skills_async('set_active_skill_combat_sgun')"
+        },
+        "set_passive_skill_combat_sgun": {
+          "type": "radios",
+          "title": "Дробовики (пассивные)",
+          "options": "__panel.items_all_skills_async('set_passive_skill_combat_sgun')",
+          "file": "items_data.js",
+          "default": "__panel.items_current_skills_async('set_passive_skill_combat_sgun')"
+        },
+        "set_active_skill_combat_pistols": {
+          "type": "radios",
+          "title": "Пистолеты и пистолеты-пулеметы (активные)",
+          "options": "__panel.items_all_skills_async('set_active_skill_combat_pistols')",
+          "file": "items_data.js",
+          "default": "__panel.items_current_skills_async('set_active_skill_combat_pistols')"
+        },
+        "set_passive_skill_combat_pistols": {
+          "type": "radios",
+          "title": "Пистолеты и пистолеты-пулеметы (пассивные)",
+          "options": "__panel.items_all_skills_async('set_passive_skill_combat_pistols')",
+          "file": "items_data.js",
+          "default": "__panel.items_current_skills_async('set_passive_skill_combat_pistols')"
+        },
+        "set_active_skill_combat_explosives": {
+          "type": "radios",
+          "title": "Гранатометы (активные)",
+          "options": "__panel.items_all_skills_async('set_active_skill_combat_explosives')",
+          "file": "items_data.js",
+          "default": "__panel.items_current_skills_async('set_active_skill_combat_explosives')"
+        },
+        "set_passive_skill_combat_explosives": {
+          "type": "radios",
+          "title": "Гранатометы (пассивные)",
+          "options": "__panel.items_all_skills_async('set_passive_skill_combat_explosives')",
+          "file": "items_data.js",
+          "default": "__panel.items_current_skills_async('set_passive_skill_combat_explosives')"
+        }
+      },
+      "img": "http://images.ganjawars.ru/img/forum/f4.gif",
+      "description": "Кнопка для быстрого изменения набора навыков на указанные значения.",
+      "callback": "items_skills",
+      "file": "items_buttons.js"
     }
   }
 }

@@ -51,6 +51,7 @@ jQuery.extend(panel, {
     var pane_id = null;
     var first_pane_with_buttons = null;
     var button_id = null;
+    var skill_button;
 
     /// При изменении селектбокса с комплектами
     $set_id.change(function() {
@@ -63,23 +64,18 @@ jQuery.extend(panel, {
       /// ищем есть ли кнопка с этим комплектом в панели
       is_edit = false;
 
-      for(var i = 0; i < current_options.panes.length; i++) {
-        if($.type(current_options.panes[i]) != 'object') continue;
-        if($.type(current_options.panes[i].buttons) != 'array') continue;
-        if(first_pane_with_buttons === null && 
-           current_options.panes[i].buttons.length > 0) {
-          first_pane_with_buttons = i;
+      $.each(panel.getAllButtons('items_putset_button'), function(i, btn) {
+        if(first_pane_with_buttons === null) {
+          first_pane_with_buttons = btn.paneID;
         }
-        for(var b = 0; b < current_options.panes[i].buttons.length; b++) {
-          if(current_options.panes[i].buttons[b].type == 'items_putset_button'
-             && current_options.panes[i].buttons[b].arguments.set_id == set_id) {
-            pane_id = i;
-            button_id = b;
-            is_edit = true;
-            break;
-          }
+        if(btn.button.arguments.set_id == set_id) {
+          pane_id = btn.paneID;
+          button_id = btn.index;
+          is_edit = true;
+          skill_button = btn.button.arguments.skill_button;
         }
-      }
+      });
+
       $form.find('.gwp-upd, .icon-select').remove();
       if(is_edit) {
         $('<p class="gwp-upd">').append(
@@ -122,6 +118,55 @@ jQuery.extend(panel, {
           $(this).attr('src', panel.iconURL(current_icon));
         })
       ).appendTo($form);
+
+      /// Привязка к навыкам
+      $('.skills-select, .skills-title').remove();
+
+      var $append_to = $form;
+      if($('#extras').length) {
+        $append_to = $form.closest('td').next();
+      }
+
+      $('<h3 class="skills-title">Привязать к набору навыков:</h3>').css({
+        color: '#900',
+        'font-size': '9pt',
+        'text-align': 'center'
+      })
+        .appendTo($append_to);
+
+      var $skills_div = $('<div class="skills-select pane inline">')
+                          .appendTo($append_to);
+
+
+      $.each(panel.getAllButtons('items_skills_button'), function(i, btn) {
+        var $div = $('<div class="button ' + btn.button.type + '">')
+                     .appendTo($skills_div);
+
+        $('<label class="img" for="skill-button-' + btn.button.id + '">' + 
+          '<img src="' + panel.iconURL(btn.button.img) + '"/>' + 
+          '<h3>' + btn.button.title + '</h3>' +
+          '</label>').appendTo($div);
+
+        var $input = $('<input type="radio" id="skill-button-' + btn.button.id
+                       + '" name="skills-radio">').appendTo($div);
+
+        $input.change(function() {
+          $skills_div.find('.button-ok').removeClass('button-ok');
+          $(this).closest('.button').addClass('button-ok');
+          skill_button = btn.button.id;
+          if(is_edit) {
+            // Если кнопка уже существует, то сразу меняем у неё набор
+            current_options.panes[pane_id].buttons[button_id].arguments.skill_button = skill_button;
+            panel.setOptions(current_options);
+          }
+          // если кнопка не существует, то набор будет записан после сохранения
+        });
+
+        if(btn.button.id == skill_button) {
+          $input.attr('checked', 'checked');
+          $div.addClass('button-ok');
+        }
+      });
     }).change().closest('form');
 
     $form.find('input[type=submit]').click(function() {
@@ -137,8 +182,12 @@ jQuery.extend(panel, {
             var current_options = panel.getOptions();
             panel.loadScript('panel/panel_settings.js', function() {
               if($('#edit-button:checked').length) {
-                current_options.panes[pane_id].buttons[button_id].img = current_icon;
-                current_options.panes[pane_id].buttons[button_id].title = $set_name.val();
+                var btnOptions = current_options.panes[pane_id].buttons[button_id];
+                btnOptions.img = current_icon;
+                btnOptions.title = $set_name.val();
+                btnOptions.arguments = btnOptions.arguments || {};
+                btnOptions.arguments.skill_button = skill_button;
+
                 panel.setOptions(current_options);
                 $('.pane').remove();
                 panel.showFlash('Кнопка изменена', 'message', 3000);
@@ -147,7 +196,7 @@ jQuery.extend(panel, {
                   'items_putset_button', 
                   $.extend(panel.getSchema().buttons.items_putset_button, {
                     title: $set_name.val(),
-                    arguments: {set_id: $set_id.val()},
+                    arguments: {set_id: $set_id.val(), skill_button: skill_button},
                     img: current_icon
                   }
                 ));
@@ -193,18 +242,25 @@ jQuery.extend(panel, {
           trFound = true;
         }
       });
-      console.log(seek);
       /// соответствие не найдено, переходим к первому похожему
-      if(!trFound && $first_tr) {
+      if(!trFound && $first_tr && $first_tr.length > 0) {
         $('html,body').animate({
           scrollTop: $first_tr.offset().top - 40
         }, 1000);
       } else if(seek && !trFound) {
         /// Предлагаем "Где купить"
-        var ar = seek.split('&');
-        panel.showFlash('В инвентаре не найден этот предмет. <a href="' + 
-                        'http://www.ganjawars.ru/market.php?buy=1&item_id=' + 
-                        ar[0] + '">Где купить?</a>', 5000);
+        panel.loadScript('items/items_data.js', function() {
+          var ar = seek.split('&');
+          if(panel.items_synd_grenades.indexOf(ar[0]) > -1) {
+            panel.showFlash('В инвентаре не найдена граната. <a href="' + 
+                            'http://www.ganjawars.ru/sshop.php?seek=' + 
+                            ar[0] + '">Перейти в магазин.</a>', 5000);
+          } else {
+            panel.showFlash('В инвентаре не найден этот предмет. <a href="' + 
+                            'http://www.ganjawars.ru/market.php?buy=1&item_id=' + 
+                            ar[0] + '">Где купить?</a>', 5000);
+          }
+        });
       }
     }
 
@@ -215,9 +271,8 @@ jQuery.extend(panel, {
           var $js_window = $('#js_window').clone();
           $.ajax(href, {
             success: function(data) {
-              console.log($js_window);
               if(panel.panel_ajaxify) {
-                panel.ajaxUpdateContent(data);
+                panel.ajaxUpdateContent(data, location.href);
                 $js_window.appendTo('#gw-content');
                 panel.ajaxTearDown();
                 panel.ajaxRefresh();
@@ -301,6 +356,15 @@ jQuery.extend(panel, {
         }
       }, true);
     }, true);
+  },
+
+  items_shop_seek: function() {
+    var seek = location.search.split('seek=')[1];
+    if(seek) {
+      $('html,body').animate({
+        scrollTop: $('img[src$="' + seek + '_b.jpg"]').parent().offset().top - 40
+      }, 1000);
+    }
   }
 
 });

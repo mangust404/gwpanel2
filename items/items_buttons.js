@@ -13,8 +13,36 @@
             panel.get('items_set_' + options.set_id, function(set) {
               if(set) {
                 // комплект был сохранён
+                function updateData() {
+                  panel.set('items_current_set', options.set_id, function() {}, true);
+                  if(panel.panel_ajaxify && 
+                      (location.pathname == '/me/' || location.pathname == '/items.php')) {
+                    panel.gotoHref(location.href, null, true);
+                  }
+                }
+
+                function success() {
+                  if(options.skill_button) {
+                    // Если указана кнопка комплектов, то программно кликаем по ней
+                    try {
+                      panel.clickButton(options.skill_button, function() {
+                        updateData();
+                        $(that).addClass('button-ok');
+                      }, function() {
+                        $(that).addClass('button-error');
+                      });
+                    } catch(e) {
+                      console.log(e);
+                      $(that).addClass('button-error');
+                    }
+                  } else {
+                    updateData();
+                    $(that).addClass('button-ok');
+                  }
+                }
+
                 if(set == dressed) {
-                  $(that).addClass('button-ok');
+                  success();
                 } else {
                   if($data.find('#extras').length == 0) {
                     panel.showFlash('Пожалуйста, включите новый вариант оформления экипировки чтобы узнавать наделся ли комплект (галочка "Старое оформление экипировки" в <a href="http://www.ganjawars.ru/info.edit.php">настройках игры</a> не должна стоять');
@@ -48,16 +76,10 @@
 
                     $(that).addClass('button-error');
                   } else {
-                    $(that).addClass('button-ok');
+                    success();
                   }
                 }
-                if($(that).hasClass('button-ok')) {
-                  panel.set('items_current_set', options.set_id, function() {}, true);
-                  if(panel.panel_ajaxify && 
-                      (location.pathname == '/me/' || location.pathname == '/items.php')) {
-                    panel.gotoHref(location.href, null, true);
-                  }
-                }
+                
               } else {
                 /// содержимое комплекта не было сохранено, предполагаем что он наделся если на него есть ссылка
                 if($(data).find('a[href*="/home.do.php?putset=' + options.set_id + '"]').length > 0) {
@@ -76,6 +98,7 @@
         }
       });
     },
+
     items_undress: function() {
       var that = this;
       $.ajax('http://www.ganjawars.ru/items.php', {
@@ -98,6 +121,73 @@
         error: function() {
           $(that).addClass('button-error');
         }
+      });
+    },
+
+    items_skills: function(options, callback, failover) {
+      var $that = $(this);
+      $('.items_skills_button').removeClass('button-ok button-error');
+
+      panel.loadScript('panel/panel_ajax.js', function() {
+        $.ajax('http://www.ganjawars.ru/home.skills.php', {
+          success: function(data) {
+            var $form = $('<div>').hide().appendTo(document.body)
+              .html(data)
+              .find('input[name=saveperks]').closest('form');
+
+            if($form.length > 0) {
+              try {
+                $.each(options, function(key, value) {
+                  if($.type(value) == 'string') {
+                    $form.find('input[name=' + key + ']').removeAttr('checked');
+                    if(value != '') {
+                      $form.find('input[name=' + key + '][value="' + value + '"]')
+                        .attr('checked', 'checked');
+                    }
+                  }
+                });
+              } catch(e) {
+                console.log(e);
+              }
+
+              $form.sendForm({
+                success: function(data) {
+                  /// Проверка установленных значений
+                  var $form = $('<div>').hide().appendTo(document.body)
+                    .html(data)
+                    .find('input[name=saveperks]').closest('form');
+                  $form.find('input[type=radio][checked]').each(function() {
+                    var name = this.name;
+                    if(name.charAt(name.length - 1) == ' ') {
+                      name = name.substr(0, name.length - 1);
+                    }
+                    if(this.value != options[name]) {
+                      $that.addClass('button-error');
+                      if(failover) {
+                        panel.showFlash('Не удалось установить указанный в настройках набор навыков');
+                      }
+                      if(failover) failover();
+                    }
+                  });
+                  if(!$that.hasClass('button-error')) {
+                    $that.addClass('button-ok');
+                    if(callback) {
+                      callback();
+                    }
+                  }
+                  $form.remove();
+                }
+              });
+            } else {
+              $that.addClass('button-error');
+              if(failover) failover();
+            }
+            $form.remove();
+          },
+          error: function() {
+            $that.addClass('button-error');
+          }
+        });
       });
     }
   });
