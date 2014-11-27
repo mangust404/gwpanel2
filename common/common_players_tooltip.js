@@ -139,7 +139,16 @@
                 $input.eq(0).prop("value", info.name);
                 panel.set("nameToSendMoneyItem", null);
               } else {
-                panel.showFlash("Выберите предмет для передачи игроку <b>" + info.name + "</b>, и нажмите «Передать».", 'message', 5000);
+                var $msg = $('<p>Выберите предмет для передачи игроку <b>' + 
+                             info.name + '</b>, и нажмите «Передать».</p>')
+                            .add(
+                              $('<a href="#" class="ajax-link">отмена</a>').click(function() {
+                                panel.del('nameToSendMoneyItem');
+                                return true;
+                              })
+                            );
+                
+                panel.showFlash($msg, 'message', 5000);
               }
             } else {
               panel.set("nameToSendMoneyItem", null);
