@@ -1254,9 +1254,12 @@ window.Panel2 = new function() {
           } else {
             /// Вызываем мастер настроек
             if(document.domain.indexOf('ganjawars.ru') > -1 && environment != 'testing' && !instance.getCookies()['gwp2_mc']) {
-              instance.loadScript('panel/panel_master.js', function() {
-                instance.panel_master();
-              });
+              if(location.pathname == '/info.edit.php') { /// выводим мастер только на странице настроек
+                instance.loadScript('panel/panel_master.js', function() {
+                  instance.panel_master();
+                });
+              }
+              instance.check_button('panel_master');
             } else {
               /// дефолтные настройки
               options = $.extend(options, window.panelSettingsCollection.default);

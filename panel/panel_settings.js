@@ -113,26 +113,31 @@
   }
 
   /// функция для генерации параметров, которые указываются в .module.json
-  function evaluate_options(option, callback) {
+  function evaluate_options(option, callback, widget, params) {
     if($.type(option) == 'string' && 
        (option.indexOf('__panel.') == 0 || option.indexOf('__panel[') == 0)) {
-      if(option.indexOf('_async') == -1) {
-        option = eval(option);
-        callback(option);
-      } else {
-        /// Асинхронная подгрузка опций
-        var start = option.indexOf('(');
-        var end = option.lastIndexOf(')');
-        var func_name = option.substr(0, start);
-        var args = option.substr(start + 1, end - start - 1).split(',');
-        if(!args[0]) args.pop();
-        args.push('function(o) { callback(o); }');
+      try {
+        if(option.indexOf('_async') == -1) {
+          option = eval(option);
+          callback(option);
+        } else {
+          /// Асинхронная подгрузка опций
+          var start = option.indexOf('(');
+          var end = option.lastIndexOf(')');
+          var func_name = option.substr(0, start);
+          var args = option.substr(start + 1, end - start - 1).split(',');
+          if(!args[0]) args.pop();
+          args.push('function(o) { callback(o); }');
 
-        try {
-          eval(func_name + '(' + args.join(',') + ')');
-        } catch(e) {
-          console.log(e, 'error in evaluating "' + func_name + '(' + args.join(',') + ')' + '"');
+          try {
+            eval(func_name + '(' + args.join(',') + ')');
+          } catch(e) {
+            console.log(e, 'error in evaluating "' + func_name + '(' + args.join(',') + ')' + '"');
+          }
         }
+      } catch(e) {
+        console.log(e, 'error in evaluating "' + option + '"');
+        if(callback) callback(null);
       }
     } else {
       callback(option);
@@ -1570,7 +1575,7 @@
           if(have_options && have_default) {
             drawFunc();
           }
-        });
+        }, widget, params);
         if(isDefault) {
           evaluate_options(this.default, function(val) {
             have_default = true;
@@ -1579,7 +1584,7 @@
             if(have_options && have_default) {
               drawFunc();
             }
-          });
+          }, widget, params);
         } else {
           have_default = true;
           if(have_options && have_default) {

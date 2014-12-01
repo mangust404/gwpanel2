@@ -85,7 +85,7 @@
           panel.dispatchException(e);
         }
       });
-      $next_button.removeClass('ui-disabled');
+      if($next_button) $next_button.removeClass('ui-disabled');
     });
     $content.trigger('create');
     
@@ -279,6 +279,8 @@ jQuery.extend(panel, {
   * Мастер настроек. Вызывается когда настроек нет.
   **/
   panel_master: function() {
+    panel.hideAllPanes();
+
     panel.loadScript('panel/panel_settings.js', function() {
       panel.panel_settings_init(function() {
         var $master = $('<div id="panel-settings-editor" class="ui-page-theme-a ui-popup ui-overlay-shadow ui-corner-all">\

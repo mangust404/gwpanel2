@@ -92,6 +92,13 @@
       "img": "settings.png",
       "description": "Кнопка настроек для текущей страницы"
     },
+    "master": {
+      "title": "Мастер настроек",
+      "callback": "panel_master",
+      "file": "panel_master.js",
+      "img": "settings.png",
+      "description": "Кнопка, открывающая мастер настроек"
+    },
     "exit": {
       "title": "Выход",
       "callback": "panel_exit",
