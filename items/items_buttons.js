@@ -135,11 +135,17 @@
               .html(data)
               .find('input[name=saveperks]').closest('form');
 
+            var currentSkills = {};
+
             if($form.length > 0) {
               try {
                 $.each(options, function(key, value) {
                   if($.type(value) == 'string') {
-                    $form.find('input[name=' + key + ']').removeAttr('checked');
+                    var $elem = $form.find('input[name=' + key + '][checked]');
+                    if($elem.length > 0) {
+                      currentSkills[$elem.attr('name')] = $elem.attr('value');
+                    }
+                    $elem.removeAttr('checked');
                     if(value != '') {
                       $form.find('input[name=' + key + '][value="' + value + '"]')
                         .attr('checked', 'checked');
@@ -156,10 +162,13 @@
                   var $form = $('<div>').hide().appendTo(document.body)
                     .html(data)
                     .find('input[name=saveperks]').closest('form');
+                  var changed = {};
                   $form.find('input[type=radio][checked]').each(function() {
                     var name = this.name;
-                    if(name.charAt(name.length - 1) == ' ') {
-                      name = name.substr(0, name.length - 1);
+                    if(currentSkills[name] != options[name]) {
+                      var __title = $(this).parents('tr').last().prev().text();
+                      var __value = $(this).closest('td').next().find('b').text() || 'нет';
+                      changed[__title] = __value;
                     }
                     if(this.value != options[name]) {
                       $that.addClass('button-error');
@@ -170,6 +179,14 @@
                     }
                   });
                   if(!$that.hasClass('button-error')) {
+                    if(Object.keys(changed).length > 0) {
+                      var msg = '<p>Изменены навыки:</p><ul>';
+                      for(var title in changed) {
+                        msg += '<li>' + title + ' &ndash; <b>' + changed[title] + '</b></li>';
+                      }
+                      msg += '</ul>';
+                      panel.showFlash(msg, 'message', 3000);
+                    }
                     $that.addClass('button-ok');
                     if(callback) {
                       callback();
