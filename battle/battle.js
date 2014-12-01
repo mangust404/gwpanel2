@@ -360,7 +360,7 @@ $.extend(panel, {
             } else if(location.href.indexOf('bid=') > -1) {
               location.href = location.href;
             } else {
-              location.href = location.href + '?bid=' + document.forms.battleform.bid.value;
+              location.href = location.href + '?bid=' + (document.forms.battleform? document.forms.battleform.bid.value: document.forms.battlechat.bid.value);
             }
           });
         }
