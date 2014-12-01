@@ -2510,11 +2510,13 @@ window.Panel2 = new function() {
 
             if(loaded >= new_version - old_version) {
               /// всё обновлено до последней версии
-              __panel.showFlash('Произошло обновление системы. Новая версия: ' 
-                + new_version + '.' + 
-                ($('#panel-settings-editor:visible').length? '': 
-                  '<br />Посмотреть <a href="#release-notes" onclick="__panel.loadScript(&quot;panel/panel_settings.js&quot;, function() { __panel.panel_settings_editor(&quot;release_notes&quot;); }); return false;">заметки к выпуску</a>.'), 
-                'message');
+              if(old_version > 0) {
+                __panel.showFlash('Произошло обновление системы. Новая версия: ' 
+                  + new_version + '.' + 
+                  ($('#panel-settings-editor:visible').length? '': 
+                    '<br />Посмотреть <a href="#release-notes" onclick="__panel.loadScript(&quot;panel/panel_settings.js&quot;, function() { __panel.panel_settings_editor(&quot;release_notes&quot;); }); return false;">заметки к выпуску</a>.'), 
+                  'message');
+              }
               instance.set('release_notes', notes);
               /// Выставляем версию
               version = new_version;
