@@ -101,8 +101,8 @@ window.Panel2 = new function() {
   var haveServerSync = false;
   
   /// Списки таймаутов и интервалов, которые не нужно удалять при AJAX-переходах
-  var safeIntervals = [];
   var safeTimeouts = [];
+  var notSafeTimeouts = [];
 
   /// последние запомненные таймауты и интервалы
   var lastTimeout = 0;
@@ -280,7 +280,7 @@ window.Panel2 = new function() {
           } else {
             $button.appendTo(paneContainer);
           }
-          instance.setTimeout(function() {
+          setTimeout(function() {
             if($button.find('h3').get(0).clientHeight > 30) {
               $button.find('h3').addClass('big');
             }
@@ -1189,7 +1189,7 @@ window.Panel2 = new function() {
         __initFunc();
         initInterface();
         /// функция загрузки css довольно долгая, так что выполняем её параллельно
-        instance.setTimeout(function() {
+        setTimeout(function() {
           instance.loadCSS('panel.css');
         }, 1);
         checkTime('fastInit');
@@ -1222,7 +1222,7 @@ window.Panel2 = new function() {
         if(environment == 'testing' && location.search.indexOf('gwpanel_pause') != -1) {
           instance.__ready = __initFunc;
         } else {
-          instance.setTimeout(instance.__load, 1);
+          setTimeout(instance.__load, 1);
         }
       }, domain);
       checkTime('crossWindow init');
@@ -1354,6 +1354,36 @@ window.Panel2 = new function() {
       });
 
       $(window).bind('beforeunload', instance.tearDown);
+
+      /// Запускаем выполнение эффектов запуском фейкового события, это нужно
+      /// для того чтобы jQuery проинициализировал свои tick-функции обычным 
+      /// setTimeout, чтобы мы его не затёрли
+      $('<div>').animate({top: 1});
+
+      window.osetTimeout = window.setTimeout;
+      window.osetInterval = window.setInterval;
+      window.setTimeout = function(c, t, safe) {
+        var id = window.osetTimeout(c, t);
+        if((arguments.callee && 
+           arguments.callee.caller &&
+           arguments.callee.caller.toString().indexOf('createFxNow') > -1) ||
+           safe ) {
+        } else {
+          notSafeTimeouts.push(id);
+        }
+        return id;
+      }
+      window.setInterval = function(c, t, safe) {
+        var id = window.osetInterval(c, t);
+        if((arguments.callee && 
+           arguments.callee.caller &&
+           arguments.callee.caller.toString().indexOf('createFxNow') > -1) ||
+           safe ) {
+        } else {
+          notSafeTimeouts.push(id);
+        }
+        return id;
+      }
     },
     /**
     * Обработка исключений. Если есть консоль, то выводим в консоль.
@@ -2105,7 +2135,8 @@ window.Panel2 = new function() {
         $(this).animate({bottom: parseInt($(this).css('bottom')) + 50});
       });
 
-      var $flash = $('<div class="panel-flash"></div>').css({bottom: -40}).addClass(type).html(text)
+      var $flash = $('<div class="panel-flash"></div>').css({bottom: -40})
+        .addClass(type).html(text)
         .appendTo(document.body).click(function() {
           $(this).clearQueue();
           $(this).fadeOut(function() {
@@ -2124,19 +2155,27 @@ window.Panel2 = new function() {
     },
 
     clearTimeouts: function (w) {
-      if(!w) w = window;
-      var s = w.setTimeout('void 0;', 1000);
-      for(var i = lastTimeout; i <= s; i++) {
-        if(safeTimeouts.indexOf(i) == -1 && safeIntervals.indexOf(i) == -1) {
-          w.clearTimeout(i);
-          w.clearInterval(i);
-        }
-      };
+      //if(!w) w = window;
+      for(var i = 0; i < notSafeTimeouts.length; i++) {
+        clearTimeout(notSafeTimeouts[i]);
+      }
+      notSafeTimeouts = [];
       /// Останавливаем выполнение всех эффектов
-      $.fx.stop();
+      //$.fx.stop();
+      //var jqTimerId = $.fx.getTimerId();
+      //console.log('jqTimerId', jqTimerId);
+
+      //var s = w.setTimeout('void 0;', 1000);
+      /*for(var i = lastTimeout; i <= s; i++) {
+        if(safeTimeouts.indexOf(i) == -1 &&
+           jqTimerId != i) {
+          console.log('clearing to: ', i);
+          w.clearTimeout(i);
+        }
+      };*/
       /// Запускаем выполнение эффектов запуском фейкового события
-      $('<div>').animate({top: 1});
-      lastTimeout = s;
+      //$('<div>').animate({top: 1});
+      //lastTimeout = s;
     },
 
     /**
@@ -2474,11 +2513,13 @@ window.Panel2 = new function() {
 
             if(loaded >= new_version - old_version) {
               /// всё обновлено до последней версии
-              __panel.showFlash('Произошло обновление системы. Новая версия: ' 
-                + new_version + '.' + 
-                ($('#panel-settings-editor:visible').length? '': 
-                  '<br />Посмотреть <a href="#release-notes" onclick="__panel.loadScript(&quot;panel/panel_settings.js&quot;, function() { __panel.panel_settings_editor(&quot;release_notes&quot;); }); return false;">заметки к выпуску</a>.'), 
-                'message');
+              if(old_version > 0) {
+                __panel.showFlash('Произошло обновление системы. Новая версия: ' 
+                  + new_version + '.' + 
+                  ($('#panel-settings-editor:visible').length? '': 
+                    '<br />Посмотреть <a href="#release-notes" onclick="__panel.loadScript(&quot;panel/panel_settings.js&quot;, function() { __panel.panel_settings_editor(&quot;release_notes&quot;); }); return false;">заметки к выпуску</a>.'), 
+                  'message');
+              }
               instance.set('release_notes', notes);
               /// Выставляем версию
               version = new_version;
@@ -2719,10 +2760,8 @@ window.Panel2 = new function() {
     setInterval: function(func, timeout) {
       var i = setInterval(function() {
         func();
-        var index = safeIntervals.indexOf(i);
-        safeTimeouts.splice(index, 1);
-      }, timeout);
-      safeIntervals.push(i);
+      }, timeout, true);
+      safeTimeouts.push(i);
       return i;
     },
 
@@ -2732,15 +2771,21 @@ window.Panel2 = new function() {
     * ваши таймауты никогда не выполнятся, т.к. они затираются
     */
     setTimeout: function(func, timeout) {
-      var i = setTimeout(function() {
+      var id = setTimeout(function() {
         func();
-        var index = safeTimeouts.indexOf(i);
-        safeTimeouts.splice(index, 1);
-      }, timeout);
-      safeTimeouts.push(i);
-      return i;
+        instance.clearTimeout(i);
+      }, timeout, true);
+      safeTimeouts.push(id);
+      return id;
     },
 
+    clearTimeout: function(id) {
+      clearTimeout(id);
+      var index = safeTimeouts.indexOf(id);
+      if(index > -1) {
+        safeTimeouts.splice(index, 1);
+      }
+    },
     /**
     * Интервал, который сработает через указанный промежуток
     * даже после перезагрузки страницы (после перезагрузки вы должны 
@@ -2796,7 +2841,7 @@ window.Panel2 = new function() {
         var now = (new Date).getTime();
         if(nextRun > now) {
           // откладываем запуск
-          instance.setTimeout(function() {
+          setTimeout(function() {
             callback();
             start();
           }, now - nextRun);

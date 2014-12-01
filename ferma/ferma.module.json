@@ -4,11 +4,14 @@
   "title": "Модуль для Фермы",
   "weight": 5, 
   "pages": {
-    "/ferma.php": ["ferma_hotkeys"]
+    "/ferma.php": ["ferma_hotkeys", "ferma_statistics"]
   },
   "methods": {
     "ferma_hotkeys": {
       "title": "горячие клавиши и удобные кнопки",
+      "file": "ferma.js"
+    },
+    "ferma_statistics": {
       "file": "ferma.js"
     }
   }
