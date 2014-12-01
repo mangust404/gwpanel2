@@ -16,7 +16,7 @@
     // отменяем предыдущий запрос
     if(xhr) xhr.abort();
 
-    if(loaderTO > 0) clearTimeout(loaderTO);
+    if(loaderTO > 0) panel.clearTimeout(loaderTO);
     /// показываем крутилку если запрос длится больше 300 миллисекунд
     loaderTO = panel.setTimeout(function() {
       $(document.body).addClass('ajax-loading');
@@ -529,7 +529,7 @@
         history.pushState(lastState, document.title, href);
       }
       $(document.body).addClass(window.location.pathname.replace(/\./g, '-').replace(/\//g, '_').substr(1));
-      clearTimeout(loaderTO);
+      panel.clearTimeout(loaderTO);
       loaderTO = 0;
       $(document.body).removeClass('ajax-loading');
 
