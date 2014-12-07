@@ -228,20 +228,23 @@ jQuery.extend(panel, {
       var $first_tr;
       var trFound;
       /// находим все предметы удовлетворяющие условию
-      $('a[href*="' + seek + '"]').each(function() {
-        var $item_tr = $(this).closest('tr[id*="item_tr"]');
-        if(!$first_tr) $first_tr = $item_tr;
-        if($item_tr.length > 0 && $item_tr.find('a[href*="workshop.php"]').length > 0) {
-          /// точное соответствие найдено
-          $item_tr.css({
-            'background-color': '#ffe0e0'
-          })
-          $('html,body').animate({
-            scrollTop: $item_tr.offset().top - 40
-          }, 1000);
-          trFound = true;
-        }
-      });
+      $('a[href$="' + seek + '"], a[href$="' + seek + '_box"]')
+        .each(function() {
+          var $item_tr = $(this).closest('tr[id*="item_tr"]');
+          if($item_tr.length > 0) {
+            if(!$first_tr) $first_tr = $item_tr;
+            if($item_tr.find('a[href*="workshop.php"]').length > 0) {
+              /// точное соответствие найдено
+              $item_tr.css({
+                'background-color': '#ffe0e0'
+              })
+              $('html,body').animate({
+                scrollTop: $item_tr.offset().top - 40
+              }, 1000);
+              trFound = true;
+            }
+          }
+        });
       /// соответствие не найдено, переходим к первому похожему
       if(!trFound && $first_tr && $first_tr.length > 0) {
         $('html,body').animate({
@@ -251,10 +254,14 @@ jQuery.extend(panel, {
         /// Предлагаем "Где купить"
         panel.loadScript('items/items_data.js', function() {
           var ar = seek.split('&');
-          if(panel.items_synd_grenades.indexOf(ar[0]) > -1) {
-            panel.showFlash('В инвентаре не найдена граната. <a href="' + 
+          if(panel.items_synd_grenades.indexOf(ar[0]) > -1 ) {
+            panel.showFlash('В инвентаре не найдена синдовая граната. <a href="' + 
                             'http://www.ganjawars.ru/sshop.php?seek=' + 
                             ar[0] + '">Перейти в магазин.</a>', 5000);
+          } else if(panel.items_grenades.indexOf(ar[0]) > -1) {
+            panel.showFlash('В инвентаре не найдена граната. <a href="' + 
+                            'http://www.ganjawars.ru/market.php?buy=1&item_id=' + 
+                            ar[0] + '">Где купить?</a>', 5000);
           } else {
             panel.showFlash('В инвентаре не найден этот предмет. <a href="' + 
                             'http://www.ganjawars.ru/market.php?buy=1&item_id=' + 
@@ -265,26 +272,28 @@ jQuery.extend(panel, {
     }
 
     $(function() {
-      var originalPostdo = window.postdo;
-      if(originalPostdo.toString().indexOf('originalPostdo') == -1) {
-        window.postdo = function(href) {
-          var $js_window = $('#js_window').clone();
-          $.ajax(href, {
-            success: function(data) {
-              if(panel.panel_ajaxify) {
-                panel.ajaxUpdateContent(data, location.href);
-                $js_window.appendTo('#gw-content');
-                panel.ajaxTearDown();
-                panel.ajaxRefresh();
-              } else {
-                $('#itemsbody').html(data);
-                $js_window.insertBefore('#itemsbody');
+      setTimeout(function() {
+        var originalPostdo = window.postdo;
+        if(originalPostdo.toString().indexOf('originalPostdo') == -1) {
+          window.postdo = function(href) {
+            var $js_window = $('#js_window').clone();
+            $.ajax(href, {
+              success: function(data) {
+                if(panel.panel_ajaxify) {
+                  panel.ajaxUpdateContent(data, 'http://www.ganjawars.ru/items.php');
+                  $js_window.appendTo('#gw-content');
+                  panel.ajaxTearDown();
+                  panel.ajaxRefresh();
+                } else {
+                  $('#itemsbody').html(data);
+                  $js_window.insertBefore('#itemsbody');
+                }
               }
-            }
-          });
-          return false;
+            });
+            return false;
+          }
         }
-      }
+      }, 500);
     });
   },
 

@@ -40,6 +40,32 @@ jQuery.extend(panel, {
     'ghtb',
     'me85'
   ],
+  items_grenades: [
+    'rgd5', 
+    'grenade_f1',
+    'rgd2',
+    'lightst',
+    'lights',
+    'rkg3',
+    'mdn',
+    'rgd2m',
+    'rgo',
+    'm84',
+    'rgn',
+    'emp_ir',
+    'fg3l',
+    'l83a1',
+    'emp_s',
+    'm67',
+    'm3',
+    'hg78',
+    'hg84',
+    'fg6',
+    'anm14',
+    'm34ph',
+    'fg7',
+    'fg8bd'
+  ],
 
   items_skills_parser: function(callback) {
     panel.loadScript('panel/panel_ajax.js', function() {
