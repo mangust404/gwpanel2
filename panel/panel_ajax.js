@@ -1,7 +1,5 @@
 (function(panel, $) {
 
-  var xhr;
-
   var prevScrollTop;
 
   var loaderTO;
@@ -14,7 +12,7 @@
 
   function ajaxGoto(href, callback, refresh) {
     // отменяем предыдущий запрос
-    if(xhr) xhr.abort();
+    if(this.__xhr) this.__xhr.abort();
 
     if(loaderTO > 0) panel.clearTimeout(loaderTO);
     /// показываем крутилку если запрос длится больше 300 миллисекунд
@@ -30,7 +28,7 @@
     prevScrollTop = $(window).scrollTop();
     $.ajax(goto_href, {
       success: function(data) {
-        var final_url = xhr.responseURL || href;
+        var final_url = this.__xhr.responseURL || href;
         final_url = final_url.replace('&ajax', '').replace('?ajax', '');
         /// отметка "JQS loaded" появляется только на домене www
         if(final_url.indexOf('www.ganjawars.ru') > -1  && 
@@ -123,7 +121,7 @@
             if(href == 'object-hdo.php') {
               href = location.href;
             }
-            var final_url = xhr.responseURL || href;
+            var final_url = this.__xhr.responseURL || href;
 
             if(final_url.indexOf('www.ganjawars.ru') > -1  &&
                data.indexOf('JQS loaded.') == -1) {
@@ -161,7 +159,7 @@
         var s_data = $('input.form-' + form_id + ', textarea.form-' + form_id + ', select.form-' + form_id).serializeArray();
         $form.sendForm({
           data: s_data, success: function(data) {
-            var final_url = __panel.responseURL() || $this.attr('action');
+            var final_url = this.__xhr.responseURL || $this.attr('action');
 
             if(final_url.indexOf('www.ganjawars.ru') > -1  &&
                data.indexOf('JQS loaded.') == -1) {
@@ -544,23 +542,22 @@
     * её реализовали совсем недавно, см. http://stackoverflow.com/questions/8056277/how-to-get-response-url-in-xmlhttprequest
     */
     responseURL: function() {
-      if(xhr) {
-        return xhr.responseURL;
-      } else {
-        return location.href;
+      if(this.__xhr && this.__xhr.responseURL && this.__xhr.responseURL.indexOf('getstate.php') == -1) {
+        return this.__xhr.responseURL;
       }
+      return location.href;
     }
 
   });
 
   var _orgAjax = jQuery.ajaxSettings.xhr;
   jQuery.ajaxSettings.xhr = function () {
-    xhr = _orgAjax();
-    var origonreadystatechange = xhr.onreadystatechange;
-    xhr.onreadystatechange = function() {
+    this.__xhr = _orgAjax();
+    var origonreadystatechange = this.__xhr.onreadystatechange;
+    this.__xhr.onreadystatechange = function() {
       if(origonreadystatechange) origonreadystatechange();
     }
-    return xhr;
+    return this.__xhr;
   };
 
   /**
@@ -884,8 +881,8 @@ $.fn.html = function(html) {
 
       $(this).sendForm({
         data: $('.gwp-form-' + index + '-item:not([type=submit]):not([type=image])').serializeArray(),
-        success: function(data) {
-          var final_url = __panel.responseURL() || $this.attr('action');
+        success: function(data, transport) {
+          var final_url = this.__xhr.responseURL || $this.attr('action');
           
           if(final_url.indexOf('www.ganjawars.ru') > -1  &&
              data.indexOf('JQS loaded.') == -1) {
