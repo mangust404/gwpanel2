@@ -1542,31 +1542,33 @@ QUnit.asyncTest('Тестирование функции getCached с истеч
             assert.equal(generator, 1, 'Генератор должен быть вызван один раз');
             /// привязываемся к событию, которое очистит кеш
             __panel.bind(event_name, function() {
-              /// сейчас должен быть вызван генератор
-              __panel.getCached(runFunc, function(data) {
-                assert.equal(data, val2);
-                assert.equal(generator, 2, 'Генератор должен быть вызван два раза');
-                /// ещё раз вызываем вторую функцию чтобы объект listeners[event_name]
-                /// содержал хоть что-нибудь т.к. после вызова события он будет пустой
-                __panel.getCached(secondFunc, function(data) {
-                  assert.equal(data, '123');
-                  __panel.get('cacheListeners', function(listeners) {
-                    //console.log('cacheListeners after secondFunc', JSON.stringify(listeners));
-                    __panel.clearCached(runFunc, function() {
-                      __panel.get('cacheListeners', function(listeners) {
-                        //console.log('cacheListeners after clean runFunc', JSON.stringify(listeners));
-                        assert.equal(jQuery.type(listeners[event_name]), 'array', 
-                          'Нужное осталось');
-                        assert.equal(jQuery.type(listeners[event_name][cid]), 'undefined', 
-                          'Мусор подчищен');
-                        //console.log('cleaned listeners: ', JSON.stringify(listeners));
-                        __panel.clearCached(secondFunc);
-                        QUnit.start();
+              setTimeout(function() {
+                /// сейчас должен быть вызван генератор
+                __panel.getCached(runFunc, function(data) {
+                  assert.equal(data, val2);
+                  assert.equal(generator, 2, 'Генератор должен быть вызван два раза');
+                  /// ещё раз вызываем вторую функцию чтобы объект listeners[event_name]
+                  /// содержал хоть что-нибудь т.к. после вызова события он будет пустой
+                  __panel.getCached(secondFunc, function(data) {
+                    assert.equal(data, '123');
+                    __panel.get('cacheListeners', function(listeners) {
+                      //console.log('cacheListeners after secondFunc', JSON.stringify(listeners));
+                      __panel.clearCached(runFunc, function() {
+                        __panel.get('cacheListeners', function(listeners) {
+                          //console.log('cacheListeners after clean runFunc', JSON.stringify(listeners));
+                          assert.equal(jQuery.type(listeners[event_name]), 'array', 
+                            'Нужное осталось');
+                          assert.equal(jQuery.type(listeners[event_name][cid]), 'undefined', 
+                            'Мусор подчищен');
+                          //console.log('cleaned listeners: ', JSON.stringify(listeners));
+                          __panel.clearCached(secondFunc);
+                          QUnit.start();
+                        });
                       });
                     });
-                  });
+                  }, event_name);
                 }, event_name);
-              }, event_name);
+              }, 500);
             });
             __panel.triggerEvent(event_name);
           }, event_name);

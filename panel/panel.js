@@ -2354,7 +2354,7 @@ window.Panel2 = new function() {
             ) {
             /// Генерируем
             data = {
-              type: isNaN(condition)? 'event': 'time'
+              type: isNaN(parseInt(condition))? 'event': 'time'
             };
             var runFunc = function() {
               /// запускаем генератор
