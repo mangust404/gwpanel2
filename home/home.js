@@ -2,7 +2,6 @@
 jQuery.extend(panel, {
 
   home_get_items: function(items, callback) {
-    console.log(items, 'home_get_items');
     panel.loadScript('data/items_db.js', function() {
       var result = {};
       $.each(items, function(i, item_id) {

@@ -6131,7 +6131,284 @@
         "shop": "rent",
         "type": "armour",
         "isWear": true
-      }
+      },
+      "lightss": {
+        "name": "ОР-1С",
+        "cost": 333,
+        "weight": 0,
+        "dura": 1,
+        "minLvl": 17,
+        "damage": "1-10",
+        "precision": 100,
+        "range": 12,
+        "shop": "synd",
+        "isWeapon": true
+      },
+      "lightsm": {
+        "name": "ОР-2C",
+        "weight": 0,
+        "dura": 1,
+        "minLvl": 21,
+        "damage": "1-15",
+        "precision": 100,
+        "range": 20,
+        "shop": "synd",
+        "isWeapon": true
+      },
+      "rgd2s": {
+        "name": "РГД-2С",
+        "weight": 0,
+        "dura": 1,
+        "minLvl": 18,
+        "damage": "5-15",
+        "precision": 100,
+        "range": 15,
+        "shop": "synd",
+        "isWeapon": true
+      },
+      "grenade_dg1": {
+        "name": "ДГ-1",
+        "weight": 0,
+        "dura": 1,
+        "minLvl": 20,
+        "damage": "5-15",
+        "precision": 100,
+        "range": 20,
+        "shop": "synd",
+        "isWeapon": true
+      },
+      "fg5": {
+        "name": "Mk-5 Frag Grenade",
+        "weight": 0,
+        "dura": 1,
+        "minLvl": 25,
+        "damage": "50-100",
+        "precision": 100,
+        "range": 6,
+        "area": 2,
+        "shop": "synd",
+        "isWeapon": true
+      },
+      "molotov": {
+        "name": "Коктейль Молотова",
+        "weight": 1,
+        "dura": 1,
+        "minLvl": 24,
+        "damage": "45-55",
+        "precision": 100,
+        "range": 6,
+        "area": 1,
+        "shop": "synd",
+        "isWeapon": true
+      },
+      "hellsbreath": {
+        "name": "HellsBreath",
+        "cost": 1333,
+        "weight": 0,
+        "dura": 1,
+        "minLvl": 34,
+        "damage": "70-90",
+        "precision": 100,
+        "range": 10,
+        "area": 1,
+        "shop": "synd",
+        "isWeapon": true
+      },
+      "napalm": {
+        "name": "Напалм",
+        "weight": 1,
+        "dura": 1,
+        "minLvl": 29,
+        "damage": "20-30",
+        "precision": 100,
+        "range": 10,
+        "area": 2,
+        "shop": "synd",
+        "isWeapon": true
+      },
+      "ghtb": {
+        "name": "GHTB",
+        "cost": 1222,
+        "weight": 1,
+        "dura": 1,
+        "minLvl": 40,
+        "damage": "90-110",
+        "precision": 100,
+        "range": 12,
+        "area": 1,
+        "shop": "synd",
+        "isWeapon": true
+      },
+      "me85": {
+        "name": "ME-85 Frag Grenade",
+        "cost": 1111,
+        "weight": 0,
+        "dura": 1,
+        "minLvl": 42,
+        "damage": "128-150",
+        "precision": 100,
+        "range": 17,
+        "area": 2,
+        "shop": "synd",
+        "isWeapon": true
+      },
+      "chip_armour1": {
+        "name": "Чип брони",
+        "cost": 10000,
+        "weight": 0,
+        "dura": 100,
+        "minLvl": 0,
+        "shop": "synd"
+      },
+      "chip_armour": {
+        "name": "Чип защиты",
+        "cost": 26000,
+        "weight": 0,
+        "dura": 100,
+        "minLvl": 0,
+        "shop": "synd"
+      },
+      "chip_armour2": {
+        "name": "Чип брони 2 класса",
+        "cost": 20000,
+        "weight": 0,
+        "dura": 100,
+        "minLvl": 0,
+        "shop": "synd"
+      },
+      "chip_armour3": {
+        "name": "Чип брони 3 класса",
+        "cost": 20000,
+        "weight": 0,
+        "dura": 100,
+        "minLvl": 0,
+        "shop": "synd"
+      },
+      "chipset_bonus1": {
+        "name": "Чип самолечения",
+        "cost": 17333,
+        "weight": 0,
+        "dura": 100,
+        "minLvl": 0,
+        "shop": "synd"
+      },
+      "chipset_bonus2": {
+        "name": "Чип адреналина",
+        "cost": 8667,
+        "weight": 0,
+        "dura": 100,
+        "minLvl": 0,
+        "shop": "synd"
+      },
+      "chipset_bonus3": {
+        "name": "Чип \"Антикиллер\"",
+        "cost": 8667,
+        "weight": 0,
+        "dura": 100,
+        "minLvl": 0,
+        "shop": "synd"
+      },
+      "chipset_bonus4": {
+        "name": "Чип \"Skillmaster\"",
+        "cost": 8667,
+        "weight": 0,
+        "dura": 100,
+        "minLvl": 0,
+        "shop": "synd"
+      },
+      "chip_explosives": {
+        "name": "Чип взрывотехника",
+        "cost": 11267,
+        "weight": 0,
+        "dura": 100,
+        "minLvl": 0,
+        "shop": "synd"
+      },
+      "chipset_bonus5": {
+        "name": "Чип самолечения 2 класса",
+        "cost": 26000,
+        "weight": 0,
+        "dura": 100,
+        "minLvl": 0,
+        "shop": "synd"
+      },
+      "chipset_bonus6": {
+        "name": "Чип здоровья 2 класса",
+        "cost": 26000,
+        "weight": 0,
+        "dura": 100,
+        "minLvl": 0,
+        "shop": "synd"
+      },
+      "chipset_bonus7": {
+        "name": "Чип здоровья",
+        "cost": 26000,
+        "weight": 0,
+        "dura": 100,
+        "minLvl": 0,
+        "shop": "synd"
+      },
+      "chip_attack": {
+        "name": "Чип атаки",
+        "cost": 26000,
+        "weight": 0,
+        "dura": 100,
+        "minLvl": 0,
+        "shop": "synd"
+      },
+      "heavysg": {
+        "name": "Heavy Sentry Gun",
+        "cost": 2222,
+        "weight": 1,
+        "dura": 100,
+        "minLvl": 0,
+        "damage": "18-24",
+        "precision": 35,
+        "range": 19,
+        "shots": 36,
+        "shop": "synd",
+        "isWeapon": true
+      },
+      "tavor": {
+        "name": "Tavor Sentry Gun",
+        "cost": 2222,
+        "weight": 1,
+        "dura": 100,
+        "minLvl": 0,
+        "damage": "24-35",
+        "precision": 80,
+        "range": 23,
+        "shots": 17,
+        "shop": "synd",
+        "isWeapon": true
+      },
+      "larue": {
+        "name": "Larue Sniper Stationary",
+        "cost": 2222,
+        "weight": 1,
+        "dura": 100,
+        "minLvl": 0,
+        "damage": "105-115",
+        "precision": 100,
+        "range": 26,
+        "shots": 1,
+        "shop": "synd",
+        "isWeapon": true
+      },
+      "ga2gl": {
+        "name": "GA2 Launcher Station",
+        "cost": 2222,
+        "weight": 1,
+        "dura": 100,
+        "minLvl": 0,
+        "damage": "60-70",
+        "precision": 80,
+        "range": 21,
+        "shots": 1,
+        "area": 1,
+        "shop": "synd",
+        "isWeapon": true
+      }      
     },
 
     /**

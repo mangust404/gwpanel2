@@ -38,8 +38,13 @@
       jQuery.each(shops, function(shopType, shopUrl) {
         jQuery.ajax('http://www.ganjawars.ru' + shopUrl, {
           success: function(shopData) {
-            jQuery(shopData).find('a[href*="' + shopUrl + '?shop="]').each(function() {
-              var itemType = this.href.split(shopUrl + '?shop=')[1].split('_')[1];
+            jQuery(shopData).find('a[href*="' + shopUrl + '?shop="], \
+                                   a[href*="' + shopUrl + '?tshop="]').each(function() {
+              if(this.href.indexOf('tshop=') > -1) {
+                var itemType = this.href.split(shopUrl + '?tshop=')[1].split('_')[1];
+              } else {
+                var itemType = this.href.split(shopUrl + '?shop=')[1].split('_')[1];
+              }
               jQuery.ajax(this.href, {
                 success: function(itemTypeData) {
                   var $itemTypeData = jQuery(itemTypeData);
