@@ -1,34 +1,61 @@
 (function(panel, $) {
 jQuery.extend(panel, {
+
+  home_get_items: function(items, callback) {
+    console.log(items, 'home_get_items');
+    panel.loadScript('data/items_db.js', function() {
+      var result = {};
+      $.each(items, function(i, item_id) {
+        result[item_id] = panel.items_db[item_id];
+      });
+      callback(result);
+    });
+  },
+
   home_durability: function(options) {
-    __panel.loadScript('data/items.js', function() {
-    for(var i = 0; i < document.links.length; i++) {
-      if(document.links[i].href.indexOf('?item_id=') != -1 && (document.links[i].innerHTML.indexOf('<img') != -1 || document.links[i].innerHTML.indexOf('<IMG') != -1)) {
-        try {
-          var img = document.links[i].firstChild.tagName && document.links[i].firstChild.tagName.toUpperCase() == 'IMG'? document.links[i].firstChild: document.links[i].childNodes[1];
-          if(!img) continue;
-          var ar = img.title.split('/');
-          if(ar.length < 2) continue;
-          for(var j = 0; j < ar.length; j++) {
-            if(ar[j] < 4) ar[j] = '<font style="color: red; font-weight: bold;">' + ar[j] + '</font>';
-          };
-          var mods = document.links[i].href.match(/item_id=([^=]+)&m=([0-9]+)/);
-          var mod_add = '';
-          if(mods) {
-            var item_id = mods[1];
-            var mod = mods[2];
-              if(__panel.wear_string.indexOf(item_id) == -1) {
-                //Это оружие
-                if(__panel.mods_weapon[mod]) mod_add = '<font style="color: green; display: block; font-weight: bold; position: absolute; margin: -26px 0 0 17px; background: #ecffed; padding: 1px 1px 0px;" title="' + __panel.mods_weapon[mod][1] + ', ' + __panel.mods_weapon[mod][3] + '; частота появления: ' + __panel.mods_weapon[mod][2] + '">' + __panel.mods_weapon[mod][0] + '</font>';
-              } else {
-                //Это броня
-                if(__panel.mods_wear[mod]) mod_add = '<font style="color: green; display: block; font-weight: bold; position: absolute; margin: -26px 0 0 17px; background: #ecffed; padding: 1px 1px 0px;" title="' + __panel.mods_wear[mod][1] + ', ' + __panel.mods_wear[mod][3] + '; частота появления: ' + __panel.mods_wear[mod][2] + '">' + __panel.mods_wear[mod][0] + '</font>';
-              };
+    var $items = $('td[bgcolor="#e9ffe9"]:has(img[src$="_s.jpg"])')
+                   .find('img[src$="_s.jpg"]').closest('a');
+    var item_ids = $items.map(function() {
+      return this.href.split('item_id=')[1].split('&')[0];
+    });
+
+    var f;
+    eval('f = function(c) { __panel.home_get_items(' + JSON.stringify(item_ids.toArray()) + ', c) }');
+    
+    __panel.loadScript('data/items_mods.js', function() {
+      panel.getCached(f, function(items) {
+        $items.each(function() {
+          var ar = this.href.split('item_id=')[1].split('&');
+          var item_id = ar[0];
+          if(ar[1]) {
+            var mod_ar = ar[1].split('=');
+            if(mod_ar[0] == 'm' && parseInt(mod_ar[1]) > 0) {
+              var modif_data;
+              if(items[item_id] && items[item_id].isWear) {
+                modif_data = __panel.mods_wear[mod_ar[1]];
+              } else if(items[item_id] && items[item_id].isWeapon) {
+                modif_data = __panel.mods_weapon[mod_ar[1]];
+              }
+
+              if(modif_data) {
+                $('<font title="' + modif_data[1] + ', ' + modif_data[3] + 
+                  '; частота появления: ' + modif_data[2] + '">' + modif_data[0] + '</font>')
+                  .css({
+                    color: 'green',
+                    display: 'block',
+                    'font-weight': 'bold',
+                    position: 'absolute',
+                    margin: '-26px 0 0 17px',
+                    background: '#ecffed',
+                    padding: '1px 1px 0px'
+                  })
+                  .appendTo(this.parentNode);
+              }
+            }
           }
-          document.links[i].parentNode.innerHTML += '<font style="display: block; text-align: center; font-size: 8px; color: #809980;">' +  ar[0] + '/' + ar[1] + (mod_add? mod_add: '') + '</font>';
-        } catch(e) {}
-      };
-    };
+
+        });
+      }, 86400);
     });
   }
 });
