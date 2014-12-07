@@ -50,7 +50,10 @@
         mlinks = {};
         return false;
       } else {
-        __goto = $('a:contains("Собрать весь урожай"), a:contains("Вскопать"), a:contains("Собрать урожай"), a:contains("Полить")').last();
+        __goto = $('a:contains("Собрать весь урожай"), \
+                    a:contains("Вскопать"), a:contains("Собрать урожай"), \
+                    a:contains("Полить"), \
+                    a:contains("Покормить")').last();
       }
     } else if(keys['space']) {
       __goto = $('td:contains("Ближайшее действие")').find('a');
@@ -171,181 +174,253 @@ jQuery.extend(__panel, {
       /// это чужая ферма
       return;
     }
-    function initProfit(profit) {
-      var result = profit || {
-              money: 0,
-              exp: 0,
-              totalMoney: 0,
-              totalExp: 0,
-              cashout: 0
-            };
-      result.cashout = result.cashout || 0;
-      return result;
-    }
+    panel.loadScript('ferma/ferma_data.js', function() {
+      var $moneyDiv = $('div:contains(Счет):last');
+      var $right_td = $($('table[background$="ferma_bg.jpg"]')
+                          .parents('table').eq(1).get(0).rows[0].cells[1]
+                       );
 
-    if(location.search.indexOf('action=extract') > -1) {
-      $gathered = $('center:contains("Вы собрали")');
-      if($gathered.length > 0) {
-        var text = $gathered.text();
-        var name = text.split('Вы собрали ')[1].split('+')[0];
-        var ar = text.match(/\+\$([0-9]+), \+([0-9\.]+) производственного/);
-        var __money = parseInt(ar[1]);
-        var __exp = parseFloat(ar[2]);
+      var ar = $moneyDiv.text().match(/Счет: \$([0-9\,]+)/);
+      if(ar) {
+        var totalMoney = parseInt(ar[1].replace(',', ''));
+      }
+      var overallMoney = totalMoney;
 
-        panel.loadScript('ferma/ferma_data.js', function() {
-          var plant;
-          $.each(panel.ferma_plants, function(id, __plant) {
-            if(__plant.name == name || 
-                // название может склоняться, пытаемся сравнить чуть по-другому
-                (__money == __plant.profit && 
-                  __exp == __plant.exp && 
-                  __plant.name.indexOf(name.substr(0, name.length - 2)) == 0
-                )
-              ) {
-              plant = __plant;
+      panel.get('plants_index', function(plants_index) {
+        plants_index = plants_index || {};
+
+        /// Собираем информацию по посадкам по их картинкам
+        var $plants = $('img[src*="/ferma/"]');
+        if($plants.length > 0) {
+          /// Подсчитываем сумму вместе с посадками
+          $('img[src*="/ferma/"]').each(function() {
+            var img = this.src.split('ferma/')[1].split('/')[0];
+            var ar = img.match(/([a-z]+)[0-9]+\.png/);
+            if(ar) {
+              var plantId = ar[1];
+              if(panel.ferma_plants[plantId]) {
+                var ar2 = $(this).parents('a').attr('href')
+                            .match(/x=([0-9]+)&y=([0-9]+)/);
+                if(ar2) {
+                  plants_index[ar2[1]] = plants_index[ar2[1]] || {};
+                  plants_index[ar2[1]][ar2[2]] = plantId;
+                }
+              }
             }
           });
-          if(!plant) {
-            console.log('Тип растений не найден');
-            return;
-          }
-          var money = parseInt(plant.profit - plant.price);
-          var exp = parseFloat(plant.exp);
-          var now = new Date;
-          now.setHours(0);
-          now.setMinutes(0);
-          now.setSeconds(0);
-          now.setMilliseconds(0);
+        }
 
-          var ar = $('div:contains(Счет)').text().match(/Счет: \$([0-9\,]+)/);
-          if(ar) {
-            var totalMoney = parseInt(ar[1].replace(',', ''));
-          }
-
-          panel.get('ferma_profit_' + now.getTime(), function(profit) {
-            profit = initProfit(profit);
-
-            profit.money += money;
-            profit.exp += exp;
-            if(profit.totalMoney > 0) {
-              profit.totalMoney = totalMoney;
+        /// Дополнительно мы должны запомнить на какой грядке что растёт, т.к.
+        /// когда происходит посадка, то там картинка seed.png, из неё не получится 
+        /// вытащить название растения
+        var planted = $right_td.text()
+                        .match(/На этой грядке растет ([^,]+),/);
+        if(planted) {
+          for(plantId in panel.ferma_plants) {
+            if(panel.ferma_plants[plantId].name == planted[1]) {
+              var ar = $('img[src$="point2.gif"]').parents('a').attr('href')
+                         .match(/x=([0-9]+)&y=([0-9]+)/);
+              if(ar) {
+                plants_index[ar[1]] = plants_index[ar[1]] || {};
+                plants_index[ar[1]][ar[2]] = plantId;
+              }
+              break;
             }
-            panel.set('ferma_profit_' + now.getTime(), profit, function() {}, true);
-            if(!profit.totalMoney) {
-              // Начинается новый день, и машины туда-сюда, высчитываем разницу
-              // за предыдущий день если есть записи за позапрошлый
-              now.setDate(now.getDate() - 2);
-              panel.get('ferma_profit_' + now.getTime(), function(profit_before_y) {
-                profit_before_y = initProfit(profit_before_y);
-                now.setDate(now.getDate() + 1);
-                panel.get('ferma_profit_' + now.getTime(), function(profit_yesterday) {
-                  profit_yesterday = initProfit(profit_yesterday);
-                  if(profit_before_y.totalMoney < profit_yesterday.totalMoney && 
-                     profit_yesterday.money > profit_yesterday.totalMoney - profit_before_y.totalMoney
-                     ) {
-                    /// деньги не снимались, мы можем вычислить разницу
-                    profit_yesterday.money = profit_yesterday.totalMoney - profit_before_y.totalMoney;
-                  }
-                  if(profit_before_y.totalExp && profit_yesterday.totalExp) {
-                    profit_yesterday.exp = profit_yesterday.totalExp - profit_before_y.totalExp;
-                  }
-                  panel.set('ferma_profit_' + now.getTime(), profit_yesterday, function() {}, true);
+          }
+        }
+
+        panel.set('plants_index', plants_index, function() {}, true);
+
+        // И, наконец подсчитываем сумму когда индекс посадок будет готов
+        for(var x in plants_index) {
+          for(var y in plants_index[x]) {
+            var plantId = plants_index[x][y];
+            if(plantId && panel.ferma_plants[plantId].profit) {
+              overallMoney += panel.ferma_plants[plantId].profit;
+            }
+          }
+        }
+        $moneyDiv.before(
+          $('<div>С посадками: <b>' + panel.convertingIntToMoney(overallMoney) + 
+            '</b></div>')
+            .css({
+              position: 'absolute',
+              opacity: 0.4
+            })
+            .attr({
+              title: 'Сколько денег у вас будет после сбора всего урожая'
+            })
+        );
+
+        function initProfit(profit) {
+          var result = profit || {
+                  money: 0,
+                  exp: 0,
+                  totalMoney: 0,
+                  totalExp: 0,
+                  cashout: 0
+                };
+          result.cashout = result.cashout || 0;
+          return result;
+        }
+
+        if(location.search.indexOf('action=extract') > -1) {
+          $gathered = $('center:contains("Вы собрали")');
+          if($gathered.length > 0) {
+            var text = $gathered.text();
+            var name = text.split('Вы собрали ')[1].split('+')[0];
+            var ar = text.match(/\+\$([0-9]+), \+([0-9\.]+) производственного/);
+            var __money = parseInt(ar[1]);
+            var __exp = parseFloat(ar[2]);
+
+            var plant;
+            $.each(panel.ferma_plants, function(id, __plant) {
+              if(__plant.name == name || 
+                  // название может склоняться, пытаемся сравнить чуть по-другому
+                  (__money == __plant.profit && 
+                    __exp == __plant.exp && 
+                    __plant.name.indexOf(name.substr(0, name.length - 2)) == 0
+                  )
+                ) {
+                plant = __plant;
+              }
+            });
+            if(!plant) {
+              console.log('Тип растений не найден');
+              return;
+            }
+            var money = parseInt(plant.profit - plant.price);
+            var exp = parseFloat(plant.exp);
+            var now = new Date;
+            now.setHours(0);
+            now.setMinutes(0);
+            now.setSeconds(0);
+            now.setMilliseconds(0);
+
+            panel.get('ferma_profit_' + now.getTime(), function(profit) {
+              profit = initProfit(profit);
+
+              profit.money += money;
+              profit.exp += exp;
+              if(profit.totalMoney > 0) {
+                profit.totalMoney = overallMoney;
+              }
+              panel.set('ferma_profit_' + now.getTime(), profit, function() {}, true);
+              if(!profit.totalMoney) {
+                // Начинается новый день, и машины туда-сюда, высчитываем разницу
+                // за предыдущий день если есть записи за позапрошлый
+                now.setDate(now.getDate() - 2);
+                panel.get('ferma_profit_' + now.getTime(), function(profit_before_y) {
+                  profit_before_y = initProfit(profit_before_y);
+                  now.setDate(now.getDate() + 1);
+                  panel.get('ferma_profit_' + now.getTime(), function(profit_yesterday) {
+                    profit_yesterday = initProfit(profit_yesterday);
+                    if(profit_before_y.totalMoney < profit_yesterday.totalMoney && 
+                       profit_yesterday.money > profit_yesterday.totalMoney - profit_before_y.totalMoney
+                       ) {
+                      /// деньги не снимались, мы можем вычислить разницу
+                      profit_yesterday.money = profit_yesterday.totalMoney - profit_before_y.totalMoney;
+                    }
+                    if(profit_before_y.totalExp && profit_yesterday.totalExp) {
+                      profit_yesterday.exp = profit_yesterday.totalExp - profit_before_y.totalExp;
+                    }
+                    panel.set('ferma_profit_' + now.getTime(), profit_yesterday, function() {}, true);
+                  }, true);
                 }, true);
+              }
+            }, true);
+          }
+        } else {
+          var __now = new Date;
+          __now.setHours(0);
+          __now.setMinutes(0);
+          __now.setSeconds(0);
+          __now.setMilliseconds(0);
+          // Поскольку сбор с грядок может производиться из двух разных мест, то
+          // следим ещё за строкой "На счете фермы" 
+          if($('form[action="/ferma.php"]').length) {
+            $balance = $('td:contains("На счете фермы"):last');
+
+            var ar = $balance.text().match(/На счете фермы \$([0-9]+), получен опыт ([0-9\.]+) ед/);
+            if(ar) {
+              panel.get('ferma_profit_' + __now.getTime(), function(profit) {
+                profit = initProfit(profit);
+                profit.totalMoney = overallMoney;
+                profit.totalExp = parseFloat(ar[2]);
+                panel.set('ferma_profit_' + __now.getTime(), profit, function() {}, true);
               }, true);
             }
-          }, true);
-        });
-      }
-    } else {
-      var __now = new Date;
-      __now.setHours(0);
-      __now.setMinutes(0);
-      __now.setSeconds(0);
-      __now.setMilliseconds(0);
-      // Поскольку сбор с грядок может производиться из двух разных мест, то
-      // следим ещё за строкой "На счете фермы" 
-      if($('form[action="/ferma.php"]').length) {
-        $balance = $('td:contains("На счете фермы"):last');
-
-        var ar = $balance.text().match(/На счете фермы \$([0-9]+), получен опыт ([0-9\.]+) ед/);
-        if(ar) {
-          panel.get('ferma_profit_' + __now.getTime(), function(profit) {
-            profit = initProfit(profit);
-            profit.totalMoney = parseInt(ar[1]);
-            profit.totalExp = parseFloat(ar[2]);
-            panel.set('ferma_profit_' + __now.getTime(), profit, function() {}, true);
-          }, true);
+          } else {
+            // парсим деньги 
+            var totalMoney = parseInt(ar[1].replace(',', ''));
+            panel.get('ferma_profit_' + __now.getTime(), function(profit) {
+              profit = initProfit(profit);
+              if(profit && profit.totalMoney > overallMoney) {
+                /// со счёта были сняты деньги, не учитываем их в рассчётах
+                profit.cashout = profit.cashout - (profit.totalMoney - overallMoney);
+                profit.totalMoney = overallMoney;
+                panel.set('ferma_profit_' + __now.getTime(), profit, function() {}, true);
+              } else if(profit.totalMoney != overallMoney) {
+                /// просто обновляем счёт
+                profit.totalMoney = overallMoney;
+                panel.set('ferma_profit_' + __now.getTime(), profit, function() {}, true);
+              }
+            }, true);
+          }
         }
-      } else {
-        // парсим деньги 
-        var ar = $('div:contains(Счет)').text().match(/Счет: \$([0-9\,]+)/);
-        if(ar) {
-          var totalMoney = parseInt(ar[1].replace(',', ''));
-          panel.get('ferma_profit_' + __now.getTime(), function(profit) {
-            profit = initProfit(profit);
-            if(profit && profit.totalMoney > totalMoney) {
-              /// со счёта были сняты деньги, не учитываем их в рассчётах
-              profit.cashout = profit.cashout - (profit.totalMoney - totalMoney);
-              profit.totalMoney = totalMoney;
-              panel.set('ferma_profit_' + __now.getTime(), profit, function() {}, true);
+
+        // Выводим статистику справа
+        var now = new Date;
+        now.setHours(0);
+        now.setMinutes(0);
+        now.setSeconds(0);
+        now.setMilliseconds(0);
+
+        var i = 0;
+        var days = ['сегодня', 'вчера', 'позавчера'];
+
+        var $element = $right_td;
+        function drawDay(date) {
+          panel.get('ferma_profit_' + date.getTime(), function(profit) {
+            if(profit) {
+              var date_name = days[i];
+              if(!date_name) date_name = date.getDate() + '.' + (date.getMonth() + 1);
+              var $item = $('<p>Прибыль за ' + date_name + ': $' + 
+               profit.money + ', ' + Math.round(profit.exp * 100) / 100 + ' ед.</p>').appendTo($element);
+              if(i == 0) {
+                $('<span>+</span>').css({
+                  display: 'inline-block',
+                  padding: '2px 4px 4px',
+                  border: '1px dotted #040',
+                  cursor: 'pointer',
+                  'margin-left': 10
+                }).click(function() {
+                  if($('#profit-history').is(':visible')) {
+                    $(this).html('+');
+                  } else {
+                    $(this).html('&ndash;');
+                  }
+                  $('#profit-history').slideToggle();
+                }).appendTo($item);
+                /// Первой выводим данные за сегодняшний день, остальные подкатом
+                $element = $('<div id="profit-history">').css({
+                    background: '#fff',
+                    padding: '5px 10px',
+                    border: '1px dotted #000'
+                  })
+                  .hide().insertAfter($item);
+              }
+              i++;
+              if(i > 5) return;
+              date.setDate(now.getDate() - 1);
+
+              drawDay(date);
             }
           }, true);
         }
-      }
-    }
-
-    // Выводим статистику справа
-    var $right_td = $($('table[background$="ferma_bg.jpg"]').parents('table').eq(1).get(0).rows[0].cells[1]);
-
-    var now = new Date;
-    now.setHours(0);
-    now.setMinutes(0);
-    now.setSeconds(0);
-    now.setMilliseconds(0);
-
-    var i = 0;
-    var days = ['сегодня', 'вчера', 'позавчера'];
-
-    var $element = $right_td;
-    function drawDay(date) {
-      panel.get('ferma_profit_' + date.getTime(), function(profit) {
-        if(profit) {
-          var date_name = days[i];
-          if(!date_name) date_name = date.getDate() + '.' + (date.getMonth() + 1);
-          var $item = $('<p>Получено за ' + date_name + ': $' + 
-           profit.money + ', ' + Math.round(profit.exp * 100) / 100 + ' ед.</p>').appendTo($element);
-          if(i == 0) {
-            $('<span>+</span>').css({
-              display: 'inline-block',
-              padding: '2px 4px 4px',
-              border: '1px dotted #040',
-              cursor: 'pointer',
-              'margin-left': 10
-            }).click(function() {
-              if($('#profit-history').is(':visible')) {
-                $(this).html('+');
-              } else {
-                $(this).html('&ndash;');
-              }
-              $('#profit-history').slideToggle();
-            }).appendTo($item);
-            /// Первой выводим данные за сегодняшний день, остальные подкатом
-            $element = $('<div id="profit-history">').css({
-                background: '#fff',
-                padding: '5px 10px',
-                border: '1px dotted #000'
-              })
-              .hide().insertAfter($item);
-          }
-          i++;
-          if(i > 5) return;
-          date.setDate(now.getDate() - 1);
-
-          drawDay(date);
-        }
+        drawDay(now);
       }, true);
-    }
-    drawDay(now);
+    });
   }
   
 })
