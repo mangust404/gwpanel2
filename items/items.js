@@ -234,9 +234,13 @@ jQuery.extend(panel, {
       var $first_tr;
       var trFound;
       /// находим все предметы удовлетворяющие условию
-      $('a[href$="' + seek + '"], a[href$="' + seek + '_box"]')
+      $('a[href$="item_id=' + seek + '"], a[href$="item_id=' + seek + '_box"]')
         .each(function() {
-          var $item_tr = $(this).closest('tr[id*="item_tr"]');
+          if($('#extras').length) {
+            var $item_tr = $(this).closest('tr[id*="item_tr"]');
+          } else {
+            var $item_tr = $(this).closest('tr');
+          }
           if($item_tr.length > 0) {
             if(!$first_tr) $first_tr = $item_tr;
             if($item_tr.find('a[href*="workshop.php"]').length > 0) {
