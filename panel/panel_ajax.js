@@ -505,13 +505,14 @@
         //console.log('noHistory, using prevScrollTop', prevScrollTop);
         $(window).scrollTop(prevScrollTop);
       } else {
-        if(smoothScrollTop) {
+        var offset = $('a[href$="' + pathname + search + '"]:first').offset();
+        if(smoothScrollTop && offset) {
           $('html,body').animate({
-            scrollTop: $('a[href$="' + pathname + search + '"]:first').offset().top - 40
+            scrollTop: offset.top - 40
           }, 1000);
-        } else if(smoothScrollBottom) {
+        } else if(smoothScrollBottom && offset) {
           $('html,body').animate({
-            scrollTop: $('a[href$="' + pathname + search + '"]:last').offset().top - $(window).height() + 100
+            scrollTop: offset.top - $(window).height() + 100
           }, 1000);
         }
         //console.log('pushing data: ', data.substr(0, 20), ', length: ', data.length);
