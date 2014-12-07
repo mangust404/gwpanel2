@@ -141,6 +141,54 @@ jQuery.extend(panel, {
         }
       });
     });
+  },
+
+  map_seaside: function(options) {
+    panel.get('map_sector', function(sector) {
+      var seasideSector;
+      /// определяем остров с прибрежкой
+      var ar = sector.split('x');
+      var x = parseInt(ar);
+      if(x < 154 && x > 145) {
+        /// Z-lands, surfear
+        seasideSector = '149x151';
+      } else if(x > 40 && x < 60) {
+        /// Ganja island, green parks
+        seasideSector = '52x50';
+      }
+
+      if(seasideSector) {
+        if(sector == seasideSector) {
+          panel.gotoHref('http://quest.ganjawars.ru/walk.php');
+        } else {
+          panel.set('moveHref', 'http://quest.ganjawars.ru/walk.p.php', function() {
+            panel.set('moveDest', 'Прибрежная зона', function() {
+              panel.gotoHref('http://www.ganjawars.ru/map.move.php?gps=1&sxy=' + seasideSector);
+            });
+          });
+        }
+      } else {
+        alert('На этом острове нет прибрежной зоны :-(');
+      }
+    });
+  },
+
+  map_custom: function(options) {
+    panel.get('map_sector', function(sector) {
+      if(options.sector) {
+        if(sector == options.sector) {
+          panel.gotoHref(options.link);
+        } else {
+          panel.set('moveHref', options.link, function() {
+            panel.set('moveDest', '', function() {
+              panel.gotoHref('http://www.ganjawars.ru/map.move.php?gps=1&sxy=' + options.sector);
+            });
+          });
+        }
+      } else {
+        alert('Не указан сектор для перехода');
+      }
+    });
   }
 });
 })(window.__panel, jQuery);

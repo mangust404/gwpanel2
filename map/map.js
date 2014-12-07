@@ -53,8 +53,9 @@ jQuery.extend(panel, {
         window.BattleRefreshChat = function() {
           $.ajax(location.pathname.substr(1), {
             success: function() {
-              panel.set('moveHref', 0);
-              panel.gotoHref(moveHref);
+              panel.set('moveHref', 0, function() {
+                panel.gotoHref(moveHref);
+              });
             }
           });
         };
@@ -63,9 +64,10 @@ jQuery.extend(panel, {
     });
 
     panel.loadScript('map/map_sectors.js', function() {
-
-      if($(document.body).html().match(/в <nobr><b>([^<]+)<\/b>/)) {
-        var sector = RegExp.$1;
+      var m = $('center:contains(Вы находитесь в пути из)')
+                .html().match(/в <nobr><b>([^<]+)<\/b>/);
+      if(m) {
+        var sector = m[1];
         for(var key in panel.map_names) {
           if(panel.map_names[key] == sector) {
             panel.set('map_sector', key);
@@ -80,12 +82,14 @@ jQuery.extend(panel, {
   
   map_sector: function() {
     $(function() {
+      var m = $('a[href*="map.php?sx="]:not(.fast-move):visible').filter(function() {
+        if($(this).parent().text().indexOf('Район') > -1) return true;
+        return false;
+      }).attr('href').match(/sx=([0-9]+)&sy=([0-9]+)$/);
 
-      if($(document.body).html().match(/Район: <a href=['"]*\/map\.php\?sx=([0-9]+)[^=]+sy=([0-9]+)/)) {
-        //alert(RegExp.$1 + 'x' + RegExp.$2);
-        panel.set('map_sector', RegExp.$1 + 'x' + RegExp.$2);
+      if(m) {
+        panel.set('map_sector', m[1] + 'x' + m[2]);
       }
-
     });
   },
   
@@ -109,7 +113,7 @@ jQuery.extend(panel, {
         var href = this.href;
         //Запоминаем текущую страницу, чтобы по окончании пути на неё вернуться
         panel.set('moveHref', targetHref, function() {
-          panel.set('moveDest', null, function() {
+          panel.set('moveDest', '', function() {
             panel.gotoHref(href);
           });
         });

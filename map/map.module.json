@@ -95,6 +95,34 @@
       "callback": "map_gooverlord", 
       "file": "map_buttons.js",
       "description": "Кнопка отплытия в Overlord"
+    },
+    "seaside": {
+      "title": "Прибрежка",
+      "img": "seaside.png",
+      "callback": "map_seaside",
+      "file": "map_buttons.js",
+      "description": "Перемещение в прибрежную зону"
+    },
+    "custom": {
+      "title": "Переход",
+      "configure": {
+        "sector": {
+          "type": "select",
+          "title": "Сектор, куда перейти",
+          "options": "__panel.map_names",
+          "default": "__panel.map_current_sector_parser()",
+          "file": ["map_sectors.js", "map.js"]
+        },
+        "link": {
+          "type": "text",
+          "default": "http://www.ganjawars.ru/object.php?id=....",
+          "title": "Ссылка, куда перейти, например объект, дом или терминал"
+        }
+      },
+      "img": "link.png",
+      "callback": "map_custom",
+      "file": "map_buttons.js",
+      "description": "Перемещение в район и переход по указанной ссылке"
     }
   }
 }
