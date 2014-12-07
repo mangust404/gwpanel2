@@ -242,14 +242,31 @@ window.Panel2 = new function() {
                 });
                 return false;
               })
-            ).css({
+            )
+            .css({
               left: that.left * options.system.btnwidth,
               top: that.top * options.system.btnheight,
               width: options.system.btnwidth,
-              height: options.system.btnheight
+              height: options.system.btnheight,
+              visibility: 'hidden'
             })
-            .attr('left', that.left).attr('top', that.top).attr('index', index);
+            .attr('left', that.left)
+            .attr('top', that.top)
+            .attr('index', index);
 
+          function btnAfterDraw() {
+          //setTimeout(function() {
+            var btnTitle = $button.find('h3').get(0);
+            /// Если заголовок не вмещается в кнопку
+            if(btnTitle.clientHeight > 30 || 
+               btnTitle.scrollWidth > $button.get(0).clientWidth) {
+              $button.find('h3').addClass('big');
+            }
+            $button.css({
+              visibility: 'visible'
+            });
+          //}, 1);
+          }
           if(type.draw) {
             instance.loadScript(getFiles(type.file, type.module), function() {
               var __options = {};
@@ -276,15 +293,12 @@ window.Panel2 = new function() {
                 instance.dispatchException(e);
               }
               $button.appendTo(paneContainer);
+              setTimeout(btnAfterDraw, 1);
             });
           } else {
             $button.appendTo(paneContainer);
+            setTimeout(btnAfterDraw, 1);
           }
-          setTimeout(function() {
-            if($button.find('h3').get(0).clientHeight > 30) {
-              $button.find('h3').addClass('big');
-            }
-          }, 10);
           if(!hold_positions[that.top]) hold_positions[that.top] = {};
           hold_positions[that.top][that.left] = $button.attr('id');
         });
