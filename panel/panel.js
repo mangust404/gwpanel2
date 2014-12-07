@@ -1378,9 +1378,14 @@ window.Panel2 = new function() {
       window.osetInterval = window.setInterval;
       window.setTimeout = function(c, t, safe) {
         var id = window.osetTimeout(c, t);
+
         if((arguments.callee && 
            arguments.callee.caller &&
-           arguments.callee.caller.toString().indexOf('createFxNow') > -1) ||
+           (
+             arguments.callee.caller.toString().indexOf('createFxNow') > -1 ||
+             arguments.callee.caller.toString().indexOf('cr=f.now()') > -1 ||
+             arguments.callee.caller.toString().indexOf('fxshow') > -1
+           )) ||
            safe ) {
         } else {
           notSafeTimeouts.push(id);
@@ -1391,7 +1396,11 @@ window.Panel2 = new function() {
         var id = window.osetInterval(c, t);
         if((arguments.callee && 
            arguments.callee.caller &&
-           arguments.callee.caller.toString().indexOf('createFxNow') > -1) ||
+           (
+             arguments.callee.caller.toString().indexOf('createFxNow') > -1 ||
+             arguments.callee.caller.toString().indexOf('cr=f.now()') > -1 ||
+             arguments.callee.caller.toString().indexOf('fxshow') > -1
+           )) ||
            safe ) {
         } else {
           notSafeTimeouts.push(id);
