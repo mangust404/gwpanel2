@@ -55,11 +55,11 @@
 
                     $.each(ar_set, function(i, item) {
                       if(ar_dressed.indexOf(item) == -1) {
-                        item = item.split('=')[1];
+                        item = item.substr(3);
                         var ar = item.split('&');
                         var item_id = ar[0];
                         missed_items += '<a href="http://www.ganjawars.ru/items.php?seek=' + 
-                          item + '"><img src="http://images.ganjawars.ru/img/items/' + item_id + '_s.jpg" /></a>';
+                          encodeURIComponent(item) + '"><img src="http://images.ganjawars.ru/img/items/' + item_id + '_s.jpg" /></a>';
                       }
                     });
 
