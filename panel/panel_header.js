@@ -144,6 +144,13 @@
       $fight = $header.find('a:contains(Ваш бой)');
       if($fight.length) {
         $fight = $fight.wrapAll('<span></span>').parent();
+        var contents = $fight.parent().contents();
+        for(var i = 0; i < contents.length; i++) {
+          if(contents[i + 1] && contents[i + 1] == $fight.get(0)) {
+            $(contents[i]).remove().prependTo($fight);
+            $(contents[i + 2]).remove().appendTo($fight);
+          }
+        }
       } else {
         $fight = $('<span> | </span>').hide().insertAfter($header.find('a:contains(Форум)'));
       }
