@@ -223,6 +223,16 @@ jQuery.extend(panel, {
           panel.del('dress_on_set', function() {
             panel.get_set_str(null, function(dressed) {
               panel.set('items_set_' + set_id, dressed);
+              // Находим кнопку в настройках
+              $.each(panel.getAllButtons('items_putset_button'), function(i, btn) {
+                if(btn.button.arguments.set_id == set_id) {
+                  // Если к кнопке привязан набор навыков, то мы должны его использовать
+                  if(btn.button.arguments.skill_button) {
+                    panel.clickButton(btn.button.arguments.skill_button);
+                  }
+                }
+              });
+
             });
           });
         }, true);
