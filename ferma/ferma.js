@@ -180,11 +180,11 @@ jQuery.extend(__panel, {
                           .parents('table').eq(1).get(0).rows[0].cells[1]
                        );
 
-      var ar = $moneyDiv.text().match(/Счет: \$([0-9\,]+)/);
-      if(ar) {
-        var totalMoney = parseInt(ar[1].replace(',', ''));
+      var moneyAr = $moneyDiv.text().match(/Счет: \$([0-9\,]+)/);
+      if(moneyAr) {
+        var balanceMoney = parseInt(moneyAr[1].replace(',', ''));
       }
-      var overallMoney = totalMoney;
+      var overallMoney = balanceMoney;
 
       panel.get('plants_index', function(plants_index) {
         plants_index = plants_index || {};
@@ -193,7 +193,7 @@ jQuery.extend(__panel, {
         var $plants = $('img[src*="/ferma/"]');
         if($plants.length > 0) {
           /// Подсчитываем сумму вместе с посадками
-          $('img[src*="/ferma/"]').each(function() {
+          $plants.each(function() {
             var img = this.src.split('ferma/')[1].split('/')[0];
             var ar = img.match(/([a-z]+)[0-9]+\.png/);
             if(ar) {
@@ -206,9 +206,26 @@ jQuery.extend(__panel, {
                   plants_index[ar2[1]][ar2[2]] = plantId;
                 }
               }
+            } else if(img.indexOf('ground.png') > -1) {
+              /// вскопанная земля
+              var ar2 = $(this).parents('a').attr('href')
+                          .match(/x=([0-9]+)&y=([0-9]+)/);
+              if(ar2) {
+                plants_index[ar2[1]] = plants_index[ar2[1]] || {};
+                plants_index[ar2[1]][ar2[2]] = '';
+              }
             }
           });
         }
+
+        /// Находим все остальные пустые клетки, и если они засажены в индексе, то убираем посадку
+        $('a[href*="/ferma.php?x="] img[src*="/t.gif"]').each(function() {
+          var ar = $(this).closest('a').attr('href')
+                          .match(/x=([0-9]+)&y=([0-9]+)/);
+          if(ar && plants_index[ar[1]] && plants_index[ar[1]][ar[2]]) {
+            plants_index[ar[1]][ar[2]] = '';
+          }
+        });
 
         /// Дополнительно мы должны запомнить на какой грядке что растёт, т.к.
         /// когда происходит посадка, то там картинка seed.png, из неё не получится 
@@ -231,7 +248,7 @@ jQuery.extend(__panel, {
 
         panel.set('plants_index', plants_index, function() {}, true);
 
-        // И, наконец подсчитываем сумму когда индекс посадок будет готов
+        // И, наконец подсчитываем сумму по индексу
         for(var x in plants_index) {
           for(var y in plants_index[x]) {
             var plantId = plants_index[x][y];
@@ -256,11 +273,13 @@ jQuery.extend(__panel, {
           var result = profit || {
                   money: 0,
                   exp: 0,
+                  startMoney: overallMoney,
                   totalMoney: 0,
                   totalExp: 0,
                   cashout: 0
                 };
           result.cashout = result.cashout || 0;
+          result.startMoney = result.startMoney || overallMoney;
           return result;
         }
 
@@ -299,7 +318,6 @@ jQuery.extend(__panel, {
 
             panel.get('ferma_profit_' + now.getTime(), function(profit) {
               profit = initProfit(profit);
-
               profit.money += money;
               profit.exp += exp;
               if(profit.totalMoney > 0) {
@@ -350,9 +368,9 @@ jQuery.extend(__panel, {
                 panel.set('ferma_profit_' + __now.getTime(), profit, function() {}, true);
               }, true);
             }
-          } else {
+          } else if(moneyAr) {
             // парсим деньги 
-            var totalMoney = parseInt(ar[1].replace(',', ''));
+            var totalMoney = parseInt(moneyAr[1].replace(',', ''));
             panel.get('ferma_profit_' + __now.getTime(), function(profit) {
               profit = initProfit(profit);
               if(profit && profit.totalMoney > overallMoney) {
