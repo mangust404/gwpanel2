@@ -635,7 +635,7 @@
         modules_ul.appendTo('#edit-modules-wrapper').trigger('create');
       });
 
-      editor.find('a[href="#edit-buttons-wrapper"]').click(function() {
+      editor.find('a[href="#edit-other-wrapper"]').click(function() {
         if(this.initialize) return false;
         this.initialized = true;
         panel.get(panel.getEnv() + '_variants', function(variants) {
