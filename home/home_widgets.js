@@ -56,7 +56,14 @@
         originalTitle = document.title;
       }
       if(text != undefined) {
-        document.title = '[' + text + '] ' + originalTitle;
+        panel.checkFocused(function() {
+        }, function() {
+          panel.lockAcquire('home_health_timer', function() {
+            document.title = '[' + text + '] ' + originalTitle;
+          }, function() {
+            document.title = originalTitle;
+          }, 3);
+        });
       }
     }
     if(health.hp_start / health.hp_max > 0.8 && !this.over80) {
