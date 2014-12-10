@@ -1,4 +1,5 @@
 (function(panel, $) {
+  var originalTitle;
 
   function home_formatTime(s) {
     var h = Math.floor(s / 3600);
@@ -48,8 +49,15 @@
       if(this.options.autohide) this.css({display: 'none'});
       clearInterval(this.healthUpdInterval);
       this.healthUpdInterval = false;
+      if(originalTitle) document.title = originalTitle;
     } else {
       health.hp_start = this.hp_current;
+      if(!originalTitle || document.title.indexOf('[') != 0) {
+        originalTitle = document.title;
+      }
+      if(text != undefined) {
+        document.title = '[' + text + '] ' + originalTitle;
+      }
     }
     if(health.hp_start / health.hp_max > 0.8 && !this.over80) {
       this.over80 = true;
