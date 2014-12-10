@@ -3286,6 +3286,10 @@ window.Panel2 = new function() {
         }
       });
     },
+
+    localStorageSize: function(callback) {
+      instance.crossWindow.localStorageSize(callback);
+    },
     /**
     * Публичные аттрибуты
     */

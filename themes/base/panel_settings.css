@@ -141,6 +141,15 @@
   transform: translateY(-50%);   
 }
 
+#panel-settings-editor #greetings {
+  position: absolute;
+  top: 10%;
+  -webkit-transform: translateX(-50%);
+  -ms-transform: translateX(-50%);
+  transform: translateX(-50%);   
+  left: 50%;
+}
+
 #panel-settings-editor .description {
   color: #666;
   font-size: 11px;
