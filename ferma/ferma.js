@@ -284,6 +284,7 @@ jQuery.extend(__panel, {
         }
 
         if(location.search.indexOf('action=extract') > -1) {
+          /// Сбор урожая
           $gathered = $('center:contains("Вы собрали")');
           if($gathered.length > 0) {
             var text = $gathered.text();
@@ -408,13 +409,13 @@ jQuery.extend(__panel, {
               var money = 0;
               var exp = 0;
               if(prev_profit) {
-                money = parseInt(prev_profit.startMoney) - parseInt(profit.startMoney);
+                money = parseInt(prev_profit.startMoney) - parseInt(profit.startMoney) + parseInt(prev_profit.cashout);
                 exp = parseFloat(prev_profit.totalExp) - parseFloat(profit.totalExp);
               }
-              if(!money) {
+              if(!money || money < 0 || money > 20000) {
                 money = profit.money;
               }
-              if(!exp) {
+              if(!exp || exp < 0 || exp > 1000) {
                 exp = parseFloat(profit.exp);
               }
               exp = Math.round(exp * 100) / 100;
