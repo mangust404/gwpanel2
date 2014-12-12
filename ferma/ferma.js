@@ -398,13 +398,28 @@ jQuery.extend(__panel, {
         var days = ['сегодня', 'вчера', 'позавчера'];
 
         var $element = $right_td;
+        var prev_profit;
+
         function drawDay(date) {
           panel.get('ferma_profit_' + date.getTime(), function(profit) {
             if(profit) {
               var date_name = days[i];
               if(!date_name) date_name = date.getDate() + '.' + (date.getMonth() + 1);
+              var money = 0;
+              var exp = 0;
+              if(prev_profit) {
+                money = parseInt(prev_profit.startMoney) - parseInt(profit.startMoney);
+                exp = parseFloat(prev_profit.totalExp) - parseFloat(profit.totalExp);
+              }
+              if(!money) {
+                money = profit.money;
+              }
+              if(!exp) {
+                exp = parseFloat(profit.exp);
+              }
+              exp = Math.round(exp * 100) / 100;
               var $item = $('<p>Прибыль за ' + date_name + ': $' + 
-               profit.money + ', ' + Math.round(profit.exp * 100) / 100 + ' ед.</p>').appendTo($element);
+               money + ', ' + exp + ' ед.</p>').appendTo($element);
               if(i == 0) {
                 $('<span>+</span>').css({
                   display: 'inline-block',
@@ -429,9 +444,24 @@ jQuery.extend(__panel, {
                   .hide().insertAfter($item);
               }
               i++;
-              if(i > 5) return;
+              if(i > 7) {
+                $('<p>Важно! Значения могут не совпадать с действительными, ' + 
+                      'особенно если вы играете с нескольких компьютеров, ' + 
+                      'или производите сложные манипуляции со счётом фермы.<br />' + 
+                      'Прибыль "за сегодня" отображает только урожай, собранный ' + 
+                      'на этом браузере, полная сумма будет высчитана только на ' + 
+                      'следующий день</p>')
+                  .css({
+                    'font-size': '9px',
+                    opacity: 0.8,
+                    'margin-top': 30
+                  })
+                  .appendTo($element);
+                return;
+              }
               date.setDate(now.getDate() - 1);
 
+              prev_profit = profit;
               drawDay(date);
             }
           }, true);
