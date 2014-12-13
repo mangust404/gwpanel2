@@ -273,6 +273,7 @@ jQuery.extend(__panel, {
           var result = profit || {
                   money: 0,
                   exp: 0,
+                  startExp: 0,
                   startMoney: overallMoney,
                   totalMoney: 0,
                   totalExp: 0,
@@ -366,6 +367,9 @@ jQuery.extend(__panel, {
                 profit = initProfit(profit);
                 profit.totalMoney = overallMoney;
                 profit.totalExp = parseFloat(ar[2]);
+                if(!profit.startExp) {
+                  profit.startExp = profit.totalExp;
+                }
                 panel.set('ferma_profit_' + __now.getTime(), profit, function() {}, true);
               }, true);
             }
@@ -469,6 +473,18 @@ jQuery.extend(__panel, {
         }
         drawDay(now);
       }, true);
+    });
+  },
+
+  ferma_widget_update: function() {
+    panel.loadScript('ferma/ferma_parser.js', function() {
+      panel.ferma_action_parser(function(data) {
+        panel.setCached(panel.ferma_action_parser, data, function() {
+          $('.ferma_ferma_timer').each(function() {
+            panel.ferma_timer_widget($(this), data);
+          });
+        });
+      }, $(document.body));
     });
   }
   

@@ -1,0 +1,31 @@
+.ferma_ferma_timer {
+  padding: 0px 10px;
+  font-size: 8pt;
+  height: 42px !important;
+  width: 130px !important;
+  padding-left: 42px;
+}
+
+.ferma_ferma_timer .icon {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  height: 30px;
+  width: 30px;
+}
+
+.ferma_ferma_timer img {
+  height: 30px;
+}
+
+.ferma_ferma_timer p {
+  margin: 4px 0;
+}
+
+.ferma_ferma_timer a {
+  font-size: 8pt;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;  
+}
