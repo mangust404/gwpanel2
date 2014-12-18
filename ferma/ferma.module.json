@@ -4,7 +4,7 @@
   "title": "Модуль для Фермы",
   "weight": 5, 
   "pages": {
-    "/ferma.php": ["ferma_hotkeys", "ferma_statistics"]
+    "/ferma.php": ["ferma_hotkeys", "ferma_statistics", "ferma_widget_update"]
   },
   "methods": {
     "ferma_hotkeys": {
@@ -13,6 +13,18 @@
     },
     "ferma_statistics": {
       "file": "ferma.js"
+    },
+    "ferma_widget_update": {
+      "file": "ferma.js"
+    }
+  },
+  "widgets": {
+    "ferma_timer": {
+      "title": "Таймер фермы",
+      "callback": "ferma_timer_widget",
+      "file": "ferma_widgets.js", 
+      "width": 2,
+      "height": 1
     }
   }
 }

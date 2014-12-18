@@ -752,6 +752,7 @@ window.Panel2 = new function() {
       if(!this.type || !panel_schema.widgets[this.type]) return;
       this.module = panel_schema.widgets[this.type].module;
       var widget = this;
+      widget.arguments = widget.arguments || {};
       widget.index = index;
       widget.float = true;
       /// Виджет выводится только на одной странице
@@ -2423,6 +2424,20 @@ window.Panel2 = new function() {
       });
     },
 
+    /**
+    * Функция для принудительного выставления данных в кеше
+    */
+    setCached: function(generator, set_data, callback) {
+      callback = callback || function() {};
+      var cid = 'cached_' + generator.toString().replace(/[\n\s\t]/g, '').hashCode();
+      instance.get(cid, function(data) {
+        if(!data || !data.data) {
+          data = {type: 'time'};
+        }
+        data.data = set_data;
+        instance.set(cid, data, callback);
+      });
+    },
     /**
     * Функция удаления данных из кеша
     */

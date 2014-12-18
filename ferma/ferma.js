@@ -277,6 +277,7 @@ jQuery.extend(__panel, {
           var result = profit || {
                   money: 0,
                   exp: 0,
+                  startExp: 0,
                   startMoney: overallMoney,
                   totalMoney: 0,
                   totalExp: 0,
@@ -288,6 +289,7 @@ jQuery.extend(__panel, {
         }
 
         if(location.search.indexOf('action=extract') > -1) {
+          /// Сбор урожая
           $gathered = $('center:contains("Вы собрали")');
           if($gathered.length > 0) {
             var text = $gathered.text();
@@ -369,6 +371,9 @@ jQuery.extend(__panel, {
                 profit = initProfit(profit);
                 profit.totalMoney = overallMoney;
                 profit.totalExp = parseFloat(ar[2]);
+                if(!profit.startExp) {
+                  profit.startExp = profit.totalExp;
+                }
                 panel.set('ferma_profit_' + __now.getTime(), profit, function() {}, true);
               }, true);
             }
@@ -402,13 +407,28 @@ jQuery.extend(__panel, {
         var days = ['сегодня', 'вчера', 'позавчера'];
 
         var $element = $right_td;
+        var prev_profit;
+
         function drawDay(date) {
           panel.get('ferma_profit_' + date.getTime(), function(profit) {
             if(profit) {
               var date_name = days[i];
               if(!date_name) date_name = date.getDate() + '.' + (date.getMonth() + 1);
+              var money = 0;
+              var exp = 0;
+              if(prev_profit) {
+                money = parseInt(prev_profit.startMoney) - parseInt(profit.startMoney) + parseInt(prev_profit.cashout);
+                exp = parseFloat(prev_profit.totalExp) - parseFloat(profit.totalExp);
+              }
+              if(!money || money < 0 || money > 20000) {
+                money = profit.money;
+              }
+              if(!exp || exp < 0 || exp > 1000) {
+                exp = parseFloat(profit.exp);
+              }
+              exp = Math.round(exp * 100) / 100;
               var $item = $('<p>Прибыль за ' + date_name + ': $' + 
-               profit.money + ', ' + Math.round(profit.exp * 100) / 100 + ' ед.</p>').appendTo($element);
+               money + ', ' + exp + ' ед.</p>').appendTo($element);
               if(i == 0) {
                 $('<span>+</span>').css({
                   display: 'inline-block',
@@ -433,15 +453,42 @@ jQuery.extend(__panel, {
                   .hide().insertAfter($item);
               }
               i++;
-              if(i > 5) return;
+              if(i > 7) {
+                $('<p>Важно! Значения могут не совпадать с действительными, ' + 
+                      'особенно если вы играете с нескольких компьютеров, ' + 
+                      'или производите сложные манипуляции со счётом фермы.<br />' + 
+                      'Прибыль "за сегодня" отображает только урожай, собранный ' + 
+                      'на этом браузере, полная сумма будет высчитана только на ' + 
+                      'следующий день</p>')
+                  .css({
+                    'font-size': '9px',
+                    opacity: 0.8,
+                    'margin-top': 30
+                  })
+                  .appendTo($element);
+                return;
+              }
               date.setDate(now.getDate() - 1);
 
+              prev_profit = profit;
               drawDay(date);
             }
           }, true);
         }
         drawDay(now);
       }, true);
+    });
+  },
+
+  ferma_widget_update: function() {
+    panel.loadScript('ferma/ferma_parser.js', function() {
+      panel.ferma_action_parser(function(data) {
+        panel.setCached(panel.ferma_action_parser, data, function() {
+          $('.ferma_ferma_timer').each(function() {
+            panel.ferma_timer_widget($(this), data);
+          });
+        });
+      }, $(document.body));
     });
   }
   

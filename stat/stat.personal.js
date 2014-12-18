@@ -220,8 +220,11 @@ $.extend(panel, {
       if(time > 0) {
         var d = new Date;
         d.setTime(time);
+        var hours = d.getHours();
+        var minutes = d.getMinutes();
         $resetDate.html(' (' + d.getDate() + '.' + (d.getMonth() + 1) + 
-          ' ' + d.getHours() + ':' + d.getMinutes() + ')');
+          ' ' + (hours < 10? '0' + hours: hours) + ':' + 
+          (minutes < 10? '0' + minutes: minutes) + ')');
       }
     }, true);
   },
