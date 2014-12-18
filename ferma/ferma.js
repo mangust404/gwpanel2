@@ -161,6 +161,10 @@ jQuery.extend(__panel, {
         hide();
       }
     }, true);
+    
+    if(document.forms[1] && document.forms[1].fermacode) {
+      document.forms[1].fermacode.focus();
+    }
   },
 
   /**
