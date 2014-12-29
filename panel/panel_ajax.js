@@ -57,7 +57,10 @@
       if(e.ctrlKey || e.altKey || e.button != 0) return true;
       var href = $(this).attr('href');
       if(href.indexOf('/battle.php') > -1 || 
-         href.indexOf('logout.php') > -1) return true;
+         href.indexOf('logout.php') > -1 ||
+         href.indexOf('forum.vnotes.php') > -1 || // По просьбе Морти
+         href.indexOf('/forum.ban.php') > -1
+         ) return true;
       if(document.location.toString().indexOf(href) > -1) return true;
       ajaxGoto(href);
       return false;
@@ -1034,6 +1037,7 @@ $.fn.html = function(html) {
       /// при нажатии enter в осиротевших элементах отсылаем форму
       $('.' + className + ':not(textarea)').keypress(function(event) {
         if(event.which == 13 && !$(this).closest('form').hasClass('.gwp-form-' + index)) {
+          if($(this).attr('onclick')) return true;
           $('form.gwp-form-' + index).submit();
         }
       });

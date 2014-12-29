@@ -1125,6 +1125,8 @@ window.Panel2 = new function() {
     * объект window.__panel чтобы успешно подгрузить внешние модули
     */
     init: function() {
+      if(location.pathname.indexOf('/forum.vnotes.php') == 0 || 
+         location.pathname.indexOf('/forum.ban.php') == 0) return false; // По просьбе Морти
       domain = document.domain.indexOf('gwpanel.org') > -1? 'gwpanel.org': 'ganjawars.ru';
       /// Если в localStorage на текущем домене есть копия нужных опций, 
       /// то эта функция будет запущена сразу
