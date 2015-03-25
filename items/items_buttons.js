@@ -58,21 +58,92 @@
                         item = item.substr(3);
                         var ar = item.split('&');
                         var item_id = ar[0];
-                        missed_items += '<a href="http://www.ganjawars.ru/items.php?seek=' + 
-                          encodeURIComponent(item) + '"><img src="http://images.ganjawars.ru/img/items/' + item_id + '_s.jpg" /></a>';
+                        if($data.find('a[href*="' + item + '"]').length == 0) {
+                          missed_items += '<a class="missed" href="http://www.ganjawars.ru/items.php?seek=' + 
+                            encodeURIComponent(item) + '"><img src="http://images.ganjawars.ru/img/items/' + item_id + '_s.jpg" /></a>';
+                        }
                       }
                     });
 
                     if(missed_items) {
-                      panel.showFlash('<p>Cет не полный, не хватает вещей:</p><center>' + 
-                        missed_items + '</center>');
+                      panel.showFlash('<p>Cет не полный, в инвентаре не хватает вещей:</p><center>' + 
+                        missed_items + '<p>Вы можете попытаться <a href="#" class="force">надеть</a> все имеющиеся вещи вручную</p></center>');
                       if(panel.panel_ajaxify) {
-                        $('.panel-flash a').click(function() {
+                        $('.panel-flash a.missed').click(function() {
                           panel.gotoHref(this.href);
                           $('.panel-flash').remove();
                           return false;
                         });
                       }
+
+                      $('.panel-flash a.force').click(function() {
+                        var dressed = 0;
+                        var started = 0;
+                        var slots = {
+                          'hd': 'Голова',
+                          'lh': 'Левая рука',
+                          'rh': 'Правая рука',
+                          'bh': 'Правая рука+Левая рука',
+                          'bd': 'Корпус',
+                          'bk': 'Спина',
+                          'gr': 'Граната',
+                          'bt': 'Пояс',
+                          'ft': 'Ноги',
+                          'tr': 'Транспорт',
+                          'lp': 'Левый карман',
+                          'rp': 'Правый карман',
+                          'gl': 'Очки',
+                          'ch': 'Чипсет',
+                        }
+                        var hrefs = [];
+                        $.ajax({url: $data.find('a[href*="dress_off"]').attr('href'), success: function(data) {
+                          $data = $(data);
+                          $.each(ar_set, function(i, item) {
+                            var slot = item.substr(0, 2);
+                            item = item.substr(3);
+                            /// находим соответствующую ссылку на странице $data
+                            console.log($data.find('a[href*="' + item + '"]').parents('tr').last(), 'a:contains("' + slots[slot] + '")', $data.find('a[href*="' + item + '"]').parents('tr').last().find('a:contains("' + slots[slot] + '")'));
+                            var href = $data.find('a[href*="' + item + '"]').parents('tr').last().find('a:contains("' + slots[slot] + '")').attr('href');
+                            if(href) {
+                              hrefs.push(href);
+                            }
+                          });
+
+                          for(var i = 0; i < hrefs.length; i++) {
+                            jQuery.ajax(hrefs[i], {
+                              success: function() {
+                                dressed++;
+                                if(dressed >= hrefs.length) {
+                                  missed_items = '';
+                                  $.each(ar_set, function(i, item) {
+                                    if(ar_dressed.indexOf(item) == -1) {
+                                      item = item.substr(3);
+                                      var ar = item.split('&');
+                                      var item_id = ar[0];
+                                      if($data.find('a[href*="' + item + '"]').length == 0) {
+                                        missed_items += '<a class="missed" href="http://www.ganjawars.ru/items.php?seek=' + 
+                                          encodeURIComponent(item) + '"><img src="http://images.ganjawars.ru/img/items/' + item_id + '_s.jpg" /></a>';
+                                      }
+                                    }
+                                  });
+
+                                  if(missed_items) {
+                                    panel.showFlash('<p>Надето ' + dressed + ' из ' + ar_set.length + ' вещей. Всё ещё не хватает:</p><center>' + 
+                                      missed_items + '</center>');
+                                    if(panel.panel_ajaxify) {
+                                      $('.panel-flash a.missed').click(function() {
+                                        panel.gotoHref(this.href);
+                                        $('.panel-flash').remove();
+                                        return false;
+                                      });
+                                    }
+                                  }
+                                }
+                              }
+                            });
+                          }
+                        }});
+                      });
 
                       $(that).addClass('button-error');
                     } else {

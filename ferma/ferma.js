@@ -484,9 +484,10 @@ jQuery.extend(__panel, {
     panel.loadScript('ferma/ferma_parser.js', function() {
       panel.ferma_action_parser(function(data) {
         panel.setCached(panel.ferma_action_parser, data, function() {
-          $('.ferma_ferma_timer').each(function() {
-            panel.ferma_timer_widget($(this), data);
-          });
+          /*$('.ferma_ferma_timer').each(function() {
+            panel.ferma_timer_widget.apply($(this), [data]);
+          });*/
+          panel.triggerEvent('ferma_data', data);
         });
       }, $(document.body));
     });

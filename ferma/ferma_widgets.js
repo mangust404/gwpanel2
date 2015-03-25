@@ -1,4 +1,7 @@
 (function(panel, $) {
+  var originalTitle;
+  var isTime;
+
   function drawTimer($widget, data) {
     //console.log('drawTimer, data=', data);
     if(data && data.text) {
@@ -29,20 +32,36 @@
           panel.setTimeout(function() {drawTimer($widget, data);}, 60000);
         }
         $('<p>Через ' + timeStr + ':</p>').appendTo($widget);
+        isTime = false;
       } else {
         $('<p class="time">Уже пора:</p>').appendTo($widget);
+        panel.checkFocused(function() {
+        }, function() {
+          panel.lockAcquire('ferma_widget_notify', function() {
+            panel.loadScript('lib/jquery.title.alert.js', function() {
+              jQuery.titleAlert('Уже пора', {
+                interval: 1000
+              });
+            });
+          }, function() {
+          }, 3);
+        });
+        isTime = true;
       }
-      $('<a href="' + data.href + '">' + data.text + '</a>')
+      var $link = $('<a href="' + data.href + '">' + data.text + '</a>')
         .click(function() {
           panel.gotoHref(this.href);
           return false;
         })
         .appendTo($widget);
 
+      if(isTime) {
+        $link.css({color: 'red', 'font-weight': 'bold'});
+      }
 
       $widget.show();
     } else {
-      $widget.html('').hide();
+      $widget.hide().html('');
     }
   }
 
@@ -57,6 +76,7 @@ $.extend(panel, {
        )) {
       return;
     }
+    var new_data;
     panel.loadCSS('ferma/ferma.css', function() {
       panel.loadScript('ferma/ferma_parser.js', function() {
         if(location.pathname == '/ferma.php') {
@@ -70,6 +90,19 @@ $.extend(panel, {
             drawTimer($widget, data);
           }, 1800);
         }
+
+        panel.bind('ferma_data', function(data) {
+          /// сохраняем новые данные, чтобы не перерисовывать виджет при каждом пуке
+          new_data = data;
+          panel.setCached(panel.ferma_action_parser, new_data);
+        });
+
+        /// Слушаем событие focus, и перерисовываем данные если нужно
+        $(window).focus(function() {
+          if(new_data != null) {
+            drawTimer($widget, new_data);
+          }
+        });
       });
     });
   }

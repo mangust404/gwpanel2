@@ -254,7 +254,7 @@
     $.ajax({
       type: "POST",
       url: "http://www.ganjawars.ru/home.friends.php",
-      data: "blop=" + type + "&addfriend=" + panel.encodeURIComponent(name),
+      data: (type? "blop=" + type + '&': '') + "addfriend=" + panel.encodeURIComponent(name),
       success: function(data) {
         text = !type ? "Ваши друзья" : "Черный список";
         if ($(data).find('b:contains("' + text + '")').closest('table').find('b:contains("' + name + '")').length) {

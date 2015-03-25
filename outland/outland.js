@@ -93,10 +93,23 @@ jQuery.extend(__panel, {
   outland_hotkeys: function() {
     mmoves = {};
     mlinks = {};
+    var gps = $(document).text().match(/GPS: ([0-9]+),([0-9]+)/);
+    var gps_x = parseInt(gps[1]);
+    var gps_y = parseInt(gps[2]);
     for(var i = 0; i < document.links.length; i++) {
       var link = document.links[i];
       if(link.href.search(/walk(\.op|\.ep|\.p|\.bp)\.php\?w=[0-9]+&wx=([0-9\-]+)&wy=([0-9\-]+)/) != -1 && 
-        link.innerHTML.indexOf('t.gif') != -1 && link.innerHTML.indexOf('turist') == -1) {
+        (
+          link.innerHTML.indexOf('t.gif') > -1 || 
+          ( 
+            link.innerHTML.indexOf('turist') > -1 &&  // Если турист стоит на краю карты, то всё-таки наступаем
+            (
+              ([0, 97]).indexOf(parseInt(RegExp.$2) + gps_x) != -1 || 
+              ([0, 97]).indexOf(parseInt(RegExp.$3) + gps_y) != -1 
+            )
+          )
+        )
+      ) {
         var x = parseInt(RegExp.$2);
         var y = parseInt(RegExp.$3);
         if(!mmoves['topleft'] || (mmoves['topleft'][0] + mmoves['topleft'][1] > x + y)) {
@@ -133,7 +146,9 @@ jQuery.extend(__panel, {
         };
       } else if(!mlinks['center'] && link.innerHTML.indexOf('anchor.gif') != -1) {
         mlinks['center'] = link;
-      };
+      } else {
+        console.log('not found', parseInt(RegExp.$2) + gps_x, ([0, 99]).indexOf(parseInt(RegExp.$2) + gps_x), parseInt(RegExp.$3) + gps_y);
+      }
     };
     if(mlinks['left']) mlinks['left'].innerHTML = '<div class="move_left">' + mlinks['left'].innerHTML + '</div>';
     if(mlinks['right']) mlinks['right'].innerHTML = '<div class="move_right">' + mlinks['right'].innerHTML + '</div>';

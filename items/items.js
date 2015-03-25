@@ -206,6 +206,8 @@ jQuery.extend(panel, {
                   panel.setOptions(current_options);
                   panel.showFlash('Кнопка добавлена', 'message', 3000);
                 }
+                /// текущий надетый комплект - это сохранённый комплект
+                panel.set('items_current_set', $set_id.val());
                 $form.submit();
               });
             }, true);
