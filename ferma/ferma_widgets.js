@@ -1,35 +1,40 @@
 (function(panel, $) {
   var originalTitle;
   var isTime;
+  var timeout;
+  var widgetData;
 
-  function drawTimer($widget, data) {
+  function setData(data) {
+    widgetData = data;
+  }
+  function drawTimer($widget) {
     //console.log('drawTimer, data=', data);
-    if(data && data.text) {
+    if(widgetData && widgetData.text) {
       $widget.html('');
 
-      $('<a class="icon" href="' + data.href + '"><img src="' + panel.iconURL('ferma.png') + '"/></a>')
+      $('<a class="icon" href="' + widgetData.href + '"><img src="' + panel.iconURL('ferma.png') + '"/></a>')
         .appendTo($widget);
 
       /// высчитываем оставшееся время в секундах
-      var seconds = data.time - Math.floor(((new Date).getTime() - data.start) / 1000);
+      var seconds = widgetData.time - Math.floor(((new Date).getTime() - widgetData.start) / 1000);
       if(seconds > 0) {
         var timeStr = '';
         if(seconds <= 20) {
           timeStr = seconds + ' ' + panel.pluralize(seconds, 'секунду', 'секунды', 'секунд');
-          panel.setTimeout(function() {drawTimer($widget, data);}, 1000);
+          if(!timeout) timeout = panel.setTimeout(function() {timeout = false; drawTimer($widget);}, 1000);
         } else if(seconds <= 60) {
           timeStr = seconds + ' ' + panel.pluralize(seconds, 'секунду', 'секунды', 'секунд');
-          panel.setTimeout(function() {drawTimer($widget, data);}, 10000);
+          if(!timeout) timeout = panel.setTimeout(function() {timeout = false; drawTimer($widget);}, 10000);
         } else if(seconds <= 3600) {
           var minutes = Math.ceil(seconds / 60);
           timeStr = minutes + ' ' + panel.pluralize(minutes, 'минуту', 'минуты', 'минут');
-          panel.setTimeout(function() {drawTimer($widget, data);}, 60000);
+          if(!timeout) timeout = panel.setTimeout(function() {timeout = false; drawTimer($widget);}, 60000);
         } else {
           var hours = Math.floor(seconds / 3600);
           var minutes = Math.floor((seconds - hours * 3600) / 60);
           timeStr = hours + ' ' + panel.pluralize(hours, 'час', 'часа', 'часов') + ' ' + 
                  minutes + ' ' + ' мин';
-          panel.setTimeout(function() {drawTimer($widget, data);}, 60000);
+          if(!timeout) timeout = panel.setTimeout(function() {timeout = false; drawTimer($widget);}, 60000);
         }
         $('<p>Через ' + timeStr + ':</p>').appendTo($widget);
         isTime = false;
@@ -48,7 +53,7 @@
         });
         isTime = true;
       }
-      var $link = $('<a href="' + data.href + '">' + data.text + '</a>')
+      var $link = $('<a href="' + widgetData.href + '">' + widgetData.text + '</a>')
         .click(function() {
           panel.gotoHref(this.href);
           return false;
@@ -82,12 +87,14 @@ $.extend(panel, {
         if(location.pathname == '/ferma.php') {
           panel.ferma_action_parser(function(data) {
             panel.setCached(panel.ferma_action_parser, data, function() {
-              drawTimer($widget, data);
+              setData(data);
+              drawTimer($widget);
             });
           }, $(document.body));
         } else {
           panel.getCached(panel.ferma_action_parser, function(data) {
-            drawTimer($widget, data);
+            setData(data);
+            drawTimer($widget);
           }, 1800);
         }
 
@@ -100,7 +107,8 @@ $.extend(panel, {
         /// Слушаем событие focus, и перерисовываем данные если нужно
         $(window).focus(function() {
           if(new_data != null) {
-            drawTimer($widget, new_data);
+            setData(new_data);
+            drawTimer($widget);
           }
         });
       });
