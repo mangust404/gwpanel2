@@ -1,5 +1,7 @@
 (function(panel, $) {
 
+  var statsIndex = {};
+
   function getDateStr(date) {
     return date.getDate().toString() + '_' + (date.getMonth() + 1).toString() + '_' + date.getFullYear().toString();
   }
@@ -67,7 +69,6 @@
   function drawStats(currentStats) {
 
     var statsData = [];
-    var statsIndex = {};
 
     var numbersMax = 0;
     var twelveNumbersMax = 0;
@@ -76,6 +77,7 @@
     var $numbers = $('img[onclick]').map(function() {
       if(this.onclick.toString().search(/putbet\(([0-9]+)\)/) != -1) {
         var num = parseInt(RegExp.$1);
+        $(this).attr('data-num', num);
         if(num > 0 && num < 37) {
           if(currentStats[num] > numbersMax) numbersMax = currentStats[num];
           if(currentStats[num] > 0) gamesCount += currentStats[num];
@@ -83,8 +85,6 @@
           statsIndex[num] = item;
           statsData.push(item);
           return this;
-        } else {
-          $(this).attr('data-num', num);
         }
       }
     });
@@ -197,20 +197,6 @@
       }
     }
     
-    var betsData = [];
-    $('center:contains("Ваши ставки"):last').parent().find('.greenlightbg').each(function() {
-      if($(this).text().search(/Число ([0-9]+)/) != -1) {
-        betsData.push(parseInt(RegExp.$1));
-      } else if($(this).text().search(/(Двенадцать номеров|Дюжина|Числа|Чётное|Нечётное|Красное|Чёрное)/) != -1) {
-        var $img = $('img[onclick][title*="' + $(this).text() + '"]');
-        if($img.length > 0 && $img[0].onclick.toString().search(/putbet\(([0-9]+)\)/) != -1) {
-          var num = parseInt(RegExp.$1);
-          statsIndex[num] = {img: $img[0]};
-          betsData.push(num);
-        }
-      }
-    });
-
     //console.log(statsData);
     var stats = d3.select('.roulette-stat').selectAll('span').data(statsData, function(d, i) {
       return d.num + '_' + d.count;
@@ -261,13 +247,32 @@
             return 41 * d.count / gamesCount;
           }
         });
+    drawBets();
+  }
+
+  function drawBets() {
+    var betsData = [];
+    $('center:contains("Ваши ставки"):last').parent().find('.greenlightbg').each(function() {
+      if($(this).text().search(/Число ([0-9]+)/) != -1) {
+        betsData.push(parseInt(RegExp.$1));
+      } else if($(this).text().search(/(Двенадцать номеров|Дюжина|Числа|Чётное|Нечётное|Красное|Чёрное)/) != -1) {
+        var $img = $('img[onclick][title*="' + $(this).text() + '"]');
+        if($img.length > 0 && $img[0].onclick.toString().search(/putbet\(([0-9]+)\)/) != -1) {
+          var num = parseInt(RegExp.$1);
+          betsData.push(num);
+        }
+      }
+    });
 
     if(betsData.length > 0) {
-      var bets = d3.select('.roulette-bets').selectAll('img').data(betsData);
+      var bets = d3.select('.roulette-bets').selectAll('img').data(betsData, function(bet) {
+        return bet;
+      });
 
       bets
         .enter()
         .append('img')
+        .attr('title', 'Сделана ставка')
         .attr('src', panel.path_to_theme() + '/images/ok.png')
         .style({
           display: 'block',
@@ -279,13 +284,13 @@
           'border-radius': '9px'
         })
         .style('left', function(bet) {
-          return statsIndex[bet].img.offsetLeft + 2 + 'px';
+          return $('img[data-num="' + bet + '"]')[0].offsetLeft + 2 + 'px';
         })
         .style('top', function(bet) {
-          return statsIndex[bet].img.parentNode.offsetTop + 22 + 'px';
+          return $('img[data-num="' + bet + '"]')[0].parentNode.offsetTop + 22 + 'px';
         })
         .each(function(bet) {
-          this.onclick = statsIndex[bet].img.onclick;
+          this.onclick = $('img[data-num="' + bet + '"]')[0].onclick;
         });
 
     }
@@ -297,6 +302,38 @@ jQuery.extend(__panel, {
   * Вывод статистики по рулетке
   */
   roulette_stats: function() {
+    if(panel.panel_ajaxify) {
+      function initRouletteForm() {
+        $('.mainbutton').click(function() {
+          document.forms.rform.submit = function() {
+            var prevBet = $('input[name="bet"]').val();
+            $('form[name="rform"]').sendForm({
+              success: function(data, transport) {
+                var $data = $(data);
+                var $newForm = $data.find('form[name="rform"]');
+
+                if($newForm.length > 0 && $newForm.find('input[name="betsign"]').length > 0) {
+                  $('center:contains("Ваши ставки"):last').parents('table:first').replaceWith(
+                    $data.find('center:contains("Ваши ставки"):last').parents('table:first')
+                  );
+                  //panel.ajaxUpdateContent(data, 'http://www.ganjawars.ru/roulette.php');
+                  $('form[name="rform"]').replaceWith($newForm);
+                  initRouletteForm();
+                  $('input[name="bet"]').val(prevBet);
+                } else {
+                  panel.ajaxUpdateContent(data, location.href);
+                }
+                //$('input[name="bettype"], input[name="')
+                drawBets();//, 20);
+              }
+            });
+          }
+          checkbet();
+          return false;
+        });
+      }
+      initRouletteForm();
+    }
     panel.loadScript(['roulette/roulette_parser.js', 'lib/d3.min.js'], function() {
       panel.roulette_stat_parser(function(todayStats) {
         document.title = 'Рулетка :: ' + document.title.replace('Рулетка :: ', '');
@@ -379,6 +416,7 @@ jQuery.extend(__panel, {
           if(!mode) mode = 'today';
           $control.find('.roulette-' + mode).click();
         });
+
       });
     });
   },
