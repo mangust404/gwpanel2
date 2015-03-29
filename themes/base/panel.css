@@ -373,3 +373,19 @@ body.map-php.ajax-processed td[width="100%"] + td select {
   -moz-border-radius: 2px;
   cursor: pointer;
 }
+
+a.ajax-href {
+  border-bottom: 1px dashed #004400;
+  cursor: pointer;
+  margin: 0 6px;
+}
+
+a.ajax-href.active {
+  margin: 0;
+  font-weight: bold;
+  padding: 4px 9px;
+  background: #d0eed0;
+  border: 0;
+  color: #990000;
+  border-radius: 5px;
+}
