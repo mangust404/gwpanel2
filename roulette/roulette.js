@@ -237,6 +237,12 @@
         d.img.title = this.title = d.img.origTitle + (d.count > 0? '. Выпало: ' + d.count + panel.pluralize(d.count, ' раз', ' раза', ' раз'): '. Пока ещё не выпадало');
 
         this.onclick = d.img.onclick;
+        $(this).on('dblclick', function() {
+          $('.mainbutton').click();
+        });
+        $(d.img).on('dblclick', function() {
+          $('.mainbutton').click();
+        })
       })
       .transition()
       .duration(500)
