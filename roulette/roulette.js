@@ -6,6 +6,14 @@
     return date.getDate().toString() + '_' + (date.getMonth() + 1).toString() + '_' + date.getFullYear().toString();
   }
 
+  function dataSum(data) {
+    var sum = 0;
+    for(var key in data) {
+      sum += data[key];
+    }
+    return sum;
+  }
+
   function fetchStatsTo(date, callback) {
     date.setHours(0); date.setMinutes(0); date.setSeconds(0); date.setMilliseconds(0);
 
@@ -17,6 +25,13 @@
         if(localStorage['rouinfo_' + date_str]) {
           /// если данные есть в локалсторадже, то берём из него
           var __data = JSON.parse(localStorage['rouinfo_' + date_str] || JSON.stringify({})) || {};
+          /// Если данные не за сегодня, и их количество не 144
+          if(getDateStr(new Date) != date_str && dataSum(__data) < 144 && !localStorage['rouinfo_' + date_str + '_parsed']) {
+            /// удаляем текущие данные из стораджа, в результате они спарсятся с сервера
+            delete localStorage['rouinfo_' + date_str];
+            parse(date_str);
+            return;
+          }
           for(var key in __data) {
             if(result[key] != undefined) {
               result[key] += __data[key];
@@ -33,7 +48,7 @@
           var s = document.createElement('script');
           s.type = 'text/javascript';
           var date_ar = date_str.split('_');
-          s.src = 'http://gwpanel.org/' + date_ar[2] + '/' + date_ar[1] + '/' + date_str + '.js';
+          s.src = 'http://gwpanel.org/roulette/' + date_ar[2] + '/' + date_ar[1] + '/' + date_str + '.js';
 
           s.addEventListener('load', function() {
             for(var key in window.rouinfo) {
@@ -44,6 +59,7 @@
               }
             }
             localStorage['rouinfo_' + date_str] = JSON.stringify(window.rouinfo);
+            localStorage['rouinfo_' + date_str + '_parsed'] = Object.keys(window.rouinfo).length;
             window.rouinfo = null;
             serverDate.setDate(serverDate.getDate() - 1);
             if(serverDate.getTime() > date.getTime()) {
