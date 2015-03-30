@@ -1,6 +1,7 @@
 (function(panel, $) {
 
   var statsIndex = {};
+  var savedBets = {};
 
   function getDateStr(date) {
     return date.getDate().toString() + '_' + (date.getMonth() + 1).toString() + '_' + date.getFullYear().toString();
@@ -213,7 +214,6 @@
       }
     }
     
-    //console.log(statsData);
     var stats = d3.select('.roulette-stat').selectAll('span').data(statsData, function(d, i) {
       return d.num + '_' + d.count;
     });
@@ -274,17 +274,24 @@
 
   function drawBets() {
     var betsData = [];
+
     $('center:contains("Ваши ставки"):last').parent().find('.greenlightbg').each(function() {
+      var betn;
       if($(this).text().search(/Число ([0-9]+)/) != -1) {
-        betsData.push(parseInt(RegExp.$1));
+        betn = parseInt(RegExp.$1);
       } else if($(this).text().search(/(Двенадцать номеров|Дюжина|Числа|Чётное|Нечётное|Красное|Чёрное)/) != -1) {
         var $img = $('img[onclick][title*="' + $(this).text() + '"]');
         if($img.length > 0 && $img[0].onclick.toString().search(/putbet\(([0-9]+)\)/) != -1) {
-          var num = parseInt(RegExp.$1);
-          betsData.push(num);
+          betn = parseInt(RegExp.$1);
         }
       }
+      if(betn > 0) {
+        betsData.push(betn);
+        savedBets[betn] = panel.convertingMoneyToInt($(this).prev('td').text());
+      }
     });
+
+    //panel.set('roulette_bets', betsData);
 
     if(betsData.length > 0) {
       var bets = d3.select('.roulette-bets').selectAll('img').data(betsData, function(bet) {
@@ -314,8 +321,60 @@
         .each(function(bet) {
           this.onclick = $('img[data-num="' + bet + '"]')[0].onclick;
         });
-
     }
+
+    panel.get('roulette_bets', function(bets) {
+      if(bets && Object.keys(bets).length > 0) {
+        $('<br>').insertAfter($('a.mainbutton'));
+        $('<span class="mainbutton repeat-bet">Повторить ' + Object.keys(bets).length + panel.pluralize(Object.keys(bets).length, ' ставка', ' ставки', ' ставок') + ' на сумму ' + panel.convertingIntToMoney(dataSum(bets)) + '</span>').click(function() {
+          bets_ar = [];
+          for(var betn in bets) {
+            bets_ar.push({betn: betn, bet: bets[betn]});
+          }
+          function makeBet() {
+            var bet_data = bets_ar.pop();
+            $('input[name="betn"]').val(bet_data.betn);
+            $('input[name="bet"]').val(bet_data.bet);
+            $('form[name="rform"]').sendForm({
+              success: function(data, transport) {
+                if(bets_ar.length > 0) { /// ещё есть ставки
+                  var $data = $(data);
+                  var $newForm = $data.find('form[name="rform"]');
+
+                  $('form[name="rform"]').replaceWith($newForm);
+                  setTimeout(makeBet, 100);
+                } else {
+                  panel.ajaxUpdateContent(data, location.href);
+                }
+              }
+            });
+          }
+          makeBet();
+
+        }).css({display: 'block'}).insertAfter($('a.mainbutton'));
+
+        $('<span class="mainbutton forget-bet">Забыть запомненные ставки</span>').click(function() {
+          panel.del('roulette_bets', function() {
+            $('.repeat-bet, .forget-bet').remove();
+            if(Object.keys(savedBets).length > 0) {
+              $('<span class="mainbutton save-bet">Запомнить текущие ставки</span>').click(function() {
+                panel.set('roulette_bets', savedBets, function() {
+                  $('.save-bet').hide();
+                });
+              }).insertAfter($('a.mainbutton'));
+            }
+          });
+        }).css({display: 'block'}).insertAfter($('.repeat-bet'));
+
+      } else if(Object.keys(savedBets).length > 0) {
+        $('<span class="mainbutton save-bet">Запомнить текущие ставки</span>').click(function() {
+          panel.set('roulette_bets', savedBets, function() {
+            $('.save-bet').hide();
+          });
+        }).css({display: 'block'}).insertAfter($('a.mainbutton'));
+      }
+    });
+
   }
 
 jQuery.extend(__panel, {
@@ -326,7 +385,7 @@ jQuery.extend(__panel, {
   roulette_stats: function() {
     if(panel.panel_ajaxify) {
       function initRouletteForm() {
-        $('.mainbutton').click(function() {
+        $('a.mainbutton').click(function() {
           document.forms.rform.submit = function() {
             var prevBet = $('input[name="bet"]').val();
             $('form[name="rform"]').sendForm({
@@ -342,11 +401,10 @@ jQuery.extend(__panel, {
                   $('form[name="rform"]').replaceWith($newForm);
                   initRouletteForm();
                   $('input[name="bet"]').val(prevBet);
+                  drawBets();
                 } else {
                   panel.ajaxUpdateContent(data, location.href);
                 }
-                //$('input[name="bettype"], input[name="')
-                drawBets();//, 20);
               }
             });
           }
