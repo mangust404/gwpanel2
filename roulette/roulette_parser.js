@@ -20,7 +20,6 @@ $.extend(panel, {
           var last = parseInt(localStorage['last_rouinfo']);
           var prev = parseInt(localStorage['prev_rouinfo']);
           var id = parseInt(this.href.split('id=')[1]);
-          //console.log('id', id, 'last', last, 'prev', prev);
           index++;
           if(isNaN(prev) || prev > id || id > last) {
             ids.push(id);
@@ -34,7 +33,6 @@ $.extend(panel, {
           }
         });
 
-        console.log(ids.length, Object.keys(rouinfo).length);
         if(ids.length > 10 || Object.keys(rouinfo).length == 0) {
           var s = document.createElement('script');
           s.type = 'text/javascript';

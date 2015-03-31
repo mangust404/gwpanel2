@@ -323,6 +323,7 @@
         });
     }
 
+    if($('.repeat-bet, .forget-bet, .save-bet').length > 0) return;
     panel.get('roulette_bets', function(bets) {
       if(bets && Object.keys(bets).length > 0) {
         $('<br>').insertAfter($('a.mainbutton'));
