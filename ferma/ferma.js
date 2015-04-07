@@ -290,7 +290,7 @@ jQuery.extend(__panel, {
 
         if(location.search.indexOf('action=extract') > -1) {
           /// Сбор урожая
-          $gathered = $('center:contains("Вы собрали")');
+          $gathered = $('center:contains("Вы собрали"):last').parent();
           if($gathered.length > 0) {
             var text = $gathered.text();
             var name = text.split('Вы собрали ')[1].split('+')[0];
@@ -301,21 +301,18 @@ jQuery.extend(__panel, {
             var plant;
             $.each(panel.ferma_plants, function(id, __plant) {
               if(__plant.name == name || 
-                  // название может склоняться, пытаемся сравнить чуть по-другому
-                  (__money == __plant.profit && 
-                    __exp == __plant.exp && 
-                    __plant.name.indexOf(name.substr(0, name.length - 2)) == 0
-                  )
+                  // название может склоняться, пытаемся сравнить по деньгам
+                  (__money == __plant.profit)
                 ) {
                 plant = __plant;
               }
             });
             if(!plant) {
-              console.log('Тип растений не найден');
-              return;
+              console.log('Тип растений не найден, считаем опыт и деньги');
+              //return;
             }
-            var money = parseInt(plant.profit - plant.price);
-            var exp = parseFloat(plant.exp);
+            var money = __money; //parseInt(plant.profit - plant.price);
+            var exp = __exp; //parseFloat(plant.exp);
             var now = new Date;
             now.setHours(0);
             now.setMinutes(0);
