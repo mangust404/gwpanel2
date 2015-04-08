@@ -310,8 +310,10 @@ jQuery.extend(__panel, {
             if(!plant) {
               console.log('Тип растений не найден, считаем опыт и деньги');
               //return;
+              var money = 0;
+            } else {
+              var money = parseInt(plant.profit - plant.price);
             }
-            var money = __money; //parseInt(plant.profit - plant.price);
             var exp = __exp; //parseFloat(plant.exp);
             var now = new Date;
             now.setHours(0);
