@@ -323,6 +323,42 @@
         });
     }
 
+    function shuffle(o){
+        for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+        return o;
+    }
+    $('<span class="mainbutton random-bet">Случайная ставка</span>').click(function() {
+      var bets_ar = [];
+      var ar = [{betn: 40, bet: 10334}, {betn: 41, bet: 10334}, {betn: 42, bet: 10334}];
+      shuffle(ar);
+      bets_ar.push(ar.pop());
+      for(var key in ar) {
+        ar[key].bet = 4666;
+      }
+      shuffle(ar);
+      bets_ar.push(ar.pop());
+      function makeBet() {
+        var bet_data = bets_ar.pop();
+        $('input[name="betn"]').val(bet_data.betn);
+        $('input[name="bet"]').val(bet_data.bet);
+        $('form[name="rform"]').sendForm({
+          success: function(data, transport) {
+            if(bets_ar.length > 0) { /// ещё есть ставки
+              var $data = $(data);
+              var $newForm = $data.find('form[name="rform"]');
+
+              $('form[name="rform"]').replaceWith($newForm);
+              setTimeout(makeBet, 100);
+            } else {
+              panel.ajaxUpdateContent(data, location.href);
+            }
+          }
+        });
+      }
+      makeBet();
+
+    }).css({display: 'block'}).insertAfter($('a.mainbutton'));
+
     if($('.repeat-bet, .forget-bet, .save-bet').length > 0) return;
     panel.get('roulette_bets', function(bets) {
       if(bets && Object.keys(bets).length > 0) {
