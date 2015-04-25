@@ -10,30 +10,24 @@ $.extend(panel, {
         //delete localStorage['last_rouinfo'];
         //delete localStorage['prev_rouinfo'];
 
-        var rouinfo = JSON.parse(localStorage['rouinfo_' + date_str] || JSON.stringify({})) || {};
+        var rouinfo = JSON.parse(localStorage['rouinfo_' + date_str] || JSON.stringify({history: {}, summ: {}, overall: 0})) || {history: {}, summ: {}, overall: 0};
         var index = 0;
         
         //console.log($d.find('a[href*="rouinfo.php"]'));
         var ids = [];
+        var last_id;
         var hrefs = [];
-        $d.find('a[href*="rouinfo.php"]').each(function() {
-          var last = parseInt(localStorage['last_rouinfo']);
-          var prev = parseInt(localStorage['prev_rouinfo']);
-          var id = parseInt(this.href.split('id=')[1]);
-          index++;
-          if(isNaN(prev) || prev > id || id > last) {
-            ids.push(id);
-            hrefs.push(this.href);
-            if(id > last || isNaN(last)) {
-              localStorage['last_rouinfo'] = id;
-            }
-            if(id < prev || isNaN(prev)) {
-              localStorage['prev_rouinfo'] = id;
-            }
-          }
+        $d.find('a[href*="rouinfo.php"]:first').each(function() {
+          last_id = parseInt(this.href.split('id=')[1]);
         });
-
-        if(ids.length > 10 || Object.keys(rouinfo).length == 0) {
+        var need_parse = false;
+        for(var i = 1; i < 4; i++) {
+          if(!rouinfo['history'][last_id - i]) {
+            need_parse = true;
+          }
+        }
+        if(need_parse) {
+          /// слишком много игр пропущено, лучше взять данные с сервера gwpanel
           var s = document.createElement('script');
           s.type = 'text/javascript';
           var date_ar = date_str.split('_');
@@ -41,33 +35,39 @@ $.extend(panel, {
 
           window.rouinfo_callback = function() {
             localStorage['rouinfo_' + date_str] = JSON.stringify(window.rouinfo);
+            callback(window.rouinfo);
           }
+          s.addEventListener('error', function() {
+            callback(rouinfo);
+          }, false);
+
           document.body.appendChild(s);
         } else {
-          for(var i = 0; i < ids.length; i++) {
-            var last = parseInt(localStorage['last_rouinfo']);
-            var prev = parseInt(localStorage['prev_rouinfo']);
-            var id = ids[i];
-            var href = hrefs[i];
-            jQuery.ajax(href, {
-              async: false,
-              success: function(data) {
-                jQuery(data).text().search(/Выпало число[\s]+([0-9]+)/);
-                var result = parseInt(RegExp.$1);
-                if(result > 0) {
-                  if(rouinfo[result] == undefined) {
-                    rouinfo[result] = 1;
-                  } else {
-                    rouinfo[result]++;
+          /// меньше 4х игр нужно спарсить, парсим синхронно из истории
+          $d.find('a[href*="rouinfo.php"]:first').each(function() {
+            var id = parseInt(this.href.split('id=')[1]);
+            if(id > 0 && rouinfo['history'][id] == undefined) {
+              jQuery.ajax(this.href, {
+                async: false,
+                success: function(data) {
+                  jQuery(data).text().search(/Выпало число[\s]+([0-9]+)/);
+                  var result = parseInt(RegExp.$1);
+                  if(result > 0) {
+                    rouinfo['history'][id] = result;
+                    if(rouinfo['summ'][result] == undefined) {
+                      rouinfo['summ'][result] = 1;
+                    } else {
+                      rouinfo['summ'][result]++;
+                    }
+                    rouinfo['overall']++;
                   }
                 }
-              }
-            });
-          }
+              });
+            }
+          });
+          localStorage['rouinfo_' + date_str] = JSON.stringify(rouinfo);
+          callback(rouinfo);
         }
-        localStorage['rouinfo_' + date_str] = JSON.stringify(rouinfo);
-
-        callback(rouinfo);
       });
     }
 

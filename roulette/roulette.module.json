@@ -4,11 +4,16 @@
   "title": "Модуль для Рулетки",
   "weight": 5, 
   "pages": {
-    "/roulette.php": ["roulette_stats"]
+    "/roulette.php": ["roulette_stats"],
+    "/roulist.php": ["roulette_results"]
   },
   "methods": {
     "roulette_stats": {
       "title": "Статистика для рулетки",
+      "file": "roulette.js"
+    },
+    "roulette_results": {
+      "title": "Показывать выпавшие числа в сегодняшних играх",
       "file": "roulette.js"
     }
   },

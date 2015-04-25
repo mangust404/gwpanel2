@@ -15,76 +15,168 @@
     return sum;
   }
 
-  function fetchStatsTo(date, callback) {
-    date.setHours(0); date.setMinutes(0); date.setSeconds(0); date.setMilliseconds(0);
+  function fetchStatsFor(exact_date, callback, is_today) {
+    exact_date.setHours(0); exact_date.setMinutes(0); exact_date.setSeconds(0); exact_date.setMilliseconds(0);
+    var date_str = getDateStr(exact_date)
 
-    var result = {};
+    var result = {
+      history: {},
+      summ: {},
+      overall: 0
+    };
+    var __data;
+
+    if(localStorage['rouinfo_' + date_str]) {
+      /// если данные есть в локалсторадже, то берём из него
+      var __data = JSON.parse(localStorage['rouinfo_' + date_str] || JSON.stringify({})) || {};
+      if(!__data.history || (__data.overall < 144 && !localStorage['rouinfo_' + date_str + '_parsed'])) {
+        __data = false;
+      }
+    }
+
+    if(__data) {
+      callback(__data);
+    } else {
+      // если данных нет, то берём с gwpanel.org/roulette/Y/m/
+      var s = document.createElement('script');
+      s.type = 'text/javascript';
+      var date_ar = date_str.split('_');
+      s.src = 'http://gwpanel.org/roulette/' + date_ar[2] + '/' + date_ar[1] + '/' + date_str + '.js?' + (new Date).getTime();
+
+      s.addEventListener('load', function() {
+        localStorage['rouinfo_' + date_str] = JSON.stringify(window.rouinfo);
+        if(!is_today) {
+          localStorage['rouinfo_' + date_str + '_parsed'] = window.rouinfo.overall;
+        }
+        $.extend(result['history'], window.rouinfo['history']);
+        $.extend(result['summ'], window.rouinfo['summ']);
+        result['overall'] = window.rouinfo['overall'];
+        callback(result);
+        window.rouinfo = null;
+      }, false);
+      s.addEventListener('error', function() {
+        callback(result);
+      }, false);
+
+      document.body.appendChild(s);
+    }
+  }
+
+  function fetchStatsTill(parse_to_date, callback) {
+    parse_to_date.setHours(0); parse_to_date.setMinutes(0); parse_to_date.setSeconds(0); parse_to_date.setMilliseconds(0);
+
+    var result = {'summ': {}, 'history': {}, 'overall': 0};
+    var now;
     panel.getTime(function(serverDate) {
+      now = serverDate;
       serverDate.setHours(0); serverDate.setMinutes(0); serverDate.setSeconds(0); serverDate.setMilliseconds(0);
 
-      function parse(date_str) {
-        if(localStorage['rouinfo_' + date_str]) {
-          /// если данные есть в локалсторадже, то берём из него
-          var __data = JSON.parse(localStorage['rouinfo_' + date_str] || JSON.stringify({})) || {};
-          /// Если данные не за сегодня, и их количество не 144
-          if(getDateStr(new Date) != date_str && dataSum(__data) < 144 && !localStorage['rouinfo_' + date_str + '_parsed']) {
-            /// удаляем текущие данные из стораджа, в результате они спарсятся с сервера
-            delete localStorage['rouinfo_' + date_str];
-            parse(date_str);
-            return;
-          }
-          for(var key in __data) {
-            if(result[key] != undefined) {
-              result[key] += __data[key];
-            } else {
-              result[key] = __data[key];
-            }
-          }
-          serverDate.setDate(serverDate.getDate() - 1);
-          if(serverDate.getTime() > date.getTime()) {
-            parse(getDateStr(serverDate));
-          }
-        } else if(serverDate.getTime() >= 1427565600000) {
-          // если данных нет, то берём с gwpanel.org/roulette/Y/m/
-          var s = document.createElement('script');
-          s.type = 'text/javascript';
-          var date_ar = date_str.split('_');
-          s.src = 'http://gwpanel.org/roulette/' + date_ar[2] + '/' + date_ar[1] + '/' + date_str + '.js';
-
-          s.addEventListener('load', function() {
-            for(var key in window.rouinfo) {
-              if(result[key] != undefined) {
-                result[key] += window.rouinfo[key];
+      function parse() {
+        fetchStatsFor(serverDate, function(__data) {
+          if(__data['overall'] > 0) {
+            for(var key in __data['summ']) {
+              if(result['summ'][key] != undefined) {
+                result['summ'][key] += __data['summ'][key];
               } else {
-                result[key] = window.rouinfo[key];
+                result['summ'][key] = __data['summ'][key];
               }
             }
-            localStorage['rouinfo_' + date_str] = JSON.stringify(window.rouinfo);
-            localStorage['rouinfo_' + date_str + '_parsed'] = Object.keys(window.rouinfo).length;
-            window.rouinfo = null;
-            serverDate.setDate(serverDate.getDate() - 1);
-            if(serverDate.getTime() > date.getTime()) {
-              parse(getDateStr(serverDate));
+            for(var id in __data['history']) {
+              result['history'][id] = __data['history'];
             }
-          }, false);
-          s.addEventListener('error', function() {
+            result['overall'] += __data['overall'];
+            serverDate.setDate(serverDate.getDate() - 1);
+            if(serverDate.getTime() > parse_to_date.getTime()) {
+              parse();
+            } else {
+              callback(result);
+            }
+          } else {
             callback(result);
-          }, false);
-
-          document.body.appendChild(s);
-        } else {
-          callback(result);
-        }
+          }
+        }, now == parse_to_date);
       }
 
-      parse(getDateStr(serverDate));
+      parse();
 
     });
     //roulette/2015/3/29_3_2015.js
   }
 
-  function drawStats(currentStats) {
+  function determineDozen(num) {
+    if(num < 13) {
+      return 37;
+    } else if(num < 27) {
+      return 38;
+    } else {
+      return 39;
+    }
+  }
 
+  function determineTvelveNumber(num) {
+    // Двенадцать номеров #3, 2, 1
+    switch(num % 3) {
+      case 0:
+        return 40;
+      break;
+      case 2:
+        return 41;
+      break;
+      case 1:
+        return 42;
+      break;
+    }
+  }
+
+  // 1-18, 19-36
+  function determineHalf(num) {
+    if(num < 20) {
+      return 43;
+    } else {
+      return 44;
+    }    
+  }
+
+  var redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+
+  function determineColor(num) {
+    if(redNumbers.indexOf(num) != -1) {
+      return 47;
+    } else {
+      return 48;
+    }
+  }
+
+  function determineParity(num) {
+    if(num % 2 == 1) {
+      return 46;
+    } else {
+      return 45;
+    }
+  }
+
+  var names = {
+    '1': 'Число 1', '2': 'Число 2', '3': 'Число 3', '4': 'Число 4', '5': 'Число 5', '6': 'Число 6',
+    '7': 'Число 7', '8': 'Число 8', '9': 'Число 9', '10': 'Число 10', '11': 'Число 11', '12': 'Число 12',
+    '13': 'Число 13', '14': 'Число 14', '15': 'Число 15', '16': 'Число 16', '17': 'Число 17', '18': 'Число 18',
+    '19': 'Число 19', '20': 'Число 20', '21': 'Число 21', '22': 'Число 22', '23': 'Число 23', '24': 'Число 24',
+    '25': 'Число 25', '26': 'Число 26', '27': 'Число 27', '28': 'Число 28', '29': 'Число 29', '30': 'Число 30',
+    '31': 'Число 31', '32': 'Число 32', '33': 'Число 33', '34': 'Число 34', '35': 'Число 35', '36': 'Число 36',
+    '37': 'Дюжина "1-12"',
+    '38': 'Дюжина 13-24',
+    '39': 'Дюжина "25-36"',
+    '40': 'Двенадцать номеров #3',
+    '41': 'Двенадцать номеров #2',
+    '42': 'Двенадцать номеров #1',
+    '43': 'Числа 1-18',
+    '44': 'Числа 19-36',
+    '45': 'Чётное',
+    '46': 'Нечётное',
+    '47': 'Красное',
+    '48': 'Чёрное'
+  }
+
+  function drawStats(currentStats) {
     var statsData = [];
 
     var numbersMax = 0;
@@ -96,9 +188,9 @@
         var num = parseInt(RegExp.$1);
         $(this).attr('data-num', num);
         if(num > 0 && num < 37) {
-          if(currentStats[num] > numbersMax) numbersMax = currentStats[num];
-          if(currentStats[num] > 0) gamesCount += currentStats[num];
-          var item = { img: this, count: currentStats[num]? currentStats[num]: 0, num: num};
+          if(currentStats['summ'][num] > numbersMax) numbersMax = currentStats['summ'][num];
+          if(currentStats['summ'][num] > 0) gamesCount += currentStats['summ'][num];
+          var item = { img: this, count: currentStats['summ'][num]? currentStats['summ'][num]: 0, num: num};
           statsIndex[num] = item;
           statsData.push(item);
           return this;
@@ -109,97 +201,61 @@
     /// Подсчитываем варианты
     var extraStats = {};
 
-    var redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-
-    for(var key in currentStats) {
+    for(var key in currentStats['summ']) {
       key = parseInt(key);
       if(key > 0 && key < 37) {
         var num = 0;
 
         // Дюжины
-        if(key < 13) {
-          num = 37;
-        } else if(key < 27) {
-          num = 38;
-        } else {
-          num = 39;
-        }
+        num = determineDozen(key);
 
-        if(num > 0 && parseInt(currentStats[key]) > 0) {
+        if(num > 0 && parseInt(currentStats['summ'][key]) > 0) {
           if(extraStats[num] != undefined) {
-            extraStats[num] += currentStats[key];
+            extraStats[num] += currentStats['summ'][key];
           } else {
-            extraStats[num] = parseInt(currentStats[key]);
+            extraStats[num] = parseInt(currentStats['summ'][key]);
           }
         }
 
-        var num = 0;
-        // Двенадцать номеров #3, 2, 1
-        switch(key % 3) {
-          case 0:
-            num = 40;
-          break;
-          case 2:
-            num = 41;
-          break;
-          case 1:
-            num = 42;
-          break;
-        }
+        num = determineTvelveNumber(key);
 
-        if(num > 0 && parseInt(currentStats[key]) > 0) {
+        if(num > 0 && parseInt(currentStats['summ'][key]) > 0) {
           if(extraStats[num] != undefined) {
-            extraStats[num] += currentStats[key];
+            extraStats[num] += currentStats['summ'][key];
           } else {
-            extraStats[num] = parseInt(currentStats[key]);
+            extraStats[num] = parseInt(currentStats['summ'][key]);
           }
         }
 
-        // 1-18, 19-36
-        var num = 0;
-        if(key < 20) {
-          num = 43;
-        } else {
-          num = 44;
-        }
+        num = determineHalf(key);
 
-        if(num > 0 && parseInt(currentStats[key]) > 0) {
+        if(num > 0 && parseInt(currentStats['summ'][key]) > 0) {
           if(extraStats[num] != undefined) {
-            extraStats[num] += currentStats[key];
+            extraStats[num] += currentStats['summ'][key];
           } else {
-            extraStats[num] = parseInt(currentStats[key]);
+            extraStats[num] = parseInt(currentStats['summ'][key]);
           }
         }
 
         // чётное-нечётное
-        var num = 0;
-        if(key % 2 == 1) {
-          num = 46;
-        } else {
-          num = 45;
-        }
+        num = determineParity(key);
 
-        if(num > 0 && parseInt(currentStats[key]) > 0) {
+        if(num > 0 && parseInt(currentStats['summ'][key]) > 0) {
           if(extraStats[num] != undefined) {
-            extraStats[num] += currentStats[key];
+            extraStats[num] += currentStats['summ'][key];
           } else {
-            extraStats[num] = parseInt(currentStats[key]);
+            extraStats[num] = parseInt(currentStats['summ'][key]);
           }
         }
 
         // чёрное-красное
-        var num = 0;
-        if(redNumbers.indexOf(key) != -1) {
-          num = 47;
-        } else {
-          num = 48;
-        }
+        num = determineColor(key);
 
-        if(num > 0 && parseInt(currentStats[key]) > 0) {
+        if(num > 0 && parseInt(currentStats['summ'][key]) > 0) {
           if(extraStats[num] != undefined) {
-            extraStats[num] += currentStats[key];
+            extraStats[num] += currentStats['summ'][key];
           } else {
-            extraStats[num] = parseInt(currentStats[key]);
+            extraStats[num] = parseInt(currentStats['summ'][key]);
           }
         }
         
@@ -327,6 +383,8 @@
         for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
         return o;
     }
+    if($('.repeat-bet, .forget-bet, .save-bet, .random-bet').length > 0) return;
+
     $('<span class="mainbutton random-bet">Случайная ставка</span>').click(function() {
       var bets_ar = [];
       var ar = [{betn: 40, bet: 10334}, {betn: 41, bet: 10334}, {betn: 42, bet: 10334}];
@@ -359,7 +417,6 @@
 
     }).css({display: 'block'}).insertAfter($('a.mainbutton'));
 
-    if($('.repeat-bet, .forget-bet, .save-bet').length > 0) return;
     panel.get('roulette_bets', function(bets) {
       if(bets && Object.keys(bets).length > 0) {
         $('<br>').insertAfter($('a.mainbutton'));
@@ -470,12 +527,18 @@ jQuery.extend(__panel, {
           left: 0
         });
 
-        gamesCount = 0;
-        for(var key in todayStats) {
-          if(todayStats[key] > 0) gamesCount += todayStats[key];
+        var $last_game = $('a:contains(Результат прошлой игры):first');
+        var last_id = $last_game.attr('href').split('id=')[1];
+        if(todayStats.history[last_id]) {
+          $last_game.html($last_game.html() + ' [<strong title="Выпало число">' + todayStats.history[last_id] + '</strong>]');
         }
 
-        $('center:contains("Ваш счёт"):last').append('<b>За сегодня игр: ' + gamesCount + '</b>');
+        gamesCount = 0;
+        for(var key in todayStats) {
+          if(todayStats['summ'][key] > 0) gamesCount += todayStats['summ'][key];
+        }
+
+        $('center:contains("Ваш счёт"):last').append('<b id="roulette-overall"></b>');
 
 
         var $control = $('<p class="roulette-control">').insertAfter($roulette.parents('table').first());
@@ -486,26 +549,34 @@ jQuery.extend(__panel, {
         $control.append($('<a class="ajax-href roulette-today">за сегодня</a>').click(function() {
           drawStats(todayStats);
           panel.set('roulette_mode', 'today');
+          $('#roulette-overall').html('За сегодня игр: ' + todayStats.overall);
         })).append($('<a class="ajax-href roulette-yesterday">за вчера</a>').click(function() {
           panel.getTime(function(serverDate) { /// Получаем время на сервере
             if(!yesterdayStats) {
               serverDate.setDate(serverDate.getDate() - 1);
-              var date_str = getDateStr(serverDate);
-              yesterdayStats = JSON.parse(localStorage['rouinfo_' + date_str] || JSON.stringify({})) || {};
+              fetchStatsFor(serverDate, function(stats) {
+                yesterdayStats = stats;
+                drawStats(yesterdayStats);
+                $('#roulette-overall').html('За вчера игр: ' + yesterdayStats.overall);
+              });
+            } else {
+              $('#roulette-overall').html('За вчера игр: ' + yesterdayStats.overall);
+              drawStats(yesterdayStats);
             }
-            drawStats(yesterdayStats);
           });
           panel.set('roulette_mode', 'yesterday');
         })).append($('<a class="ajax-href roulette-week">за неделю</a>').click(function() {
           panel.getTime(function(serverDate) { /// Получаем время на сервере
             if(!aggregatedWeekStats) {
               serverDate.setDate(serverDate.getDate() - 7);
-              fetchStatsTo(serverDate, function(stats) {
+              fetchStatsTill(serverDate, function(stats) {
                 aggregatedWeekStats = stats;
                 drawStats(aggregatedWeekStats);
+                $('#roulette-overall').html('За неделю игр: ' + aggregatedWeekStats.overall);
               });
             } else {
               drawStats(aggregatedWeekStats);
+              $('#roulette-overall').html('За неделю игр: ' + aggregatedWeekStats.overall);
             }
           });
           panel.set('roulette_mode', 'week');
@@ -513,12 +584,14 @@ jQuery.extend(__panel, {
           panel.getTime(function(serverDate) { /// Получаем время на сервере
             if(!aggregatedMonthStats) {
               serverDate.setDate(serverDate.getDate() - 30);
-              fetchStatsTo(serverDate, function(stats) {
+              fetchStatsTill(serverDate, function(stats) {
                 aggregatedMonthStats = stats;
                 drawStats(aggregatedMonthStats);
+                $('#roulette-overall').html('За месяц игр: ' + aggregatedMonthStats.overall);
               });
             } else {
               drawStats(aggregatedMonthStats);
+              $('#roulette-overall').html('За месяц игр: ' + aggregatedMonthStats.overall);
             }
           });
           panel.set('roulette_mode', 'month');
@@ -537,6 +610,48 @@ jQuery.extend(__panel, {
       });
     });
   },
+
+  roulette_results: function() {
+    panel.loadScript(['roulette/roulette_parser.js'], function() {
+      panel.roulette_stat_parser(function(todayStats) {
+        $('td:contains(Время запуска)').parent().append('<td class="greenbg_red">Число</td><td class="greenbg_red">Дюжины</td><td class="greenbg_red">1:2</td><td class="greenbg_red">1-18/19-36</td><td class="greenbg_red">Чёт/нечет</td>');
+        $('a[href*="rouinfo.php"]').each(function() {
+          var id = parseInt(this.href.split('id=')[1]);
+          if(id > 0 && todayStats['history'][id]) {
+            var cl = $(this).parents('td:first').attr('class');
+            $(this).parents('tr:first').append('<td class="' + cl + '" align="center"><img style="margin: -4px" height="26" src="http://images.ganjawars.ru/i/rim/' + todayStats.history[id] + '.gif"></td>');
+            var text = '';
+            switch(determineDozen(todayStats['history'][id])) {
+              case 37: text = '1-12'; break;
+              case 38: text = '13-24'; break;
+              case 39: text = '25-36'; break;
+            }
+            $(this).parents('tr:first').append('<td class="' + cl + '" align="center"><strong>' + text + '</strong></td>');
+            var text = '';
+            switch(determineTvelveNumber(todayStats['history'][id])) {
+              case 40: text = '#3'; break;
+              case 41: text = '#2'; break;
+              case 42: text = '#1'; break;
+            }
+            $(this).parents('tr:first').append('<td class="' + cl + '" align="center"><strong>' + text + '</strong></td>');
+            var text = '';
+            switch(determineHalf(todayStats['history'][id])) {
+              case 43: text = '1-18'; break;
+              case 44: text = '19-36'; break;
+            }
+            $(this).parents('tr:first').append('<td class="' + cl + '" align="center"><strong>' + text + '</strong></td>');
+
+            var text = '';
+            switch(determineParity(todayStats['history'][id])) {
+              case 45: text = 'чёт'; break;
+              case 46: text = 'нечет'; break;
+            }
+            $(this).parents('tr:first').append('<td class="' + cl + '" align="center"><strong>' + text + '</strong></td>');
+          }
+        });
+      }, $(document.body));
+    });
+  }
   
 })
 })(__panel, jQuery);
