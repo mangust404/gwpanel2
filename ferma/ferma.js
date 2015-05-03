@@ -262,7 +262,7 @@ jQuery.extend(__panel, {
           }
         }
         $moneyDiv.before(
-          $('<div>С посадками: <b>' + panel.convertingIntToMoney(overallMoney) + 
+          $('<div class="ferma-overall">С посадками: <b>' + panel.convertingIntToMoney(overallMoney) + 
             '</b></div>')
             .css({
               position: 'absolute',
@@ -272,6 +272,9 @@ jQuery.extend(__panel, {
               title: 'Сколько денег у вас будет после сбора всего урожая'
             })
         );
+        if($('div:contains(в схроне)').length > 0) {
+          $('.ferma-overall').css({margin: '30px 0 0 5px'});
+        }
 
         function initProfit(profit) {
           var result = profit || {

@@ -68,8 +68,11 @@
     var result = {'summ': {}, 'history': {}, 'overall': 0};
     var now;
     panel.getTime(function(serverDate) {
-      now = serverDate;
       serverDate.setHours(0); serverDate.setMinutes(0); serverDate.setSeconds(0); serverDate.setMilliseconds(0);
+      if(!now) {
+        now = new Date;
+        now.setTime(serverDate.getTime());
+      }
 
       function parse() {
         fetchStatsFor(serverDate, function(__data) {
@@ -94,13 +97,12 @@
           } else {
             callback(result);
           }
-        }, now == parse_to_date);
+        }, now.getTime() == serverDate.getTime());
       }
 
       parse();
 
     });
-    //roulette/2015/3/29_3_2015.js
   }
 
   function determineDozen(num) {
@@ -387,14 +389,28 @@
 
     $('<span class="mainbutton random-bet">Случайная ставка</span>').click(function() {
       var bets_ar = [];
-      var ar = [{betn: 40, bet: 10334}, {betn: 41, bet: 10334}, {betn: 42, bet: 10334}];
-      shuffle(ar);
-      bets_ar.push(ar.pop());
-      for(var key in ar) {
-        ar[key].bet = 4666;
+      var ar = $('td[valign=top]:contains("Максимальная сумма ставок")').text().match(/Максимальная сумма ставок: ([\$0-9,]+)/)
+      var max_bet = panel.convertingMoneyToInt(ar[1]);
+      if(max_bet == 25000) {
+        var ar = [{betn: 40, bet: 16666}, {betn: 41, bet: 16666}, {betn: 42, bet: 16666}];
+        shuffle(ar);
+        bets_ar.push(ar.pop());
+        for(var key in ar) {
+          ar[key].bet = 8334
+        }
+        shuffle(ar);
+        bets_ar.push(ar.pop());
+        //bets_ar.push(ar.pop());
+      } else if(max_bet == 15000) {
+        var ar = [{betn: 40, bet: 10334}, {betn: 41, bet: 10334}, {betn: 42, bet: 10334}];
+        shuffle(ar);
+        bets_ar.push(ar.pop());
+        for(var key in ar) {
+          ar[key].bet = 4666;
+        }
+        shuffle(ar);
+        bets_ar.push(ar.pop());
       }
-      shuffle(ar);
-      bets_ar.push(ar.pop());
       function makeBet() {
         var bet_data = bets_ar.pop();
         $('input[name="betn"]').val(bet_data.betn);
@@ -558,7 +574,7 @@ jQuery.extend(__panel, {
                 yesterdayStats = stats;
                 drawStats(yesterdayStats);
                 $('#roulette-overall').html('За вчера игр: ' + yesterdayStats.overall);
-              });
+              }, true);
             } else {
               $('#roulette-overall').html('За вчера игр: ' + yesterdayStats.overall);
               drawStats(yesterdayStats);
@@ -619,7 +635,11 @@ jQuery.extend(__panel, {
           var id = parseInt(this.href.split('id=')[1]);
           if(id > 0 && todayStats['history'][id]) {
             var cl = $(this).parents('td:first').attr('class');
-            $(this).parents('tr:first').append('<td class="' + cl + '" align="center"><img style="margin: -4px" height="26" src="http://images.ganjawars.ru/i/rim/' + todayStats.history[id] + '.gif"></td>');
+            suff = '';
+            if(todayStats['history'][id + 1] == todayStats['history'][id] || todayStats['history'][id - 1] == todayStats['history'][id]) {
+              suff = '<span class="bullet" title="Повтор" style="position: absolute; margin: 6px 0 0 6px; border: 4px solid #003300; border-radius: 4px; height: 0px; width: 0px; display: inline-block;">&nbsp;</span>';
+            }
+            $(this).parents('tr:first').append('<td class="' + cl + '" align="center"><img style="margin: -4px" height="26" src="http://images.ganjawars.ru/i/rim/' + todayStats.history[id] + '.gif">' + suff + '</td>');
             var text = '';
             switch(determineDozen(todayStats['history'][id])) {
               case 37: text = '1-12'; break;
@@ -649,6 +669,19 @@ jQuery.extend(__panel, {
             $(this).parents('tr:first').append('<td class="' + cl + '" align="center"><strong>' + text + '</strong></td>');
           }
         });
+        
+        var $history = $('<p></p>');
+        $history.append('<h2>Данные в хранилище: </h2>');
+        $('a:contains(Рулетка):last').after($history);
+        for(var key in localStorage) {
+          if(key.indexOf('rouinfo_') == 0 && key.indexOf('_parsed') != -1) {
+            key = key.replace('_parsed', '');
+            $history.append($('<a href="#" style="margin-right: 10px;">' + key.substr(8).replace(/_/g, '.') + '</a>').click(function() {
+
+              return false;
+            }));
+          }
+        }
       }, $(document.body));
     });
   }
