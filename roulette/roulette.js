@@ -487,8 +487,9 @@
         labousher.push(3 * step);
         labousher.push(4 * step);
         labousher = shuffle(labousher);
-        localStorage['roulette_labousher'] = JSON.stringify(labousher);
       }
+
+      localStorage['roulette_labousher'] = JSON.stringify(labousher);
 
       $('<span class="mainbutton labousher-bet">Ставка Лабушер<br /> (' + labousher.join(', ') + ')</span>').click(function() {
         if(bets_done) {
@@ -746,7 +747,7 @@ jQuery.extend(__panel, {
   roulette_results: function() {
     panel.loadScript(['roulette/roulette_parser.js'], function() {
       panel.roulette_stat_parser(function(todayStats) {
-        $('td:contains(Время запуска)').parent().append('<td class="greenbg_red">Число</td><td class="greenbg_red">Дюжины</td><td class="greenbg_red">1:2</td><td class="greenbg_red">1-18/19-36</td><td class="greenbg_red">Чёт/нечет</td>');
+        $('td:contains(Время запуска)').parent().append('<td class="greenbg_red">Число</td><td class="greenbg_red">Дюжины</td><td class="greenbg_red">1:2</td><td class="greenbg_red">1-18/19-36</td><td class="greenbg_red">Чёт/нечет</td><td class="greenbg_red">Выигрыш</td>');
         $('a[href*="rouinfo.php"]').each(function() {
           var id = parseInt(this.href.split('id=')[1]);
           if(id > 0 && todayStats['history'][id]) {
@@ -781,6 +782,20 @@ jQuery.extend(__panel, {
             switch(determineParity(todayStats['history'][id])) {
               case 45: text = 'чёт'; break;
               case 46: text = 'нечет'; break;
+            }
+            $(this).parents('tr:first').append('<td class="' + cl + '" align="center"><strong>' + text + '</strong></td>');
+
+            var text = '';
+            if(localStorage['bet_history_' + id]) {
+              var prev_bet = JSON.parse(localStorage['bet_history_' + id]);
+              var summ = prev_bet.won - prev_bet.bets;
+              if(summ < 0) {
+                text = '<font style="color: red;">' + panel.convertingIntToMoney(summ) + '</font>'
+              } else {
+                text = '<font style="color: green;">' + panel.convertingIntToMoney(prev_bet.won) + '</font>'
+              }
+            } else {
+              text = '';
             }
             $(this).parents('tr:first').append('<td class="' + cl + '" align="center"><strong>' + text + '</strong></td>');
           }
