@@ -385,9 +385,27 @@
         for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
         return o;
     }
-    if($('.repeat-bet, .forget-bet, .save-bet, .random-bet').length > 0) return;
+
+    if($('.repeat-bet, .forget-bet, .save-bet, .random-bet, .labousher-bet').length > 0) return;
+    var current_bets = $('center:contains(Ваши ставки)').next('table').find('tr:last').find('td:first').text();
+    var bets_done = false;
+    if(panel.convertingMoneyToInt(current_bets) > 0) {
+      bets_done = true;
+      setTimeout(function() {
+        $('.repeat-bet, .forget-bet, .save-bet, .random-bet, .labousher-bet').css({
+          opacity: 0.5
+        });
+      }, 1000);
+    }
+
+    var ar = $('td[valign=top]:contains("Максимальная сумма ставок")').text().match(/Максимальная сумма ставок: ([\$0-9,]+)/)
+    var max_bet = panel.convertingMoneyToInt(ar[1]);
 
     $('<span class="mainbutton random-bet">Случайная ставка</span>').click(function() {
+      if(bets_done) {
+        console.log('Ставка уже сделана');
+        return false;
+      }
       var bets_ar = [];
       var ar = $('td[valign=top]:contains("Максимальная сумма ставок")').text().match(/Максимальная сумма ставок: ([\$0-9,]+)/)
       var max_bet = panel.convertingMoneyToInt(ar[1]);
@@ -432,11 +450,109 @@
       makeBet();
 
     }).css({display: 'block'}).insertAfter($('a.mainbutton'));
+    
+    function labousher_draw(prev_bet) {
+      if(!prev_bet) return;
+
+      if(localStorage['roulette_labousher']) {
+        labousher = JSON.parse(localStorage['roulette_labousher']);
+      } else {
+        labousher = [];
+      }
+
+      if(prev_bet.bets > 0 && prev_bet.won == 0) {
+        /// Мы проиграли в предыдущий раз, добавляем ставку в конец
+        if(prev_bet.bets > max_bet / 2) {
+          /// предыдущая ставка слишком большая, бьём её
+          var small_part = parseInt(prev_bet.bets / 100) * 100;
+          var big_part = prev_bet.bets - small_part;
+          // меньшее - в конец
+          labousher.push(small_part);
+          // большее - в середину
+          labousher.splice(labousher.length / 2, 0, big_part);
+        } else {
+          labousher.push(prev_bet.bets);
+        }
+      } else if(prev_bet.bets > 0 && prev_bet.won > prev_bet.bets) {
+        /// Мы выиграли, удаляем первую и последнюю ставку
+        labousher.pop();
+        labousher.shift();
+      }
+
+      if(!labousher.length) {
+        labousher = [];
+        var step = parseInt(max_bet / 50);
+        labousher.push(1 * step);
+        labousher.push(2 * step);
+        labousher.push(3 * step);
+        labousher.push(4 * step);
+        labousher = shuffle(labousher);
+        localStorage['roulette_labousher'] = JSON.stringify(labousher);
+      }
+
+      $('<span class="mainbutton labousher-bet">Ставка Лабушер (' + labousher.join(', ') + ')</span>').click(function() {
+        if(bets_done) {
+          console.log('Ставка уже сделана');
+          return false;
+        }
+        var bets_ar = [];
+
+        var labousher_summ = labousher[0] + labousher[labousher.length - 1];
+        var bets_50_percent = [43, 45, 48, 47, 46, 44];
+        bets_50_percent = shuffle(bets_50_percent);
+        bets_ar.push({betn: bets_50_percent.pop(), bet: labousher_summ});
+
+        function makeBet() {
+          var bet_data = bets_ar.pop();
+          $('input[name="betn"]').val(bet_data.betn);
+          $('input[name="bet"]').val(bet_data.bet);
+          $('form[name="rform"]').sendForm({
+            success: function(data, transport) {
+              if(bets_ar.length > 0) { /// ещё есть ставки
+                var $data = $(data);
+                var $newForm = $data.find('form[name="rform"]');
+
+                $('form[name="rform"]').replaceWith($newForm);
+                setTimeout(makeBet, 100);
+              } else {
+                panel.ajaxUpdateContent(data, location.href);
+              }
+            }
+          });
+        }
+        makeBet();
+
+      }).css({display: 'block'}).insertAfter($('a.mainbutton'));
+    }
+
+    var last_id = 0;
+    $('a[href*="rouinfo.php"]:first').each(function() {
+      last_id = parseInt(this.href.split('id=')[1]);
+    });
+
+    if(last_id > 0) {
+      if(sessionStorage['bet_history_' + last_id]) {
+        labousher_draw(JSON.parse(sessionStorage['bet_history_' + last_id]));
+      } else {
+        panel.loadScript('roulette/roulette_parser.js', function() {
+          panel.roulette_stat_parser(function() {
+            console.log(last_id, sessionStorage['bet_history_' + last_id]);
+            if(sessionStorage['bet_history_' + last_id]) {
+              labousher_draw(JSON.parse(sessionStorage['bet_history_' + last_id]));
+            } 
+          }, $(document.body));
+        });
+      }
+    }
 
     panel.get('roulette_bets', function(bets) {
       if(bets && Object.keys(bets).length > 0) {
         $('<br>').insertAfter($('a.mainbutton'));
         $('<span class="mainbutton repeat-bet">Повторить ' + Object.keys(bets).length + panel.pluralize(Object.keys(bets).length, ' ставка', ' ставки', ' ставок') + ' на сумму ' + panel.convertingIntToMoney(dataSum(bets)) + '</span>').click(function() {
+          if(bets_done) {
+            console.log('Ставка уже сделана');
+            return false;
+          }
           bets_ar = [];
           for(var betn in bets) {
             bets_ar.push({betn: betn, bet: bets[betn]});

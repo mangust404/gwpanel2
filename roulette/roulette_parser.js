@@ -1,4 +1,22 @@
 (function(panel, $) {
+  function roulette_parse_rouinfo(rouinfo, $data, id) {
+    $data.find('div.m1:contains(Выпало число)').text().search(/Выпало число[\s]+([0-9]+)/);
+    var result = parseInt(RegExp.$1);
+    if(result > 0) {
+      rouinfo['history'][id] = result;
+      if(rouinfo['summ'][result] == undefined) {
+        rouinfo['summ'][result] = 1;
+      } else {
+        rouinfo['summ'][result]++;
+      }
+      rouinfo['overall']++;
+    }
+    var $results_row = $data.find('center:contains(Ваши ставки:)').next('table').find('tr:last');
+    var bets_summ = panel.convertingMoneyToInt($results_row.find('td:first').text());
+    var won_summ = panel.convertingMoneyToInt($results_row.find('td:last').text());
+    sessionStorage['bet_history_' + id] = JSON.stringify({bets: bets_summ, won: won_summ});
+  }
+
 $.extend(panel, {
 
   roulette_stat_parser: function(callback, $data) {
@@ -50,17 +68,8 @@ $.extend(panel, {
               jQuery.ajax(this.href, {
                 async: false,
                 success: function(data) {
-                  jQuery(data).text().search(/Выпало число[\s]+([0-9]+)/);
-                  var result = parseInt(RegExp.$1);
-                  if(result > 0) {
-                    rouinfo['history'][id] = result;
-                    if(rouinfo['summ'][result] == undefined) {
-                      rouinfo['summ'][result] = 1;
-                    } else {
-                      rouinfo['summ'][result]++;
-                    }
-                    rouinfo['overall']++;
-                  }
+                  var $data = jQuery('<div>').html(data);
+                  roulette_parse_rouinfo(rouinfo, $data, id);
                 }
               });
             }
@@ -83,6 +92,13 @@ $.extend(panel, {
         }
       });
     }
+  },
+
+  roulette_parse: function() {
+    roulette_parse_rouinfo({history: {}, summ: {}, overall: 0},
+                            $(document), 
+                            location.search.split('=')[1]
+                          );
   }
 });
 })(window.__panel, jQuery);

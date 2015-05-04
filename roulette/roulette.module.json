@@ -5,7 +5,8 @@
   "weight": 5, 
   "pages": {
     "/roulette.php": ["roulette_stats"],
-    "/roulist.php": ["roulette_results"]
+    "/roulist.php": ["roulette_results"],
+    "/rouinfo.php": ["roulette_parse"]
   },
   "methods": {
     "roulette_stats": {
@@ -15,6 +16,9 @@
     "roulette_results": {
       "title": "Показывать выпавшие числа в сегодняшних играх",
       "file": "roulette.js"
+    },
+    "roulette_parse": {
+      "file": "roulette_parser.js"
     }
   },
   "widgets": {
