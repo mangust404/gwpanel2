@@ -490,7 +490,7 @@
         localStorage['roulette_labousher'] = JSON.stringify(labousher);
       }
 
-      $('<span class="mainbutton labousher-bet">Ставка Лабушер (' + labousher.join(', ') + ')</span>').click(function() {
+      $('<span class="mainbutton labousher-bet">Ставка Лабушер<br /> (' + labousher.join(', ') + ')</span>').click(function() {
         if(bets_done) {
           console.log('Ставка уже сделана');
           return false;
