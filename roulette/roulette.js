@@ -531,14 +531,14 @@
     });
 
     if(last_id > 0) {
-      if(sessionStorage['bet_history_' + last_id]) {
-        labousher_draw(JSON.parse(sessionStorage['bet_history_' + last_id]));
+      if(localStorage['bet_history_' + last_id]) {
+        labousher_draw(JSON.parse(localStorage['bet_history_' + last_id]));
       } else {
         panel.loadScript('roulette/roulette_parser.js', function() {
           panel.roulette_stat_parser(function() {
-            console.log(last_id, sessionStorage['bet_history_' + last_id]);
-            if(sessionStorage['bet_history_' + last_id]) {
-              labousher_draw(JSON.parse(sessionStorage['bet_history_' + last_id]));
+            console.log(last_id, localStorage['bet_history_' + last_id]);
+            if(localStorage['bet_history_' + last_id]) {
+              labousher_draw(JSON.parse(localStorage['bet_history_' + last_id]));
             } 
           }, $(document.body));
         });

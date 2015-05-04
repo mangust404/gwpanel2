@@ -14,7 +14,7 @@
     var $results_row = $data.find('center:contains(Ваши ставки:)').next('table').find('tr:last');
     var bets_summ = panel.convertingMoneyToInt($results_row.find('td:first').text());
     var won_summ = panel.convertingMoneyToInt($results_row.find('td:last').text());
-    sessionStorage['bet_history_' + id] = JSON.stringify({bets: bets_summ, won: won_summ});
+    localStorage['bet_history_' + id] = JSON.stringify({bets: bets_summ, won: won_summ});
   }
 
 $.extend(panel, {
