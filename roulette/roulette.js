@@ -460,23 +460,26 @@
         labousher = [];
       }
 
-      if(prev_bet.bets > 0 && prev_bet.won == 0) {
-        /// Мы проиграли в предыдущий раз, добавляем ставку в конец
-        if(prev_bet.bets > max_bet / 2) {
-          /// предыдущая ставка слишком большая, бьём её
-          var small_part = parseInt(prev_bet.bets / 100) * 100;
-          var big_part = prev_bet.bets - small_part;
-          // меньшее - в конец
-          labousher.push(small_part);
-          // большее - в середину
-          labousher.splice(labousher.length / 2, 0, big_part);
-        } else {
-          labousher.push(prev_bet.bets);
+      if(String(last_id) != localStorage['labousher_id']) {
+        if(prev_bet.bets > 0 && prev_bet.won == 0) {
+          /// Мы проиграли в предыдущий раз, добавляем ставку в конец
+          if(prev_bet.bets > max_bet / 2) {
+            /// предыдущая ставка слишком большая, бьём её
+            var small_part = parseInt(prev_bet.bets / 100) * 100;
+            var big_part = prev_bet.bets - small_part;
+            // меньшее - в конец
+            labousher.push(small_part);
+            // большее - в середину
+            labousher.splice(labousher.length / 2, 0, big_part);
+          } else {
+            labousher.push(prev_bet.bets);
+          }
+        } else if(prev_bet.bets > 0 && prev_bet.won > 0) {
+          /// Мы выиграли, удаляем первую и последнюю ставку
+          labousher.pop();
+          labousher.shift();
         }
-      } else if(prev_bet.bets > 0 && prev_bet.won > 0) {
-        /// Мы выиграли, удаляем первую и последнюю ставку
-        labousher.pop();
-        labousher.shift();
+        localStorage['labousher_id'] = last_id;
       }
 
       if(!labousher.length) {
