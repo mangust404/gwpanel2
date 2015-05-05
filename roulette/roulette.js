@@ -473,7 +473,7 @@
         } else {
           labousher.push(prev_bet.bets);
         }
-      } else if(prev_bet.bets > 0 && prev_bet.won > prev_bet.bets) {
+      } else if(prev_bet.bets > 0 && prev_bet.won > 0) {
         /// Мы выиграли, удаляем первую и последнюю ставку
         labousher.pop();
         labousher.shift();
