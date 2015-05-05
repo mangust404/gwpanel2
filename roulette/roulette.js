@@ -451,6 +451,12 @@
 
     }).css({display: 'block'}).insertAfter($('a.mainbutton'));
     
+    function labousher_split(bet) {
+      var small_part = parseInt(bet / 100) * 100;
+      var big_part = bet - small_part;
+      return [small_part, big_part];
+    }
+
     function labousher_draw(prev_bet) {
       if(!prev_bet) return;
 
@@ -511,6 +517,19 @@
           var labousher_summ = labousher[0] + labousher[labousher.length - 1];
         } else {
           var labousher_summ = labousher[0];
+        }
+        if(labousher_summ > max_bet) {
+          if(labousher[0] > labousher[labousher.length - 1]) {
+            var new_bets = labousher_split(labousher[0]);
+            labousher.shift();
+          } else {
+            var new_bets = labousher_split(labousher[labousher.length - 1]);
+            labousher.pop();
+          }
+          labousher.push(new_bets[0]);
+          labousher.splice(labousher.length / 2, 0, new_bets[1]);
+          
+          labousher_summ = labousher[0] + labousher[labousher.length - 1];
         }
         var bets_50_percent = [43, 45, 48, 47, 46, 44];
         bets_50_percent = shuffle(bets_50_percent);
