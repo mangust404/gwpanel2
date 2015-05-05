@@ -478,13 +478,19 @@
           /// Мы выиграли, удаляем первую и последнюю ставку
           labousher.pop();
           if(labousher.length > 0) labousher.shift();
+          if(labousher.length == 0) {
+            var won = parseInt(localStorage['labousher_won']);
+            if(isNaN(won)) won = 0;
+            won++;
+            localStorage['labousher_won'] = won;
+          }
         }
         localStorage['labousher_id'] = last_id;
       }
 
       if(!labousher.length) {
         labousher = [];
-        var step = parseInt(max_bet / 50);
+        var step = parseInt(max_bet / 25);
         labousher.push(1 * step);
         labousher.push(2 * step);
         labousher.push(3 * step);
