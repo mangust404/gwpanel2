@@ -452,7 +452,7 @@
     }).css({display: 'block'}).insertAfter($('a.mainbutton'));
     
     function labousher_split(bet) {
-      var small_part = parseInt(bet / 100) * 100;
+      var small_part = parseInt(bet / 200) * 100;
       var big_part = bet - small_part;
       return [small_part, big_part];
     }
@@ -469,17 +469,7 @@
       if(String(last_id) != localStorage['labousher_id']) {
         if(prev_bet.bets > 0 && prev_bet.won == 0) {
           /// Мы проиграли в предыдущий раз, добавляем ставку в конец
-          if(prev_bet.bets > max_bet / 2) {
-            /// предыдущая ставка слишком большая, бьём её
-            var small_part = parseInt(prev_bet.bets / 100) * 100;
-            var big_part = prev_bet.bets - small_part;
-            // меньшее - в конец
-            labousher.push(small_part);
-            // большее - в середину
-            labousher.splice(labousher.length / 2, 0, big_part);
-          } else {
-            labousher.push(prev_bet.bets);
-          }
+          labousher.push(prev_bet.bets);
         } else if(prev_bet.bets > 0 && prev_bet.won > 0) {
           /// Мы выиграли, удаляем первую и последнюю ставку
           labousher.pop();
@@ -496,7 +486,7 @@
 
       if(!labousher.length) {
         labousher = [];
-        var step = parseInt(max_bet / 25);
+        var step = parseInt(max_bet / 10);
         labousher.push(1 * step);
         labousher.push(2 * step);
         labousher.push(3 * step);
@@ -528,10 +518,11 @@
           }
           labousher.push(new_bets[0]);
           labousher.splice(labousher.length / 2, 0, new_bets[1]);
-          
+          localStorage['roulette_labousher'] = JSON.stringify(labousher);
+
           labousher_summ = labousher[0] + labousher[labousher.length - 1];
         }
-        var bets_50_percent = [43, 45, 48, 47, 46, 44];
+        var bets_50_percent = [43]; //, 45, 48, 47, 46, 44];
         bets_50_percent = shuffle(bets_50_percent);
         bets_ar.push({betn: bets_50_percent.pop(), bet: labousher_summ});
 
