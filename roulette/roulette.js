@@ -477,7 +477,7 @@
         } else if(prev_bet.bets > 0 && prev_bet.won > 0) {
           /// Мы выиграли, удаляем первую и последнюю ставку
           labousher.pop();
-          labousher.shift();
+          if(labousher.length > 0) labousher.shift();
         }
         localStorage['labousher_id'] = last_id;
       }
@@ -501,7 +501,11 @@
         }
         var bets_ar = [];
 
-        var labousher_summ = labousher[0] + labousher[labousher.length - 1];
+        if(labousher.length > 1) {
+          var labousher_summ = labousher[0] + labousher[labousher.length - 1];
+        } else {
+          var labousher_summ = labousher[0];
+        }
         var bets_50_percent = [43, 45, 48, 47, 46, 44];
         bets_50_percent = shuffle(bets_50_percent);
         bets_ar.push({betn: bets_50_percent.pop(), bet: labousher_summ});
