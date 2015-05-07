@@ -2839,6 +2839,18 @@ window.Panel2 = new function() {
     persistInterval: function(callback, timeout) {
       var hash = callback.toString().hashCode();
 
+      var now = (new Date).getTime();
+      if(sessionStorage['persist_intrvl_lastrun'] != undefined && now < parseInt(sessionStorage['persist_intrvl_lastrun'])) {
+        /// На компьютере перевели часы назад, сбрасываем все интервалы
+        for(var key in sessionStorage) {
+          if(key.indexOf('persist_') === 0) {
+            delete sessionStorage[key];
+          }
+        }
+      }
+
+      sessionStorage['persist_intrvl_lastrun'] = now;
+
       var info = sessionStorage['persist_intrvl_' + hash];
       if(info) {
         try {
@@ -2915,10 +2927,14 @@ window.Panel2 = new function() {
         var timestamp = parseInt(lines[7].split("\t")[1]);
         var nowLocal = new Date;
 
-        var delta = timestamp * 1000 - nowLocal.getTime() + 
-          (nowLocal.getTimezoneOffset() + 180) * 60 * 1000;
+        var delta = parseInt((timestamp * 1000 - nowLocal.getTime() + 
+          (nowLocal.getTimezoneOffset() + 180) * 60 * 1000)/1000) * 1000;
 
-        localStorage['time_delta'] = delta;
+        instance.get('time_delta', function(prev_delta) {
+          if(prev_delta != delta) {
+            instance.set('time_delta', delta);
+          }
+        })
       }
     },
     /**
@@ -2926,9 +2942,9 @@ window.Panel2 = new function() {
     * @param callback - этот метод вызывается с точным объектом временем 
     *   в качестве первого аргумента
     */
-    getTime: function(callback, failover) {
+    getTime: function(callback, failover, test) {
       instance.get('time_delta', function(delta) {
-        if(delta) {
+        if(delta != undefined && !test) {
           var now = new Date;
           now.setTime(now.getTime() + parseInt(delta));
           callback(now);
@@ -2942,8 +2958,10 @@ window.Panel2 = new function() {
               if(lines[7]) {
                 var timestamp = parseInt(lines[7].split("\t")[1]); 
                 var nowLocal = new Date;
+                console.log(nowLocal.getTimezoneOffset());
                 var delta = timestamp * 1000 - nowLocal.getTime() + 
                   (nowLocal.getTimezoneOffset() + 180) * 60 * 1000;
+                console.log('timestamp', timestamp, 'nowLocal', nowLocal, 'delta', delta);
                 if(delta != 0) {
                   instance.set('time_delta', delta, function() {
                     instance.getTime(callback);
