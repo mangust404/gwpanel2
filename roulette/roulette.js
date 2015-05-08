@@ -479,9 +479,9 @@
             if(isNaN(won)) won = 0;
             won++;
             localStorage['labousher_won'] = won;
-            if(!confirm('Уф. Кажется мы отыгрались. Будем продолжать?')) {
+            /*if(!confirm('Уф. Кажется мы отыгрались. Будем продолжать?')) {
               return false;
-            }
+            }*/
           }
         }
         localStorage['labousher_id'] = last_id;
@@ -489,7 +489,7 @@
 
       if(!labousher.length) {
         labousher = [];
-        var step = parseInt(max_bet / 25);
+        var step = parseInt(max_bet / 50);
         labousher.push(1 * step);
         labousher.push(2 * step);
         labousher.push(3 * step);
