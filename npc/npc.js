@@ -93,8 +93,8 @@ jQuery.extend(panel, {
         } else {
           data.timer = 'next_quest';
           // Определяем таймаут следующего квеста по формуле
-          var timeout = 14400 - data.status * 100 * 144;
-          if(timeout < 7200) timeout = 7200;
+          var timeout = 7200 - data.status * 100 * 72;
+          if(timeout < 3600) timeout = 3600;
         }
         data.starttime = (new Date()).getTime();
         data.timeout = timeout;
