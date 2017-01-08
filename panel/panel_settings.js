@@ -114,6 +114,7 @@
 
   /// функция для генерации параметров, которые указываются в .module.json
   function evaluate_options(option, callback, widget, params) {
+    var that = this;
     if($.type(option) == 'string' && 
        (option.indexOf('__panel.') == 0 || option.indexOf('__panel[') == 0)) {
       try {
@@ -139,7 +140,39 @@
         console.log(e, 'error in evaluating "' + option + '"');
         if(callback) callback(null);
       }
-    } else {
+    }
+    else if (this.type == 'item') {
+      // Подгрузка предметов из инвентаря
+      panel.loadScript('items/items.js', function() {
+        panel.items_get_items_async(function(items) {
+          var result = {};
+          $.each(items, function(index) {
+            var item = this;
+            if (that.filter) {
+              // Фильтруем предметы по указанному критерию
+              if ($.type(that.filter) == 'string') {
+                if (item.header.indexOf(that.filter) !== -1 || item.footer.indexOf(that.filter) !== -1) {
+                  result[item.item_id] = item.name;
+                }
+              } else if ($.type(that.filter) == 'object') {
+                for (var key in that.filter) {
+                  if ((item.header.indexOf(key) !== -1 || item.footer.indexOf(key) !== -1) &&
+                      (item.header.indexOf(that.filter[key]) !== -1 || item.footer.indexOf(that.filter[key]) !== -1)) {
+                    result[item.item_id] = item.name;
+                  }
+                }
+              }
+            }
+            else {
+              result[item.item_id] = item.name;
+            }
+          });
+
+          callback(result);
+        });
+      });
+    }
+    else {
       callback(option);
     }
 
@@ -1483,6 +1516,7 @@
         var drawFunc = function() {
           switch(that.type) {
             case 'checkboxes':
+              /// Выбор нескольких вариантов из списка (чекбоксы)
               var collapsible = true;
               if($.type(that.collapsible) != 'undefined') {
                 collapsible = that.collapsible;
@@ -1515,6 +1549,8 @@
               });
             break;
             case 'select':
+            case 'item':
+              /// Выбор одного варианта из нескольких
               var __id = 'param-' + widget.id + '-' + param;
               var $s = $('<select id="' + __id + '" name="' + widget.id + '_' + param + '"></select>');
               var is_array = $.type(that.options) == 'array';
@@ -1537,6 +1573,7 @@
               $s.before('<label for="' + __id + '">Укажите ' + that.title + ':</label>');
             break;
             case 'radios':
+              /// Выбор одного варианта из нескольких, которые отображаются в виде списка
               var __id = 'param-' + widget.id + '-' + param;
               var name = widget.id + '_' + param;
               var is_array = $.type(that.options) == 'array';
@@ -1564,6 +1601,7 @@
               });
             break;
             case 'checkbox':
+              /// Опция - включено - отключено
               $('<label for="param-' + widget.id + '-' + param + '">' + that.title + '</label>').appendTo(append_to);
               $('<input name="' + widget.id + '_' + param + 
                 '" id="param-' + widget.id + '-' + param + '"' +
@@ -1575,6 +1613,7 @@
                 });
             break;
             case 'text':
+              /// Свободный ввод текста
               var __id = 'param-' + widget.id + '-' + param;
               $('<label for="' + __id + '">' + that.title + 
                 '</label><input name="' + widget.id + '_' + param + 
@@ -1587,6 +1626,7 @@
                 });
             break;
             case 'textarea':
+              /// Свободный ввод текста, большой
               var __id = 'param-' + widget.id + '-' + param;
               $('<label for="' + __id + '">' + that.title + 
                 '</label><textarea name="' + widget.id + '_' + param + 
@@ -1607,22 +1647,22 @@
         var have_options = false;
         var have_default = false;
 
-        evaluate_options(that.options, function(options) {
+        evaluate_options.apply(that, [that.options, function(options) {
           have_options = true;
           that.options = options;
           if(have_options && have_default) {
             drawFunc();
           }
-        }, widget, params);
+        }, widget, params]);
         if(isDefault) {
-          evaluate_options(this.default, function(val) {
+          evaluate_options.apply(that, [this.default, function(val) {
             have_default = true;
             change_callback(param, val);
             current_value = val;
             if(have_options && have_default) {
               drawFunc();
             }
-          }, widget, params);
+          }, widget, params]);
         } else {
           have_default = true;
           if(have_options && have_default) {

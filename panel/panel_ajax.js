@@ -90,8 +90,17 @@
       var form_id = $(this).attr('formid');
       var $form = $(this);
 
-      $('input.form-' + form_id + '[type=submit], ' + 
-        'input.form-' + form_id + '[type=image]').click(function() {
+      var $submitButtons = $('input.form-' + form_id + '[type=submit], ' + 
+        'input.form-' + form_id + '[type=image]').filter(function() {
+          // Фильтруем все кнопки, к которым на клик подсоединяются другие модули или скрипты с jQuery.
+          var events = $._data(this, 'events');
+          if (events && (events.mousedown || events.click)) {
+            return false;
+          }
+          return true;
+        });
+
+      $submitButtons.click(function(e) {
         if($(this).attr('onclick')) return true;
         if($(document.body).hasClass('ajax-loading')) return false;
 

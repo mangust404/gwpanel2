@@ -11,7 +11,8 @@
     "/info.php": ["map_links"],
     "/object.php": ["map_links", "map_resources"],
     "/statlist.php": ["map_links"],
-    "/objects-bar.php": ["map_links", "map_resources"]
+    "/objects-bar.php": ["map_links", "map_resources"],
+    "/map.php": ["map_alter"]
   }, 
 
   "methods": {
@@ -23,11 +24,23 @@
     },
     "map_links": {
       "file": "map.js",
-      "title": "Добавлять ссылки быстрого перехода в сектор"
+      "title": "Добавлять ссылки быстрого перехода в сектор",
+      "configure": {
+        "move_item": {
+          "type": "item",
+          "title": "Транспорт для передвижения",
+          "description": "Этот транспорт будет надеваться при переходах в другой сектор",
+          "filter": {"Взять": "Транспорт"},
+          "default": ""
+        }
+      }
     },
     "map_resources": {
       "file": "map.js",
       "title": "Проставлять максимально возможное количество ресурсов"
+    },
+    "map_alter": {
+      "file": "map.js"
     }
   },
 

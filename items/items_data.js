@@ -118,6 +118,35 @@ jQuery.extend(panel, {
       result[btn.button.id] = btn.button.title || ('Набор #' + (i + 1));
     });
     return result;
+  },
+
+  items_get_items_async: function(callback) {
+    $.ajax('/items.php', {
+        success: function(data) {
+          var $data = $(data);
+          var items = [];
+          var $items = $data.find('td[id*=item_]');
+          $items.each(function() {
+            var $this = $(this);
+            var id = $this.attr('id').split("_")[1];
+            var $item_id_a = $this.prev().find('a[href*=item_id]');
+            if ($item_id_a.length > 0) {
+              var item_id = $item_id_a.attr('href').split('item_id=')[1];
+              items.push({
+                'id': id,
+                'item_id': item_id,
+                'name': $item_id_a.text(),
+                'header': $data.find('#item_tr1_' + id).text(),
+                'footer': $data.find('#item_tr2_' + id).text()
+              });
+            }
+          });
+          callback(items);
+        },
+        error: function() {
+          callback([]);
+        }
+    });
   }
 });
 })(window.__panel, jQuery);
