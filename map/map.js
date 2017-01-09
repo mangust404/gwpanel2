@@ -36,7 +36,11 @@ jQuery.extend(panel, {
 
     panel.get('moveHref', function(moveHref) {
       panel.get('prevTransport', function(args) {
-        var prev_transport_dress_link = args[0], prev_transport_id = args[1];
+        var prev_transport_dress_link, prev_transport_id;
+        if (args && args.length > 0) {
+          prev_transport_dress_link = args[0];
+          prev_transport_id = args[1];
+        }
 
         if($('#gw-content').length) {
           var $target = $('#gw-content');
