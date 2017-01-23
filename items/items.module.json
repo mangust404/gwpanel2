@@ -9,7 +9,8 @@
   "pages": {
     "/items.php": ["items_sets"],
     "*": ["items_dress"],
-    "/sshop.php": ["items_shop_seek"]
+    "/sshop.php": ["items_shop_seek"],
+    "/object.php": ["items_home_checkboxes"]
   },
   "listeners": {
     "battleend": ["items_set_check"]
@@ -34,6 +35,9 @@
     },
     "items_shop_seek": {
       "file": "items.js"
+    },
+    "items_home_checkboxes": {
+      "file": "items_object.js"
     }
   },
   
