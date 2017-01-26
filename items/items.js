@@ -276,7 +276,11 @@ jQuery.extend(panel, {
         /// Предлагаем "Где купить"
         panel.loadScript('items/items_data.js', function() {
           var ar = seek.split('&');
-          if(panel.items_synd_grenades.indexOf(ar[0]) > -1 ) {
+          if(panel.items_synd_grenades_special.indexOf(ar[0]) > -1 ) {
+            panel.showFlash('В инвентаре не найдена синдовая граната. <a href="' + 
+                            'http://www.ganjawars.ru/statlist.php?r=' + ar[0] + 
+                            '&type=i">Где купить?</a>', 5000);
+          } else if(panel.items_synd_grenades.indexOf(ar[0]) > -1 ) {
             panel.showFlash('В инвентаре не найдена синдовая граната. <a href="' + 
                             'http://www.ganjawars.ru/sshop.php?seek=' + 
                             ar[0] + '">Перейти в магазин.</a>', 5000);

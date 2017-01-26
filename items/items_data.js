@@ -28,18 +28,25 @@ jQuery.extend(panel, {
     }
   },
 
+  // Синдовые грены
   items_synd_grenades: [
-    'lightss',
     'lightsm',
-    'rgd2s',
     'grenade_dg1',
+    'ghtb'
+  ],
+
+  // Грены из синдмагаза, но покупаются в частном магазине.
+  items_synd_grenades_special: [
+    'lightss',
+    'rgd2s',
     'fg5',
     'molotov',
     'hellsbreath',
     'napalm',
-    'ghtb',
     'me85'
   ],
+
+  // Все остальные грены
   items_grenades: [
     'rgd5', 
     'grenade_f1',
