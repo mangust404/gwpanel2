@@ -1014,7 +1014,7 @@ window.Panel2 = new function() {
   }
 
   function getFiles(f, module) {
-    if(!f) return;
+    if(!f) return [];
     if($.type(f) != 'array') {
       f = [f];
     }
