@@ -12,7 +12,8 @@
     "/object.php": ["map_links", "map_resources"],
     "/statlist.php": ["map_links"],
     "/objects-bar.php": ["map_links", "map_resources"],
-    "/map.php": ["map_alter"]
+    "/map.php": ["map_alter"],
+    "/objects-upgrade.php": ["map_links", "map_resources"]
   }, 
 
   "methods": {
