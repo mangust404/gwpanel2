@@ -1,7 +1,6 @@
 (function(panel, $) {
   var bgenerated, rightattack, leftattack, defence, prevRightAttack, prevLeftAttack, prevDefence, bsrcframe, bgenerator, $bgenchk, walk, bredo;
-  var generator_options;
-  var redo_options;
+  var generator_options, redo_options, grenade_options;
   var allies = {name: []}, enemies = {name: []};
   var enemySelectBox;
   var battle_modifyChatWait;
@@ -624,6 +623,11 @@ $.extend(panel, {
     __redoInitHandler();
   },
 
+  battle_grenade: function(options) {
+    grenade_options = options;
+    $('#bagaboom').prop('checked', true);
+  },
+
   battle_std_init: function() {
     panel.triggerEvent('battlebegin', {'bid': window.BattleID});
     panel.set('BattleID', window.BattleID);
@@ -655,6 +659,10 @@ $.extend(panel, {
       };
       if(!enemySelectBox) enemySelectBox = document.getElementsByTagName('select')[0];
       if(selectedEnemy) $(enemySelectBox).val(selectedEnemy);
+
+      if (grenade_options) {
+        panel.battle_grenade(grenade_options);
+      }
 
       panel.__clrline = false;
     });

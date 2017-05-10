@@ -4,8 +4,8 @@
   "weight": -1, 
   "title": "Дополнения для боев",
   "pages": {
-    "/b0/btl.php": ["battle_fix", "battle_js_init", "battle_generator", "battle_redo", "battle_to_allies"],
-    "/b0/b.php": ["battle_std_init", "battle_generator", "battle_redo", "battle_to_allies"],
+    "/b0/btl.php": ["battle_fix", "battle_js_init", "battle_generator", "battle_redo", "battle_to_allies", "battle_grenade"],
+    "/b0/b.php": ["battle_std_init", "battle_generator", "battle_redo", "battle_to_allies", "battle_grenade"],
     "/warlog.php": ["battle_end"]
   },
   "events": {
@@ -58,6 +58,11 @@
           "description": "Если эта галочка установлена, то галочка &quot;Запоминать ход&quot; будет автоматически выставляться в бою."
         }
       },
+      "file": "battle.js"
+    },
+    "battle_grenade": {
+      "title": "Всегда бросать гранату",
+      "description": "Актуально для шахидов и качающих гранаты",
       "file": "battle.js"
     },
     "battle_end": {
